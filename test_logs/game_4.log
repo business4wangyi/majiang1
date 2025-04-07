@@ -1,0 +1,1353 @@
+欢迎来到麻将游戏！
+测试国士无双逻辑:
+[DEBUG]: [RuleEngine.testThirteenOrphans] 开始测试十三幺牌型
+[DEBUG]: [RuleEngine.testThirteenOrphans] 测试牌型: 1万, 9万, 1筒, 9筒, 1条, 9条, 东风, 南风, 西风, 北风, 中箭, 发箭, 白箭, 1万
+[DEBUG]: [RuleEngine.isThirteenOrphans] 检查是否为十三幺，牌数=14
+[DEBUG]: [RuleEngine.isThirteenOrphans] 牌组详情: 1万, 9万, 1筒, 9筒, 1条, 9条, 东风, 南风, 西风, 北风, 中箭, 发箭, 白箭, 1万
+[DEBUG]: [RuleEngine.isThirteenOrphans] 开始检查13种必要牌是否都存在
+[DEBUG]: [RuleEngine.isThirteenOrphans] 所有13种必要牌都存在，继续检查是否有一个对子
+[DEBUG]: [RuleEngine.isThirteenOrphans] 牌型计数详情:
+[DEBUG]: [RuleEngine.isThirteenOrphans]   - 1万: 2张
+[DEBUG]: [RuleEngine.isThirteenOrphans]   - 9万: 1张
+[DEBUG]: [RuleEngine.isThirteenOrphans]   - 1筒: 1张
+[DEBUG]: [RuleEngine.isThirteenOrphans]   - 9筒: 1张
+[DEBUG]: [RuleEngine.isThirteenOrphans]   - 1条: 1张
+[DEBUG]: [RuleEngine.isThirteenOrphans]   - 9条: 1张
+[DEBUG]: [RuleEngine.isThirteenOrphans]   - 1风: 1张
+[DEBUG]: [RuleEngine.isThirteenOrphans]   - 2风: 1张
+[DEBUG]: [RuleEngine.isThirteenOrphans]   - 3风: 1张
+[DEBUG]: [RuleEngine.isThirteenOrphans]   - 4风: 1张
+[DEBUG]: [RuleEngine.isThirteenOrphans]   - 1箭: 1张
+[DEBUG]: [RuleEngine.isThirteenOrphans]   - 2箭: 1张
+[DEBUG]: [RuleEngine.isThirteenOrphans]   - 3箭: 1张
+[DEBUG]: [RuleEngine.isThirteenOrphans] 确认为十三幺，对子是: 1万
+[DEBUG]: [RuleEngine.testThirteenOrphans] 测试结果: ✓ 测试通过
+[DEBUG]: [RuleEngine.isWinningHand] 检查是否为胡牌，牌数=14
+[DEBUG]: [RuleEngine.isWinningHand] 牌组: 1万, 9万, 1筒, 9筒, 1条, 9条, 东风, 南风, 西风, 北风, 中箭, 发箭, 白箭, 1万
+[DEBUG]: [RuleEngine.isSevenPairs] 检查是否为七对，牌数=14
+[DEBUG]: [RuleEngine.isSevenPairs] 牌组详情: 1万, 9万, 1筒, 9筒, 1条, 9条, 东风, 南风, 西风, 北风, 中箭, 发箭, 白箭, 1万
+[DEBUG]: [RuleEngine.isSevenPairs] 牌型计数详情:
+[DEBUG]: [RuleEngine.isSevenPairs]   - 万1: 2张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 万9: 1张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 筒1: 1张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 筒9: 1张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 条1: 1张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 条9: 1张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 风1: 1张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 风2: 1张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 风3: 1张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 风4: 1张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 箭1: 1张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 箭2: 1张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 箭3: 1张
+[DEBUG]: [RuleEngine.isSevenPairs] 发现非对子牌: 万_9, 数量=1
+[DEBUG]: [RuleEngine.isSevenPairs] 发现非对子牌: 筒_1, 数量=1
+[DEBUG]: [RuleEngine.isSevenPairs] 发现非对子牌: 筒_9, 数量=1
+[DEBUG]: [RuleEngine.isSevenPairs] 发现非对子牌: 条_1, 数量=1
+[DEBUG]: [RuleEngine.isSevenPairs] 发现非对子牌: 条_9, 数量=1
+[DEBUG]: [RuleEngine.isSevenPairs] 发现非对子牌: 风_1, 数量=1
+[DEBUG]: [RuleEngine.isSevenPairs] 发现非对子牌: 风_2, 数量=1
+[DEBUG]: [RuleEngine.isSevenPairs] 发现非对子牌: 风_3, 数量=1
+[DEBUG]: [RuleEngine.isSevenPairs] 发现非对子牌: 风_4, 数量=1
+[DEBUG]: [RuleEngine.isSevenPairs] 发现非对子牌: 箭_1, 数量=1
+[DEBUG]: [RuleEngine.isSevenPairs] 发现非对子牌: 箭_2, 数量=1
+[DEBUG]: [RuleEngine.isSevenPairs] 发现非对子牌: 箭_3, 数量=1
+[DEBUG]: [RuleEngine.isSevenPairs] 存在非对子数量的牌，不是七对
+[DEBUG]: [RuleEngine.isThirteenOrphans] 检查是否为十三幺，牌数=14
+[DEBUG]: [RuleEngine.isThirteenOrphans] 牌组详情: 1万, 9万, 1筒, 9筒, 1条, 9条, 东风, 南风, 西风, 北风, 中箭, 发箭, 白箭, 1万
+[DEBUG]: [RuleEngine.isThirteenOrphans] 开始检查13种必要牌是否都存在
+[DEBUG]: [RuleEngine.isThirteenOrphans] 所有13种必要牌都存在，继续检查是否有一个对子
+[DEBUG]: [RuleEngine.isThirteenOrphans] 牌型计数详情:
+[DEBUG]: [RuleEngine.isThirteenOrphans]   - 1万: 2张
+[DEBUG]: [RuleEngine.isThirteenOrphans]   - 9万: 1张
+[DEBUG]: [RuleEngine.isThirteenOrphans]   - 1筒: 1张
+[DEBUG]: [RuleEngine.isThirteenOrphans]   - 9筒: 1张
+[DEBUG]: [RuleEngine.isThirteenOrphans]   - 1条: 1张
+[DEBUG]: [RuleEngine.isThirteenOrphans]   - 9条: 1张
+[DEBUG]: [RuleEngine.isThirteenOrphans]   - 1风: 1张
+[DEBUG]: [RuleEngine.isThirteenOrphans]   - 2风: 1张
+[DEBUG]: [RuleEngine.isThirteenOrphans]   - 3风: 1张
+[DEBUG]: [RuleEngine.isThirteenOrphans]   - 4风: 1张
+[DEBUG]: [RuleEngine.isThirteenOrphans]   - 1箭: 1张
+[DEBUG]: [RuleEngine.isThirteenOrphans]   - 2箭: 1张
+[DEBUG]: [RuleEngine.isThirteenOrphans]   - 3箭: 1张
+[DEBUG]: [RuleEngine.isThirteenOrphans] 确认为十三幺，对子是: 1万
+[DEBUG]: [RuleEngine.isWinningHand] 检测到十三幺，可以胡牌
+[DEBUG]: [RuleEngine.testThirteenOrphans] 同时检查是否符合和牌条件: ✓ 是
+[DEBUG]: [RuleEngine.isSevenPairs] 检查是否为七对，牌数=14
+[DEBUG]: [RuleEngine.isSevenPairs] 牌组详情: 东风, 南风, 西风, 北风, 中箭, 发箭, 白箭, 1条, 9条, 1筒, 9筒, 1万, 1万, 9万
+[DEBUG]: [RuleEngine.isSevenPairs] 牌型计数详情:
+[DEBUG]: [RuleEngine.isSevenPairs]   - 风1: 1张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 风2: 1张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 风3: 1张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 风4: 1张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 箭1: 1张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 箭2: 1张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 箭3: 1张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 条1: 1张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 条9: 1张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 筒1: 1张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 筒9: 1张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 万1: 2张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 万9: 1张
+[DEBUG]: [RuleEngine.isSevenPairs] 发现非对子牌: 风_1, 数量=1
+[DEBUG]: [RuleEngine.isSevenPairs] 发现非对子牌: 风_2, 数量=1
+[DEBUG]: [RuleEngine.isSevenPairs] 发现非对子牌: 风_3, 数量=1
+[DEBUG]: [RuleEngine.isSevenPairs] 发现非对子牌: 风_4, 数量=1
+[DEBUG]: [RuleEngine.isSevenPairs] 发现非对子牌: 箭_1, 数量=1
+[DEBUG]: [RuleEngine.isSevenPairs] 发现非对子牌: 箭_2, 数量=1
+[DEBUG]: [RuleEngine.isSevenPairs] 发现非对子牌: 箭_3, 数量=1
+[DEBUG]: [RuleEngine.isSevenPairs] 发现非对子牌: 条_1, 数量=1
+[DEBUG]: [RuleEngine.isSevenPairs] 发现非对子牌: 条_9, 数量=1
+[DEBUG]: [RuleEngine.isSevenPairs] 发现非对子牌: 筒_1, 数量=1
+[DEBUG]: [RuleEngine.isSevenPairs] 发现非对子牌: 筒_9, 数量=1
+[DEBUG]: [RuleEngine.isSevenPairs] 发现非对子牌: 万_9, 数量=1
+[DEBUG]: [RuleEngine.isSevenPairs] 存在非对子数量的牌，不是七对
+[DEBUG]: [RuleEngine.isThirteenOrphans] 检查是否为十三幺，牌数=14
+[DEBUG]: [RuleEngine.isThirteenOrphans] 牌组详情: 东风, 南风, 西风, 北风, 中箭, 发箭, 白箭, 1条, 9条, 1筒, 9筒, 1万, 1万, 9万
+[DEBUG]: [RuleEngine.isThirteenOrphans] 开始检查13种必要牌是否都存在
+[DEBUG]: [RuleEngine.isThirteenOrphans] 所有13种必要牌都存在，继续检查是否有一个对子
+[DEBUG]: [RuleEngine.isThirteenOrphans] 牌型计数详情:
+[DEBUG]: [RuleEngine.isThirteenOrphans]   - 1风: 1张
+[DEBUG]: [RuleEngine.isThirteenOrphans]   - 2风: 1张
+[DEBUG]: [RuleEngine.isThirteenOrphans]   - 3风: 1张
+[DEBUG]: [RuleEngine.isThirteenOrphans]   - 4风: 1张
+[DEBUG]: [RuleEngine.isThirteenOrphans]   - 1箭: 1张
+[DEBUG]: [RuleEngine.isThirteenOrphans]   - 2箭: 1张
+[DEBUG]: [RuleEngine.isThirteenOrphans]   - 3箭: 1张
+[DEBUG]: [RuleEngine.isThirteenOrphans]   - 1条: 1张
+[DEBUG]: [RuleEngine.isThirteenOrphans]   - 9条: 1张
+[DEBUG]: [RuleEngine.isThirteenOrphans]   - 1筒: 1张
+[DEBUG]: [RuleEngine.isThirteenOrphans]   - 9筒: 1张
+[DEBUG]: [RuleEngine.isThirteenOrphans]   - 1万: 2张
+[DEBUG]: [RuleEngine.isThirteenOrphans]   - 9万: 1张
+[DEBUG]: [RuleEngine.isThirteenOrphans] 确认为十三幺，对子是: 1万
+[DEBUG]: [RuleEngine.isPengPengHu] 检查是否为碰碰胡，手牌数量=14，已亮出牌组数量=0
+[DEBUG]: [RuleEngine.isPengPengHu] 手牌: 东风, 南风, 西风, 北风, 中箭, 发箭, 白箭, 1条, 9条, 1筒, 9筒, 1万, 1万, 9万
+[DEBUG]: [RuleEngine.isPengPengHu] 需要从手牌中组成 4 个刻子和1个对子
+[DEBUG]: [RuleEngine.isPengPengHu] 检查牌组 风1: 1张
+[DEBUG]: [RuleEngine.isPengPengHu] 发现 1 张牌无法组成刻子或对子，不是碰碰胡
+[DEBUG]: [RuleEngine.isQingYiSe] 检查是否为清一色，首张牌类型: 风
+[DEBUG]: [RuleEngine.isQingYiSe] 手牌: 东风, 南风, 西风, 北风, 中箭, 发箭, 白箭, 1条, 9条, 1筒, 9筒, 1万, 1万, 9万
+[DEBUG]: [RuleEngine.isQingYiSe] 发现不同花色: 中箭, 不是清一色
+[DEBUG]: [RuleEngine.isWinningHand] 检查是否为胡牌，牌数=14
+[DEBUG]: [RuleEngine.isWinningHand] 牌组: 东风, 南风, 西风, 北风, 中箭, 发箭, 白箭, 1条, 9条, 1筒, 9筒, 1万, 1万, 9万
+[DEBUG]: [RuleEngine.isSevenPairs] 检查是否为七对，牌数=14
+[DEBUG]: [RuleEngine.isSevenPairs] 牌组详情: 东风, 南风, 西风, 北风, 中箭, 发箭, 白箭, 1条, 9条, 1筒, 9筒, 1万, 1万, 9万
+[DEBUG]: [RuleEngine.isSevenPairs] 牌型计数详情:
+[DEBUG]: [RuleEngine.isSevenPairs]   - 风1: 1张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 风2: 1张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 风3: 1张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 风4: 1张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 箭1: 1张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 箭2: 1张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 箭3: 1张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 条1: 1张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 条9: 1张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 筒1: 1张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 筒9: 1张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 万1: 2张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 万9: 1张
+[DEBUG]: [RuleEngine.isSevenPairs] 发现非对子牌: 风_1, 数量=1
+[DEBUG]: [RuleEngine.isSevenPairs] 发现非对子牌: 风_2, 数量=1
+[DEBUG]: [RuleEngine.isSevenPairs] 发现非对子牌: 风_3, 数量=1
+[DEBUG]: [RuleEngine.isSevenPairs] 发现非对子牌: 风_4, 数量=1
+[DEBUG]: [RuleEngine.isSevenPairs] 发现非对子牌: 箭_1, 数量=1
+[DEBUG]: [RuleEngine.isSevenPairs] 发现非对子牌: 箭_2, 数量=1
+[DEBUG]: [RuleEngine.isSevenPairs] 发现非对子牌: 箭_3, 数量=1
+[DEBUG]: [RuleEngine.isSevenPairs] 发现非对子牌: 条_1, 数量=1
+[DEBUG]: [RuleEngine.isSevenPairs] 发现非对子牌: 条_9, 数量=1
+[DEBUG]: [RuleEngine.isSevenPairs] 发现非对子牌: 筒_1, 数量=1
+[DEBUG]: [RuleEngine.isSevenPairs] 发现非对子牌: 筒_9, 数量=1
+[DEBUG]: [RuleEngine.isSevenPairs] 发现非对子牌: 万_9, 数量=1
+[DEBUG]: [RuleEngine.isSevenPairs] 存在非对子数量的牌，不是七对
+[DEBUG]: [RuleEngine.isThirteenOrphans] 检查是否为十三幺，牌数=14
+[DEBUG]: [RuleEngine.isThirteenOrphans] 牌组详情: 东风, 南风, 西风, 北风, 中箭, 发箭, 白箭, 1条, 9条, 1筒, 9筒, 1万, 1万, 9万
+[DEBUG]: [RuleEngine.isThirteenOrphans] 开始检查13种必要牌是否都存在
+[DEBUG]: [RuleEngine.isThirteenOrphans] 所有13种必要牌都存在，继续检查是否有一个对子
+[DEBUG]: [RuleEngine.isThirteenOrphans] 牌型计数详情:
+[DEBUG]: [RuleEngine.isThirteenOrphans]   - 1风: 1张
+[DEBUG]: [RuleEngine.isThirteenOrphans]   - 2风: 1张
+[DEBUG]: [RuleEngine.isThirteenOrphans]   - 3风: 1张
+[DEBUG]: [RuleEngine.isThirteenOrphans]   - 4风: 1张
+[DEBUG]: [RuleEngine.isThirteenOrphans]   - 1箭: 1张
+[DEBUG]: [RuleEngine.isThirteenOrphans]   - 2箭: 1张
+[DEBUG]: [RuleEngine.isThirteenOrphans]   - 3箭: 1张
+[DEBUG]: [RuleEngine.isThirteenOrphans]   - 1条: 1张
+[DEBUG]: [RuleEngine.isThirteenOrphans]   - 9条: 1张
+[DEBUG]: [RuleEngine.isThirteenOrphans]   - 1筒: 1张
+[DEBUG]: [RuleEngine.isThirteenOrphans]   - 9筒: 1张
+[DEBUG]: [RuleEngine.isThirteenOrphans]   - 1万: 2张
+[DEBUG]: [RuleEngine.isThirteenOrphans]   - 9万: 1张
+[DEBUG]: [RuleEngine.isThirteenOrphans] 确认为十三幺，对子是: 1万
+[DEBUG]: [RuleEngine.isWinningHand] 检测到十三幺，可以胡牌
+┌─────────────────── 牌型概要 ────────────────────┐
+│ 风: 东 南 西 北                                 │
+│ 箭: 中 发 白                                   │
+│ 条: 1               9                       │
+│ 筒: 1               9                       │
+│ 万: 12               9                      │
+├──────────────── 牌型分析 ──────────────────┤
+│ 对子: 1   刻子: 0   顺子可能性: 0.0                 │
+├──────────────── 特殊牌型 ──────────────────┤
+│ 七对: ✗   十三幺: ✓                             │
+│ 碰碰胡: ✗   清一色: ✗                            │
+├─────────────────────────────────────────────┤
+│ 和牌: ✓ 可以和牌                                 │
+└─────────────────────────────────────────────┘
+
+测试七对逻辑:
+[DEBUG]: [RuleEngine.testSevenPairs] 开始测试七对牌型
+[DEBUG]: [RuleEngine.testSevenPairs] 测试牌型: 1万, 1万, 3万, 3万, 5万, 5万, 7万, 7万, 9万, 9万, 东风, 东风, 中箭, 中箭
+[DEBUG]: [RuleEngine.isSevenPairs] 检查是否为七对，牌数=14
+[DEBUG]: [RuleEngine.isSevenPairs] 牌组详情: 1万, 1万, 3万, 3万, 5万, 5万, 7万, 7万, 9万, 9万, 东风, 东风, 中箭, 中箭
+[DEBUG]: [RuleEngine.isSevenPairs] 牌型计数详情:
+[DEBUG]: [RuleEngine.isSevenPairs]   - 万1: 2张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 万3: 2张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 万5: 2张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 万7: 2张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 万9: 2张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 风1: 2张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 箭1: 2张
+[DEBUG]: [RuleEngine.isSevenPairs] 检测到7组对子，确认为七对
+[DEBUG]: [RuleEngine.testSevenPairs] 测试结果: ✓ 测试通过
+[DEBUG]: [RuleEngine.isWinningHand] 检查是否为胡牌，牌数=14
+[DEBUG]: [RuleEngine.isWinningHand] 牌组: 1万, 1万, 3万, 3万, 5万, 5万, 7万, 7万, 9万, 9万, 东风, 东风, 中箭, 中箭
+[DEBUG]: [RuleEngine.isSevenPairs] 检查是否为七对，牌数=14
+[DEBUG]: [RuleEngine.isSevenPairs] 牌组详情: 1万, 1万, 3万, 3万, 5万, 5万, 7万, 7万, 9万, 9万, 东风, 东风, 中箭, 中箭
+[DEBUG]: [RuleEngine.isSevenPairs] 牌型计数详情:
+[DEBUG]: [RuleEngine.isSevenPairs]   - 万1: 2张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 万3: 2张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 万5: 2张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 万7: 2张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 万9: 2张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 风1: 2张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 箭1: 2张
+[DEBUG]: [RuleEngine.isSevenPairs] 检测到7组对子，确认为七对
+[DEBUG]: [RuleEngine.isWinningHand] 检测到七对，可以胡牌
+[DEBUG]: [RuleEngine.testSevenPairs] 同时检查是否符合和牌条件: ✓ 是
+[DEBUG]: [RuleEngine.isSevenPairs] 检查是否为七对，牌数=14
+[DEBUG]: [RuleEngine.isSevenPairs] 牌组详情: 东风, 东风, 中箭, 中箭, 1万, 1万, 3万, 3万, 5万, 5万, 7万, 7万, 9万, 9万
+[DEBUG]: [RuleEngine.isSevenPairs] 牌型计数详情:
+[DEBUG]: [RuleEngine.isSevenPairs]   - 风1: 2张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 箭1: 2张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 万1: 2张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 万3: 2张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 万5: 2张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 万7: 2张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 万9: 2张
+[DEBUG]: [RuleEngine.isSevenPairs] 检测到7组对子，确认为七对
+[DEBUG]: [RuleEngine.isThirteenOrphans] 检查是否为十三幺，牌数=14
+[DEBUG]: [RuleEngine.isThirteenOrphans] 牌组详情: 东风, 东风, 中箭, 中箭, 1万, 1万, 3万, 3万, 5万, 5万, 7万, 7万, 9万, 9万
+[DEBUG]: [RuleEngine.isThirteenOrphans] 开始检查13种必要牌是否都存在
+[DEBUG]: [RuleEngine.isThirteenOrphans] 缺少必要牌: 1条
+[DEBUG]: [RuleEngine.isThirteenOrphans] 缺少必要牌: 9条
+[DEBUG]: [RuleEngine.isThirteenOrphans] 缺少必要牌: 1筒
+[DEBUG]: [RuleEngine.isThirteenOrphans] 缺少必要牌: 9筒
+[DEBUG]: [RuleEngine.isThirteenOrphans] 缺少必要牌: 2风
+[DEBUG]: [RuleEngine.isThirteenOrphans] 缺少必要牌: 3风
+[DEBUG]: [RuleEngine.isThirteenOrphans] 缺少必要牌: 4风
+[DEBUG]: [RuleEngine.isThirteenOrphans] 缺少必要牌: 2箭
+[DEBUG]: [RuleEngine.isThirteenOrphans] 缺少必要牌: 3箭
+[DEBUG]: [RuleEngine.isThirteenOrphans] 共缺少9种必要牌，不是十三幺
+[DEBUG]: [RuleEngine.isPengPengHu] 检查是否为碰碰胡，手牌数量=14，已亮出牌组数量=0
+[DEBUG]: [RuleEngine.isPengPengHu] 手牌: 东风, 东风, 中箭, 中箭, 1万, 1万, 3万, 3万, 5万, 5万, 7万, 7万, 9万, 9万
+[DEBUG]: [RuleEngine.isPengPengHu] 需要从手牌中组成 4 个刻子和1个对子
+[DEBUG]: [RuleEngine.isPengPengHu] 检查牌组 风1: 2张
+[DEBUG]: [RuleEngine.isPengPengHu] 找到对子: 东风, 东风
+[DEBUG]: [RuleEngine.isPengPengHu] 检查牌组 箭1: 2张
+[DEBUG]: [RuleEngine.isPengPengHu] 已经找到对子，但又发现一个对子，不是碰碰胡
+[DEBUG]: [RuleEngine.isQingYiSe] 检查是否为清一色，首张牌类型: 风
+[DEBUG]: [RuleEngine.isQingYiSe] 手牌: 东风, 东风, 中箭, 中箭, 1万, 1万, 3万, 3万, 5万, 5万, 7万, 7万, 9万, 9万
+[DEBUG]: [RuleEngine.isQingYiSe] 发现不同花色: 中箭, 不是清一色
+[DEBUG]: [RuleEngine.isWinningHand] 检查是否为胡牌，牌数=14
+[DEBUG]: [RuleEngine.isWinningHand] 牌组: 东风, 东风, 中箭, 中箭, 1万, 1万, 3万, 3万, 5万, 5万, 7万, 7万, 9万, 9万
+[DEBUG]: [RuleEngine.isSevenPairs] 检查是否为七对，牌数=14
+[DEBUG]: [RuleEngine.isSevenPairs] 牌组详情: 东风, 东风, 中箭, 中箭, 1万, 1万, 3万, 3万, 5万, 5万, 7万, 7万, 9万, 9万
+[DEBUG]: [RuleEngine.isSevenPairs] 牌型计数详情:
+[DEBUG]: [RuleEngine.isSevenPairs]   - 风1: 2张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 箭1: 2张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 万1: 2张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 万3: 2张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 万5: 2张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 万7: 2张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 万9: 2张
+[DEBUG]: [RuleEngine.isSevenPairs] 检测到7组对子，确认为七对
+[DEBUG]: [RuleEngine.isWinningHand] 检测到七对，可以胡牌
+┌─────────────────── 牌型概要 ────────────────────┐
+│ 风: 东2                                      │
+│ 箭: 中2                                      │
+│ 万: 12   32   52   72   92                  │
+├──────────────── 牌型分析 ──────────────────┤
+│ 对子: 7   刻子: 0   顺子可能性: 2.0                 │
+├──────────────── 特殊牌型 ──────────────────┤
+│ 七对: ✓   十三幺: ✗                             │
+│ 碰碰胡: ✗   清一色: ✗                            │
+├─────────────────────────────────────────────┤
+│ 和牌: ✓ 可以和牌                                 │
+└─────────────────────────────────────────────┘
+
+测试风牌处理逻辑:
+[DEBUG]: [RuleEngine.testWindTiles] 开始测试四种风牌处理
+[DEBUG]: [RuleEngine.testWindTiles] 测试牌型: 东风, 东风, 东风, 南风, 南风, 南风, 西风, 西风, 西风, 北风, 北风, 北风, 中箭, 中箭
+[DEBUG]: [RuleEngine.testWindTiles] 排序后牌型: 东风, 东风, 东风, 南风, 南风, 南风, 西风, 西风, 西风, 北风, 北风, 北风, 中箭, 中箭
+[DEBUG]: [RuleEngine.isWinningHand] 检查是否为胡牌，牌数=14
+[DEBUG]: [RuleEngine.isWinningHand] 牌组: 东风, 东风, 东风, 南风, 南风, 南风, 西风, 西风, 西风, 北风, 北风, 北风, 中箭, 中箭
+[DEBUG]: [RuleEngine.isSevenPairs] 检查是否为七对，牌数=14
+[DEBUG]: [RuleEngine.isSevenPairs] 牌组详情: 东风, 东风, 东风, 南风, 南风, 南风, 西风, 西风, 西风, 北风, 北风, 北风, 中箭, 中箭
+[DEBUG]: [RuleEngine.isSevenPairs] 牌型计数详情:
+[DEBUG]: [RuleEngine.isSevenPairs]   - 风1: 3张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 风2: 3张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 风3: 3张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 风4: 3张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 箭1: 2张
+[DEBUG]: [RuleEngine.isSevenPairs] 发现非对子牌: 风_1, 数量=3
+[DEBUG]: [RuleEngine.isSevenPairs] 发现非对子牌: 风_2, 数量=3
+[DEBUG]: [RuleEngine.isSevenPairs] 发现非对子牌: 风_3, 数量=3
+[DEBUG]: [RuleEngine.isSevenPairs] 发现非对子牌: 风_4, 数量=3
+[DEBUG]: [RuleEngine.isSevenPairs] 存在非对子数量的牌，不是七对
+[DEBUG]: [RuleEngine.isThirteenOrphans] 检查是否为十三幺，牌数=14
+[DEBUG]: [RuleEngine.isThirteenOrphans] 牌组详情: 东风, 东风, 东风, 南风, 南风, 南风, 西风, 西风, 西风, 北风, 北风, 北风, 中箭, 中箭
+[DEBUG]: [RuleEngine.isThirteenOrphans] 开始检查13种必要牌是否都存在
+[DEBUG]: [RuleEngine.isThirteenOrphans] 缺少必要牌: 1万
+[DEBUG]: [RuleEngine.isThirteenOrphans] 缺少必要牌: 9万
+[DEBUG]: [RuleEngine.isThirteenOrphans] 缺少必要牌: 1条
+[DEBUG]: [RuleEngine.isThirteenOrphans] 缺少必要牌: 9条
+[DEBUG]: [RuleEngine.isThirteenOrphans] 缺少必要牌: 1筒
+[DEBUG]: [RuleEngine.isThirteenOrphans] 缺少必要牌: 9筒
+[DEBUG]: [RuleEngine.isThirteenOrphans] 缺少必要牌: 2箭
+[DEBUG]: [RuleEngine.isThirteenOrphans] 缺少必要牌: 3箭
+[DEBUG]: [RuleEngine.isThirteenOrphans] 共缺少8种必要牌，不是十三幺
+[DEBUG]: [RuleEngine.isPengPengHu] 检查是否为碰碰胡，手牌数量=14，已亮出牌组数量=0
+[DEBUG]: [RuleEngine.isPengPengHu] 手牌: 东风, 东风, 东风, 南风, 南风, 南风, 西风, 西风, 西风, 北风, 北风, 北风, 中箭, 中箭
+[DEBUG]: [RuleEngine.isPengPengHu] 需要从手牌中组成 4 个刻子和1个对子
+[DEBUG]: [RuleEngine.isPengPengHu] 检查牌组 风1: 3张
+[DEBUG]: [RuleEngine.isPengPengHu] 找到刻子: 东风, 东风, 东风
+[DEBUG]: [RuleEngine.isPengPengHu] 检查牌组 风2: 3张
+[DEBUG]: [RuleEngine.isPengPengHu] 找到刻子: 南风, 南风, 南风
+[DEBUG]: [RuleEngine.isPengPengHu] 检查牌组 风3: 3张
+[DEBUG]: [RuleEngine.isPengPengHu] 找到刻子: 西风, 西风, 西风
+[DEBUG]: [RuleEngine.isPengPengHu] 检查牌组 风4: 3张
+[DEBUG]: [RuleEngine.isPengPengHu] 找到刻子: 北风, 北风, 北风
+[DEBUG]: [RuleEngine.isPengPengHu] 检查牌组 箭1: 2张
+[DEBUG]: [RuleEngine.isPengPengHu] 找到对子: 中箭, 中箭
+[DEBUG]: [RuleEngine.isPengPengHu] 检查结果: ✓ 是碰碰胡
+[DEBUG]: [RuleEngine.isPengPengHu]   - 是否找到对子: 是
+[DEBUG]: [RuleEngine.isPengPengHu]   - 刻子数量: 4, 需要: 4
+[DEBUG]: [RuleEngine.isWinningHand] 检测到碰碰胡，可以胡牌
+[DEBUG]: [RuleEngine.testWindTiles] 检查是否符合胡牌条件: ✓ 是
+[DEBUG]: [RuleEngine.isSevenPairs] 检查是否为七对，牌数=14
+[DEBUG]: [RuleEngine.isSevenPairs] 牌组详情: 东风, 东风, 东风, 南风, 南风, 南风, 西风, 西风, 西风, 北风, 北风, 北风, 中箭, 中箭
+[DEBUG]: [RuleEngine.isSevenPairs] 牌型计数详情:
+[DEBUG]: [RuleEngine.isSevenPairs]   - 风1: 3张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 风2: 3张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 风3: 3张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 风4: 3张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 箭1: 2张
+[DEBUG]: [RuleEngine.isSevenPairs] 发现非对子牌: 风_1, 数量=3
+[DEBUG]: [RuleEngine.isSevenPairs] 发现非对子牌: 风_2, 数量=3
+[DEBUG]: [RuleEngine.isSevenPairs] 发现非对子牌: 风_3, 数量=3
+[DEBUG]: [RuleEngine.isSevenPairs] 发现非对子牌: 风_4, 数量=3
+[DEBUG]: [RuleEngine.isSevenPairs] 存在非对子数量的牌，不是七对
+[DEBUG]: [RuleEngine.isThirteenOrphans] 检查是否为十三幺，牌数=14
+[DEBUG]: [RuleEngine.isThirteenOrphans] 牌组详情: 东风, 东风, 东风, 南风, 南风, 南风, 西风, 西风, 西风, 北风, 北风, 北风, 中箭, 中箭
+[DEBUG]: [RuleEngine.isThirteenOrphans] 开始检查13种必要牌是否都存在
+[DEBUG]: [RuleEngine.isThirteenOrphans] 缺少必要牌: 1万
+[DEBUG]: [RuleEngine.isThirteenOrphans] 缺少必要牌: 9万
+[DEBUG]: [RuleEngine.isThirteenOrphans] 缺少必要牌: 1条
+[DEBUG]: [RuleEngine.isThirteenOrphans] 缺少必要牌: 9条
+[DEBUG]: [RuleEngine.isThirteenOrphans] 缺少必要牌: 1筒
+[DEBUG]: [RuleEngine.isThirteenOrphans] 缺少必要牌: 9筒
+[DEBUG]: [RuleEngine.isThirteenOrphans] 缺少必要牌: 2箭
+[DEBUG]: [RuleEngine.isThirteenOrphans] 缺少必要牌: 3箭
+[DEBUG]: [RuleEngine.isThirteenOrphans] 共缺少8种必要牌，不是十三幺
+[DEBUG]: [RuleEngine.isPengPengHu] 检查是否为碰碰胡，手牌数量=14，已亮出牌组数量=0
+[DEBUG]: [RuleEngine.isPengPengHu] 手牌: 东风, 东风, 东风, 南风, 南风, 南风, 西风, 西风, 西风, 北风, 北风, 北风, 中箭, 中箭
+[DEBUG]: [RuleEngine.isPengPengHu] 需要从手牌中组成 4 个刻子和1个对子
+[DEBUG]: [RuleEngine.isPengPengHu] 检查牌组 风1: 3张
+[DEBUG]: [RuleEngine.isPengPengHu] 找到刻子: 东风, 东风, 东风
+[DEBUG]: [RuleEngine.isPengPengHu] 检查牌组 风2: 3张
+[DEBUG]: [RuleEngine.isPengPengHu] 找到刻子: 南风, 南风, 南风
+[DEBUG]: [RuleEngine.isPengPengHu] 检查牌组 风3: 3张
+[DEBUG]: [RuleEngine.isPengPengHu] 找到刻子: 西风, 西风, 西风
+[DEBUG]: [RuleEngine.isPengPengHu] 检查牌组 风4: 3张
+[DEBUG]: [RuleEngine.isPengPengHu] 找到刻子: 北风, 北风, 北风
+[DEBUG]: [RuleEngine.isPengPengHu] 检查牌组 箭1: 2张
+[DEBUG]: [RuleEngine.isPengPengHu] 找到对子: 中箭, 中箭
+[DEBUG]: [RuleEngine.isPengPengHu] 检查结果: ✓ 是碰碰胡
+[DEBUG]: [RuleEngine.isPengPengHu]   - 是否找到对子: 是
+[DEBUG]: [RuleEngine.isPengPengHu]   - 刻子数量: 4, 需要: 4
+[DEBUG]: [RuleEngine.isQingYiSe] 检查是否为清一色，首张牌类型: 风
+[DEBUG]: [RuleEngine.isQingYiSe] 手牌: 东风, 东风, 东风, 南风, 南风, 南风, 西风, 西风, 西风, 北风, 北风, 北风, 中箭, 中箭
+[DEBUG]: [RuleEngine.isQingYiSe] 发现不同花色: 中箭, 不是清一色
+[DEBUG]: [RuleEngine.isWinningHand] 检查是否为胡牌，牌数=14
+[DEBUG]: [RuleEngine.isWinningHand] 牌组: 东风, 东风, 东风, 南风, 南风, 南风, 西风, 西风, 西风, 北风, 北风, 北风, 中箭, 中箭
+[DEBUG]: [RuleEngine.isSevenPairs] 检查是否为七对，牌数=14
+[DEBUG]: [RuleEngine.isSevenPairs] 牌组详情: 东风, 东风, 东风, 南风, 南风, 南风, 西风, 西风, 西风, 北风, 北风, 北风, 中箭, 中箭
+[DEBUG]: [RuleEngine.isSevenPairs] 牌型计数详情:
+[DEBUG]: [RuleEngine.isSevenPairs]   - 风1: 3张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 风2: 3张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 风3: 3张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 风4: 3张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 箭1: 2张
+[DEBUG]: [RuleEngine.isSevenPairs] 发现非对子牌: 风_1, 数量=3
+[DEBUG]: [RuleEngine.isSevenPairs] 发现非对子牌: 风_2, 数量=3
+[DEBUG]: [RuleEngine.isSevenPairs] 发现非对子牌: 风_3, 数量=3
+[DEBUG]: [RuleEngine.isSevenPairs] 发现非对子牌: 风_4, 数量=3
+[DEBUG]: [RuleEngine.isSevenPairs] 存在非对子数量的牌，不是七对
+[DEBUG]: [RuleEngine.isThirteenOrphans] 检查是否为十三幺，牌数=14
+[DEBUG]: [RuleEngine.isThirteenOrphans] 牌组详情: 东风, 东风, 东风, 南风, 南风, 南风, 西风, 西风, 西风, 北风, 北风, 北风, 中箭, 中箭
+[DEBUG]: [RuleEngine.isThirteenOrphans] 开始检查13种必要牌是否都存在
+[DEBUG]: [RuleEngine.isThirteenOrphans] 缺少必要牌: 1万
+[DEBUG]: [RuleEngine.isThirteenOrphans] 缺少必要牌: 9万
+[DEBUG]: [RuleEngine.isThirteenOrphans] 缺少必要牌: 1条
+[DEBUG]: [RuleEngine.isThirteenOrphans] 缺少必要牌: 9条
+[DEBUG]: [RuleEngine.isThirteenOrphans] 缺少必要牌: 1筒
+[DEBUG]: [RuleEngine.isThirteenOrphans] 缺少必要牌: 9筒
+[DEBUG]: [RuleEngine.isThirteenOrphans] 缺少必要牌: 2箭
+[DEBUG]: [RuleEngine.isThirteenOrphans] 缺少必要牌: 3箭
+[DEBUG]: [RuleEngine.isThirteenOrphans] 共缺少8种必要牌，不是十三幺
+[DEBUG]: [RuleEngine.isPengPengHu] 检查是否为碰碰胡，手牌数量=14，已亮出牌组数量=0
+[DEBUG]: [RuleEngine.isPengPengHu] 手牌: 东风, 东风, 东风, 南风, 南风, 南风, 西风, 西风, 西风, 北风, 北风, 北风, 中箭, 中箭
+[DEBUG]: [RuleEngine.isPengPengHu] 需要从手牌中组成 4 个刻子和1个对子
+[DEBUG]: [RuleEngine.isPengPengHu] 检查牌组 风1: 3张
+[DEBUG]: [RuleEngine.isPengPengHu] 找到刻子: 东风, 东风, 东风
+[DEBUG]: [RuleEngine.isPengPengHu] 检查牌组 风2: 3张
+[DEBUG]: [RuleEngine.isPengPengHu] 找到刻子: 南风, 南风, 南风
+[DEBUG]: [RuleEngine.isPengPengHu] 检查牌组 风3: 3张
+[DEBUG]: [RuleEngine.isPengPengHu] 找到刻子: 西风, 西风, 西风
+[DEBUG]: [RuleEngine.isPengPengHu] 检查牌组 风4: 3张
+[DEBUG]: [RuleEngine.isPengPengHu] 找到刻子: 北风, 北风, 北风
+[DEBUG]: [RuleEngine.isPengPengHu] 检查牌组 箭1: 2张
+[DEBUG]: [RuleEngine.isPengPengHu] 找到对子: 中箭, 中箭
+[DEBUG]: [RuleEngine.isPengPengHu] 检查结果: ✓ 是碰碰胡
+[DEBUG]: [RuleEngine.isPengPengHu]   - 是否找到对子: 是
+[DEBUG]: [RuleEngine.isPengPengHu]   - 刻子数量: 4, 需要: 4
+[DEBUG]: [RuleEngine.isWinningHand] 检测到碰碰胡，可以胡牌
+┌─────────────────── 牌型概要 ────────────────────┐
+│ 风: 东3 南3 西3 北3                             │
+│ 箭: 中2                                      │
+├──────────────── 牌型分析 ──────────────────┤
+│ 对子: 1   刻子: 4   顺子可能性: 0.0                 │
+├──────────────── 特殊牌型 ──────────────────┤
+│ 七对: ✗   十三幺: ✗                             │
+│ 碰碰胡: ✓   清一色: ✗                            │
+├─────────────────────────────────────────────┤
+│ 和牌: ✓ 可以和牌                                 │
+└─────────────────────────────────────────────┘
+风牌测试结果: 通过
+
+测试箭牌处理逻辑:
+[DEBUG]: [RuleEngine.testArrowTiles] 开始测试三种箭牌处理
+[DEBUG]: [RuleEngine.testArrowTiles] 测试牌型: 中箭, 中箭, 中箭, 发箭, 发箭, 发箭, 白箭, 白箭, 白箭, 1万, 1万, 1万, 2万, 2万
+[DEBUG]: [RuleEngine.testArrowTiles] 排序后牌型: 1万, 1万, 1万, 2万, 2万, 中箭, 中箭, 中箭, 发箭, 发箭, 发箭, 白箭, 白箭, 白箭
+[DEBUG]: [RuleEngine.isWinningHand] 检查是否为胡牌，牌数=14
+[DEBUG]: [RuleEngine.isWinningHand] 牌组: 1万, 1万, 1万, 2万, 2万, 中箭, 中箭, 中箭, 发箭, 发箭, 发箭, 白箭, 白箭, 白箭
+[DEBUG]: [RuleEngine.isSevenPairs] 检查是否为七对，牌数=14
+[DEBUG]: [RuleEngine.isSevenPairs] 牌组详情: 1万, 1万, 1万, 2万, 2万, 中箭, 中箭, 中箭, 发箭, 发箭, 发箭, 白箭, 白箭, 白箭
+[DEBUG]: [RuleEngine.isSevenPairs] 牌型计数详情:
+[DEBUG]: [RuleEngine.isSevenPairs]   - 万1: 3张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 万2: 2张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 箭1: 3张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 箭2: 3张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 箭3: 3张
+[DEBUG]: [RuleEngine.isSevenPairs] 发现非对子牌: 万_1, 数量=3
+[DEBUG]: [RuleEngine.isSevenPairs] 发现非对子牌: 箭_1, 数量=3
+[DEBUG]: [RuleEngine.isSevenPairs] 发现非对子牌: 箭_2, 数量=3
+[DEBUG]: [RuleEngine.isSevenPairs] 发现非对子牌: 箭_3, 数量=3
+[DEBUG]: [RuleEngine.isSevenPairs] 存在非对子数量的牌，不是七对
+[DEBUG]: [RuleEngine.isThirteenOrphans] 检查是否为十三幺，牌数=14
+[DEBUG]: [RuleEngine.isThirteenOrphans] 牌组详情: 1万, 1万, 1万, 2万, 2万, 中箭, 中箭, 中箭, 发箭, 发箭, 发箭, 白箭, 白箭, 白箭
+[DEBUG]: [RuleEngine.isThirteenOrphans] 开始检查13种必要牌是否都存在
+[DEBUG]: [RuleEngine.isThirteenOrphans] 缺少必要牌: 9万
+[DEBUG]: [RuleEngine.isThirteenOrphans] 缺少必要牌: 1条
+[DEBUG]: [RuleEngine.isThirteenOrphans] 缺少必要牌: 9条
+[DEBUG]: [RuleEngine.isThirteenOrphans] 缺少必要牌: 1筒
+[DEBUG]: [RuleEngine.isThirteenOrphans] 缺少必要牌: 9筒
+[DEBUG]: [RuleEngine.isThirteenOrphans] 缺少必要牌: 1风
+[DEBUG]: [RuleEngine.isThirteenOrphans] 缺少必要牌: 2风
+[DEBUG]: [RuleEngine.isThirteenOrphans] 缺少必要牌: 3风
+[DEBUG]: [RuleEngine.isThirteenOrphans] 缺少必要牌: 4风
+[DEBUG]: [RuleEngine.isThirteenOrphans] 共缺少9种必要牌，不是十三幺
+[DEBUG]: [RuleEngine.isPengPengHu] 检查是否为碰碰胡，手牌数量=14，已亮出牌组数量=0
+[DEBUG]: [RuleEngine.isPengPengHu] 手牌: 1万, 1万, 1万, 2万, 2万, 中箭, 中箭, 中箭, 发箭, 发箭, 发箭, 白箭, 白箭, 白箭
+[DEBUG]: [RuleEngine.isPengPengHu] 需要从手牌中组成 4 个刻子和1个对子
+[DEBUG]: [RuleEngine.isPengPengHu] 检查牌组 万1: 3张
+[DEBUG]: [RuleEngine.isPengPengHu] 找到刻子: 1万, 1万, 1万
+[DEBUG]: [RuleEngine.isPengPengHu] 检查牌组 万2: 2张
+[DEBUG]: [RuleEngine.isPengPengHu] 找到对子: 2万, 2万
+[DEBUG]: [RuleEngine.isPengPengHu] 检查牌组 箭1: 3张
+[DEBUG]: [RuleEngine.isPengPengHu] 找到刻子: 中箭, 中箭, 中箭
+[DEBUG]: [RuleEngine.isPengPengHu] 检查牌组 箭2: 3张
+[DEBUG]: [RuleEngine.isPengPengHu] 找到刻子: 发箭, 发箭, 发箭
+[DEBUG]: [RuleEngine.isPengPengHu] 检查牌组 箭3: 3张
+[DEBUG]: [RuleEngine.isPengPengHu] 找到刻子: 白箭, 白箭, 白箭
+[DEBUG]: [RuleEngine.isPengPengHu] 检查结果: ✓ 是碰碰胡
+[DEBUG]: [RuleEngine.isPengPengHu]   - 是否找到对子: 是
+[DEBUG]: [RuleEngine.isPengPengHu]   - 刻子数量: 4, 需要: 4
+[DEBUG]: [RuleEngine.isWinningHand] 检测到碰碰胡，可以胡牌
+[DEBUG]: [RuleEngine.testArrowTiles] 检查是否符合胡牌条件: ✓ 是
+[DEBUG]: [RuleEngine.isSevenPairs] 检查是否为七对，牌数=14
+[DEBUG]: [RuleEngine.isSevenPairs] 牌组详情: 中箭, 中箭, 中箭, 发箭, 发箭, 发箭, 白箭, 白箭, 白箭, 1万, 1万, 1万, 2万, 2万
+[DEBUG]: [RuleEngine.isSevenPairs] 牌型计数详情:
+[DEBUG]: [RuleEngine.isSevenPairs]   - 箭1: 3张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 箭2: 3张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 箭3: 3张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 万1: 3张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 万2: 2张
+[DEBUG]: [RuleEngine.isSevenPairs] 发现非对子牌: 箭_1, 数量=3
+[DEBUG]: [RuleEngine.isSevenPairs] 发现非对子牌: 箭_2, 数量=3
+[DEBUG]: [RuleEngine.isSevenPairs] 发现非对子牌: 箭_3, 数量=3
+[DEBUG]: [RuleEngine.isSevenPairs] 发现非对子牌: 万_1, 数量=3
+[DEBUG]: [RuleEngine.isSevenPairs] 存在非对子数量的牌，不是七对
+[DEBUG]: [RuleEngine.isThirteenOrphans] 检查是否为十三幺，牌数=14
+[DEBUG]: [RuleEngine.isThirteenOrphans] 牌组详情: 中箭, 中箭, 中箭, 发箭, 发箭, 发箭, 白箭, 白箭, 白箭, 1万, 1万, 1万, 2万, 2万
+[DEBUG]: [RuleEngine.isThirteenOrphans] 开始检查13种必要牌是否都存在
+[DEBUG]: [RuleEngine.isThirteenOrphans] 缺少必要牌: 9万
+[DEBUG]: [RuleEngine.isThirteenOrphans] 缺少必要牌: 1条
+[DEBUG]: [RuleEngine.isThirteenOrphans] 缺少必要牌: 9条
+[DEBUG]: [RuleEngine.isThirteenOrphans] 缺少必要牌: 1筒
+[DEBUG]: [RuleEngine.isThirteenOrphans] 缺少必要牌: 9筒
+[DEBUG]: [RuleEngine.isThirteenOrphans] 缺少必要牌: 1风
+[DEBUG]: [RuleEngine.isThirteenOrphans] 缺少必要牌: 2风
+[DEBUG]: [RuleEngine.isThirteenOrphans] 缺少必要牌: 3风
+[DEBUG]: [RuleEngine.isThirteenOrphans] 缺少必要牌: 4风
+[DEBUG]: [RuleEngine.isThirteenOrphans] 共缺少9种必要牌，不是十三幺
+[DEBUG]: [RuleEngine.isPengPengHu] 检查是否为碰碰胡，手牌数量=14，已亮出牌组数量=0
+[DEBUG]: [RuleEngine.isPengPengHu] 手牌: 中箭, 中箭, 中箭, 发箭, 发箭, 发箭, 白箭, 白箭, 白箭, 1万, 1万, 1万, 2万, 2万
+[DEBUG]: [RuleEngine.isPengPengHu] 需要从手牌中组成 4 个刻子和1个对子
+[DEBUG]: [RuleEngine.isPengPengHu] 检查牌组 箭1: 3张
+[DEBUG]: [RuleEngine.isPengPengHu] 找到刻子: 中箭, 中箭, 中箭
+[DEBUG]: [RuleEngine.isPengPengHu] 检查牌组 箭2: 3张
+[DEBUG]: [RuleEngine.isPengPengHu] 找到刻子: 发箭, 发箭, 发箭
+[DEBUG]: [RuleEngine.isPengPengHu] 检查牌组 箭3: 3张
+[DEBUG]: [RuleEngine.isPengPengHu] 找到刻子: 白箭, 白箭, 白箭
+[DEBUG]: [RuleEngine.isPengPengHu] 检查牌组 万1: 3张
+[DEBUG]: [RuleEngine.isPengPengHu] 找到刻子: 1万, 1万, 1万
+[DEBUG]: [RuleEngine.isPengPengHu] 检查牌组 万2: 2张
+[DEBUG]: [RuleEngine.isPengPengHu] 找到对子: 2万, 2万
+[DEBUG]: [RuleEngine.isPengPengHu] 检查结果: ✓ 是碰碰胡
+[DEBUG]: [RuleEngine.isPengPengHu]   - 是否找到对子: 是
+[DEBUG]: [RuleEngine.isPengPengHu]   - 刻子数量: 4, 需要: 4
+[DEBUG]: [RuleEngine.isQingYiSe] 检查是否为清一色，首张牌类型: 箭
+[DEBUG]: [RuleEngine.isQingYiSe] 手牌: 中箭, 中箭, 中箭, 发箭, 发箭, 发箭, 白箭, 白箭, 白箭, 1万, 1万, 1万, 2万, 2万
+[DEBUG]: [RuleEngine.isQingYiSe] 发现不同花色: 1万, 不是清一色
+[DEBUG]: [RuleEngine.isWinningHand] 检查是否为胡牌，牌数=14
+[DEBUG]: [RuleEngine.isWinningHand] 牌组: 中箭, 中箭, 中箭, 发箭, 发箭, 发箭, 白箭, 白箭, 白箭, 1万, 1万, 1万, 2万, 2万
+[DEBUG]: [RuleEngine.isSevenPairs] 检查是否为七对，牌数=14
+[DEBUG]: [RuleEngine.isSevenPairs] 牌组详情: 中箭, 中箭, 中箭, 发箭, 发箭, 发箭, 白箭, 白箭, 白箭, 1万, 1万, 1万, 2万, 2万
+[DEBUG]: [RuleEngine.isSevenPairs] 牌型计数详情:
+[DEBUG]: [RuleEngine.isSevenPairs]   - 箭1: 3张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 箭2: 3张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 箭3: 3张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 万1: 3张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 万2: 2张
+[DEBUG]: [RuleEngine.isSevenPairs] 发现非对子牌: 箭_1, 数量=3
+[DEBUG]: [RuleEngine.isSevenPairs] 发现非对子牌: 箭_2, 数量=3
+[DEBUG]: [RuleEngine.isSevenPairs] 发现非对子牌: 箭_3, 数量=3
+[DEBUG]: [RuleEngine.isSevenPairs] 发现非对子牌: 万_1, 数量=3
+[DEBUG]: [RuleEngine.isSevenPairs] 存在非对子数量的牌，不是七对
+[DEBUG]: [RuleEngine.isThirteenOrphans] 检查是否为十三幺，牌数=14
+[DEBUG]: [RuleEngine.isThirteenOrphans] 牌组详情: 中箭, 中箭, 中箭, 发箭, 发箭, 发箭, 白箭, 白箭, 白箭, 1万, 1万, 1万, 2万, 2万
+[DEBUG]: [RuleEngine.isThirteenOrphans] 开始检查13种必要牌是否都存在
+[DEBUG]: [RuleEngine.isThirteenOrphans] 缺少必要牌: 9万
+[DEBUG]: [RuleEngine.isThirteenOrphans] 缺少必要牌: 1条
+[DEBUG]: [RuleEngine.isThirteenOrphans] 缺少必要牌: 9条
+[DEBUG]: [RuleEngine.isThirteenOrphans] 缺少必要牌: 1筒
+[DEBUG]: [RuleEngine.isThirteenOrphans] 缺少必要牌: 9筒
+[DEBUG]: [RuleEngine.isThirteenOrphans] 缺少必要牌: 1风
+[DEBUG]: [RuleEngine.isThirteenOrphans] 缺少必要牌: 2风
+[DEBUG]: [RuleEngine.isThirteenOrphans] 缺少必要牌: 3风
+[DEBUG]: [RuleEngine.isThirteenOrphans] 缺少必要牌: 4风
+[DEBUG]: [RuleEngine.isThirteenOrphans] 共缺少9种必要牌，不是十三幺
+[DEBUG]: [RuleEngine.isPengPengHu] 检查是否为碰碰胡，手牌数量=14，已亮出牌组数量=0
+[DEBUG]: [RuleEngine.isPengPengHu] 手牌: 中箭, 中箭, 中箭, 发箭, 发箭, 发箭, 白箭, 白箭, 白箭, 1万, 1万, 1万, 2万, 2万
+[DEBUG]: [RuleEngine.isPengPengHu] 需要从手牌中组成 4 个刻子和1个对子
+[DEBUG]: [RuleEngine.isPengPengHu] 检查牌组 箭1: 3张
+[DEBUG]: [RuleEngine.isPengPengHu] 找到刻子: 中箭, 中箭, 中箭
+[DEBUG]: [RuleEngine.isPengPengHu] 检查牌组 箭2: 3张
+[DEBUG]: [RuleEngine.isPengPengHu] 找到刻子: 发箭, 发箭, 发箭
+[DEBUG]: [RuleEngine.isPengPengHu] 检查牌组 箭3: 3张
+[DEBUG]: [RuleEngine.isPengPengHu] 找到刻子: 白箭, 白箭, 白箭
+[DEBUG]: [RuleEngine.isPengPengHu] 检查牌组 万1: 3张
+[DEBUG]: [RuleEngine.isPengPengHu] 找到刻子: 1万, 1万, 1万
+[DEBUG]: [RuleEngine.isPengPengHu] 检查牌组 万2: 2张
+[DEBUG]: [RuleEngine.isPengPengHu] 找到对子: 2万, 2万
+[DEBUG]: [RuleEngine.isPengPengHu] 检查结果: ✓ 是碰碰胡
+[DEBUG]: [RuleEngine.isPengPengHu]   - 是否找到对子: 是
+[DEBUG]: [RuleEngine.isPengPengHu]   - 刻子数量: 4, 需要: 4
+[DEBUG]: [RuleEngine.isWinningHand] 检测到碰碰胡，可以胡牌
+┌─────────────────── 牌型概要 ────────────────────┐
+│ 箭: 中3 发3 白3                                │
+│ 万: 13 22                                   │
+├──────────────── 牌型分析 ──────────────────┤
+│ 对子: 1   刻子: 4   顺子可能性: 0.5                 │
+├──────────────── 特殊牌型 ──────────────────┤
+│ 七对: ✗   十三幺: ✗                             │
+│ 碰碰胡: ✓   清一色: ✗                            │
+├─────────────────────────────────────────────┤
+│ 和牌: ✓ 可以和牌                                 │
+└─────────────────────────────────────────────┘
+箭牌测试结果: 通过
+
+测试所有特殊牌型胡牌功能:
+[RuleEngine.testAllSpecialHuFunctions] 开始测试特殊牌型胡牌功能
+[DEBUG]: [RuleEngine.testStandardHu] 开始测试标准和牌逻辑
+[DEBUG]: [RuleEngine.testStandardHu] 测试牌型: 1万, 1万, 1万, 4万, 4万, 4万, 7万, 7万, 7万, 2条, 2条, 2条, 9条, 9条
+[DEBUG]: [RuleEngine.isWinningHand] 检查是否为胡牌，牌数=14
+[DEBUG]: [RuleEngine.isWinningHand] 牌组: 1万, 1万, 1万, 4万, 4万, 4万, 7万, 7万, 7万, 2条, 2条, 2条, 9条, 9条
+[DEBUG]: [RuleEngine.isSevenPairs] 检查是否为七对，牌数=14
+[DEBUG]: [RuleEngine.isSevenPairs] 牌组详情: 1万, 1万, 1万, 4万, 4万, 4万, 7万, 7万, 7万, 2条, 2条, 2条, 9条, 9条
+[DEBUG]: [RuleEngine.isSevenPairs] 牌型计数详情:
+[DEBUG]: [RuleEngine.isSevenPairs]   - 万1: 3张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 万4: 3张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 万7: 3张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 条2: 3张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 条9: 2张
+[DEBUG]: [RuleEngine.isSevenPairs] 发现非对子牌: 万_1, 数量=3
+[DEBUG]: [RuleEngine.isSevenPairs] 发现非对子牌: 万_4, 数量=3
+[DEBUG]: [RuleEngine.isSevenPairs] 发现非对子牌: 万_7, 数量=3
+[DEBUG]: [RuleEngine.isSevenPairs] 发现非对子牌: 条_2, 数量=3
+[DEBUG]: [RuleEngine.isSevenPairs] 存在非对子数量的牌，不是七对
+[DEBUG]: [RuleEngine.isThirteenOrphans] 检查是否为十三幺，牌数=14
+[DEBUG]: [RuleEngine.isThirteenOrphans] 牌组详情: 1万, 1万, 1万, 4万, 4万, 4万, 7万, 7万, 7万, 2条, 2条, 2条, 9条, 9条
+[DEBUG]: [RuleEngine.isThirteenOrphans] 开始检查13种必要牌是否都存在
+[DEBUG]: [RuleEngine.isThirteenOrphans] 缺少必要牌: 9万
+[DEBUG]: [RuleEngine.isThirteenOrphans] 缺少必要牌: 1条
+[DEBUG]: [RuleEngine.isThirteenOrphans] 缺少必要牌: 1筒
+[DEBUG]: [RuleEngine.isThirteenOrphans] 缺少必要牌: 9筒
+[DEBUG]: [RuleEngine.isThirteenOrphans] 缺少必要牌: 1风
+[DEBUG]: [RuleEngine.isThirteenOrphans] 缺少必要牌: 2风
+[DEBUG]: [RuleEngine.isThirteenOrphans] 缺少必要牌: 3风
+[DEBUG]: [RuleEngine.isThirteenOrphans] 缺少必要牌: 4风
+[DEBUG]: [RuleEngine.isThirteenOrphans] 缺少必要牌: 1箭
+[DEBUG]: [RuleEngine.isThirteenOrphans] 缺少必要牌: 2箭
+[DEBUG]: [RuleEngine.isThirteenOrphans] 缺少必要牌: 3箭
+[DEBUG]: [RuleEngine.isThirteenOrphans] 共缺少11种必要牌，不是十三幺
+[DEBUG]: [RuleEngine.isPengPengHu] 检查是否为碰碰胡，手牌数量=14，已亮出牌组数量=0
+[DEBUG]: [RuleEngine.isPengPengHu] 手牌: 1万, 1万, 1万, 4万, 4万, 4万, 7万, 7万, 7万, 2条, 2条, 2条, 9条, 9条
+[DEBUG]: [RuleEngine.isPengPengHu] 需要从手牌中组成 4 个刻子和1个对子
+[DEBUG]: [RuleEngine.isPengPengHu] 检查牌组 万1: 3张
+[DEBUG]: [RuleEngine.isPengPengHu] 找到刻子: 1万, 1万, 1万
+[DEBUG]: [RuleEngine.isPengPengHu] 检查牌组 万4: 3张
+[DEBUG]: [RuleEngine.isPengPengHu] 找到刻子: 4万, 4万, 4万
+[DEBUG]: [RuleEngine.isPengPengHu] 检查牌组 万7: 3张
+[DEBUG]: [RuleEngine.isPengPengHu] 找到刻子: 7万, 7万, 7万
+[DEBUG]: [RuleEngine.isPengPengHu] 检查牌组 条2: 3张
+[DEBUG]: [RuleEngine.isPengPengHu] 找到刻子: 2条, 2条, 2条
+[DEBUG]: [RuleEngine.isPengPengHu] 检查牌组 条9: 2张
+[DEBUG]: [RuleEngine.isPengPengHu] 找到对子: 9条, 9条
+[DEBUG]: [RuleEngine.isPengPengHu] 检查结果: ✓ 是碰碰胡
+[DEBUG]: [RuleEngine.isPengPengHu]   - 是否找到对子: 是
+[DEBUG]: [RuleEngine.isPengPengHu]   - 刻子数量: 4, 需要: 4
+[DEBUG]: [RuleEngine.isWinningHand] 检测到碰碰胡，可以胡牌
+[DEBUG]: [RuleEngine.testStandardHu] 检查是否符合胡牌条件: ✓ 是
+[DEBUG]: [RuleEngine.isSevenPairs] 检查是否为七对，牌数=14
+[DEBUG]: [RuleEngine.isSevenPairs] 牌组详情: 2条, 2条, 2条, 9条, 9条, 1万, 1万, 1万, 4万, 4万, 4万, 7万, 7万, 7万
+[DEBUG]: [RuleEngine.isSevenPairs] 牌型计数详情:
+[DEBUG]: [RuleEngine.isSevenPairs]   - 条2: 3张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 条9: 2张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 万1: 3张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 万4: 3张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 万7: 3张
+[DEBUG]: [RuleEngine.isSevenPairs] 发现非对子牌: 条_2, 数量=3
+[DEBUG]: [RuleEngine.isSevenPairs] 发现非对子牌: 万_1, 数量=3
+[DEBUG]: [RuleEngine.isSevenPairs] 发现非对子牌: 万_4, 数量=3
+[DEBUG]: [RuleEngine.isSevenPairs] 发现非对子牌: 万_7, 数量=3
+[DEBUG]: [RuleEngine.isSevenPairs] 存在非对子数量的牌，不是七对
+[DEBUG]: [RuleEngine.isThirteenOrphans] 检查是否为十三幺，牌数=14
+[DEBUG]: [RuleEngine.isThirteenOrphans] 牌组详情: 2条, 2条, 2条, 9条, 9条, 1万, 1万, 1万, 4万, 4万, 4万, 7万, 7万, 7万
+[DEBUG]: [RuleEngine.isThirteenOrphans] 开始检查13种必要牌是否都存在
+[DEBUG]: [RuleEngine.isThirteenOrphans] 缺少必要牌: 9万
+[DEBUG]: [RuleEngine.isThirteenOrphans] 缺少必要牌: 1条
+[DEBUG]: [RuleEngine.isThirteenOrphans] 缺少必要牌: 1筒
+[DEBUG]: [RuleEngine.isThirteenOrphans] 缺少必要牌: 9筒
+[DEBUG]: [RuleEngine.isThirteenOrphans] 缺少必要牌: 1风
+[DEBUG]: [RuleEngine.isThirteenOrphans] 缺少必要牌: 2风
+[DEBUG]: [RuleEngine.isThirteenOrphans] 缺少必要牌: 3风
+[DEBUG]: [RuleEngine.isThirteenOrphans] 缺少必要牌: 4风
+[DEBUG]: [RuleEngine.isThirteenOrphans] 缺少必要牌: 1箭
+[DEBUG]: [RuleEngine.isThirteenOrphans] 缺少必要牌: 2箭
+[DEBUG]: [RuleEngine.isThirteenOrphans] 缺少必要牌: 3箭
+[DEBUG]: [RuleEngine.isThirteenOrphans] 共缺少11种必要牌，不是十三幺
+[DEBUG]: [RuleEngine.isPengPengHu] 检查是否为碰碰胡，手牌数量=14，已亮出牌组数量=0
+[DEBUG]: [RuleEngine.isPengPengHu] 手牌: 2条, 2条, 2条, 9条, 9条, 1万, 1万, 1万, 4万, 4万, 4万, 7万, 7万, 7万
+[DEBUG]: [RuleEngine.isPengPengHu] 需要从手牌中组成 4 个刻子和1个对子
+[DEBUG]: [RuleEngine.isPengPengHu] 检查牌组 条2: 3张
+[DEBUG]: [RuleEngine.isPengPengHu] 找到刻子: 2条, 2条, 2条
+[DEBUG]: [RuleEngine.isPengPengHu] 检查牌组 条9: 2张
+[DEBUG]: [RuleEngine.isPengPengHu] 找到对子: 9条, 9条
+[DEBUG]: [RuleEngine.isPengPengHu] 检查牌组 万1: 3张
+[DEBUG]: [RuleEngine.isPengPengHu] 找到刻子: 1万, 1万, 1万
+[DEBUG]: [RuleEngine.isPengPengHu] 检查牌组 万4: 3张
+[DEBUG]: [RuleEngine.isPengPengHu] 找到刻子: 4万, 4万, 4万
+[DEBUG]: [RuleEngine.isPengPengHu] 检查牌组 万7: 3张
+[DEBUG]: [RuleEngine.isPengPengHu] 找到刻子: 7万, 7万, 7万
+[DEBUG]: [RuleEngine.isPengPengHu] 检查结果: ✓ 是碰碰胡
+[DEBUG]: [RuleEngine.isPengPengHu]   - 是否找到对子: 是
+[DEBUG]: [RuleEngine.isPengPengHu]   - 刻子数量: 4, 需要: 4
+[DEBUG]: [RuleEngine.isQingYiSe] 检查是否为清一色，首张牌类型: 条
+[DEBUG]: [RuleEngine.isQingYiSe] 手牌: 2条, 2条, 2条, 9条, 9条, 1万, 1万, 1万, 4万, 4万, 4万, 7万, 7万, 7万
+[DEBUG]: [RuleEngine.isQingYiSe] 发现不同花色: 1万, 不是清一色
+[DEBUG]: [RuleEngine.isWinningHand] 检查是否为胡牌，牌数=14
+[DEBUG]: [RuleEngine.isWinningHand] 牌组: 2条, 2条, 2条, 9条, 9条, 1万, 1万, 1万, 4万, 4万, 4万, 7万, 7万, 7万
+[DEBUG]: [RuleEngine.isSevenPairs] 检查是否为七对，牌数=14
+[DEBUG]: [RuleEngine.isSevenPairs] 牌组详情: 2条, 2条, 2条, 9条, 9条, 1万, 1万, 1万, 4万, 4万, 4万, 7万, 7万, 7万
+[DEBUG]: [RuleEngine.isSevenPairs] 牌型计数详情:
+[DEBUG]: [RuleEngine.isSevenPairs]   - 条2: 3张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 条9: 2张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 万1: 3张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 万4: 3张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 万7: 3张
+[DEBUG]: [RuleEngine.isSevenPairs] 发现非对子牌: 条_2, 数量=3
+[DEBUG]: [RuleEngine.isSevenPairs] 发现非对子牌: 万_1, 数量=3
+[DEBUG]: [RuleEngine.isSevenPairs] 发现非对子牌: 万_4, 数量=3
+[DEBUG]: [RuleEngine.isSevenPairs] 发现非对子牌: 万_7, 数量=3
+[DEBUG]: [RuleEngine.isSevenPairs] 存在非对子数量的牌，不是七对
+[DEBUG]: [RuleEngine.isThirteenOrphans] 检查是否为十三幺，牌数=14
+[DEBUG]: [RuleEngine.isThirteenOrphans] 牌组详情: 2条, 2条, 2条, 9条, 9条, 1万, 1万, 1万, 4万, 4万, 4万, 7万, 7万, 7万
+[DEBUG]: [RuleEngine.isThirteenOrphans] 开始检查13种必要牌是否都存在
+[DEBUG]: [RuleEngine.isThirteenOrphans] 缺少必要牌: 9万
+[DEBUG]: [RuleEngine.isThirteenOrphans] 缺少必要牌: 1条
+[DEBUG]: [RuleEngine.isThirteenOrphans] 缺少必要牌: 1筒
+[DEBUG]: [RuleEngine.isThirteenOrphans] 缺少必要牌: 9筒
+[DEBUG]: [RuleEngine.isThirteenOrphans] 缺少必要牌: 1风
+[DEBUG]: [RuleEngine.isThirteenOrphans] 缺少必要牌: 2风
+[DEBUG]: [RuleEngine.isThirteenOrphans] 缺少必要牌: 3风
+[DEBUG]: [RuleEngine.isThirteenOrphans] 缺少必要牌: 4风
+[DEBUG]: [RuleEngine.isThirteenOrphans] 缺少必要牌: 1箭
+[DEBUG]: [RuleEngine.isThirteenOrphans] 缺少必要牌: 2箭
+[DEBUG]: [RuleEngine.isThirteenOrphans] 缺少必要牌: 3箭
+[DEBUG]: [RuleEngine.isThirteenOrphans] 共缺少11种必要牌，不是十三幺
+[DEBUG]: [RuleEngine.isPengPengHu] 检查是否为碰碰胡，手牌数量=14，已亮出牌组数量=0
+[DEBUG]: [RuleEngine.isPengPengHu] 手牌: 2条, 2条, 2条, 9条, 9条, 1万, 1万, 1万, 4万, 4万, 4万, 7万, 7万, 7万
+[DEBUG]: [RuleEngine.isPengPengHu] 需要从手牌中组成 4 个刻子和1个对子
+[DEBUG]: [RuleEngine.isPengPengHu] 检查牌组 条2: 3张
+[DEBUG]: [RuleEngine.isPengPengHu] 找到刻子: 2条, 2条, 2条
+[DEBUG]: [RuleEngine.isPengPengHu] 检查牌组 条9: 2张
+[DEBUG]: [RuleEngine.isPengPengHu] 找到对子: 9条, 9条
+[DEBUG]: [RuleEngine.isPengPengHu] 检查牌组 万1: 3张
+[DEBUG]: [RuleEngine.isPengPengHu] 找到刻子: 1万, 1万, 1万
+[DEBUG]: [RuleEngine.isPengPengHu] 检查牌组 万4: 3张
+[DEBUG]: [RuleEngine.isPengPengHu] 找到刻子: 4万, 4万, 4万
+[DEBUG]: [RuleEngine.isPengPengHu] 检查牌组 万7: 3张
+[DEBUG]: [RuleEngine.isPengPengHu] 找到刻子: 7万, 7万, 7万
+[DEBUG]: [RuleEngine.isPengPengHu] 检查结果: ✓ 是碰碰胡
+[DEBUG]: [RuleEngine.isPengPengHu]   - 是否找到对子: 是
+[DEBUG]: [RuleEngine.isPengPengHu]   - 刻子数量: 4, 需要: 4
+[DEBUG]: [RuleEngine.isWinningHand] 检测到碰碰胡，可以胡牌
+┌─────────────────── 牌型概要 ────────────────────┐
+│ 条:   23             92                     │
+│ 万: 13     43     73                        │
+├──────────────── 牌型分析 ──────────────────┤
+│ 对子: 1   刻子: 4   顺子可能性: 0.0                 │
+├──────────────── 特殊牌型 ──────────────────┤
+│ 七对: ✗   十三幺: ✗                             │
+│ 碰碰胡: ✓   清一色: ✗                            │
+├─────────────────────────────────────────────┤
+│ 和牌: ✓ 可以和牌                                 │
+└─────────────────────────────────────────────┘
+标准和牌测试结果: 通过
+[RuleEngine.testAllSpecialHuFunctions] 标准和牌测试结果: ✓ 通过
+[DEBUG]: [RuleEngine.testSevenPairs] 开始测试七对牌型
+[DEBUG]: [RuleEngine.testSevenPairs] 测试牌型: 1万, 1万, 3万, 3万, 5万, 5万, 7万, 7万, 9万, 9万, 东风, 东风, 中箭, 中箭
+[DEBUG]: [RuleEngine.isSevenPairs] 检查是否为七对，牌数=14
+[DEBUG]: [RuleEngine.isSevenPairs] 牌组详情: 1万, 1万, 3万, 3万, 5万, 5万, 7万, 7万, 9万, 9万, 东风, 东风, 中箭, 中箭
+[DEBUG]: [RuleEngine.isSevenPairs] 牌型计数详情:
+[DEBUG]: [RuleEngine.isSevenPairs]   - 万1: 2张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 万3: 2张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 万5: 2张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 万7: 2张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 万9: 2张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 风1: 2张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 箭1: 2张
+[DEBUG]: [RuleEngine.isSevenPairs] 检测到7组对子，确认为七对
+[DEBUG]: [RuleEngine.testSevenPairs] 测试结果: ✓ 测试通过
+[DEBUG]: [RuleEngine.isWinningHand] 检查是否为胡牌，牌数=14
+[DEBUG]: [RuleEngine.isWinningHand] 牌组: 1万, 1万, 3万, 3万, 5万, 5万, 7万, 7万, 9万, 9万, 东风, 东风, 中箭, 中箭
+[DEBUG]: [RuleEngine.isSevenPairs] 检查是否为七对，牌数=14
+[DEBUG]: [RuleEngine.isSevenPairs] 牌组详情: 1万, 1万, 3万, 3万, 5万, 5万, 7万, 7万, 9万, 9万, 东风, 东风, 中箭, 中箭
+[DEBUG]: [RuleEngine.isSevenPairs] 牌型计数详情:
+[DEBUG]: [RuleEngine.isSevenPairs]   - 万1: 2张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 万3: 2张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 万5: 2张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 万7: 2张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 万9: 2张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 风1: 2张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 箭1: 2张
+[DEBUG]: [RuleEngine.isSevenPairs] 检测到7组对子，确认为七对
+[DEBUG]: [RuleEngine.isWinningHand] 检测到七对，可以胡牌
+[DEBUG]: [RuleEngine.testSevenPairs] 同时检查是否符合和牌条件: ✓ 是
+[DEBUG]: [RuleEngine.isSevenPairs] 检查是否为七对，牌数=14
+[DEBUG]: [RuleEngine.isSevenPairs] 牌组详情: 东风, 东风, 中箭, 中箭, 1万, 1万, 3万, 3万, 5万, 5万, 7万, 7万, 9万, 9万
+[DEBUG]: [RuleEngine.isSevenPairs] 牌型计数详情:
+[DEBUG]: [RuleEngine.isSevenPairs]   - 风1: 2张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 箭1: 2张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 万1: 2张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 万3: 2张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 万5: 2张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 万7: 2张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 万9: 2张
+[DEBUG]: [RuleEngine.isSevenPairs] 检测到7组对子，确认为七对
+[DEBUG]: [RuleEngine.isThirteenOrphans] 检查是否为十三幺，牌数=14
+[DEBUG]: [RuleEngine.isThirteenOrphans] 牌组详情: 东风, 东风, 中箭, 中箭, 1万, 1万, 3万, 3万, 5万, 5万, 7万, 7万, 9万, 9万
+[DEBUG]: [RuleEngine.isThirteenOrphans] 开始检查13种必要牌是否都存在
+[DEBUG]: [RuleEngine.isThirteenOrphans] 缺少必要牌: 1条
+[DEBUG]: [RuleEngine.isThirteenOrphans] 缺少必要牌: 9条
+[DEBUG]: [RuleEngine.isThirteenOrphans] 缺少必要牌: 1筒
+[DEBUG]: [RuleEngine.isThirteenOrphans] 缺少必要牌: 9筒
+[DEBUG]: [RuleEngine.isThirteenOrphans] 缺少必要牌: 2风
+[DEBUG]: [RuleEngine.isThirteenOrphans] 缺少必要牌: 3风
+[DEBUG]: [RuleEngine.isThirteenOrphans] 缺少必要牌: 4风
+[DEBUG]: [RuleEngine.isThirteenOrphans] 缺少必要牌: 2箭
+[DEBUG]: [RuleEngine.isThirteenOrphans] 缺少必要牌: 3箭
+[DEBUG]: [RuleEngine.isThirteenOrphans] 共缺少9种必要牌，不是十三幺
+[DEBUG]: [RuleEngine.isPengPengHu] 检查是否为碰碰胡，手牌数量=14，已亮出牌组数量=0
+[DEBUG]: [RuleEngine.isPengPengHu] 手牌: 东风, 东风, 中箭, 中箭, 1万, 1万, 3万, 3万, 5万, 5万, 7万, 7万, 9万, 9万
+[DEBUG]: [RuleEngine.isPengPengHu] 需要从手牌中组成 4 个刻子和1个对子
+[DEBUG]: [RuleEngine.isPengPengHu] 检查牌组 风1: 2张
+[DEBUG]: [RuleEngine.isPengPengHu] 找到对子: 东风, 东风
+[DEBUG]: [RuleEngine.isPengPengHu] 检查牌组 箭1: 2张
+[DEBUG]: [RuleEngine.isPengPengHu] 已经找到对子，但又发现一个对子，不是碰碰胡
+[DEBUG]: [RuleEngine.isQingYiSe] 检查是否为清一色，首张牌类型: 风
+[DEBUG]: [RuleEngine.isQingYiSe] 手牌: 东风, 东风, 中箭, 中箭, 1万, 1万, 3万, 3万, 5万, 5万, 7万, 7万, 9万, 9万
+[DEBUG]: [RuleEngine.isQingYiSe] 发现不同花色: 中箭, 不是清一色
+[DEBUG]: [RuleEngine.isWinningHand] 检查是否为胡牌，牌数=14
+[DEBUG]: [RuleEngine.isWinningHand] 牌组: 东风, 东风, 中箭, 中箭, 1万, 1万, 3万, 3万, 5万, 5万, 7万, 7万, 9万, 9万
+[DEBUG]: [RuleEngine.isSevenPairs] 检查是否为七对，牌数=14
+[DEBUG]: [RuleEngine.isSevenPairs] 牌组详情: 东风, 东风, 中箭, 中箭, 1万, 1万, 3万, 3万, 5万, 5万, 7万, 7万, 9万, 9万
+[DEBUG]: [RuleEngine.isSevenPairs] 牌型计数详情:
+[DEBUG]: [RuleEngine.isSevenPairs]   - 风1: 2张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 箭1: 2张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 万1: 2张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 万3: 2张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 万5: 2张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 万7: 2张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 万9: 2张
+[DEBUG]: [RuleEngine.isSevenPairs] 检测到7组对子，确认为七对
+[DEBUG]: [RuleEngine.isWinningHand] 检测到七对，可以胡牌
+┌─────────────────── 牌型概要 ────────────────────┐
+│ 风: 东2                                      │
+│ 箭: 中2                                      │
+│ 万: 12   32   52   72   92                  │
+├──────────────── 牌型分析 ──────────────────┤
+│ 对子: 7   刻子: 0   顺子可能性: 2.0                 │
+├──────────────── 特殊牌型 ──────────────────┤
+│ 七对: ✓   十三幺: ✗                             │
+│ 碰碰胡: ✗   清一色: ✗                            │
+├─────────────────────────────────────────────┤
+│ 和牌: ✓ 可以和牌                                 │
+└─────────────────────────────────────────────┘
+[RuleEngine.testAllSpecialHuFunctions] 七对测试结果: ✓ 通过
+[DEBUG]: [RuleEngine.testThirteenOrphans] 开始测试十三幺牌型
+[DEBUG]: [RuleEngine.testThirteenOrphans] 测试牌型: 1万, 9万, 1筒, 9筒, 1条, 9条, 东风, 南风, 西风, 北风, 中箭, 发箭, 白箭, 1万
+[DEBUG]: [RuleEngine.isThirteenOrphans] 检查是否为十三幺，牌数=14
+[DEBUG]: [RuleEngine.isThirteenOrphans] 牌组详情: 1万, 9万, 1筒, 9筒, 1条, 9条, 东风, 南风, 西风, 北风, 中箭, 发箭, 白箭, 1万
+[DEBUG]: [RuleEngine.isThirteenOrphans] 开始检查13种必要牌是否都存在
+[DEBUG]: [RuleEngine.isThirteenOrphans] 所有13种必要牌都存在，继续检查是否有一个对子
+[DEBUG]: [RuleEngine.isThirteenOrphans] 牌型计数详情:
+[DEBUG]: [RuleEngine.isThirteenOrphans]   - 1万: 2张
+[DEBUG]: [RuleEngine.isThirteenOrphans]   - 9万: 1张
+[DEBUG]: [RuleEngine.isThirteenOrphans]   - 1筒: 1张
+[DEBUG]: [RuleEngine.isThirteenOrphans]   - 9筒: 1张
+[DEBUG]: [RuleEngine.isThirteenOrphans]   - 1条: 1张
+[DEBUG]: [RuleEngine.isThirteenOrphans]   - 9条: 1张
+[DEBUG]: [RuleEngine.isThirteenOrphans]   - 1风: 1张
+[DEBUG]: [RuleEngine.isThirteenOrphans]   - 2风: 1张
+[DEBUG]: [RuleEngine.isThirteenOrphans]   - 3风: 1张
+[DEBUG]: [RuleEngine.isThirteenOrphans]   - 4风: 1张
+[DEBUG]: [RuleEngine.isThirteenOrphans]   - 1箭: 1张
+[DEBUG]: [RuleEngine.isThirteenOrphans]   - 2箭: 1张
+[DEBUG]: [RuleEngine.isThirteenOrphans]   - 3箭: 1张
+[DEBUG]: [RuleEngine.isThirteenOrphans] 确认为十三幺，对子是: 1万
+[DEBUG]: [RuleEngine.testThirteenOrphans] 测试结果: ✓ 测试通过
+[DEBUG]: [RuleEngine.isWinningHand] 检查是否为胡牌，牌数=14
+[DEBUG]: [RuleEngine.isWinningHand] 牌组: 1万, 9万, 1筒, 9筒, 1条, 9条, 东风, 南风, 西风, 北风, 中箭, 发箭, 白箭, 1万
+[DEBUG]: [RuleEngine.isSevenPairs] 检查是否为七对，牌数=14
+[DEBUG]: [RuleEngine.isSevenPairs] 牌组详情: 1万, 9万, 1筒, 9筒, 1条, 9条, 东风, 南风, 西风, 北风, 中箭, 发箭, 白箭, 1万
+[DEBUG]: [RuleEngine.isSevenPairs] 牌型计数详情:
+[DEBUG]: [RuleEngine.isSevenPairs]   - 万1: 2张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 万9: 1张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 筒1: 1张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 筒9: 1张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 条1: 1张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 条9: 1张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 风1: 1张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 风2: 1张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 风3: 1张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 风4: 1张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 箭1: 1张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 箭2: 1张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 箭3: 1张
+[DEBUG]: [RuleEngine.isSevenPairs] 发现非对子牌: 万_9, 数量=1
+[DEBUG]: [RuleEngine.isSevenPairs] 发现非对子牌: 筒_1, 数量=1
+[DEBUG]: [RuleEngine.isSevenPairs] 发现非对子牌: 筒_9, 数量=1
+[DEBUG]: [RuleEngine.isSevenPairs] 发现非对子牌: 条_1, 数量=1
+[DEBUG]: [RuleEngine.isSevenPairs] 发现非对子牌: 条_9, 数量=1
+[DEBUG]: [RuleEngine.isSevenPairs] 发现非对子牌: 风_1, 数量=1
+[DEBUG]: [RuleEngine.isSevenPairs] 发现非对子牌: 风_2, 数量=1
+[DEBUG]: [RuleEngine.isSevenPairs] 发现非对子牌: 风_3, 数量=1
+[DEBUG]: [RuleEngine.isSevenPairs] 发现非对子牌: 风_4, 数量=1
+[DEBUG]: [RuleEngine.isSevenPairs] 发现非对子牌: 箭_1, 数量=1
+[DEBUG]: [RuleEngine.isSevenPairs] 发现非对子牌: 箭_2, 数量=1
+[DEBUG]: [RuleEngine.isSevenPairs] 发现非对子牌: 箭_3, 数量=1
+[DEBUG]: [RuleEngine.isSevenPairs] 存在非对子数量的牌，不是七对
+[DEBUG]: [RuleEngine.isThirteenOrphans] 检查是否为十三幺，牌数=14
+[DEBUG]: [RuleEngine.isThirteenOrphans] 牌组详情: 1万, 9万, 1筒, 9筒, 1条, 9条, 东风, 南风, 西风, 北风, 中箭, 发箭, 白箭, 1万
+[DEBUG]: [RuleEngine.isThirteenOrphans] 开始检查13种必要牌是否都存在
+[DEBUG]: [RuleEngine.isThirteenOrphans] 所有13种必要牌都存在，继续检查是否有一个对子
+[DEBUG]: [RuleEngine.isThirteenOrphans] 牌型计数详情:
+[DEBUG]: [RuleEngine.isThirteenOrphans]   - 1万: 2张
+[DEBUG]: [RuleEngine.isThirteenOrphans]   - 9万: 1张
+[DEBUG]: [RuleEngine.isThirteenOrphans]   - 1筒: 1张
+[DEBUG]: [RuleEngine.isThirteenOrphans]   - 9筒: 1张
+[DEBUG]: [RuleEngine.isThirteenOrphans]   - 1条: 1张
+[DEBUG]: [RuleEngine.isThirteenOrphans]   - 9条: 1张
+[DEBUG]: [RuleEngine.isThirteenOrphans]   - 1风: 1张
+[DEBUG]: [RuleEngine.isThirteenOrphans]   - 2风: 1张
+[DEBUG]: [RuleEngine.isThirteenOrphans]   - 3风: 1张
+[DEBUG]: [RuleEngine.isThirteenOrphans]   - 4风: 1张
+[DEBUG]: [RuleEngine.isThirteenOrphans]   - 1箭: 1张
+[DEBUG]: [RuleEngine.isThirteenOrphans]   - 2箭: 1张
+[DEBUG]: [RuleEngine.isThirteenOrphans]   - 3箭: 1张
+[DEBUG]: [RuleEngine.isThirteenOrphans] 确认为十三幺，对子是: 1万
+[DEBUG]: [RuleEngine.isWinningHand] 检测到十三幺，可以胡牌
+[DEBUG]: [RuleEngine.testThirteenOrphans] 同时检查是否符合和牌条件: ✓ 是
+[DEBUG]: [RuleEngine.isSevenPairs] 检查是否为七对，牌数=14
+[DEBUG]: [RuleEngine.isSevenPairs] 牌组详情: 东风, 南风, 西风, 北风, 中箭, 发箭, 白箭, 1条, 9条, 1筒, 9筒, 1万, 1万, 9万
+[DEBUG]: [RuleEngine.isSevenPairs] 牌型计数详情:
+[DEBUG]: [RuleEngine.isSevenPairs]   - 风1: 1张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 风2: 1张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 风3: 1张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 风4: 1张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 箭1: 1张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 箭2: 1张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 箭3: 1张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 条1: 1张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 条9: 1张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 筒1: 1张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 筒9: 1张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 万1: 2张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 万9: 1张
+[DEBUG]: [RuleEngine.isSevenPairs] 发现非对子牌: 风_1, 数量=1
+[DEBUG]: [RuleEngine.isSevenPairs] 发现非对子牌: 风_2, 数量=1
+[DEBUG]: [RuleEngine.isSevenPairs] 发现非对子牌: 风_3, 数量=1
+[DEBUG]: [RuleEngine.isSevenPairs] 发现非对子牌: 风_4, 数量=1
+[DEBUG]: [RuleEngine.isSevenPairs] 发现非对子牌: 箭_1, 数量=1
+[DEBUG]: [RuleEngine.isSevenPairs] 发现非对子牌: 箭_2, 数量=1
+[DEBUG]: [RuleEngine.isSevenPairs] 发现非对子牌: 箭_3, 数量=1
+[DEBUG]: [RuleEngine.isSevenPairs] 发现非对子牌: 条_1, 数量=1
+[DEBUG]: [RuleEngine.isSevenPairs] 发现非对子牌: 条_9, 数量=1
+[DEBUG]: [RuleEngine.isSevenPairs] 发现非对子牌: 筒_1, 数量=1
+[DEBUG]: [RuleEngine.isSevenPairs] 发现非对子牌: 筒_9, 数量=1
+[DEBUG]: [RuleEngine.isSevenPairs] 发现非对子牌: 万_9, 数量=1
+[DEBUG]: [RuleEngine.isSevenPairs] 存在非对子数量的牌，不是七对
+[DEBUG]: [RuleEngine.isThirteenOrphans] 检查是否为十三幺，牌数=14
+[DEBUG]: [RuleEngine.isThirteenOrphans] 牌组详情: 东风, 南风, 西风, 北风, 中箭, 发箭, 白箭, 1条, 9条, 1筒, 9筒, 1万, 1万, 9万
+[DEBUG]: [RuleEngine.isThirteenOrphans] 开始检查13种必要牌是否都存在
+[DEBUG]: [RuleEngine.isThirteenOrphans] 所有13种必要牌都存在，继续检查是否有一个对子
+[DEBUG]: [RuleEngine.isThirteenOrphans] 牌型计数详情:
+[DEBUG]: [RuleEngine.isThirteenOrphans]   - 1风: 1张
+[DEBUG]: [RuleEngine.isThirteenOrphans]   - 2风: 1张
+[DEBUG]: [RuleEngine.isThirteenOrphans]   - 3风: 1张
+[DEBUG]: [RuleEngine.isThirteenOrphans]   - 4风: 1张
+[DEBUG]: [RuleEngine.isThirteenOrphans]   - 1箭: 1张
+[DEBUG]: [RuleEngine.isThirteenOrphans]   - 2箭: 1张
+[DEBUG]: [RuleEngine.isThirteenOrphans]   - 3箭: 1张
+[DEBUG]: [RuleEngine.isThirteenOrphans]   - 1条: 1张
+[DEBUG]: [RuleEngine.isThirteenOrphans]   - 9条: 1张
+[DEBUG]: [RuleEngine.isThirteenOrphans]   - 1筒: 1张
+[DEBUG]: [RuleEngine.isThirteenOrphans]   - 9筒: 1张
+[DEBUG]: [RuleEngine.isThirteenOrphans]   - 1万: 2张
+[DEBUG]: [RuleEngine.isThirteenOrphans]   - 9万: 1张
+[DEBUG]: [RuleEngine.isThirteenOrphans] 确认为十三幺，对子是: 1万
+[DEBUG]: [RuleEngine.isPengPengHu] 检查是否为碰碰胡，手牌数量=14，已亮出牌组数量=0
+[DEBUG]: [RuleEngine.isPengPengHu] 手牌: 东风, 南风, 西风, 北风, 中箭, 发箭, 白箭, 1条, 9条, 1筒, 9筒, 1万, 1万, 9万
+[DEBUG]: [RuleEngine.isPengPengHu] 需要从手牌中组成 4 个刻子和1个对子
+[DEBUG]: [RuleEngine.isPengPengHu] 检查牌组 风1: 1张
+[DEBUG]: [RuleEngine.isPengPengHu] 发现 1 张牌无法组成刻子或对子，不是碰碰胡
+[DEBUG]: [RuleEngine.isQingYiSe] 检查是否为清一色，首张牌类型: 风
+[DEBUG]: [RuleEngine.isQingYiSe] 手牌: 东风, 南风, 西风, 北风, 中箭, 发箭, 白箭, 1条, 9条, 1筒, 9筒, 1万, 1万, 9万
+[DEBUG]: [RuleEngine.isQingYiSe] 发现不同花色: 中箭, 不是清一色
+[DEBUG]: [RuleEngine.isWinningHand] 检查是否为胡牌，牌数=14
+[DEBUG]: [RuleEngine.isWinningHand] 牌组: 东风, 南风, 西风, 北风, 中箭, 发箭, 白箭, 1条, 9条, 1筒, 9筒, 1万, 1万, 9万
+[DEBUG]: [RuleEngine.isSevenPairs] 检查是否为七对，牌数=14
+[DEBUG]: [RuleEngine.isSevenPairs] 牌组详情: 东风, 南风, 西风, 北风, 中箭, 发箭, 白箭, 1条, 9条, 1筒, 9筒, 1万, 1万, 9万
+[DEBUG]: [RuleEngine.isSevenPairs] 牌型计数详情:
+[DEBUG]: [RuleEngine.isSevenPairs]   - 风1: 1张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 风2: 1张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 风3: 1张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 风4: 1张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 箭1: 1张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 箭2: 1张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 箭3: 1张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 条1: 1张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 条9: 1张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 筒1: 1张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 筒9: 1张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 万1: 2张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 万9: 1张
+[DEBUG]: [RuleEngine.isSevenPairs] 发现非对子牌: 风_1, 数量=1
+[DEBUG]: [RuleEngine.isSevenPairs] 发现非对子牌: 风_2, 数量=1
+[DEBUG]: [RuleEngine.isSevenPairs] 发现非对子牌: 风_3, 数量=1
+[DEBUG]: [RuleEngine.isSevenPairs] 发现非对子牌: 风_4, 数量=1
+[DEBUG]: [RuleEngine.isSevenPairs] 发现非对子牌: 箭_1, 数量=1
+[DEBUG]: [RuleEngine.isSevenPairs] 发现非对子牌: 箭_2, 数量=1
+[DEBUG]: [RuleEngine.isSevenPairs] 发现非对子牌: 箭_3, 数量=1
+[DEBUG]: [RuleEngine.isSevenPairs] 发现非对子牌: 条_1, 数量=1
+[DEBUG]: [RuleEngine.isSevenPairs] 发现非对子牌: 条_9, 数量=1
+[DEBUG]: [RuleEngine.isSevenPairs] 发现非对子牌: 筒_1, 数量=1
+[DEBUG]: [RuleEngine.isSevenPairs] 发现非对子牌: 筒_9, 数量=1
+[DEBUG]: [RuleEngine.isSevenPairs] 发现非对子牌: 万_9, 数量=1
+[DEBUG]: [RuleEngine.isSevenPairs] 存在非对子数量的牌，不是七对
+[DEBUG]: [RuleEngine.isThirteenOrphans] 检查是否为十三幺，牌数=14
+[DEBUG]: [RuleEngine.isThirteenOrphans] 牌组详情: 东风, 南风, 西风, 北风, 中箭, 发箭, 白箭, 1条, 9条, 1筒, 9筒, 1万, 1万, 9万
+[DEBUG]: [RuleEngine.isThirteenOrphans] 开始检查13种必要牌是否都存在
+[DEBUG]: [RuleEngine.isThirteenOrphans] 所有13种必要牌都存在，继续检查是否有一个对子
+[DEBUG]: [RuleEngine.isThirteenOrphans] 牌型计数详情:
+[DEBUG]: [RuleEngine.isThirteenOrphans]   - 1风: 1张
+[DEBUG]: [RuleEngine.isThirteenOrphans]   - 2风: 1张
+[DEBUG]: [RuleEngine.isThirteenOrphans]   - 3风: 1张
+[DEBUG]: [RuleEngine.isThirteenOrphans]   - 4风: 1张
+[DEBUG]: [RuleEngine.isThirteenOrphans]   - 1箭: 1张
+[DEBUG]: [RuleEngine.isThirteenOrphans]   - 2箭: 1张
+[DEBUG]: [RuleEngine.isThirteenOrphans]   - 3箭: 1张
+[DEBUG]: [RuleEngine.isThirteenOrphans]   - 1条: 1张
+[DEBUG]: [RuleEngine.isThirteenOrphans]   - 9条: 1张
+[DEBUG]: [RuleEngine.isThirteenOrphans]   - 1筒: 1张
+[DEBUG]: [RuleEngine.isThirteenOrphans]   - 9筒: 1张
+[DEBUG]: [RuleEngine.isThirteenOrphans]   - 1万: 2张
+[DEBUG]: [RuleEngine.isThirteenOrphans]   - 9万: 1张
+[DEBUG]: [RuleEngine.isThirteenOrphans] 确认为十三幺，对子是: 1万
+[DEBUG]: [RuleEngine.isWinningHand] 检测到十三幺，可以胡牌
+┌─────────────────── 牌型概要 ────────────────────┐
+│ 风: 东 南 西 北                                 │
+│ 箭: 中 发 白                                   │
+│ 条: 1               9                       │
+│ 筒: 1               9                       │
+│ 万: 12               9                      │
+├──────────────── 牌型分析 ──────────────────┤
+│ 对子: 1   刻子: 0   顺子可能性: 0.0                 │
+├──────────────── 特殊牌型 ──────────────────┤
+│ 七对: ✗   十三幺: ✓                             │
+│ 碰碰胡: ✗   清一色: ✗                            │
+├─────────────────────────────────────────────┤
+│ 和牌: ✓ 可以和牌                                 │
+└─────────────────────────────────────────────┘
+[RuleEngine.testAllSpecialHuFunctions] 十三幺测试结果: ✓ 通过
+[DEBUG]: [RuleEngine.testWindTiles] 开始测试四种风牌处理
+[DEBUG]: [RuleEngine.testWindTiles] 测试牌型: 东风, 东风, 东风, 南风, 南风, 南风, 西风, 西风, 西风, 北风, 北风, 北风, 中箭, 中箭
+[DEBUG]: [RuleEngine.testWindTiles] 排序后牌型: 东风, 东风, 东风, 南风, 南风, 南风, 西风, 西风, 西风, 北风, 北风, 北风, 中箭, 中箭
+[DEBUG]: [RuleEngine.isWinningHand] 检查是否为胡牌，牌数=14
+[DEBUG]: [RuleEngine.isWinningHand] 牌组: 东风, 东风, 东风, 南风, 南风, 南风, 西风, 西风, 西风, 北风, 北风, 北风, 中箭, 中箭
+[DEBUG]: [RuleEngine.isSevenPairs] 检查是否为七对，牌数=14
+[DEBUG]: [RuleEngine.isSevenPairs] 牌组详情: 东风, 东风, 东风, 南风, 南风, 南风, 西风, 西风, 西风, 北风, 北风, 北风, 中箭, 中箭
+[DEBUG]: [RuleEngine.isSevenPairs] 牌型计数详情:
+[DEBUG]: [RuleEngine.isSevenPairs]   - 风1: 3张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 风2: 3张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 风3: 3张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 风4: 3张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 箭1: 2张
+[DEBUG]: [RuleEngine.isSevenPairs] 发现非对子牌: 风_1, 数量=3
+[DEBUG]: [RuleEngine.isSevenPairs] 发现非对子牌: 风_2, 数量=3
+[DEBUG]: [RuleEngine.isSevenPairs] 发现非对子牌: 风_3, 数量=3
+[DEBUG]: [RuleEngine.isSevenPairs] 发现非对子牌: 风_4, 数量=3
+[DEBUG]: [RuleEngine.isSevenPairs] 存在非对子数量的牌，不是七对
+[DEBUG]: [RuleEngine.isThirteenOrphans] 检查是否为十三幺，牌数=14
+[DEBUG]: [RuleEngine.isThirteenOrphans] 牌组详情: 东风, 东风, 东风, 南风, 南风, 南风, 西风, 西风, 西风, 北风, 北风, 北风, 中箭, 中箭
+[DEBUG]: [RuleEngine.isThirteenOrphans] 开始检查13种必要牌是否都存在
+[DEBUG]: [RuleEngine.isThirteenOrphans] 缺少必要牌: 1万
+[DEBUG]: [RuleEngine.isThirteenOrphans] 缺少必要牌: 9万
+[DEBUG]: [RuleEngine.isThirteenOrphans] 缺少必要牌: 1条
+[DEBUG]: [RuleEngine.isThirteenOrphans] 缺少必要牌: 9条
+[DEBUG]: [RuleEngine.isThirteenOrphans] 缺少必要牌: 1筒
+[DEBUG]: [RuleEngine.isThirteenOrphans] 缺少必要牌: 9筒
+[DEBUG]: [RuleEngine.isThirteenOrphans] 缺少必要牌: 2箭
+[DEBUG]: [RuleEngine.isThirteenOrphans] 缺少必要牌: 3箭
+[DEBUG]: [RuleEngine.isThirteenOrphans] 共缺少8种必要牌，不是十三幺
+[DEBUG]: [RuleEngine.isPengPengHu] 检查是否为碰碰胡，手牌数量=14，已亮出牌组数量=0
+[DEBUG]: [RuleEngine.isPengPengHu] 手牌: 东风, 东风, 东风, 南风, 南风, 南风, 西风, 西风, 西风, 北风, 北风, 北风, 中箭, 中箭
+[DEBUG]: [RuleEngine.isPengPengHu] 需要从手牌中组成 4 个刻子和1个对子
+[DEBUG]: [RuleEngine.isPengPengHu] 检查牌组 风1: 3张
+[DEBUG]: [RuleEngine.isPengPengHu] 找到刻子: 东风, 东风, 东风
+[DEBUG]: [RuleEngine.isPengPengHu] 检查牌组 风2: 3张
+[DEBUG]: [RuleEngine.isPengPengHu] 找到刻子: 南风, 南风, 南风
+[DEBUG]: [RuleEngine.isPengPengHu] 检查牌组 风3: 3张
+[DEBUG]: [RuleEngine.isPengPengHu] 找到刻子: 西风, 西风, 西风
+[DEBUG]: [RuleEngine.isPengPengHu] 检查牌组 风4: 3张
+[DEBUG]: [RuleEngine.isPengPengHu] 找到刻子: 北风, 北风, 北风
+[DEBUG]: [RuleEngine.isPengPengHu] 检查牌组 箭1: 2张
+[DEBUG]: [RuleEngine.isPengPengHu] 找到对子: 中箭, 中箭
+[DEBUG]: [RuleEngine.isPengPengHu] 检查结果: ✓ 是碰碰胡
+[DEBUG]: [RuleEngine.isPengPengHu]   - 是否找到对子: 是
+[DEBUG]: [RuleEngine.isPengPengHu]   - 刻子数量: 4, 需要: 4
+[DEBUG]: [RuleEngine.isWinningHand] 检测到碰碰胡，可以胡牌
+[DEBUG]: [RuleEngine.testWindTiles] 检查是否符合胡牌条件: ✓ 是
+[DEBUG]: [RuleEngine.isSevenPairs] 检查是否为七对，牌数=14
+[DEBUG]: [RuleEngine.isSevenPairs] 牌组详情: 东风, 东风, 东风, 南风, 南风, 南风, 西风, 西风, 西风, 北风, 北风, 北风, 中箭, 中箭
+[DEBUG]: [RuleEngine.isSevenPairs] 牌型计数详情:
+[DEBUG]: [RuleEngine.isSevenPairs]   - 风1: 3张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 风2: 3张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 风3: 3张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 风4: 3张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 箭1: 2张
+[DEBUG]: [RuleEngine.isSevenPairs] 发现非对子牌: 风_1, 数量=3
+[DEBUG]: [RuleEngine.isSevenPairs] 发现非对子牌: 风_2, 数量=3
+[DEBUG]: [RuleEngine.isSevenPairs] 发现非对子牌: 风_3, 数量=3
+[DEBUG]: [RuleEngine.isSevenPairs] 发现非对子牌: 风_4, 数量=3
+[DEBUG]: [RuleEngine.isSevenPairs] 存在非对子数量的牌，不是七对
+[DEBUG]: [RuleEngine.isThirteenOrphans] 检查是否为十三幺，牌数=14
+[DEBUG]: [RuleEngine.isThirteenOrphans] 牌组详情: 东风, 东风, 东风, 南风, 南风, 南风, 西风, 西风, 西风, 北风, 北风, 北风, 中箭, 中箭
+[DEBUG]: [RuleEngine.isThirteenOrphans] 开始检查13种必要牌是否都存在
+[DEBUG]: [RuleEngine.isThirteenOrphans] 缺少必要牌: 1万
+[DEBUG]: [RuleEngine.isThirteenOrphans] 缺少必要牌: 9万
+[DEBUG]: [RuleEngine.isThirteenOrphans] 缺少必要牌: 1条
+[DEBUG]: [RuleEngine.isThirteenOrphans] 缺少必要牌: 9条
+[DEBUG]: [RuleEngine.isThirteenOrphans] 缺少必要牌: 1筒
+[DEBUG]: [RuleEngine.isThirteenOrphans] 缺少必要牌: 9筒
+[DEBUG]: [RuleEngine.isThirteenOrphans] 缺少必要牌: 2箭
+[DEBUG]: [RuleEngine.isThirteenOrphans] 缺少必要牌: 3箭
+[DEBUG]: [RuleEngine.isThirteenOrphans] 共缺少8种必要牌，不是十三幺
+[DEBUG]: [RuleEngine.isPengPengHu] 检查是否为碰碰胡，手牌数量=14，已亮出牌组数量=0
+[DEBUG]: [RuleEngine.isPengPengHu] 手牌: 东风, 东风, 东风, 南风, 南风, 南风, 西风, 西风, 西风, 北风, 北风, 北风, 中箭, 中箭
+[DEBUG]: [RuleEngine.isPengPengHu] 需要从手牌中组成 4 个刻子和1个对子
+[DEBUG]: [RuleEngine.isPengPengHu] 检查牌组 风1: 3张
+[DEBUG]: [RuleEngine.isPengPengHu] 找到刻子: 东风, 东风, 东风
+[DEBUG]: [RuleEngine.isPengPengHu] 检查牌组 风2: 3张
+[DEBUG]: [RuleEngine.isPengPengHu] 找到刻子: 南风, 南风, 南风
+[DEBUG]: [RuleEngine.isPengPengHu] 检查牌组 风3: 3张
+[DEBUG]: [RuleEngine.isPengPengHu] 找到刻子: 西风, 西风, 西风
+[DEBUG]: [RuleEngine.isPengPengHu] 检查牌组 风4: 3张
+[DEBUG]: [RuleEngine.isPengPengHu] 找到刻子: 北风, 北风, 北风
+[DEBUG]: [RuleEngine.isPengPengHu] 检查牌组 箭1: 2张
+[DEBUG]: [RuleEngine.isPengPengHu] 找到对子: 中箭, 中箭
+[DEBUG]: [RuleEngine.isPengPengHu] 检查结果: ✓ 是碰碰胡
+[DEBUG]: [RuleEngine.isPengPengHu]   - 是否找到对子: 是
+[DEBUG]: [RuleEngine.isPengPengHu]   - 刻子数量: 4, 需要: 4
+[DEBUG]: [RuleEngine.isQingYiSe] 检查是否为清一色，首张牌类型: 风
+[DEBUG]: [RuleEngine.isQingYiSe] 手牌: 东风, 东风, 东风, 南风, 南风, 南风, 西风, 西风, 西风, 北风, 北风, 北风, 中箭, 中箭
+[DEBUG]: [RuleEngine.isQingYiSe] 发现不同花色: 中箭, 不是清一色
+[DEBUG]: [RuleEngine.isWinningHand] 检查是否为胡牌，牌数=14
+[DEBUG]: [RuleEngine.isWinningHand] 牌组: 东风, 东风, 东风, 南风, 南风, 南风, 西风, 西风, 西风, 北风, 北风, 北风, 中箭, 中箭
+[DEBUG]: [RuleEngine.isSevenPairs] 检查是否为七对，牌数=14
+[DEBUG]: [RuleEngine.isSevenPairs] 牌组详情: 东风, 东风, 东风, 南风, 南风, 南风, 西风, 西风, 西风, 北风, 北风, 北风, 中箭, 中箭
+[DEBUG]: [RuleEngine.isSevenPairs] 牌型计数详情:
+[DEBUG]: [RuleEngine.isSevenPairs]   - 风1: 3张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 风2: 3张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 风3: 3张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 风4: 3张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 箭1: 2张
+[DEBUG]: [RuleEngine.isSevenPairs] 发现非对子牌: 风_1, 数量=3
+[DEBUG]: [RuleEngine.isSevenPairs] 发现非对子牌: 风_2, 数量=3
+[DEBUG]: [RuleEngine.isSevenPairs] 发现非对子牌: 风_3, 数量=3
+[DEBUG]: [RuleEngine.isSevenPairs] 发现非对子牌: 风_4, 数量=3
+[DEBUG]: [RuleEngine.isSevenPairs] 存在非对子数量的牌，不是七对
+[DEBUG]: [RuleEngine.isThirteenOrphans] 检查是否为十三幺，牌数=14
+[DEBUG]: [RuleEngine.isThirteenOrphans] 牌组详情: 东风, 东风, 东风, 南风, 南风, 南风, 西风, 西风, 西风, 北风, 北风, 北风, 中箭, 中箭
+[DEBUG]: [RuleEngine.isThirteenOrphans] 开始检查13种必要牌是否都存在
+[DEBUG]: [RuleEngine.isThirteenOrphans] 缺少必要牌: 1万
+[DEBUG]: [RuleEngine.isThirteenOrphans] 缺少必要牌: 9万
+[DEBUG]: [RuleEngine.isThirteenOrphans] 缺少必要牌: 1条
+[DEBUG]: [RuleEngine.isThirteenOrphans] 缺少必要牌: 9条
+[DEBUG]: [RuleEngine.isThirteenOrphans] 缺少必要牌: 1筒
+[DEBUG]: [RuleEngine.isThirteenOrphans] 缺少必要牌: 9筒
+[DEBUG]: [RuleEngine.isThirteenOrphans] 缺少必要牌: 2箭
+[DEBUG]: [RuleEngine.isThirteenOrphans] 缺少必要牌: 3箭
+[DEBUG]: [RuleEngine.isThirteenOrphans] 共缺少8种必要牌，不是十三幺
+[DEBUG]: [RuleEngine.isPengPengHu] 检查是否为碰碰胡，手牌数量=14，已亮出牌组数量=0
+[DEBUG]: [RuleEngine.isPengPengHu] 手牌: 东风, 东风, 东风, 南风, 南风, 南风, 西风, 西风, 西风, 北风, 北风, 北风, 中箭, 中箭
+[DEBUG]: [RuleEngine.isPengPengHu] 需要从手牌中组成 4 个刻子和1个对子
+[DEBUG]: [RuleEngine.isPengPengHu] 检查牌组 风1: 3张
+[DEBUG]: [RuleEngine.isPengPengHu] 找到刻子: 东风, 东风, 东风
+[DEBUG]: [RuleEngine.isPengPengHu] 检查牌组 风2: 3张
+[DEBUG]: [RuleEngine.isPengPengHu] 找到刻子: 南风, 南风, 南风
+[DEBUG]: [RuleEngine.isPengPengHu] 检查牌组 风3: 3张
+[DEBUG]: [RuleEngine.isPengPengHu] 找到刻子: 西风, 西风, 西风
+[DEBUG]: [RuleEngine.isPengPengHu] 检查牌组 风4: 3张
+[DEBUG]: [RuleEngine.isPengPengHu] 找到刻子: 北风, 北风, 北风
+[DEBUG]: [RuleEngine.isPengPengHu] 检查牌组 箭1: 2张
+[DEBUG]: [RuleEngine.isPengPengHu] 找到对子: 中箭, 中箭
+[DEBUG]: [RuleEngine.isPengPengHu] 检查结果: ✓ 是碰碰胡
+[DEBUG]: [RuleEngine.isPengPengHu]   - 是否找到对子: 是
+[DEBUG]: [RuleEngine.isPengPengHu]   - 刻子数量: 4, 需要: 4
+[DEBUG]: [RuleEngine.isWinningHand] 检测到碰碰胡，可以胡牌
+┌─────────────────── 牌型概要 ────────────────────┐
+│ 风: 东3 南3 西3 北3                             │
+│ 箭: 中2                                      │
+├──────────────── 牌型分析 ──────────────────┤
+│ 对子: 1   刻子: 4   顺子可能性: 0.0                 │
+├──────────────── 特殊牌型 ──────────────────┤
+│ 七对: ✗   十三幺: ✗                             │
+│ 碰碰胡: ✓   清一色: ✗                            │
+├─────────────────────────────────────────────┤
+│ 和牌: ✓ 可以和牌                                 │
+└─────────────────────────────────────────────┘
+风牌测试结果: 通过
+[RuleEngine.testAllSpecialHuFunctions] 风牌处理测试结果: ✓ 通过
+[DEBUG]: [RuleEngine.testArrowTiles] 开始测试三种箭牌处理
+[DEBUG]: [RuleEngine.testArrowTiles] 测试牌型: 中箭, 中箭, 中箭, 发箭, 发箭, 发箭, 白箭, 白箭, 白箭, 1万, 1万, 1万, 2万, 2万
+[DEBUG]: [RuleEngine.testArrowTiles] 排序后牌型: 1万, 1万, 1万, 2万, 2万, 中箭, 中箭, 中箭, 发箭, 发箭, 发箭, 白箭, 白箭, 白箭
+[DEBUG]: [RuleEngine.isWinningHand] 检查是否为胡牌，牌数=14
+[DEBUG]: [RuleEngine.isWinningHand] 牌组: 1万, 1万, 1万, 2万, 2万, 中箭, 中箭, 中箭, 发箭, 发箭, 发箭, 白箭, 白箭, 白箭
+[DEBUG]: [RuleEngine.isSevenPairs] 检查是否为七对，牌数=14
+[DEBUG]: [RuleEngine.isSevenPairs] 牌组详情: 1万, 1万, 1万, 2万, 2万, 中箭, 中箭, 中箭, 发箭, 发箭, 发箭, 白箭, 白箭, 白箭
+[DEBUG]: [RuleEngine.isSevenPairs] 牌型计数详情:
+[DEBUG]: [RuleEngine.isSevenPairs]   - 万1: 3张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 万2: 2张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 箭1: 3张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 箭2: 3张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 箭3: 3张
+[DEBUG]: [RuleEngine.isSevenPairs] 发现非对子牌: 万_1, 数量=3
+[DEBUG]: [RuleEngine.isSevenPairs] 发现非对子牌: 箭_1, 数量=3
+[DEBUG]: [RuleEngine.isSevenPairs] 发现非对子牌: 箭_2, 数量=3
+[DEBUG]: [RuleEngine.isSevenPairs] 发现非对子牌: 箭_3, 数量=3
+[DEBUG]: [RuleEngine.isSevenPairs] 存在非对子数量的牌，不是七对
+[DEBUG]: [RuleEngine.isThirteenOrphans] 检查是否为十三幺，牌数=14
+[DEBUG]: [RuleEngine.isThirteenOrphans] 牌组详情: 1万, 1万, 1万, 2万, 2万, 中箭, 中箭, 中箭, 发箭, 发箭, 发箭, 白箭, 白箭, 白箭
+[DEBUG]: [RuleEngine.isThirteenOrphans] 开始检查13种必要牌是否都存在
+[DEBUG]: [RuleEngine.isThirteenOrphans] 缺少必要牌: 9万
+[DEBUG]: [RuleEngine.isThirteenOrphans] 缺少必要牌: 1条
+[DEBUG]: [RuleEngine.isThirteenOrphans] 缺少必要牌: 9条
+[DEBUG]: [RuleEngine.isThirteenOrphans] 缺少必要牌: 1筒
+[DEBUG]: [RuleEngine.isThirteenOrphans] 缺少必要牌: 9筒
+[DEBUG]: [RuleEngine.isThirteenOrphans] 缺少必要牌: 1风
+[DEBUG]: [RuleEngine.isThirteenOrphans] 缺少必要牌: 2风
+[DEBUG]: [RuleEngine.isThirteenOrphans] 缺少必要牌: 3风
+[DEBUG]: [RuleEngine.isThirteenOrphans] 缺少必要牌: 4风
+[DEBUG]: [RuleEngine.isThirteenOrphans] 共缺少9种必要牌，不是十三幺
+[DEBUG]: [RuleEngine.isPengPengHu] 检查是否为碰碰胡，手牌数量=14，已亮出牌组数量=0
+[DEBUG]: [RuleEngine.isPengPengHu] 手牌: 1万, 1万, 1万, 2万, 2万, 中箭, 中箭, 中箭, 发箭, 发箭, 发箭, 白箭, 白箭, 白箭
+[DEBUG]: [RuleEngine.isPengPengHu] 需要从手牌中组成 4 个刻子和1个对子
+[DEBUG]: [RuleEngine.isPengPengHu] 检查牌组 万1: 3张
+[DEBUG]: [RuleEngine.isPengPengHu] 找到刻子: 1万, 1万, 1万
+[DEBUG]: [RuleEngine.isPengPengHu] 检查牌组 万2: 2张
+[DEBUG]: [RuleEngine.isPengPengHu] 找到对子: 2万, 2万
+[DEBUG]: [RuleEngine.isPengPengHu] 检查牌组 箭1: 3张
+[DEBUG]: [RuleEngine.isPengPengHu] 找到刻子: 中箭, 中箭, 中箭
+[DEBUG]: [RuleEngine.isPengPengHu] 检查牌组 箭2: 3张
+[DEBUG]: [RuleEngine.isPengPengHu] 找到刻子: 发箭, 发箭, 发箭
+[DEBUG]: [RuleEngine.isPengPengHu] 检查牌组 箭3: 3张
+[DEBUG]: [RuleEngine.isPengPengHu] 找到刻子: 白箭, 白箭, 白箭
+[DEBUG]: [RuleEngine.isPengPengHu] 检查结果: ✓ 是碰碰胡
+[DEBUG]: [RuleEngine.isPengPengHu]   - 是否找到对子: 是
+[DEBUG]: [RuleEngine.isPengPengHu]   - 刻子数量: 4, 需要: 4
+[DEBUG]: [RuleEngine.isWinningHand] 检测到碰碰胡，可以胡牌
+[DEBUG]: [RuleEngine.testArrowTiles] 检查是否符合胡牌条件: ✓ 是
+[DEBUG]: [RuleEngine.isSevenPairs] 检查是否为七对，牌数=14
+[DEBUG]: [RuleEngine.isSevenPairs] 牌组详情: 中箭, 中箭, 中箭, 发箭, 发箭, 发箭, 白箭, 白箭, 白箭, 1万, 1万, 1万, 2万, 2万
+[DEBUG]: [RuleEngine.isSevenPairs] 牌型计数详情:
+[DEBUG]: [RuleEngine.isSevenPairs]   - 箭1: 3张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 箭2: 3张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 箭3: 3张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 万1: 3张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 万2: 2张
+[DEBUG]: [RuleEngine.isSevenPairs] 发现非对子牌: 箭_1, 数量=3
+[DEBUG]: [RuleEngine.isSevenPairs] 发现非对子牌: 箭_2, 数量=3
+[DEBUG]: [RuleEngine.isSevenPairs] 发现非对子牌: 箭_3, 数量=3
+[DEBUG]: [RuleEngine.isSevenPairs] 发现非对子牌: 万_1, 数量=3
+[DEBUG]: [RuleEngine.isSevenPairs] 存在非对子数量的牌，不是七对
+[DEBUG]: [RuleEngine.isThirteenOrphans] 检查是否为十三幺，牌数=14
+[DEBUG]: [RuleEngine.isThirteenOrphans] 牌组详情: 中箭, 中箭, 中箭, 发箭, 发箭, 发箭, 白箭, 白箭, 白箭, 1万, 1万, 1万, 2万, 2万
+[DEBUG]: [RuleEngine.isThirteenOrphans] 开始检查13种必要牌是否都存在
+[DEBUG]: [RuleEngine.isThirteenOrphans] 缺少必要牌: 9万
+[DEBUG]: [RuleEngine.isThirteenOrphans] 缺少必要牌: 1条
+[DEBUG]: [RuleEngine.isThirteenOrphans] 缺少必要牌: 9条
+[DEBUG]: [RuleEngine.isThirteenOrphans] 缺少必要牌: 1筒
+[DEBUG]: [RuleEngine.isThirteenOrphans] 缺少必要牌: 9筒
+[DEBUG]: [RuleEngine.isThirteenOrphans] 缺少必要牌: 1风
+[DEBUG]: [RuleEngine.isThirteenOrphans] 缺少必要牌: 2风
+[DEBUG]: [RuleEngine.isThirteenOrphans] 缺少必要牌: 3风
+[DEBUG]: [RuleEngine.isThirteenOrphans] 缺少必要牌: 4风
+[DEBUG]: [RuleEngine.isThirteenOrphans] 共缺少9种必要牌，不是十三幺
+[DEBUG]: [RuleEngine.isPengPengHu] 检查是否为碰碰胡，手牌数量=14，已亮出牌组数量=0
+[DEBUG]: [RuleEngine.isPengPengHu] 手牌: 中箭, 中箭, 中箭, 发箭, 发箭, 发箭, 白箭, 白箭, 白箭, 1万, 1万, 1万, 2万, 2万
+[DEBUG]: [RuleEngine.isPengPengHu] 需要从手牌中组成 4 个刻子和1个对子
+[DEBUG]: [RuleEngine.isPengPengHu] 检查牌组 箭1: 3张
+[DEBUG]: [RuleEngine.isPengPengHu] 找到刻子: 中箭, 中箭, 中箭
+[DEBUG]: [RuleEngine.isPengPengHu] 检查牌组 箭2: 3张
+[DEBUG]: [RuleEngine.isPengPengHu] 找到刻子: 发箭, 发箭, 发箭
+[DEBUG]: [RuleEngine.isPengPengHu] 检查牌组 箭3: 3张
+[DEBUG]: [RuleEngine.isPengPengHu] 找到刻子: 白箭, 白箭, 白箭
+[DEBUG]: [RuleEngine.isPengPengHu] 检查牌组 万1: 3张
+[DEBUG]: [RuleEngine.isPengPengHu] 找到刻子: 1万, 1万, 1万
+[DEBUG]: [RuleEngine.isPengPengHu] 检查牌组 万2: 2张
+[DEBUG]: [RuleEngine.isPengPengHu] 找到对子: 2万, 2万
+[DEBUG]: [RuleEngine.isPengPengHu] 检查结果: ✓ 是碰碰胡
+[DEBUG]: [RuleEngine.isPengPengHu]   - 是否找到对子: 是
+[DEBUG]: [RuleEngine.isPengPengHu]   - 刻子数量: 4, 需要: 4
+[DEBUG]: [RuleEngine.isQingYiSe] 检查是否为清一色，首张牌类型: 箭
+[DEBUG]: [RuleEngine.isQingYiSe] 手牌: 中箭, 中箭, 中箭, 发箭, 发箭, 发箭, 白箭, 白箭, 白箭, 1万, 1万, 1万, 2万, 2万
+[DEBUG]: [RuleEngine.isQingYiSe] 发现不同花色: 1万, 不是清一色
+[DEBUG]: [RuleEngine.isWinningHand] 检查是否为胡牌，牌数=14
+[DEBUG]: [RuleEngine.isWinningHand] 牌组: 中箭, 中箭, 中箭, 发箭, 发箭, 发箭, 白箭, 白箭, 白箭, 1万, 1万, 1万, 2万, 2万
+[DEBUG]: [RuleEngine.isSevenPairs] 检查是否为七对，牌数=14
+[DEBUG]: [RuleEngine.isSevenPairs] 牌组详情: 中箭, 中箭, 中箭, 发箭, 发箭, 发箭, 白箭, 白箭, 白箭, 1万, 1万, 1万, 2万, 2万
+[DEBUG]: [RuleEngine.isSevenPairs] 牌型计数详情:
+[DEBUG]: [RuleEngine.isSevenPairs]   - 箭1: 3张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 箭2: 3张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 箭3: 3张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 万1: 3张
+[DEBUG]: [RuleEngine.isSevenPairs]   - 万2: 2张
+[DEBUG]: [RuleEngine.isSevenPairs] 发现非对子牌: 箭_1, 数量=3
+[DEBUG]: [RuleEngine.isSevenPairs] 发现非对子牌: 箭_2, 数量=3
+[DEBUG]: [RuleEngine.isSevenPairs] 发现非对子牌: 箭_3, 数量=3
+[DEBUG]: [RuleEngine.isSevenPairs] 发现非对子牌: 万_1, 数量=3
+[DEBUG]: [RuleEngine.isSevenPairs] 存在非对子数量的牌，不是七对
+[DEBUG]: [RuleEngine.isThirteenOrphans] 检查是否为十三幺，牌数=14
+[DEBUG]: [RuleEngine.isThirteenOrphans] 牌组详情: 中箭, 中箭, 中箭, 发箭, 发箭, 发箭, 白箭, 白箭, 白箭, 1万, 1万, 1万, 2万, 2万
+[DEBUG]: [RuleEngine.isThirteenOrphans] 开始检查13种必要牌是否都存在
+[DEBUG]: [RuleEngine.isThirteenOrphans] 缺少必要牌: 9万
+[DEBUG]: [RuleEngine.isThirteenOrphans] 缺少必要牌: 1条
+[DEBUG]: [RuleEngine.isThirteenOrphans] 缺少必要牌: 9条
+[DEBUG]: [RuleEngine.isThirteenOrphans] 缺少必要牌: 1筒
+[DEBUG]: [RuleEngine.isThirteenOrphans] 缺少必要牌: 9筒
+[DEBUG]: [RuleEngine.isThirteenOrphans] 缺少必要牌: 1风
+[DEBUG]: [RuleEngine.isThirteenOrphans] 缺少必要牌: 2风
+[DEBUG]: [RuleEngine.isThirteenOrphans] 缺少必要牌: 3风
+[DEBUG]: [RuleEngine.isThirteenOrphans] 缺少必要牌: 4风
+[DEBUG]: [RuleEngine.isThirteenOrphans] 共缺少9种必要牌，不是十三幺
+[DEBUG]: [RuleEngine.isPengPengHu] 检查是否为碰碰胡，手牌数量=14，已亮出牌组数量=0
+[DEBUG]: [RuleEngine.isPengPengHu] 手牌: 中箭, 中箭, 中箭, 发箭, 发箭, 发箭, 白箭, 白箭, 白箭, 1万, 1万, 1万, 2万, 2万
+[DEBUG]: [RuleEngine.isPengPengHu] 需要从手牌中组成 4 个刻子和1个对子
+[DEBUG]: [RuleEngine.isPengPengHu] 检查牌组 箭1: 3张
+[DEBUG]: [RuleEngine.isPengPengHu] 找到刻子: 中箭, 中箭, 中箭
+[DEBUG]: [RuleEngine.isPengPengHu] 检查牌组 箭2: 3张
+[DEBUG]: [RuleEngine.isPengPengHu] 找到刻子: 发箭, 发箭, 发箭
+[DEBUG]: [RuleEngine.isPengPengHu] 检查牌组 箭3: 3张
+[DEBUG]: [RuleEngine.isPengPengHu] 找到刻子: 白箭, 白箭, 白箭
+[DEBUG]: [RuleEngine.isPengPengHu] 检查牌组 万1: 3张
+[DEBUG]: [RuleEngine.isPengPengHu] 找到刻子: 1万, 1万, 1万
+[DEBUG]: [RuleEngine.isPengPengHu] 检查牌组 万2: 2张
+[DEBUG]: [RuleEngine.isPengPengHu] 找到对子: 2万, 2万
+[DEBUG]: [RuleEngine.isPengPengHu] 检查结果: ✓ 是碰碰胡
+[DEBUG]: [RuleEngine.isPengPengHu]   - 是否找到对子: 是
+[DEBUG]: [RuleEngine.isPengPengHu]   - 刻子数量: 4, 需要: 4
+[DEBUG]: [RuleEngine.isWinningHand] 检测到碰碰胡，可以胡牌
+┌─────────────────── 牌型概要 ────────────────────┐
+│ 箭: 中3 发3 白3                                │
+│ 万: 13 22                                   │
+├──────────────── 牌型分析 ──────────────────┤
+│ 对子: 1   刻子: 4   顺子可能性: 0.5                 │
+├──────────────── 特殊牌型 ──────────────────┤
+│ 七对: ✗   十三幺: ✗                             │
+│ 碰碰胡: ✓   清一色: ✗                            │
+├─────────────────────────────────────────────┤
+│ 和牌: ✓ 可以和牌                                 │
+└─────────────────────────────────────────────┘
+箭牌测试结果: 通过
+[RuleEngine.testAllSpecialHuFunctions] 箭牌处理测试结果: ✓ 通过
+
+测试结果汇总:
+┌─────────────────────────────┬────────┐
+│ 测试项                      │ 结果   │
+├─────────────────────────────┼────────┤
+│ 标准和牌                       │ ✓ 通过 │
+│ 七对                         │ ✓ 通过 │
+│ 十三幺                        │ ✓ 通过 │
+│ 风牌处理                       │ ✓ 通过 │
+│ 箭牌处理                       │ ✓ 通过 │
+└─────────────────────────────┴────────┘
+[RuleEngine.testAllSpecialHuFunctions] 所有测试✓ 全部通过
+初始化游戏...
+创建了 136 张麻将牌
+游戏初始化完成。庄家: AI 1

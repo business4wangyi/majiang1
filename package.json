@@ -1,0 +1,25 @@
+{
+  "name": "majiang",
+  "version": "1.0.0",
+  "description": "广东麻将命令行游戏",
+  "main": "dist/index.js",
+  "scripts": {
+    "start": "node dist/index.js",
+    "build": "tsc",
+    "dev": "ts-node src/index.ts",
+    "test": "NODE_ENV=test ts-node src/index.ts",
+    "test:win": "set NODE_ENV=test && ts-node src/index.ts"
+  },
+  "keywords": ["majiang", "game", "cli"],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "readline-sync": "^1.4.10"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "@types/readline-sync": "^1.4.8",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.3.3"
+  }
+} 
