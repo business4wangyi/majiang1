@@ -4,6 +4,7 @@ exports.Tile = exports.JianValue = exports.FengValue = exports.TileType = void 0
 exports.createFullTileSet = createFullTileSet;
 exports.shuffleTiles = shuffleTiles;
 exports.sortTiles = sortTiles;
+const logger_1 = require("./logger");
 // 牌的类型
 var TileType;
 (function (TileType) {
@@ -98,7 +99,7 @@ function createFullTileSet() {
             tiles.push(new Tile(TileType.JIAN, value, id++));
         }
     }
-    console.log(`创建了 ${tiles.length} 张麻将牌`); // 调试信息，确认牌的总数
+    (0, logger_1.debugLog)(`创建了 ${tiles.length} 张麻将牌`); // 调试信息，确认牌的总数
     return tiles;
 }
 // 洗牌函数

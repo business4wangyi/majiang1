@@ -1,5 +1,7 @@
 import { Tile, sortTiles } from './tile';
-import { TileSet } from './rules';
+import { TileSet } from './rule-types';
+import { Style } from './display';
+import { debugLog } from './logger';
 
 // 玩家状态
 export enum PlayerState {
@@ -37,9 +39,24 @@ export class Player {
 
   // 添加一张牌到手牌
   drawTile(tile: Tile): void {
+    if (!tile) {
+      debugLog(`警告: 玩家 ${this.name} 尝试摸一张无效的牌`);
+      return;
+    }
+    
+    // 记录操作前手牌数量
+    const beforeCount = this.handTiles.length;
+    
     this.lastDrawnTile = tile;
     this.handTiles.push(tile);
+    
+    // 验证操作后手牌数量
+    if (this.handTiles.length !== beforeCount + 1) {
+      debugLog(`警告: 摸牌后手牌数量异常，预期: ${beforeCount + 1}，实际: ${this.handTiles.length}`);
+    }
+    
     this.sortHand();
+    this.verifyHandConsistency(); // 确保一致性
   }
 
   // 整理手牌（排序）
@@ -47,25 +64,41 @@ export class Player {
     this.handTiles = sortTiles(this.handTiles);
   }
 
+  // 添加手牌一致性检查方法
+  verifyHandConsistency(): boolean {
+    // 检查手牌中是否有null或undefined
+    const invalidTiles = this.handTiles.filter(tile => !tile);
+    if (invalidTiles.length > 0) {
+      debugLog(`警告: 玩家${this.name}手牌中有${invalidTiles.length}张无效牌，自动修复`);
+      // 移除无效牌
+      this.handTiles = this.handTiles.filter(tile => tile);
+      return false;
+    }
+    return true;
+  }
+
   // 打出一张牌
   discardTile(tileIndex: number): Tile | null {
-    console.log(`玩家${this.name}尝试打出索引${tileIndex}的牌，当前手牌数量: ${this.handTiles.length}`);
+    debugLog(`玩家${this.name}尝试打出索引${tileIndex}的牌，当前手牌数量: ${this.handTiles.length}`);
+    
+    // 确保手牌一致性
+    this.verifyHandConsistency();
     
     // 如果手牌为空，无法打出
     if (this.handTiles.length === 0) {
-      console.log(`错误: 玩家${this.name}没有手牌可出`);
+      debugLog(`错误: 玩家${this.name}没有手牌可出`);
       return null;
     }
     
-    // 索引范围检查与修正
+    // 索引范围检查与修正（对所有玩家类型都进行修正）
     if (tileIndex < 0 || tileIndex >= this.handTiles.length) {
-      console.log(`错误: 索引${tileIndex}超出范围(0-${this.handTiles.length-1})`);
+      debugLog(`无效的出牌索引: ${tileIndex}，有效范围: 0-${this.handTiles.length-1}`);
       
-      // 对于AI玩家且手牌超过13张的情况，特殊处理
-      if (this.type === PlayerType.AI && this.handTiles.length > 13) {
+      // 无论是AI还是人类玩家，都修正为最后一张牌的索引
+      if (this.handTiles.length > 13) {
         // 修正为最后一张牌的索引
-        const correctedIndex = this.handTiles.length - 1;
-        console.log(`AI玩家手牌>13，自动修正索引: ${tileIndex} -> ${correctedIndex}`);
+        const correctedIndex = Math.min(this.handTiles.length - 1, Math.max(0, tileIndex));
+        debugLog(`索引修正为: ${correctedIndex}`);
         tileIndex = correctedIndex;
       } else {
         return null;
@@ -74,28 +107,30 @@ export class Player {
     
     // 再次验证索引有效
     if (tileIndex < 0 || tileIndex >= this.handTiles.length) {
-      console.log(`严重错误: 索引修正后仍然无效: ${tileIndex}`);
+      debugLog(`严重错误: 索引修正后仍然无效: ${tileIndex}`);
       return null;
     }
     
     // 特殊处理：确保选中的牌存在
     if (!this.handTiles[tileIndex]) {
-      console.log(`错误: 索引${tileIndex}处的牌不存在`);
+      debugLog(`错误: 索引${tileIndex}处的牌不存在`);
       
       // 对于AI玩家，尝试找到一个有效的牌
       if (this.type === PlayerType.AI) {
         // 从最后一张开始查找有效的牌
+        let foundValidTile = false;
         for (let i = this.handTiles.length - 1; i >= 0; i--) {
           if (this.handTiles[i]) {
-            console.log(`找到有效替代牌，索引: ${i}`);
+            debugLog(`找到有效替代牌，索引: ${i}`);
             tileIndex = i;
+            foundValidTile = true;
             break;
           }
         }
         
         // 再次检查修正后的索引是否有效
-        if (!this.handTiles[tileIndex]) {
-          console.log(`严重错误: 无法找到有效的替代牌`);
+        if (!foundValidTile || !this.handTiles[tileIndex]) {
+          debugLog(`严重错误: 无法找到有效的替代牌`);
           return null;
         }
       } else {
@@ -104,48 +139,45 @@ export class Player {
     }
     
     try {
-      // 从手牌中移除并获取这张牌
+      // 克隆要打出的牌，确保有一个安全的副本
+      const tileToDiscard = this.handTiles[tileIndex].clone();
+      
+      // 记录操作前手牌数量，用于验证
+      const beforeCount = this.handTiles.length;
+      
+      // 使用splice安全地从手牌中移除这张牌
       const discarded = this.handTiles.splice(tileIndex, 1)[0];
-      if (!discarded) {
-        console.log(`严重错误: splice操作后未获取到牌`);
-        
-        // 对于AI玩家且手牌超过13张的情况，强制移除一张牌
-        if (this.type === PlayerType.AI && this.handTiles.length > 13) {
-          console.log(`强制移除AI玩家最后一张牌`);
-          const forcedDiscard = this.handTiles.pop();
-          if (forcedDiscard) {
-            this.discardedTiles.push(forcedDiscard);
-            this.lastDrawnTile = null;
-            return forcedDiscard;
-          }
-        }
-        
-        return null;
+      
+      // 验证操作后手牌数量
+      if (this.handTiles.length !== beforeCount - 1) {
+        debugLog(`警告: 出牌后手牌数量异常，预期: ${beforeCount - 1}，实际: ${this.handTiles.length}`);
+        // 尝试修复手牌数组
+        this.verifyHandConsistency();
       }
       
-      // 正常流程：添加到弃牌区并返回
-      console.log(`玩家${this.name}成功打出了${discarded.toString()}`);
+      // 如果splice返回了undefined或null，使用之前克隆的牌作为备份
+      if (!discarded) {
+        debugLog(`警告: splice操作未返回牌，使用克隆的备份`);
+        
+        // 添加到弃牌区域
+        this.discardedTiles.push(tileToDiscard);
+        this.lastDrawnTile = null;
+        
+        return tileToDiscard;
+      }
+      
+      // 常规流程：添加到弃牌区域并返回
       this.discardedTiles.push(discarded);
-      this.lastDrawnTile = null; // 重置最后摸到的牌
+      this.lastDrawnTile = null;
+      
+      debugLog(`玩家 ${this.name} 成功打出: ${discarded.toString()}`);
       return discarded;
     } catch (error) {
       console.error(`打牌过程发生错误: ${error instanceof Error ? error.message : String(error)}`);
+      console.error(`错误堆栈: ${error instanceof Error ? error.stack : '无堆栈信息'}`);
       
-      // 异常恢复：对于AI玩家且手牌超过13张的情况
-      if (this.type === PlayerType.AI && this.handTiles.length > 13) {
-        try {
-          console.log(`异常恢复: 尝试强制移除AI玩家最后一张牌`);
-          const emergencyDiscard = this.handTiles.pop();
-          if (emergencyDiscard) {
-            this.discardedTiles.push(emergencyDiscard);
-            this.lastDrawnTile = null;
-            return emergencyDiscard;
-          }
-        } catch (e) {
-          console.error(`异常恢复也失败: ${e instanceof Error ? e.message : String(e)}`);
-        }
-      }
-      
+      // 不再使用任何非标准的备用方法，而是直接返回失败
+      debugLog(`出牌失败，玩家状态可能不一致`);
       return null;
     }
   }
@@ -206,7 +238,7 @@ export class Player {
       // 明杠：需要手里有三张相同的牌
       const sameTiles = this.handTiles.filter(t => t.equals(targetTile)).slice(0, 3);
       if (sameTiles.length < 3) {
-        console.log(`明杠失败: 手牌中没有足够的牌 (有${sameTiles.length}张, 需要3张)`);
+        debugLog(`明杠失败: 手牌中没有足够的牌 (有${sameTiles.length}张, 需要3张)`);
         return false;
       }
       
@@ -292,7 +324,12 @@ export class Player {
     return this.handTiles.map((tile, index) => {
       // 特别标记最后摸到的牌
       const isLastDrawn = this.lastDrawnTile && tile.id === this.lastDrawnTile.id;
-      return `${index + 1}:${tile.toString()}${isLastDrawn ? '(新)' : ''}`;
+      if (isLastDrawn) {
+        // 使用Style添加颜色高亮，更醒目地标记新牌
+        return `${index + 1}:${Style.BOLD}${Style.YELLOW}${tile.toString()}${Style.RESET}`;
+      } else {
+        return `${index + 1}:${tile.toString()}`;
+      }
     }).join(' ');
   }
 

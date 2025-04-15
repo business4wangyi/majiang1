@@ -1,3 +1,5 @@
+import { debugLog } from "./logger";
+
 // 牌的类型
 export enum TileType {
   WAN = '万',   // 万
@@ -99,7 +101,7 @@ export function createFullTileSet(): Tile[] {
     }
   }
 
-  console.log(`创建了 ${tiles.length} 张麻将牌`); // 调试信息，确认牌的总数
+  debugLog(`创建了 ${tiles.length} 张麻将牌`); // 调试信息，确认牌的总数
 
   return tiles;
 }

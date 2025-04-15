@@ -1,63 +1,123 @@
+import { debugLog } from './logger';
 import { Player, PlayerType } from './player';
 import { Tile, TileType } from './tile';
 
 export class AIPlayer extends Player {
   private static idCounter = 1;
+  public aiStrategy = {
+    chooseDiscardTile: (handTiles: Tile[]): Tile | null => {
+      if (handTiles.length === 0) return null;
+      
+      // 确保手牌一致性
+      this.verifyHandConsistency();
+      
+      try {
+        // 使用现有的AI策略选择要打出的牌
+        const moveIndex = this.getAIMove();
+        
+        // 确保索引有效
+        if (moveIndex >= 0 && moveIndex < handTiles.length) {
+          // 验证牌对象存在
+          if (handTiles[moveIndex]) {
+            return handTiles[moveIndex];
+          } else {
+            debugLog(`警告: AI选择的牌索引 ${moveIndex} 有效但牌对象不存在`);
+          }
+        } else {
+          debugLog(`警告: AI返回无效索引 ${moveIndex}，改用最后一张牌`);
+        }
+      } catch (error) {
+        console.error(`AI策略选择牌时出错: ${error instanceof Error ? error.message : String(error)}`);
+      }
+      
+      // 如果AI策略返回无效索引或发生错误，使用最后一张牌作为备选
+      if (handTiles.length > 0) {
+        return handTiles[handTiles.length - 1];
+      }
+      
+      // 如果所有尝试都失败，返回null
+      debugLog(`警告: AI策略无法选择牌，手牌数量: ${handTiles.length}`);
+      return null;
+    }
+  };
 
   constructor(name: string) {
     super(AIPlayer.idCounter++, name, PlayerType.AI);
   }
 
-  // 获取AI出牌选择
+  // 获取AI出牌选择（优化版）
   public getAIMove(): number {
-    console.log(`AI玩家 ${this.name} 正在思考出牌...`);
-    console.log(`当前手牌数量: ${this.handTiles.length}`);
+    debugLog(`AI玩家 ${this.name} 正在思考出牌...`);
+    debugLog(`当前手牌数量: ${this.handTiles.length}`);
     
     // 安全检查：如果手牌为空，返回-1
     if (this.handTiles.length === 0) {
-      console.log(`警告: AI玩家 ${this.name} 没有手牌可出`);
+      debugLog(`警告: AI玩家 ${this.name} 没有手牌可出`);
       return -1;
     }
     
     try {
+      // 确保手牌一致性
+      this.verifyHandConsistency();
+      
       // 打印手牌详情用于调试
-      console.log(`AI玩家 ${this.name} 手牌详情: ${this.handTiles.map((t, idx) => `${idx}:${t.toString()}`).join(' ')}`);
+      debugLog(`AI玩家 ${this.name} 手牌详情: ${this.handTiles.map((t, idx) => `${idx}:${t.toString()}`).join(' ')}`);
       
-      // 特殊处理：如果手牌超过13张，直接返回最后一张牌的索引
+      // 特殊处理：如果手牌超过13张，应该优先考虑打出最差的牌，而不是直接打出最后一张
       if (this.handTiles.length > 13) {
-        const lastIndex = this.handTiles.length - 1;
-        console.log(`手牌超过13张(${this.handTiles.length})，强制出最后一张牌，索引=${lastIndex}, 牌=${this.handTiles[lastIndex].toString()}`);
+        // 获取每张牌的价值评分
+        const tileValues = this.getAllTileValues();
         
-        // 额外检查：确保索引有效且对应牌存在
-        if (lastIndex >= 0 && lastIndex < this.handTiles.length && this.handTiles[lastIndex]) {
-          console.log(`最后一张牌确认有效: ${this.handTiles[lastIndex].toString()}`);
-          return lastIndex;
-        } else {
-          // 如果最后一张牌无效，尝试找一个有效的牌
-          console.log(`警告: 最后一张牌索引(${lastIndex})无效，尝试找到一个有效牌`);
-          
-          // 从后向前找一个有效的牌
-          for (let i = this.handTiles.length - 1; i >= 0; i--) {
-            if (this.handTiles[i]) {
-              console.log(`找到有效牌索引: ${i}, 牌=${this.handTiles[i].toString()}`);
-              return i;
-            }
+        // 安全检查：确保有评分结果
+        if (tileValues.length > 0) {
+          // 选择价值最低的牌
+          const lowestValueTile = tileValues[0];
+          // 验证索引有效性
+          if (lowestValueTile.index >= 0 && lowestValueTile.index < this.handTiles.length) {
+            debugLog(`手牌超过13张(${this.handTiles.length})，选择价值最低的牌，索引=${lowestValueTile.index}, 牌=${lowestValueTile.tile.toString()}, 价值=${lowestValueTile.value}`);
+            return lowestValueTile.index;
+          } else {
+            debugLog(`警告: 评分结果索引无效 ${lowestValueTile.index}，使用备选策略`);
           }
-          
-          // 如果仍然找不到，返回0（如果手牌不为空）
-          console.log(`无法找到有效牌，返回首张牌索引0`);
-          return 0;
         }
+        
+        // 如果评分失败，使用安全的备选策略：打出最后一张牌
+        const lastIndex = this.handTiles.length - 1;
+        debugLog(`评分失败，使用备选策略: 打出最后一张牌，索引=${lastIndex}`);
+        return lastIndex;
       }
       
-      // 确保有足够的牌可供选择 - 这部分代码在之前可能导致问题
-      // 如果手牌数量等于13，AI也应该正常出牌
-      if (this.handTiles.length < 13) {
-        console.log(`AI玩家 ${this.name} 手牌数量不足13张 (${this.handTiles.length})，无需出牌`);
-        // 这种情况不应该出现，但如果出现，还是返回最后一张牌的索引
-        return this.handTiles.length - 1;
+      // 获取每张牌的价值评分
+      const tileValues = this.getAllTileValues();
+      
+      // 安全检查：确保有评分结果
+      if (tileValues.length > 0) {
+        const selectedIndex = tileValues[0].index;
+        // 确保索引在有效范围内
+        if (selectedIndex >= 0 && selectedIndex < this.handTiles.length) {
+          debugLog(`AI选择打出索引 ${selectedIndex}: ${this.handTiles[selectedIndex].toString()}, 价值: ${tileValues[0].value}`);
+          return selectedIndex;
+        } else {
+          debugLog(`错误: AI返回的索引 ${selectedIndex} 超出范围，改为使用默认策略`);
+        }
+      } else {
+        debugLog(`错误: 牌值评估结果为空，使用默认策略`);
       }
       
+      // 如果评分系统出问题，返回最后一张牌的索引（最安全）
+      return this.handTiles.length - 1;
+    } catch (error) {
+      console.error(`AI出牌决策发生错误: ${error instanceof Error ? error.message : error}`);
+      console.error(`错误堆栈: ${error instanceof Error ? error.stack : '无堆栈信息'}`);
+      
+      // 发生错误时返回最后一张牌的索引（最安全）
+      return this.handTiles.length > 0 ? this.handTiles.length - 1 : -1;
+    }
+  }
+  
+  // 获取所有手牌的价值评分，从低到高排序
+  private getAllTileValues(): { index: number; value: number; tile: Tile }[] {
+    try {
       // 获取每张牌的价值评分
       const tileValues: { index: number; value: number; tile: Tile }[] = this.handTiles.map((tile, index) => {
         return { 
@@ -71,111 +131,107 @@ export class AIPlayer extends Player {
       tileValues.sort((a, b) => a.value - b.value);
       
       // 打印出评分结果用于调试
-      console.log(`AI牌价值评分 (从低到高): ${tileValues.map(tv => `${tv.index}:${tv.tile.toString()}=${tv.value}`).join(', ')}`);
+      debugLog(`AI牌价值评分 (从低到高): ${tileValues.map(tv => `${tv.index}:${tv.tile.toString()}=${tv.value}`).join(', ')}`);
       
-      // 安全检查：确保返回有效索引
-      if (tileValues.length > 0) {
-        const selectedIndex = tileValues[0].index;
-        console.log(`AI选择打出索引 ${selectedIndex}: ${this.handTiles[selectedIndex].toString()}`);
-        
-        // 确保索引在有效范围内
-        if (selectedIndex >= 0 && selectedIndex < this.handTiles.length) {
-          return selectedIndex;
-        } else {
-          console.log(`错误: AI返回的索引 ${selectedIndex} 超出范围，改为使用默认策略`);
-        }
-      } else {
-        console.log(`错误: 牌值评估结果为空，使用默认策略`);
-      }
-      
-      // 如果评分系统出问题，使用默认策略
-      // 策略1: 如果刚摸了一张牌，默认打出它（通常是最后一张）
-      if (this.lastDrawnTile) {
-        const lastDrawnIndex = this.handTiles.findIndex(t => t.id === this.lastDrawnTile?.id);
-        if (lastDrawnIndex >= 0) {
-          console.log(`使用默认策略: 打出刚摸到的牌，索引=${lastDrawnIndex}`);
-          return lastDrawnIndex;
-        }
-      }
-      
-      // 策略2: 出最后一张牌
-      if (this.handTiles.length > 0) {
-        const lastIndex = this.handTiles.length - 1;
-        console.log(`使用默认策略: 打出最后一张牌，索引=${lastIndex}`);
-        return lastIndex;
-      }
-      
-      // 策略3: 随机出一张牌
-      const randomIndex = Math.floor(Math.random() * this.handTiles.length);
-      console.log(`使用默认策略: 随机打出一张牌，索引=${randomIndex}`);
-      return randomIndex;
+      return tileValues;
     } catch (error) {
-      console.error(`AI出牌决策发生错误: ${error instanceof Error ? error.message : error}`);
-      console.error(`错误堆栈: ${error instanceof Error ? error.stack : '无堆栈信息'}`);
-      
-      // 特别处理：如果手牌超过13张，确保返回一个有效索引
-      if (this.handTiles.length > 13) {
-        console.log(`错误恢复: 手牌超过13张，强制返回最后一张牌索引`);
-        return this.handTiles.length - 1;
-      }
-      
-      // 出错时的备选策略: 返回最后一张牌的索引
-      if (this.handTiles.length > 0) {
-        const fallbackIndex = this.handTiles.length - 1;
-        console.log(`错误处理: 返回最后一张牌索引 ${fallbackIndex}`);
-        return fallbackIndex;
-      }
-      
-      // 如果连这个也失败，返回0（如果有牌）或-1（没有牌）
-      console.log(`极端情况：无法确定合适的牌，返回首张牌索引或-1`);
-      return this.handTiles.length > 0 ? 0 : -1;
+      console.error(`牌值评估发生错误: ${error instanceof Error ? error.message : error}`);
+      return [];
     }
   }
   
-  // 评估牌的价值
+  // 评估牌的价值 (扩展版)
   private evaluateTileValue(tile: Tile, tileIndex: number): number {
-    // 基础分数
-    let value = 0;
-    
-    // 检查是否是风牌或字牌
-    if (tile.type === TileType.FENG || tile.type === TileType.JIAN) {
-      // 检查是否已经有相同的牌
-      const sameTypeCount = this.handTiles.filter(t => 
-        t.type === tile.type && t.value === tile.value
-      ).length;
+    try {
+      // 基础分数
+      let value = 0;
       
-      // 如果已经有2张或以上相同的牌，增加价值（形成刻子的可能性）
-      if (sameTypeCount >= 2) {
-        value += 20;
-      } else if (sameTypeCount === 1) {
-        value += 8; // 对子有一定价值
+      // 检查是否是风牌或字牌
+      if (tile.type === TileType.FENG || tile.type === TileType.JIAN) {
+        // 检查是否已经有相同的牌
+        const sameTypeCount = this.handTiles.filter(t => 
+          t.type === tile.type && t.value === tile.value
+        ).length;
+        
+        // 如果已经有2张或以上相同的牌，增加价值（形成刻子的可能性）
+        if (sameTypeCount >= 3) {
+          value += 30; // 刻子已形成，价值高
+        } else if (sameTypeCount >= 2) {
+          value += 20; // 可能形成刻子的对子，价值中高
+        } else if (sameTypeCount === 1) {
+          value += 8; // 对子有一定价值
+        } else {
+          value -= 5; // 单独的风牌或字牌价值较低
+        }
       } else {
-        value -= 5; // 单独的风牌或字牌价值较低
+        // 数字牌的价值评估
+        
+        // 检查是否是刻子的一部分
+        if (this.isPartOfSet(tile)) {
+          value += 25; // 已经是刻子一部分的牌价值高
+        }
+        
+        // 检查是否是对子的一部分
+        if (this.isPartOfPair(tile)) {
+          value += 10; // 对子有一定价值
+        }
+        
+        // 检查是否可能形成顺子
+        value += this.getSequenceValue(tile);
+        
+        // 考虑当前手牌中的主导类型
+        const dominantType = this.getDominantType();
+        if (tile.type === dominantType) {
+          value += 5; // 属于主导类型的牌价值稍高
+        }
+        
+        // 边张和孤张策略：边牌(1和9)如果没有形成搭子，价值更低
+        if ((tile.value === 1 || tile.value === 9) && !this.hasAdjacentTiles(tile)) {
+          value -= 3; // 单独的边张价值降低
+        }
+        
+        // 中间牌更有灵活性，略微提高价值
+        if (tile.value >= 4 && tile.value <= 6) {
+          value += 2; // 中间牌略微加分
+        }
       }
-    } else {
-      // 数字牌的价值评估
       
-      // 检查是否是刻子的一部分
-      if (this.isPartOfSet(tile)) {
-        value += 25; // 已经是刻子一部分的牌价值高
+      // 如果是最后摸的牌，稍微降低价值使其更容易被打出（优化流畅性）
+      if (this.lastDrawnTile && tile.id === this.lastDrawnTile.id) {
+        value -= 2;
       }
       
-      // 检查是否是对子的一部分
-      if (this.isPartOfPair(tile)) {
-        value += 10; // 对子有一定价值
-      }
-      
-      // 检查是否可能形成顺子
-      value += this.getSequenceValue(tile);
-      
-      // 考虑当前手牌中的主导类型
-      const dominantType = this.getDominantType();
-      if (tile.type === dominantType) {
-        value += 5; // 属于主导类型的牌价值稍高
-      }
+      return value;
+    } catch (error) {
+      console.error(`评估牌值出错: ${error instanceof Error ? error.message : String(error)}`);
+      return 0; // 出错时返回0值，使其更有可能被打出
+    }
+  }
+  
+  // 检查牌是否有相邻的牌（用于评估边张和孤张）
+  private hasAdjacentTiles(tile: Tile): boolean {
+    // 只针对数字牌
+    if (tile.type !== TileType.WAN && tile.type !== TileType.TIAO && tile.type !== TileType.TONG) {
+      return false;
     }
     
-    return value;
+    const value = tile.value;
+    const adjacentValues: number[] = [];
+    
+    // 1的邻张是2，9的邻张是8，其他数字有两个邻张
+    if (value === 1) {
+      adjacentValues.push(2);
+    } else if (value === 9) {
+      adjacentValues.push(8);
+    } else {
+      adjacentValues.push(value - 1);
+      adjacentValues.push(value + 1);
+    }
+    
+    // 检查手牌中是否有邻接的牌
+    return this.handTiles.some(t => 
+      t.type === tile.type && adjacentValues.includes(t.value)
+    );
   }
   
   // 检查牌是否是刻子的一部分
@@ -219,7 +275,73 @@ export class AIPlayer extends Player {
       }
     }
     
+    // 检查是否已经形成或接近顺子
+    const possibleSequences = this.getPossibleSequences(tile);
+    if (possibleSequences.length > 0) {
+      // 每个可能的顺子增加价值
+      value += possibleSequences.length * 3;
+      
+      // 检查有多少顺子只缺一张牌
+      const almostComplete = possibleSequences.filter(seq => seq.count >= 2);
+      value += almostComplete.length * 5;
+    }
+    
     return value;
+  }
+  
+  // 获取可能形成的顺子
+  private getPossibleSequences(tile: Tile): { start: number, count: number }[] {
+    if (tile.type !== TileType.WAN && tile.type !== TileType.TIAO && tile.type !== TileType.TONG) {
+      return []; // 非数字牌没有顺子可能
+    }
+    
+    const value = tile.value;
+    const possibleSequences = [];
+    
+    // 牌可能在顺子中的位置：开头、中间或结尾
+    // 例如：对于5万，可能的顺子是3-4-5, 4-5-6, 5-6-7
+    
+    // 作为顺子开头
+    if (value <= 7) {
+      let count = 1; // 开头算一张
+      for (let i = 1; i <= 2; i++) {
+        if (this.handTiles.some(t => t.type === tile.type && t.value === value + i)) {
+          count++;
+        }
+      }
+      if (count > 1) { // 至少有一张连续牌
+        possibleSequences.push({ start: value, count });
+      }
+    }
+    
+    // 作为顺子中间
+    if (value >= 2 && value <= 8) {
+      let count = 1; // 中间算一张
+      if (this.handTiles.some(t => t.type === tile.type && t.value === value - 1)) {
+        count++;
+      }
+      if (this.handTiles.some(t => t.type === tile.type && t.value === value + 1)) {
+        count++;
+      }
+      if (count > 1) { // 至少有一张连续牌
+        possibleSequences.push({ start: value - 1, count });
+      }
+    }
+    
+    // 作为顺子结尾
+    if (value >= 3) {
+      let count = 1; // 结尾算一张
+      for (let i = 1; i <= 2; i++) {
+        if (this.handTiles.some(t => t.type === tile.type && t.value === value - i)) {
+          count++;
+        }
+      }
+      if (count > 1) { // 至少有一张连续牌
+        possibleSequences.push({ start: value - 2, count });
+      }
+    }
+    
+    return possibleSequences;
   }
   
   // 获取当前手牌的主导类型
