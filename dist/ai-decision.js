@@ -3,7 +3,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.AI_ACTION_DELAY = void 0;
 exports.aiDecisionPause = aiDecisionPause;
 exports.aiDecideDiscard = aiDecideDiscard;
-exports.handlePlayerDraw = handlePlayerDraw;
 exports.handleAIDiscard = handleAIDiscard;
 const ai_player_1 = require("./ai-player");
 const logger_1 = require("./logger");
@@ -72,27 +71,6 @@ async function aiDecideDiscard(player) {
     catch (error) {
         (0, logger_1.errorLog)(`AI决策出错: ${error instanceof Error ? error.message : String(error)}`);
         return null;
-    }
-}
-/**
- * 处理玩家摸牌
- */
-async function handlePlayerDraw(game, player) {
-    try {
-        // 使用游戏对象的公共方法给玩家摸牌
-        const tile = game.drawTileForPlayer(player);
-        if (tile) {
-            display_manager_1.displayManager.addToTurnLog(`${player.name} 摸了一张牌`);
-            return true;
-        }
-        else {
-            (0, logger_1.warnLog)('牌山已空，无法摸牌');
-            return false;
-        }
-    }
-    catch (error) {
-        (0, logger_1.errorLog)(`玩家摸牌时发生错误: ${error instanceof Error ? error.message : String(error)}`);
-        return false;
     }
 }
 /**

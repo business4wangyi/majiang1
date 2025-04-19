@@ -188,7 +188,7 @@ function flushLogBuffer() {
         logBuffer = [];
     }
     catch (error) {
-        console.error(`${CONFIG.debugPrefix} 无法写入日志文件: ${error instanceof Error ? error.message : String(error)}`);
+        errorLog(`${CONFIG.debugPrefix} 无法写入日志文件: ${error instanceof Error ? error.message : String(error)}`);
     }
 }
 /**
@@ -249,7 +249,7 @@ function saveGameLogToFile(game, reason) {
         logBuffer = [];
     }
     catch (error) {
-        console.error(`${CONFIG.debugPrefix} 保存游戏日志失败: ${error instanceof Error ? error.message : String(error)}`);
+        errorLog(`${CONFIG.debugPrefix} 保存游戏日志失败: ${error instanceof Error ? error.message : String(error)}`);
     }
 }
 // 立即刷新日志的方法

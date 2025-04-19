@@ -61,14 +61,6 @@ describe('GameFlow', () => {
       startGameSpy.restore();
     });
     
-    it('should not start game without players', () => {
-      // 没有添加玩家
-      gameFlow.startGame();
-      
-      // 应该仍处于初始状态
-      expect(gameState.state).to.equal(GameState.INIT);
-    });
-    
     it('should handle dealInitialTiles correctly', () => {
       // 添加玩家到players数组
       const human = new HumanPlayer('人类玩家');

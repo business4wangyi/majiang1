@@ -4,8 +4,6 @@ import {
   Style, 
   TileTypeNames, 
   TileTypeOrder, 
-  clearScreen, 
-  clearLine, 
   analyzeHand, 
   groupTilesByTypeAndValue, 
   groupTilesByType, 
@@ -53,20 +51,7 @@ describe('Display模块', () => {
       expect(TileTypeOrder).to.include(TileType.TONG);
     });
   });
-  
-  describe('清屏和清行函数', () => {
-    it('clearScreen应该调用process.stdout.write', () => {
-      clearScreen();
-      expect(stdoutStub.calledOnce).to.be.true;
-      expect(stdoutStub.firstCall.args[0]).to.equal('\x1Bc');
-    });
-    
-    it('clearLine应该调用process.stdout.write', () => {
-      clearLine();
-      expect(stdoutStub.calledOnce).to.be.true;
-      expect(stdoutStub.firstCall.args[0]).to.equal('\r\x1b[K');
-    });
-  });
+
   
   describe('牌分析函数', () => {
     it('analyzeHand应该分析玩家手牌', () => {

@@ -40,6 +40,9 @@ export async function askQuestion(
   timeout: number = 5000, 
   defaultValue: string = ''
 ): Promise<string> {
+  // 设置等待用户输入状态
+  InputState.isWaitingForUserInput = true;
+  
   return askQuestionWithOptions(question, {
     timeoutInMs: timeout,
     showCountdown: true,
@@ -82,11 +85,15 @@ export async function askQuestionWithOptions(
         rl.close();
         
         if (!mergedOptions.silentMode) {
-          process.stdout.write('\r                                          \r');
-          console.log(`${Style.YELLOW}时间到，自动选择默认选项${Style.RESET}`);
+          CountdownManager.clearCountdownDisplay();
+          displayManager.printColored(`时间到，自动选择默认选项`, Style.YELLOW);
         }
         
         infoLog(`用户输入超时，返回默认值: "${mergedOptions.defaultValue}"`);
+        
+        // 重置等待用户输入状态
+        InputState.isWaitingForUserInput = false;
+        
         resolve(mergedOptions.defaultValue); // 返回默认值
       }
     }, mergedOptions.timeoutInMs);
@@ -95,8 +102,14 @@ export async function askQuestionWithOptions(
     let countdownInterval: NodeJS.Timeout | null = null;
     
     if (mergedOptions.showCountdown && !mergedOptions.silentMode) {
-      let countdown = Math.floor(mergedOptions.timeoutInMs / 1000);
+      // 计算总秒数（向上取整以确保显示完整的秒数）
+      let countdown = Math.ceil(mergedOptions.timeoutInMs / 1000);
+      
+      // 立即显示第一个倒计时数字
+      displayManager.printColored(`倒计时: ${countdown}秒`, Style.YELLOW);
+      
       countdownInterval = setInterval(() => {
+        // 如果用户已响应，清除定时器并返回
         if (userResponded) {
           if (countdownInterval) {
             clearInterval(countdownInterval);
@@ -105,17 +118,20 @@ export async function askQuestionWithOptions(
           return;
         }
         
-        // 使用process.stdout.write尝试实时更新倒计时
-        process.stdout.write(`\r${Style.YELLOW}倒计时: ${countdown}秒${Style.RESET}     `);
-        
+        // 先减少计数
         countdown--;
         
+        // 如果倒计时结束，清除定时器
         if (countdown < 0) {
           if (countdownInterval) {
             clearInterval(countdownInterval);
             countdownInterval = null;
           }
+          return;
         }
+        
+        // 显示当前倒计时（包括0秒）
+        displayManager.printColored(`倒计时: ${countdown}秒`, Style.YELLOW);
       }, 1000);
     }
 
@@ -132,11 +148,15 @@ export async function askQuestionWithOptions(
         }
         
         if (!mergedOptions.silentMode) {
-          process.stdout.write('\r                                          \r');
+          CountdownManager.clearCountdownDisplay();
         }
         
         rl.close();
         infoLog(`用户输入: "${answer}"`);
+        
+        // 重置等待用户输入状态
+        InputState.isWaitingForUserInput = false;
+        
         resolve(answer.trim());
       }
       // 如果已经因超时而处理过，这里不做额外处理
@@ -218,8 +238,36 @@ export class InputState {
   }
   
   // 启动倒计时
-  static startCountdown(seconds: number, onTimeout: () => void): void {
-    CountdownManager.startCountdown(seconds, onTimeout);
+  static startCountdown(seconds: number, onTimeout: (() => void) | null = null): void {
+    // 先清除可能存在的倒计时
+    this.clearCountdown();
+    
+    // 在启动新倒计时前记录日志
+    infoLog(`启动倒计时: ${seconds}秒, 回调状态: ${onTimeout ? '已设置' : '未设置'}`);
+    
+    // 确保onTimeout非空
+    const safeCallback = onTimeout || (() => {
+      warnLog(`倒计时结束，执行默认回调（空操作）`);
+    });
+    
+    // 启动新的倒计时
+    CountdownManager.startCountdown(seconds, () => {
+      try {
+        infoLog(`倒计时结束，执行回调函数`);
+        // 确保无论如何，都会重置等待输入状态
+        InputState.isWaitingForUserInput = false;
+        
+        // 执行回调
+        safeCallback();
+      } catch (error) {
+        // 捕获并记录回调执行时的错误
+        warnLog(`倒计时回调执行出错: ${error instanceof Error ? error.message : String(error)}`);
+        warnLog(`错误堆栈: ${error instanceof Error ? error.stack : '无堆栈信息'}`);
+        
+        // 确保重置等待输入状态
+        InputState.isWaitingForUserInput = false;
+      }
+    });
   }
   
   // 判断倒计时是否处于活跃状态
@@ -266,9 +314,10 @@ export async function getNextDiscardIndex(
     }
     
     // 用户输入1-14，转换为0-13
-    const input = await askQuestion("", timeout); // 设置超时
+    // 这里不设置timeout，因为倒计时已经在gameLoop中处理
+    const input = await askQuestion("", 999999); // 设置一个超长时间
     
-    // 如果输入为空（可能是因为超时），返回-1
+    // 如果输入为空，返回-1
     if (!input || input.trim() === '') {
       displayManager.printWarning('未收到有效输入，请重新选择');
       return -1;
@@ -670,10 +719,10 @@ export async function getSelectionFromList<T>(
   }
   
   // 显示选项列表
-  console.log(prompt);
+  displayManager.print(prompt);
   options.forEach((option, index) => {
     const defaultMark = index === defaultIndex ? ' (默认)' : '';
-    console.log(`${index + 1}: ${option}${defaultMark}`);
+    displayManager.print(`${index + 1}: ${option}${defaultMark}`);
   });
   
   // 获取用户选择

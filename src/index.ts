@@ -3,10 +3,10 @@ import { AIPlayer } from './ai-player';
 import { HumanPlayer } from './human-player';
 import { gameLoop } from './gameLoop';
 import { Style } from './display';
-import * as readline from 'readline';
-import { InputState } from './input';
+import { InputState, askQuestion } from './input';
 import { errorLog, setLogLevel, LogLevel } from './logger';
 import { displayManager } from './display-manager';
+import { CountdownManager } from './countdown-manager';
 
 // 自动打牌模式标志（导出以在其他模块中使用）
 export let AUTO_PLAY_MODE = false; // 默认关闭自动打牌模式
@@ -15,111 +15,72 @@ export let AUTO_PLAY_MODE = false; // 默认关闭自动打牌模式
 export let DEBUG_MODE = false; // 默认关闭调试模式
 
 /**
- * 提示用户选择是否启用自动打牌模式
- * 5秒内无选择则自动启用人工模式
- */
-async function promptAutoPlayMode(): Promise<boolean> {
-  return new Promise((resolve) => {
-    displayManager.printTitle(`欢迎来到麻将游戏！`);
-    displayManager.printColored(`是否启用自动打牌模式？在此模式下，4个AI玩家将自动对弈。`, Style.CYAN);
-    displayManager.printColored(`输入 'y' 启用自动模式，'n' 进入手动模式 [默认: n]`, Style.YELLOW);
-    displayManager.printColored(`5秒内无选择将自动启用人工模式`, Style.RED);
-    
-    // 使用InputState启动倒计时
-    InputState.startCountdown(
-      5, // 5秒倒计时
-      () => {
-        // 倒计时结束回调
-        process.stdout.write('\n');
-        displayManager.printSuccess(`已自动选择: 启用人工模式`);
-        resolve(false); // 默认启用人工模式
-      }
-    );
-    
-    // 创建readline接口监听用户输入
-    const rl = readline.createInterface({
-      input: process.stdin,
-      output: process.stdout
-    });
-    
-    rl.question('', (answer) => {
-      // 清除倒计时
-      InputState.clearCountdown();
-      rl.close();
-      
-      if (answer.toLowerCase() === 'y') {
-        displayManager.printSuccess(`已选择: 启用自动打牌模式，AI将自动对弈`);
-        resolve(true);
-      } else {
-        displayManager.printSuccess(`已选择: 关闭自动打牌模式，将由您亲自上场！`);
-        resolve(false);
-      }
-    });
-  });
-}
-
-/**
- * 提示用户选择是否启用调试模式
- */
-async function promptDebugMode(): Promise<boolean> {
-  return new Promise((resolve) => {
-    displayManager.printColored(`是否启用调试模式？在此模式下，将显示更多日志详情。`, Style.CYAN);
-    displayManager.printColored(`输入 'd' 启用调试模式，其他键不启用 [默认: 不启用]`, Style.YELLOW);
-    displayManager.printColored(`5秒内无选择将不启用调试模式`, Style.RED);
-    
-    // 使用InputState启动倒计时
-    InputState.startCountdown(
-      5, // 5秒倒计时
-      () => {
-        // 倒计时结束回调
-        process.stdout.write('\n');
-        displayManager.printSuccess(`已自动选择: 不启用调试模式`);
-        resolve(false); // 默认不启用调试模式
-      }
-    );
-    
-    // 创建readline接口监听用户输入
-    const rl = readline.createInterface({
-      input: process.stdin,
-      output: process.stdout
-    });
-    
-    rl.question('', (answer) => {
-      // 清除倒计时
-      InputState.clearCountdown();
-      rl.close();
-      
-      if (answer.toLowerCase() === 'd') {
-        displayManager.printSuccess(`已选择: 启用调试模式，将显示更多日志详情`);
-        resolve(true);
-      } else {
-        displayManager.printSuccess(`已选择: 不启用调试模式`);
-        resolve(false);
-      }
-    });
-  });
-}
-
-/**
  * 启动游戏
  */
 async function startGame() {
   try {
+    // 清除控制台
+    console.clear();
+    
     // 提示用户选择模式
-    AUTO_PLAY_MODE = await promptAutoPlayMode();
+    displayManager.printTitle(`欢迎来到麻将游戏！`);
+    displayManager.printColored(`是否启用自动打牌模式？在此模式下，4个AI玩家将自动对弈。`, Style.CYAN);
+    displayManager.printColored(`输入 'y' 启用自动模式，'n' 进入手动模式 [默认: y]`, Style.YELLOW);
+    displayManager.printColored(`5秒内无选择将自动启用自动模式`, Style.RED);
+    
+    // 直接使用简单的askQuestion，避免使用askConfirmation可能引入的复杂性
+    const autoModeInput = await askQuestion("", 5000, "y");
+    
+    // 手动清理倒计时显示
+    CountdownManager.clearCountdownDisplay();
+
+    // 解析用户选择
+    AUTO_PLAY_MODE = autoModeInput.toLowerCase() === 'y';
+    
+    // 显示用户选择的结果
+    if (AUTO_PLAY_MODE) {
+      displayManager.printSuccess(`已选择: 启用自动打牌模式，AI将自动对弈`);
+    } else {
+      displayManager.printSuccess(`已选择: 关闭自动打牌模式，将由您亲自上场！`);
+    }
+    
+    // 短暂延迟，确保显示正确
+    await new Promise(resolve => setTimeout(resolve, 500));
     
     // 提示用户选择是否启用调试模式
-    DEBUG_MODE = await promptDebugMode();
+    displayManager.printColored(`是否启用调试模式？在此模式下，将显示更多日志详情。`, Style.CYAN);
+    displayManager.printColored(`输入 'd' 启用调试模式，其他键不启用 [默认: 启用]`, Style.YELLOW);
+    displayManager.printColored(`5秒内无选择将启用调试模式`, Style.RED);
     
+    // 直接使用askQuestion
+    const debugModeInput = await askQuestion("", 5000, "d");
+    
+    // 手动清理倒计时显示
+    CountdownManager.clearCountdownDisplay();
+    
+    // 解析用户选择
+    DEBUG_MODE = debugModeInput.toLowerCase() === 'd';
+    
+    // 显示用户选择的结果
     // 根据调试模式设置日志级别
     if (DEBUG_MODE) {
+      displayManager.printSuccess(`已选择: 启用调试模式，将显示更多日志详情`);
+
       setLogLevel(LogLevel.DEBUG);
       displayManager.printColored(`已启用调试模式，将记录详细日志信息`, Style.BOLD + Style.CYAN);
       InputState.setDebugMode(true);
     } else {
+      displayManager.printSuccess(`已选择: 不启用调试模式`);
+
       setLogLevel(LogLevel.INFO);
       InputState.setDebugMode(false);
     }
+    
+    // 确保清除任何可能存在的倒计时
+    InputState.clearCountdown();
+    
+    // 短暂延迟，确保显示正确
+    await new Promise(resolve => setTimeout(resolve, 500));
     
     // 初始化游戏
     const game = new Game();
@@ -128,9 +89,6 @@ async function startGame() {
     if (AUTO_PLAY_MODE) {
       // 自动模式下，禁用倒计时的调试输出
       InputState.setDebugMode(DEBUG_MODE);
-      
-      // 确保清除任何可能存在的倒计时
-      InputState.clearCountdown();
       
       // 自动模式：4个AI玩家
       displayManager.printTitle(`初始化游戏：4个AI玩家对弈`);

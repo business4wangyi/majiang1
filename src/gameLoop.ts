@@ -13,30 +13,23 @@ import {
 } from './input';
 import { AUTO_PLAY_MODE, DEBUG_MODE } from './index';
 import { displayManager } from './display-manager';
+import { CountdownManager } from './countdown-manager';
 
 // 导入重构后的模块
 import { 
-  checkGameStateHealth, 
-  recoverGameState, 
-  handleHealthCheckFailure,
+  // recoverGameState, 
+  // handleHealthCheckFailure,
   generateGameStateHash,
-  detectStateLoop
+  // detectStateLoop
 } from './game-health';
 import {
   aiDecisionPause,
-  aiDecideDiscard,
-  handlePlayerDraw,
   handleAIDiscard
 } from './ai-decision';
 import {
   handleEmptyTileDeck,
-  ensureCorrectHandSizes,
   prepareGameStart
 } from './game-event-handler';
-
-// 声明全局变量
-let gameLoopInterval: NodeJS.Timeout | null = null;
-let previousPlayerState: { id: number, handTilesLength: number, state: PlayerState } | null = null;
 
 // 游戏循环检查间隔（毫秒）
 const GAME_LOOP_INTERVAL = 100;
@@ -92,19 +85,19 @@ export async function gameLoop(game: Game): Promise<void> {
       }
       
       // 检测游戏状态循环
-      const { isLoop, repeatedState } = detectStateLoop(lastGameStates, currentGameState, 20);
-      if (isLoop) {
-        warnLog(`检测到游戏状态可能循环: ${repeatedState}`);
-        displayManager.printWarning(`检测到游戏状态可能循环，尝试恢复...`);
+      // const { isLoop, repeatedState } = detectStateLoop(lastGameStates, currentGameState, 20);
+      // if (isLoop) {
+      //   warnLog(`检测到游戏状态可能循环: ${repeatedState}`);
+      //   displayManager.printWarning(`检测到游戏状态可能循环，尝试恢复...`);
         
-        // 游戏状态循环通常是由于某些玩家手牌数量异常导致的
-        // 检查并修复玩家手牌
-        if (!await recoverGameState(game)) {
-          await handleHealthCheckFailure(game, gameLoopInterval);
-          isProcessingGameLoop = false;
-          return;
-        }
-      }
+      //   // 游戏状态循环通常是由于某些玩家手牌数量异常导致的
+      //   // 检查并修复玩家手牌
+      //   if (!await recoverGameState(game)) {
+      //     await handleHealthCheckFailure(game, gameLoopInterval);
+      //     isProcessingGameLoop = false;
+      //     return;
+      //   }
+      // }
       
       // 如果是自动模式，检查剩余牌数，可能需要结束游戏
       if (AUTO_PLAY_MODE && game.remainingTiles <= 0) {
@@ -133,7 +126,7 @@ export async function gameLoop(game: Game): Promise<void> {
       if (AUTO_PLAY_MODE) {
         const playersWithExcessTiles = game.getPlayersWithExcessTiles();
         if (playersWithExcessTiles.length > 0) {
-          // 有玩家手牌超过13张，需要出牌
+          // 有玩家已摸牌，需要出牌
           for (const player of playersWithExcessTiles) {
             if (player.id === game.currentPlayerIndex) {
               infoLog(`自动模式: 检测到当前玩家 ${player.name} 手牌数量为 ${player.handTiles.length}，需要出牌`);
@@ -186,7 +179,7 @@ export async function gameLoop(game: Game): Promise<void> {
       if (continueGame.toLowerCase() === 'y') {
         // 如果继续，重置一些状态并重新启动循环
         InputState.isWaitingForUserInput = false;
-        clearAllCountdownMessages();
+        CountdownManager.clearCountdownDisplay();
         gameLoop(game);
       } else {
         // 退出程序
@@ -197,43 +190,6 @@ export async function gameLoop(game: Game): Promise<void> {
       isProcessingGameLoop = false;
     }
   }, GAME_LOOP_INTERVAL);
-}
-
-/**
- * 更新倒计时消息
- */
-function updateCountdownMessage(message: string): void {
-  process.stdout.write(`\r${Style.YELLOW}${message}${Style.RESET}`);
-}
-
-/**
- * 清除所有倒计时消息
- */
-function clearAllCountdownMessages(): void {
-  process.stdout.write('\r                                                                      \r');
-}
-
-// 清理游戏循环定时器
-export function cleanupGameLoop() {
-  if (gameLoopInterval) {
-    clearInterval(gameLoopInterval);
-    gameLoopInterval = null;
-  }
-  
-  // 确保清除任何活跃的倒计时
-  InputState.clearCountdown();
-  
-  // 重置状态
-  previousPlayerState = null;
-}
-
-export async function startGame(game: Game): Promise<void> {
-  // ... existing code ...
-  
-  // 移除原有的gameLoopInterval局部声明
-  // let gameLoopInterval: NodeJS.Timeout | null = null;
-  
-  // ... existing code ...
 }
 
 async function handleCurrentPlayerAction(game: Game): Promise<void> {
@@ -272,49 +228,17 @@ async function handleCurrentPlayerAction(game: Game): Promise<void> {
       // 处理AI玩家出牌
       await handleAIDiscard(game, currentPlayer);
       
-      // AI行动完成后，重置等待用户输入的状态
-      InputState.isWaitingForUserInput = false;
     } catch (error) {
       errorLog(`AI玩家行动出错: ${error instanceof Error ? error.message : String(error)}`);
       displayManager.printError(`AI玩家行动出错: ${error instanceof Error ? error.message : String(error)}`);
       
-      // 尝试进行恢复
-      if (currentPlayer.handTiles.length > 13) {
-        try {
-          // 如果AI玩家手牌数量大于13，尝试强制其打出最后一张牌
-          const tileIndex = currentPlayer.handTiles.length - 1;
-          
-          warnLog(`尝试使用备选方法处理AI玩家出牌...`);
-          displayManager.printWarning(`尝试使用备选方法处理AI玩家出牌...`);
-          game.currentPlayerDiscard(tileIndex);
-          
-          infoLog(`已自动处理AI玩家回合`);
-          displayManager.printSuccess(`已自动处理AI玩家回合`);
-        } catch (fallbackError) {
-          errorLog(`备选方法也失败: ${fallbackError instanceof Error ? fallbackError.message : String(fallbackError)}`);
-          displayManager.printError(`备选方法也失败: ${fallbackError instanceof Error ? fallbackError.message : String(fallbackError)}`);
-          
-          // 最后的尝试：直接使用玩家的discardTile方法
-          try {
-            const tileIndex = currentPlayer.handTiles.length - 1;
-            const fallbackDiscard = currentPlayer.discardTile(tileIndex);
-            if (fallbackDiscard) {
-              warnLog(`使用备选方法出牌: ${fallbackDiscard.toString()}`);
-              displayManager.printWarning(`使用备选方法出牌: ${fallbackDiscard.toString()}`);
-            }
-          } catch (lastError) {
-            errorLog(`所有出牌方法都失败，无法恢复状态: ${lastError instanceof Error ? lastError.message : String(lastError)}`);
-            displayManager.printError(`所有出牌方法都失败，无法恢复状态: ${lastError instanceof Error ? lastError.message : String(lastError)}`);
-          }
-        }
-      }
-      
-      // 重置等待用户输入的状态
-      InputState.isWaitingForUserInput = false;
-      
-      // 确保游戏继续进行
-      game.nextTurn();
     }
+
+    // 重置状态
+    InputState.isWaitingForUserInput = false;
+
+    // 确保游戏继续进行
+    game.nextTurn();
   } else if (currentPlayer.type === PlayerType.HUMAN) {
     // 人类玩家
     displayManager.printWarning(`${Style.CYAN}${Style.BOLD}轮到您出牌，请选择要打出的牌(输入序号1-${currentPlayer.handTiles.length})${Style.RESET}`);
@@ -369,7 +293,10 @@ async function handleCurrentPlayerAction(game: Game): Promise<void> {
         10, // 10秒倒计时
         () => { // 倒计时结束回调
           // 如果已经处理过出牌，不再执行
-          if (hasProcessedDiscard) return;
+          if (hasProcessedDiscard) {
+            infoLog(`倒计时结束回调：已经处理过出牌，跳过处理`);
+            return;
+          }
           
           // 标记为已经处理
           hasProcessedDiscard = true;
@@ -377,7 +304,24 @@ async function handleCurrentPlayerAction(game: Game): Promise<void> {
           // 直接执行自动出牌
           infoLog(`倒计时结束，执行自动出牌`);
           displayManager.printWarning(`倒计时结束，执行自动出牌`);
-          handleTimeoutAction(game, currentPlayer);
+          
+          try {
+            // 异步调用可能导致问题，所以直接使用同步方式处理
+            handleTimeoutAction(game, currentPlayer);
+          } catch (timeoutError) {
+            errorLog(`倒计时结束处理出错: ${timeoutError instanceof Error ? timeoutError.message : String(timeoutError)}`);
+            displayManager.printError(`处理超时出牌时出错，尝试恢复...`);
+            
+            // 确保重置等待状态
+            InputState.isWaitingForUserInput = false;
+            
+            // 确保游戏继续
+            try {
+              game.nextTurn();
+            } catch (nextTurnError) {
+              errorLog(`进入下一回合出错: ${nextTurnError instanceof Error ? nextTurnError.message : String(nextTurnError)}`);
+            }
+          }
         }
       );
       
@@ -460,6 +404,9 @@ function handleTimeoutAction(game: Game, player: Player): void {
   displayManager.printWarning(`时间到，自动选择出牌`);
   
   try {
+    // 确保InputState状态正确，防止gameLoop进入等待状态
+    InputState.isWaitingForUserInput = false;
+    
     // 找到最后一张牌的索引
     const lastIndex = player.handTiles.length - 1;
     
@@ -468,7 +415,6 @@ function handleTimeoutAction(game: Game, player: Player): void {
       warnLog(`玩家没有手牌可以出，强制进入下一回合`);
       displayManager.printError(`玩家没有手牌可以出，强制进入下一回合`);
       game.nextTurn();
-      InputState.isWaitingForUserInput = false;
       return;
     }
     
@@ -492,23 +438,42 @@ function handleTimeoutAction(game: Game, player: Player): void {
       game.nextTurn();
     }
     
-    // 重置等待状态 - 必须在nextTurn之后执行，确保游戏状态正确更新
-    InputState.isWaitingForUserInput = false;
-    
     // 清除可能存在的倒计时显示
-    clearAllCountdownMessages();
+    CountdownManager.clearCountdownDisplay();
     
   } catch (error) {
     errorLog(`自动出牌出错: ${error instanceof Error ? error.message : String(error)}`);
+    errorLog(`错误堆栈: ${error instanceof Error ? error.stack : '无堆栈'}`);
     displayManager.printError(`自动出牌出错: ${error instanceof Error ? error.message : String(error)}`);
     
-    // 重置等待状态
-    InputState.isWaitingForUserInput = false;
-    
     // 清除可能存在的倒计时显示
-    clearAllCountdownMessages();
+    CountdownManager.clearCountdownDisplay();
+    
+    try {
+      // 出错后的备用方案：直接使用player.discardTile方法
+      if (player.handTiles.length > 0) {
+        const lastIndex = player.handTiles.length - 1;
+        const backupTile = player.discardTile(lastIndex);
+        
+        if (backupTile) {
+          infoLog(`使用备用方法出牌: ${backupTile.toString()}`);
+          displayManager.printWarning(`使用备用方法出牌: ${backupTile.toString()}`);
+          
+          // 设置为最后打出的牌
+          game.setLastDiscardedTile(backupTile);
+        }
+      }
+    } catch (backupError) {
+      errorLog(`备用出牌方法也失败: ${backupError instanceof Error ? backupError.message : String(backupError)}`);
+    }
     
     // 确保游戏继续
     game.nextTurn();
+  } finally {
+    // 无论成功或失败，都确保重置等待状态，这是关键步骤
+    InputState.isWaitingForUserInput = false;
+    
+    // 再次确保倒计时已清除
+    InputState.clearCountdown();
   }
 }

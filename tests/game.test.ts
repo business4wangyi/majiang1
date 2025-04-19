@@ -34,14 +34,6 @@ describe('Game', () => {
       expect(game.lastDiscardedTile).to.be.null;
     });
     
-    it('should provide game state info', () => {
-      const stateInfo = game.getGameStateInfo();
-      expect(stateInfo).to.be.a('string');
-      expect(stateInfo).to.include('游戏状态');
-      expect(stateInfo).to.include('当前玩家');
-      expect(stateInfo).to.include('剩余牌数');
-      expect(stateInfo).to.include('总牌数');
-    });
   });
   
   describe('Player Management', () => {

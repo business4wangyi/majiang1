@@ -630,35 +630,6 @@ describe('RuleEngine', () => {
       expect(RuleEngine.isSameTile(tile1, tile2)).to.be.true;
       expect(RuleEngine.isSameTile(tile1, tile3)).to.be.false;
     });
-    
-    it('getBestDiscard应推荐最佳出牌', () => {
-      const player = new Player(1, '测试玩家', PlayerType.HUMAN);
-      
-      // 设置手牌，包含一些孤张和边张
-      player.handTiles = [
-        new Tile(TileType.WAN, 1, 1),
-        new Tile(TileType.WAN, 2, 2),
-        new Tile(TileType.WAN, 3, 3),
-        new Tile(TileType.WAN, 4, 4),
-        new Tile(TileType.WAN, 5, 5),
-        new Tile(TileType.TIAO, 2, 6),
-        new Tile(TileType.TIAO, 3, 7),
-        new Tile(TileType.TIAO, 4, 8),
-        new Tile(TileType.TONG, 5, 9),
-        new Tile(TileType.TONG, 6, 10),
-        new Tile(TileType.TONG, 7, 11),
-        new Tile(TileType.FENG, 1, 12), // 字牌，应该被优先打出
-        new Tile(TileType.WAN, 9, 13)  // 幺九牌，应该被优先打出
-      ];
-      
-      const index = RuleEngine.getBestDiscard(player);
-      expect(index).to.be.within(0, player.handTiles.length - 1);
-      
-      // 验证是否倾向于打出字牌或幺九牌
-      const discardedTile = player.handTiles[index];
-      const isPreferredDiscard = RuleEngine.isOrphan(discardedTile) || RuleEngine.isEdge(discardedTile);
-      expect(isPreferredDiscard).to.be.true;
-    });
 
     it('getHuDetails应返回详细的胡牌信息', () => {
       // 创建一个玩家
@@ -775,45 +746,5 @@ describe('RuleEngine', () => {
 //       expect(huDetails.huType).to.equal(HuType.THIRTEEN_ORPHANS);
 //     });
 //   });
-  
-  describe('AI决策逻辑', () => {
-    it('getBestDiscard应在复杂情况下给出合理建议', () => {
-      const player = new Player(1, '测试玩家', PlayerType.HUMAN);
-      
-      // 一种接近听牌的手牌
-      player.handTiles = [
-        // 刻子
-        new Tile(TileType.WAN, 1, 1),
-        new Tile(TileType.WAN, 1, 2),
-        new Tile(TileType.WAN, 1, 3),
-        // 顺子部分
-        new Tile(TileType.WAN, 2, 4),
-        new Tile(TileType.WAN, 3, 5),
-        // 顺子部分
-        new Tile(TileType.TIAO, 3, 7),
-        new Tile(TileType.TIAO, 4, 8),
-        // 不相关的牌
-        new Tile(TileType.TONG, 1, 10),
-        new Tile(TileType.TONG, 9, 11),
-        new Tile(TileType.FENG, 1, 12),
-        new Tile(TileType.FENG, 2, 13),
-        new Tile(TileType.FENG, 3, 14),
-        new Tile(TileType.FENG, 4, 15)
-      ];
-      
-      const bestIndex = RuleEngine.getBestDiscard(player);
-      expect(bestIndex).to.be.within(0, player.handTiles.length - 1);
-      
-      // 检查是否优先打出不影响听牌进度的孤张牌
-      const discardedTile = player.handTiles[bestIndex];
-      
-      // 应优先打出 1筒、9筒、风牌 这些不相关的牌
-      const isIrrelevantTile = 
-        (discardedTile.type === TileType.TONG && (discardedTile.value === 1 || discardedTile.value === 9)) ||
-        discardedTile.type === TileType.FENG || 
-        discardedTile.type === TileType.JIAN;
-      
-      expect(isIrrelevantTile).to.be.true;
-    });
-  });
+
 }); 

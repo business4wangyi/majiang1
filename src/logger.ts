@@ -168,7 +168,7 @@ function flushLogBuffer(): void {
     // 清空缓冲区
     logBuffer = [];
   } catch (error) {
-    console.error(`${CONFIG.debugPrefix} 无法写入日志文件: ${error instanceof Error ? error.message : String(error)}`);
+    errorLog(`${CONFIG.debugPrefix} 无法写入日志文件: ${error instanceof Error ? error.message : String(error)}`);
   }
 }
 
@@ -240,7 +240,7 @@ export function saveGameLogToFile(game: Game, reason: string): void {
     // 清空缓冲区
     logBuffer = [];
   } catch (error) {
-    console.error(`${CONFIG.debugPrefix} 保存游戏日志失败: ${error instanceof Error ? error.message : String(error)}`);
+    errorLog(`${CONFIG.debugPrefix} 保存游戏日志失败: ${error instanceof Error ? error.message : String(error)}`);
   }
 }
 

@@ -22,6 +22,10 @@ class CountdownManager {
             (0, logger_1.warnLog)(`尝试启动无效的倒计时: ${seconds}秒`);
             return null;
         }
+        // 记录回调状态
+        if (!onComplete) {
+            (0, logger_1.warnLog)(`警告：启动倒计时时未提供回调函数`);
+        }
         // 清除已存在的倒计时
         this.clearCountdown();
         // 记录当前时间
@@ -34,7 +38,7 @@ class CountdownManager {
         // 设置等待用户输入状态
         this._isWaitingForUserInput = true;
         if (this.debugMode) {
-            (0, logger_1.infoLog)(`倒计时开始: ${seconds}秒`);
+            (0, logger_1.infoLog)(`倒计时开始: ${seconds}秒, 回调状态: ${onComplete ? '已设置' : '未设置'}`);
         }
         // 通知状态监听器
         this.notifyListeners();
@@ -46,10 +50,9 @@ class CountdownManager {
             }
             // 检查自上次更新后是否已经过了1秒
             const now = Date.now();
-            const elapsed = (now - this.lastUpdateTime) / 1000;
             this.lastUpdateTime = now;
             // 更新倒计时显示
-            this.updateCountdownMessage(`${display_1.Style.YELLOW}倒计时: ${this.remainingSeconds}秒${display_1.Style.RESET}`);
+            display_manager_1.displayManager.printColored(`倒计时: ${this.remainingSeconds}秒`, display_1.Style.YELLOW);
             // 执行每秒回调
             if (this.onTickCallback) {
                 try {
@@ -76,17 +79,23 @@ class CountdownManager {
                 const callback = this.onCompleteCallback;
                 // 执行完成回调
                 if (callback) {
-                    // 使用setTimeout来确保回调在主事件循环的下一个周期执行
-                    // 这有助于防止可能的递归调用
-                    setTimeout(() => {
-                        try {
-                            if (callback)
-                                callback();
-                        }
-                        catch (error) {
-                            (0, logger_1.warnLog)(`倒计时onComplete回调执行出错: ${error instanceof Error ? error.message : String(error)}`);
-                        }
-                    }, 0);
+                    // 直接同步执行回调，确保不会因为异步延迟而导致问题
+                    try {
+                        (0, logger_1.infoLog)(`执行倒计时结束回调`);
+                        callback();
+                    }
+                    catch (error) {
+                        (0, logger_1.warnLog)(`倒计时onComplete回调执行出错: ${error instanceof Error ? error.message : String(error)}`);
+                        (0, logger_1.warnLog)(`错误堆栈: ${error instanceof Error ? error.stack : '无堆栈信息'}`);
+                        // 错误处理：即使回调失败，也确保游戏状态正确
+                        this._isWaitingForUserInput = false;
+                    }
+                }
+                else {
+                    (0, logger_1.warnLog)(`倒计时结束，但没有设置回调函数`);
+                    // 尝试恢复UI
+                    process.stdout.write('\r                                          \r');
+                    display_manager_1.displayManager.printColored(`倒计时结束, 等待用户操作...`, display_1.Style.YELLOW);
                 }
             }
         }, 1000);

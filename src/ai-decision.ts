@@ -77,25 +77,6 @@ export async function aiDecideDiscard(player: Player): Promise<{index: number, n
   }
 }
 
-/**
- * 处理玩家摸牌
- */
-export async function handlePlayerDraw(game: Game, player: Player): Promise<boolean> {
-  try {
-    // 使用游戏对象的公共方法给玩家摸牌
-    const tile = game.drawTileForPlayer(player);
-    if (tile) {
-      displayManager.addToTurnLog(`${player.name} 摸了一张牌`);
-      return true;
-    } else {
-      warnLog('牌山已空，无法摸牌');
-      return false;
-    }
-  } catch (error) {
-    errorLog(`玩家摸牌时发生错误: ${error instanceof Error ? error.message : String(error)}`);
-    return false;
-  }
-}
 
 /**
  * 处理AI玩家出牌

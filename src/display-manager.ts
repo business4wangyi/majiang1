@@ -1,4 +1,4 @@
-import { Style, clearLine, createProgressBar, groupTilesByType, TileTypeNames, TileTypeOrder, analyzeHand, formatTileSet } from './display';
+import { Style, groupTilesByType, TileTypeNames, TileTypeOrder, analyzeHand, formatTileSet } from './display';
 import { Player } from './player';
 import { Tile, sortTiles } from './tile';
 import { GameState } from './game-state';
@@ -87,13 +87,6 @@ export class DisplayManager {
     if (logToFile) {
       infoLog(divider);
     }
-  }
-  
-  /**
-   * 清除当前行并将光标移到行首
-   */
-  public clearCurrentLine(): void {
-    clearLine(); // 使用display.ts中的基础功能
   }
   
   //=== 特殊消息类型 ===
@@ -472,22 +465,6 @@ export class DisplayManager {
     });
     
     this.print(''); // 空行
-  }
-  
-  /**
-   * 打印倒计时信息
-   * @param seconds 剩余秒数
-   * @param totalSeconds 总秒数
-   */
-  public printCountdown(seconds: number, totalSeconds: number): void {
-    // 清除当前行并打印倒计时
-    this.clearCurrentLine();
-    
-    // 使用通用进度条函数创建进度条
-    const bar = createProgressBar(seconds, totalSeconds);
-    
-    const message = `倒计时: ${seconds}秒 [${bar}]`;
-    process.stdout.write(`${Style.YELLOW}${message}${Style.RESET}`);
   }
 }
 

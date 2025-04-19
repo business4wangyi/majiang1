@@ -3,7 +3,7 @@ import { Tile } from './tile';
 import { GameStateManager, GameState } from './game-state';
 import { TileManager } from './tile-manager';
 import { RuleEngine } from './rule-engine';
-import { debugLog } from './logger';
+import { debugLog, errorLog } from './logger';
 import { displayManager } from './display-manager';
 import { Game } from './game';
 
@@ -18,10 +18,6 @@ export class GameFlow {
     displayManager.print("开始初始化游戏...");
     
     // 检查玩家数量
-    if (this.players.length === 0) {
-      displayManager.printError("没有玩家，无法开始游戏");
-      return;
-    }
     displayManager.print(`游戏中共有 ${this.players.length} 名玩家`);
     
     // 初始化游戏状态
@@ -74,9 +70,9 @@ export class GameFlow {
             debugLog(`给玩家 ${player.name} 发牌: ${tile.toString()}, 当前手牌数量: ${player.handTiles.length}`);
           } else {
             displayManager.printError(`给玩家 ${player.name} 发牌失败，牌山已空，无法继续游戏`);
+            errorLog(`给玩家 ${player.name} 发牌失败，牌山已空，无法继续游戏`);
             // 在实际应用中，这里可以添加退出程序的代码
-            // 如 process.exit(1);
-            return;
+            process.exit(1);
           }
         }
       }
@@ -85,8 +81,10 @@ export class GameFlow {
     // 验证每位玩家手牌数量
     displayManager.printTitle("发牌完成，最终玩家手牌状态");
     for (const player of this.players) {
-      if (player.handTiles.length !== 13) {
-        displayManager.printError(`严重错误: 玩家 ${player.name} 手牌数量不正确 (${player.handTiles.length}/13)，游戏无法继续`);
+      // 使用Player类的方法判断手牌数量是否合理
+      const expectedHandSize = player.getExpectedHandSize(false);
+      if (!player.hasValidHandSize(false)) {
+        displayManager.printError(`严重错误: 玩家 ${player.name} 手牌数量不正确 (${player.handTiles.length}/${expectedHandSize})，游戏无法继续`);
         return;
       }
       
@@ -100,8 +98,11 @@ export class GameFlow {
 
   public currentPlayerDraw(): Tile | null {
     const currentPlayer = this.players[this.gameState.currentPlayerIndex];
-    if (currentPlayer.handTiles.length !== 13) {
-      debugLog(`玩家 ${currentPlayer.name} 手牌数量不正确: ${currentPlayer.handTiles.length}`);
+    
+    // 使用Player类的方法判断手牌数量是否合理
+    if (!currentPlayer.hasValidHandSize(false)) {
+      const expectedHandSize = currentPlayer.getExpectedHandSize(false);
+      debugLog(`玩家 ${currentPlayer.name} 手牌数量不正确: ${currentPlayer.handTiles.length}，预期: ${expectedHandSize}`);
       return null;
     }
 
@@ -121,9 +122,9 @@ export class GameFlow {
     if (currentPlayer.state !== PlayerState.ACTING) {
       displayManager.printWarning(`玩家 ${currentPlayer.name} 不处于ACTING状态，当前状态: ${PlayerState[currentPlayer.state]}`);
       
-      // 如果是AI玩家且手牌超过13张，强制允许出牌以保持游戏流畅
-      if (currentPlayer.type === PlayerType.AI && currentPlayer.handTiles.length > 13) {
-        displayManager.printWarning(`AI玩家手牌超过13张，强制允许出牌以维持游戏状态正确性`);
+      // 如果是AI玩家且手牌超过预期数量，强制允许出牌以保持游戏流畅
+      if (currentPlayer.type === PlayerType.AI && currentPlayer.needsToDiscard()) {
+        displayManager.printWarning(`AI玩家手牌超过预期数量，强制允许出牌以维持游戏状态正确性`);
         currentPlayer.state = PlayerState.ACTING;
       } else {
         return null;
@@ -246,7 +247,8 @@ export class GameFlow {
 
   public forceAIPlayerDiscard(): boolean {
     for (const player of this.players) {
-      if (player.type === PlayerType.AI && player.handTiles.length > 13) {
+      // 使用Player类的needsToDiscard方法判断是否需要出牌
+      if (player.type === PlayerType.AI && player.needsToDiscard()) {
         debugLog(`强制AI玩家 ${player.name} 出牌，手牌数量: ${player.handTiles.length}`);
         
         // 使用AI策略选择要打出的牌
@@ -326,81 +328,3 @@ export function drawTile(game: Game, player: Player, notify: boolean = true): Ti
   
   return tile;
 }
-
-/**
- * 处理超出手牌数量的检查与修复
- * @param game 游戏实例
- * @param forcedFix 是否强制修复
- * @returns 是否已修复
- */
-export function handleExcessHandTiles(game: Game, forcedFix: boolean = false): boolean {
-  // 检查每个玩家的手牌数量
-  const allPlayers = game.getAllPlayers();
-  let needsFix = false;
-  
-  for (const player of allPlayers) {
-    // 常规情况下，手牌应该是13张或14张
-    if (player.handTiles.length > 14) {
-      needsFix = true;
-      debugLog(`检测到严重错误：玩家 ${player.name} 手牌数量(${player.handTiles.length})超过14张`);
-      displayManager.printError(`严重错误：玩家 ${player.name} 手牌数量(${player.handTiles.length})超过最大值14张，游戏无法继续`);
-      // 不再执行修复逻辑，直接报错
-      displayManager.addToTurnLog(`游戏错误: 玩家 ${player.name} 手牌数量异常(${player.handTiles.length}/14)，游戏终止`);
-      // 在实际应用中，这里可以添加退出程序的代码
-      // 如 process.exit(1);
-    } else if (player.handTiles.length < 13) {
-      needsFix = true;
-      debugLog(`检测到严重错误：玩家 ${player.name} 手牌数量(${player.handTiles.length})少于13张`);
-      displayManager.printError(`严重错误：玩家 ${player.name} 手牌数量(${player.handTiles.length})少于最小值13张，游戏无法继续`);
-      // 不再执行修复逻辑，直接报错
-      displayManager.addToTurnLog(`游戏错误: 玩家 ${player.name} 手牌数量异常(${player.handTiles.length}/13)，游戏终止`);
-      // 在实际应用中，这里可以添加退出程序的代码
-      // 如 process.exit(1);
-    }
-  }
-  
-  return needsFix;
-}
-
-/**
- * 玩家摸牌
- * @param game 游戏实例
- * @returns 是否成功摸牌
- */
-export function handlePlayerDraw(game: Game): boolean {
-  // 获取当前玩家
-  const currentPlayer = game.getCurrentPlayer();
-  
-  // 检查牌山是否已空
-  if (game.remainingTiles <= 0) {
-    // 牌山已空，无法摸牌
-    return false;
-  }
-  
-  // 摸牌
-  const drawnTile = drawTile(game, currentPlayer);
-  
-  if (!drawnTile) {
-    // 摸牌失败
-    return false;
-  }
-  
-  // 注意：这里有一个类型错误，PlayerState没有DISCARDING状态
-  // 应该使用合法的PlayerState枚举值
-  currentPlayer.state = PlayerState.ACTING; // 修正为合法的状态
-  
-  // 记录到回合日志
-  displayManager.addToTurnLog(`${currentPlayer.name} 摸了一张牌`);
-  
-  return true;
-}
-
-/**
- * 计算玩家应该打出的牌的索引
- * @param player 玩家
- * @returns 牌的索引
- */
-export function getAIDiscardIndex(player: Player): number {
-  // 简单实现：返回最后一张牌的索引
-  return player.handTiles.length - 1;
-} 

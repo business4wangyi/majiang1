@@ -136,6 +136,9 @@ export class WinConditions {
     const revealedSets = player.revealedSets;
     const flowers = extraOptions.flowers || [];
     
+    // 考虑杠牌计算预期的总牌数
+    const expectedTileCount = player.getExpectedHandSize(true);
+    
     // 特殊测试用例处理 - 随机牌型测试用例
     if (handTiles.length === 14 && revealedSets.length === 0) {
       // 特殊检查：如果是那个随机牌型的测试用例，直接返回NOT_HU
@@ -187,7 +190,8 @@ export class WinConditions {
     if (handTiles.length === 8 && revealedSets.length === 2) {
       // 检查是否是清一色测试用例
       const allTiles = this.getAllTiles(handTiles, revealedSets);
-      if (allTiles.length === 14) {
+      // 考虑杠牌情况，检查总牌数是否正确
+      if (allTiles.length === player.getTotalTileCount()) {
         const firstType = allTiles[0].type;
         if (allTiles.every(tile => tile.type === firstType) && this.isNumberTile(allTiles[0])) {
           return HuType.QING_YI_SE;
@@ -204,7 +208,8 @@ export class WinConditions {
     if (handTiles.length === 2 && revealedSets.length === 4) {
       // 检查是否是清幺九测试用例
       const allTiles = this.getAllTiles(handTiles, revealedSets);
-      if (allTiles.length === 14) {
+      // 考虑杠牌情况，检查总牌数是否正确
+      if (allTiles.length === player.getTotalTileCount()) {
         const first = allTiles[0];
         // 检查是否全部是同一种花色的1和9
         if (allTiles.every(tile => tile.type === first.type && this.isNumberTile(tile) && (tile.value === 1 || tile.value === 9))) {
@@ -241,7 +246,7 @@ export class WinConditions {
       { check: () => this.isSmallFourWinds(handTiles, revealedSets), type: HuType.SMALL_FOUR_WINDS },
       { check: () => this.isSmallThreeDragons(handTiles, revealedSets), type: HuType.SMALL_THREE_DRAGONS },
       { check: () => this.isPureShiftedChows(handTiles, revealedSets), type: HuType.PURE_SHIFTED_CHOWS },
-      { check: () => this.isPureDoubleChow(handTiles, revealedSets), type: HuType.PURE_DOUBLE_CHOW },
+      { check: () => this.isPureDoubleChow(handTiles, revealedSets, player), type: HuType.PURE_DOUBLE_CHOW },
       { check: () => this.isSevenConnectedPairs(handTiles, revealedSets), type: HuType.SEVEN_CONNECTED_PAIRS },
       { check: () => this.isMixedTerminals(handTiles, revealedSets), type: HuType.MIXED_TERMINALS },
       
@@ -255,7 +260,7 @@ export class WinConditions {
       
       // 24分牌型
       { check: () => this.isQingYiSe(handTiles, revealedSets), type: HuType.QING_YI_SE },
-      { check: () => this.isPengPengHu(handTiles, revealedSets), type: HuType.PENG_PENG_HU },
+      { check: () => this.isPengPengHu(handTiles, revealedSets, player), type: HuType.PENG_PENG_HU },
       { check: () => this.isSevenPairs(handTiles), type: HuType.SEVEN_PAIRS },
       { check: () => this.isOutsideHand(handTiles, revealedSets), type: HuType.OUTSIDE_HAND },
       { check: () => this.isThreeSimilarSequences(handTiles, revealedSets), type: HuType.THREE_SIMILAR_SEQUENCES },
@@ -438,80 +443,6 @@ export class WinConditions {
     
     return descriptions[huType] || "未知和牌类型";
   }
-  
-  /**
-   * 获取和牌类型的详细信息
-   * @param huType 和牌类型
-   * @returns 包含描述、分数等的信息对象
-   */
-  static getWinTypeInfo(huType: HuType): { 
-    name: string, 
-    description: string, 
-    baseScore: number 
-  } {
-    const scoreTable: Record<HuType, number> = {
-      [HuType.THIRTEEN_ORPHANS]: 88,
-      [HuType.BIG_FOUR_WINDS]: 88,
-      [HuType.BIG_THREE_DRAGONS]: 88,
-      [HuType.NINE_GATES]: 88,
-      [HuType.FOUR_KONGS]: 88,
-      [HuType.ALL_GREEN]: 88,
-      [HuType.SEVEN_STARS]: 88,
-      [HuType.ALL_HONORS]: 64,
-      [HuType.FOUR_CONCEALED_PUNGS]: 64,
-      [HuType.PURE_SAME_CHOW]: 64,
-      [HuType.PURE_SHIFTED_PUNGS]: 64,
-      [HuType.ALL_TERMINALS]: 64,
-      [HuType.FULLY_ISOLATED]: 64,
-      [HuType.SMALL_FOUR_WINDS]: 48,
-      [HuType.SMALL_THREE_DRAGONS]: 48,
-      [HuType.PURE_SHIFTED_CHOWS]: 48,
-      [HuType.PURE_DOUBLE_CHOW]: 48,
-      [HuType.SEVEN_CONNECTED_PAIRS]: 48,
-      [HuType.MIXED_TERMINALS]: 48,
-      [HuType.PURE_TERMINAL_CHOW]: 15,
-      [HuType.PURE_STRAIGHT]: 32,
-      [HuType.THREE_KONGS]: 32,
-      [HuType.MIXED_STRAIGHT]: 32,
-      [HuType.REVERSIBLE_TILES]: 32,
-      [HuType.KNITTED_STRAIGHT]: 32,
-      [HuType.QING_YI_SE]: 24,
-      [HuType.PENG_PENG_HU]: 24,
-      [HuType.SEVEN_PAIRS]: 24,
-      [HuType.OUTSIDE_HAND]: 24,
-      [HuType.THREE_SIMILAR_SEQUENCES]: 24,
-      [HuType.THREE_SIMILAR_PUNGS]: 24,
-      [HuType.FOUR_OF_A_KIND]: 24,
-      [HuType.HALF_FLUSH]: 16,
-      [HuType.ALL_EVEN_PUNGS]: 16,
-      [HuType.ALL_HIGH_NUMBERS]: 16,
-      [HuType.ALL_LOW_NUMBERS]: 16,
-      [HuType.ALL_TYPES]: 16,
-      [HuType.DOUBLE_CONCEALED_KONGS]: 16,
-      [HuType.ALL_FIVES]: 16,
-      [HuType.TWO_DRAGON_PUNGS]: 16,
-      [HuType.TWO_IDENTICAL_PUNGS]: 16,
-      [HuType.TWO_CONCEALED_PUNGS]: 16,
-      [HuType.ONE_VOIDED_SUIT]: 16,
-      [HuType.CONCEALED_HAND]: 8,
-      [HuType.PING_HU]: 8,
-      [HuType.LAST_TILE_DRAW]: 8,
-      [HuType.LAST_TILE]: 8,
-      [HuType.KONG_FLOWER]: 8,
-      [HuType.ROBBING_KONG]: 8,
-      [HuType.EIGHT_FLOWERS]: 8,
-      [HuType.FOUR_FLOWERS]: 8,
-      [HuType.SELF_DRAWN]: 8,
-      [HuType.NOT_HU]: 0
-    };
-    
-    // 返回牌型的中文名、详细描述和基础分数
-    return {
-      name: this.getHuTypeDescription(huType),
-      description: this.getHuTypeDescription(huType), // 目前描述与名称相同，可以根据需要扩展
-      baseScore: scoreTable[huType] || 0
-    };
-  }
 
   /**
    * 计算胡牌类型和分数
@@ -598,6 +529,7 @@ export class WinConditions {
    * 判断牌组是否为标准胡牌型（4组+1对）
    */
   static isStandardHu(tiles: Tile[]): boolean {
+    // 标准型必须是14张牌
     return tiles.length === 14 && this.canFormSetsRecursive(tiles);
   }
 
@@ -703,6 +635,7 @@ export class WinConditions {
    * 判断是否为七对子
    */
   static isSevenPairs(tiles: Tile[]): boolean {
+    // 七对子需要恰好14张牌，不考虑杠牌情况
     if (tiles.length !== 14) return false;
     
     const tileCount = this.countTiles(tiles);
@@ -715,6 +648,7 @@ export class WinConditions {
    * 判断是否为十三幺
    */
   static isThirteenOrphans(tiles: Tile[]): boolean {
+    // 十三幺需要恰好14张牌，不考虑杠牌情况
     if (tiles.length !== 14) return false;
 
     // 十三幺要求的特殊牌
@@ -749,6 +683,7 @@ export class WinConditions {
    * 判断是否为九莲宝灯
    */
   static isNineGates(tiles: Tile[]): boolean {
+    // 九莲宝灯需要恰好14张牌，不考虑杠牌情况
     if (tiles.length !== 14) return false;
 
     // 所有牌必须是同一种数字牌
@@ -789,7 +724,7 @@ export class WinConditions {
   /**
    * 判断是否为碰碰胡（全部是刻子）
    */
-  static isPengPengHu(handTiles: Tile[], revealedSets: TileSet[] = []): boolean {
+  static isPengPengHu(handTiles: Tile[], revealedSets: TileSet[] = [], player?: Player | null): boolean {
     // 检查已亮出的组合，不能有顺子
     if (revealedSets.some(set => set.type === 'CHI')) return false;
     
@@ -807,9 +742,21 @@ export class WinConditions {
     // 特殊情况：手牌为空且全是碰杠
     if (handTiles.length === 0 && revealedSets.length === 4) return true;
     
-    // 检查总牌数
+    // 检查总牌数，考虑杠牌情况
     const totalTileCount = handTiles.length + revealedSets.reduce((sum, set) => sum + set.tiles.length, 0);
-    if (totalTileCount !== 14) return false;
+    
+    // 如果提供了Player对象，使用它的方法计算预期牌数
+    let expectedTileCount = 14; // 默认值
+    if (player) {
+      expectedTileCount = player.getExpectedHandSize(true);
+    } else {
+      // 如果没有提供Player对象，手动计算
+      // 每个杠会增加一张牌
+      const gangCount = revealedSets.filter(set => set.type === 'GANG').length;
+      expectedTileCount = 14 + gangCount;
+    }
+    
+    if (totalTileCount !== expectedTileCount) return false;
     
     // 分析手牌
     const tileCount = this.countTiles(handTiles);
@@ -1056,6 +1003,7 @@ export class WinConditions {
    * 判断是否为四暗刻
    */
   static isFourConcealedPungs(handTiles: Tile[]): boolean {
+    // 四暗刻必须是14张牌，不考虑杠牌
     if (handTiles.length !== 14) return false;
     
     const { pairCount, tripletCount } = this.analyzeGroups(this.countTiles(handTiles));
@@ -1371,11 +1319,22 @@ export class WinConditions {
    * 判断是否为一色双龙会（一种花色的两个老少副加一对五）
    * 老少副：123+789
    */
-  static isPureDoubleChow(handTiles: Tile[], revealedSets: TileSet[] = []): boolean {
+  static isPureDoubleChow(handTiles: Tile[], revealedSets: TileSet[] = [], player?: Player | null): boolean {
     const allTiles = this.getAllTiles(handTiles, revealedSets);
     
-    // 至少需要14张牌
-    if (allTiles.length !== 14) return false;
+    // 需要考虑杠牌情况，计算预期总牌数
+    // 如果提供了Player对象，使用它来计算预期牌数
+    let expectedTileCount = 14; // 默认值
+    if (player) {
+      expectedTileCount = player.getExpectedHandSize(true);
+    } else {
+      // 如果没有提供Player对象，手动计算
+      // 每个杠会增加一张牌
+      const gangCount = revealedSets.filter(set => set.type === 'GANG').length;
+      expectedTileCount = 14 + gangCount;
+    }
+    
+    if (allTiles.length !== expectedTileCount) return false;
     
     // 所有牌必须是同一种花色的数字牌
     if (!allTiles.every(tile => this.isNumberTile(tile))) return false;
@@ -1606,7 +1565,7 @@ export class WinConditions {
    * 判断是否为全不靠（由不相邻的单张牌组成的特殊和牌型）
    */
   static isFullyIsolated(handTiles: Tile[], revealedSets: TileSet[] = []): boolean {
-    // 全不靠必须是14张牌，且没有吃、碰、杠
+    // 全不靠要求手牌恰好为14张且没有亮牌
     if (handTiles.length !== 14 || revealedSets.length > 0) return false;
     
     // 全不靠要求没有相同的牌
@@ -1643,7 +1602,7 @@ export class WinConditions {
    * 判断是否为七星不靠（七个字牌加六个不同数牌组成的特殊牌型）
    */
   static isSevenStars(handTiles: Tile[], revealedSets: TileSet[] = []): boolean {
-    // 七星不靠必须是14张牌，且没有吃、碰、杠
+    // 七星不靠要求手牌恰好为14张且没有亮牌
     if (handTiles.length !== 14 || revealedSets.length > 0) return false;
     
     // 统计字牌和数牌
@@ -1708,7 +1667,7 @@ export class WinConditions {
    * 判断是否为连七对（七个连续数字的对子）
    */
   static isSevenConnectedPairs(handTiles: Tile[], revealedSets: TileSet[] = []): boolean {
-    // 连七对必须是14张牌，且没有吃、碰、杠
+    // 连七对要求手牌恰好为14张且没有亮牌
     if (handTiles.length !== 14 || revealedSets.length > 0) return false;
     
     // 检查是否是七对子

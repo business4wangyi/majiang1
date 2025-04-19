@@ -54,13 +54,28 @@ export function ensureCorrectHandSizes(game: Game): boolean {
   let allCorrect = true;
   
   for (const player of players) {
-    // 确保手牌一致性
-    player.verifyHandConsistency();
-    
+    // 确定是否是当前玩家
     const isCurrentPlayer = player.id === game.currentPlayerIndex;
-    const expectedSize = isCurrentPlayer && player.state === PlayerState.ACTING ? 14 : 13;
     
-    if (player.handTiles.length !== expectedSize) {
+    // 检查当前玩家是否缺少一张牌（应该是14张但只有13张）
+    if (isCurrentPlayer) {
+      const expectedHandSize = player.getExpectedHandSize(true); // 当前玩家应该有14张牌
+      
+      if (player.handTiles.length < expectedHandSize) {
+        infoLog(`当前玩家 ${player.name} 手牌不足，当前: ${player.handTiles.length}，预期: ${expectedHandSize}，自动摸牌`);
+        const tile = game.drawTileForPlayer(player);
+        if (tile) {
+          displayManager.printSuccess(`当前玩家 ${player.name} 摸了一张牌: ${tile.toString()}`);
+        } else {
+          warnLog(`当前玩家摸牌失败，牌山可能已空`);
+          return false;
+        }
+      }
+    }
+    
+    // 使用Player类的方法判断手牌是否合理
+    if (!player.hasValidHandSize(isCurrentPlayer)) {
+      const expectedSize = player.getExpectedHandSize(isCurrentPlayer);
       warnLog(`检测到玩家 ${player.name} 手牌数量不正确，当前: ${player.handTiles.length}, 预期: ${expectedSize}`);
       allCorrect = false;
       
@@ -68,8 +83,7 @@ export function ensureCorrectHandSizes(game: Game): boolean {
       displayManager.printError(`严重错误: 玩家 ${player.name} 手牌数量不正确 (${player.handTiles.length}/${expectedSize})，游戏无法继续`);
       infoLog(`游戏即将退出，请检查程序逻辑`);
       
-      // 在实际应用中，这里可以添加退出程序的代码
-      // 如 process.exit(1);
+      // 不立即退出，等待游戏逻辑处理
     }
   }
   
@@ -102,11 +116,25 @@ export function prepareGameStart(game: Game): void {
     }
   }
   
-  // 如果有AI玩家手牌超过13张，强制其出牌
+  // 为当前玩家摸一张牌，确保手牌数量正确 - 使用Player类方法
+  const currentPlayer = game.getCurrentPlayer();
+  const expectedHandSize = currentPlayer.getExpectedHandSize(true); // 摸牌阶段应该有14张牌
+  
+  if (currentPlayer.handTiles.length < expectedHandSize) {
+    infoLog(`为当前玩家 ${currentPlayer.name} 自动摸牌，当前: ${currentPlayer.handTiles.length}，预期: ${expectedHandSize}`);
+    const drawnTile = game.currentPlayerDraw();
+    if (drawnTile) {
+      displayManager.printSuccess(`当前玩家 ${currentPlayer.name} 摸了一张牌: ${drawnTile.toString()}`);
+    } else {
+      displayManager.printError(`为当前玩家摸牌失败，牌山可能已空`);
+    }
+  }
+  
+  // 如果有AI玩家手牌超过预期，强制其出牌
   for (const player of players) {
-    if (player.type === PlayerType.AI && player.handTiles.length > 13) {
+    if (player.type === PlayerType.AI && player.needsToDiscard()) {
       warnLog(`检测到AI玩家 ${player.name} 手牌数量为 ${player.handTiles.length}，需要出牌`);
-      // 这里不直接调用handleAIDiscard，因为那需要异步处理
+
       // 而是标记一个需要处理的状态，在游戏循环中处理
       infoLog(`已标记AI玩家 ${player.name} 需要在游戏开始时出牌`);
     }

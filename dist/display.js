@@ -1,8 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.TileTypeOrder = exports.TileTypeNames = exports.TILE_TYPE_JIAN = exports.TILE_TYPE_FENG = exports.TILE_TYPE_TONG = exports.TILE_TYPE_TIAO = exports.TILE_TYPE_WAN = exports.Style = void 0;
-exports.clearScreen = clearScreen;
-exports.clearLine = clearLine;
 exports.analyzeHand = analyzeHand;
 exports.groupTilesByTypeAndValue = groupTilesByTypeAndValue;
 exports.groupTilesByType = groupTilesByType;
@@ -66,18 +64,6 @@ exports.TileTypeOrder = [
     exports.TILE_TYPE_FENG,
     exports.TILE_TYPE_JIAN
 ];
-/**
- * 清屏函数
- */
-function clearScreen() {
-    process.stdout.write('\x1Bc');
-}
-/**
- * 清除当前行并将光标移到行首
- */
-function clearLine() {
-    process.stdout.write('\r\x1b[K'); // 清除当前行
-}
 /**
  * 分析AI手牌
  * @param player 玩家对象

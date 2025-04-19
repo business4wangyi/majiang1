@@ -66,20 +66,6 @@ export const TileTypeOrder: string[] = [
 ];
 
 /**
- * 清屏函数
- */
-export function clearScreen(): void {
-  process.stdout.write('\x1Bc');
-}
-
-/**
- * 清除当前行并将光标移到行首
- */
-export function clearLine(): void {
-  process.stdout.write('\r\x1b[K'); // 清除当前行
-}
-
-/**
  * 分析AI手牌
  * @param player 玩家对象
  * @returns 分析结果数组

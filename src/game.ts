@@ -54,13 +54,6 @@ export class Game {
     return this.gameFlow.forceAIPlayerDiscard();
   }
 
-  public getGameStateInfo(): string {
-    return `游戏状态: ${this.gameState.state}
-当前玩家: ${this.gameState.currentPlayerIndex}
-剩余牌数: ${this.tileManager.getRemainingTiles()}
-总牌数: ${this.tileManager.getTotalTiles()}`;
-  }
-
   public getPlayers(): Player[] {
     return this.players;
   }
@@ -138,23 +131,55 @@ export class Game {
   }
 
   public hasPlayerWithExcessTiles(): boolean {
-    return this.players.some(p => p.handTiles.length > 13);
+    return this.players.some(p => p.needsToDiscard());
   }
 
   public getPlayersWithExcessTiles(): Player[] {
-    return this.players.filter(p => p.handTiles.length > 13);
+    return this.players.filter(p => p.needsToDiscard());
   }
 
   public getAvailableActions(): PlayerAction[] {
-    // 这里需要实现获取当前可用操作的逻辑
-    // 为了简单起见，这里返回一个空数组
-    return [];
+    // 获取当前玩家
+    const currentPlayer = this.getCurrentPlayer();
+    if (!currentPlayer) {
+      return [];
+    }
+    
+    // 使用RuleEngine获取可用操作
+    return RuleEngine.getAvailableActions(
+      currentPlayer, 
+      this.gameState.lastDiscardedTile
+    );
   }
 
   public playerPass(playerId: number): void {
-    // 这里需要实现玩家"过"的逻辑
-    // 为了简单起见，这里只是设置下一个玩家为当前玩家
-    this.nextTurn();
+    // 获取玩家
+    const player = this.players[playerId];
+    if (!player) {
+      displayManager.printError(`玩家ID ${playerId} 无效`);
+      return;
+    }
+    
+    // 记录玩家选择"过"
+    displayManager.printWarning(`玩家 ${player.name} 选择了"过"`);
+    
+    // 如果是当前玩家，进入下一个回合
+    if (playerId === this.gameState.currentPlayerIndex) {
+      displayManager.print(`当前玩家选择了"过"，进入下一个回合`);
+      this.nextTurn();
+    } else {
+      // 如果不是当前玩家，可能是在响应其他玩家的动作
+      displayManager.print(`玩家${playerId}选择了"过"，等待其他玩家响应或继续游戏`);
+      
+      // 处理等待玩家的回应逻辑...
+      // (这部分逻辑可能需要访问gameFlow的内部状态，
+      // 具体实现可能需要根据GameFlow类的设计进一步修改)
+      if (this.gameState.state === GameState.WAITING_ACTION) {
+        // 检查是否所有玩家都已响应
+        // 如果是，恢复到PLAYING状态
+        this.gameState.state = GameState.PLAYING;
+      }
+    }
   }
 
   // 添加公共方法，直接从牌山抽牌给指定玩家
@@ -193,42 +218,6 @@ export class Game {
       return true;
     }
 
-    // 添加手牌数量校验
-    this.ensureValidHandSizes();
-
     return true;
   }
-
-  private ensureValidHandSizes(): void {
-    for (let i = 0; i < this.players.length; i++) {
-      const player = this.players[i];
-      const handSize = player.handTiles.length;
-      const expectedSize = 13;
-
-      if (handSize < expectedSize) {
-        displayManager.printWarning(`玩家${i}手牌数量不足，当前数量: ${handSize}，需要补牌`);
-        const tilesToDraw = expectedSize - handSize;
-        
-        for (let j = 0; j < tilesToDraw; j++) {
-          const tile = this.tileManager.drawTile();
-          if (tile) {
-            player.drawTile(tile);
-          } else {
-            displayManager.printWarning(`牌墙已空，无法补牌`);
-            break;
-          }
-        }
-      } else if (handSize > expectedSize) {
-        displayManager.printWarning(`玩家${i}手牌数量过多，当前数量: ${handSize}，需要弃牌`);
-        const tilesToDiscard = handSize - expectedSize;
-        
-        for (let j = 0; j < tilesToDiscard; j++) {
-          const tile = player.handTiles[player.handTiles.length - 1];
-          if (tile) {
-            player.discardTile(player.handTiles.length - 1);
-          }
-        }
-      }
-    }
-  }
-}
+} 

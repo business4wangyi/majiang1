@@ -9,7 +9,6 @@ import { Style } from '../src/display';
 describe('DisplayManager', () => {
   let consoleLogStub: sinon.SinonStub;
   let stdoutWriteStub: sinon.SinonStub;
-  let clearLineStub: sinon.SinonStub;
   
   beforeEach(() => {
     // 存根 console.log 以防止测试输出
@@ -17,16 +16,12 @@ describe('DisplayManager', () => {
     
     // 存根 process.stdout.write
     stdoutWriteStub = sinon.stub(process.stdout, 'write');
-    
-    // 模拟 clearCurrentLine 方法为不执行任何操作的存根
-    clearLineStub = sinon.stub(displayManager, 'clearCurrentLine');
   });
   
   afterEach(() => {
     // 恢复原始函数
     consoleLogStub.restore();
     stdoutWriteStub.restore();
-    clearLineStub.restore();
   });
   
   describe('单例模式', () => {
@@ -65,15 +60,6 @@ describe('DisplayManager', () => {
       displayManager.printDivider('-', 10);
       expect(consoleLogStub.calledOnce).to.be.true;
       expect(consoleLogStub.firstCall.args[0]).to.include('----------');
-    });
-    
-    it('clearCurrentLine应调用clearLine', () => {
-      // 恢复clearCurrentLine方法
-      clearLineStub.restore();
-      
-      // 调用测试
-      displayManager.clearCurrentLine();
-      expect(stdoutWriteStub.calledOnce).to.be.true;
     });
   });
   
@@ -214,22 +200,6 @@ describe('DisplayManager', () => {
       expect(consoleLogStub.callCount).to.be.greaterThan(3);
       // 检查是否包含状态信息，但不检查确切的调用
       expect(consoleLogStub.args.some(args => args[0].includes('当前玩家: 测试玩家'))).to.be.true;
-    });
-    
-    it('printCountdown应显示倒计时信息', () => {
-      // 调用倒计时函数
-      displayManager.printCountdown(5, 10);
-      
-      // 验证clearCurrentLine被调用（已被存根为空函数）
-      expect(clearLineStub.calledOnce).to.be.true;
-      
-      // 验证process.stdout.write被调用
-      expect(stdoutWriteStub.calledOnce).to.be.true;
-      
-      // 确保输出内容包含关键信息
-      const output = stdoutWriteStub.firstCall.args[0].toString();
-      expect(output).to.include('倒计时');
-      expect(output).to.include('5秒');
     });
   });
 }); 

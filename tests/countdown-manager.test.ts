@@ -2,6 +2,7 @@
 import { expect } from 'chai';
 import * as sinon from 'sinon';
 import { CountdownManager } from '../src/countdown-manager';
+import { errorLog } from '../src/logger';
 
 // 保存原始的输出方法以便后续恢复
 const originalWrite = process.stdout.write;
@@ -150,7 +151,7 @@ describe('CountdownManager', () => {
           clock.tick(10000); // 只运行10秒内的计时器
         } catch (e) {
           // 忽略可能的无限循环错误
-          console.error('清理计时器时出错:', e);
+          errorLog(`清理计时器时出错: ${e instanceof Error ? e.message : String(e)}`);
         }
         clock.restore();
       }

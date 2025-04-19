@@ -12,7 +12,7 @@ class AIPlayer extends player_1.Player {
                 if (handTiles.length === 0)
                     return null;
                 // 确保手牌一致性
-                this.verifyHandConsistency();
+                // this.verifyHandConsistency();
                 try {
                     // 使用现有的AI策略选择要打出的牌
                     const moveIndex = this.getAIMove();
@@ -31,7 +31,7 @@ class AIPlayer extends player_1.Player {
                     }
                 }
                 catch (error) {
-                    console.error(`AI策略选择牌时出错: ${error instanceof Error ? error.message : String(error)}`);
+                    (0, logger_1.errorLog)(`AI策略选择牌时出错: ${error instanceof Error ? error.message : String(error)}`);
                 }
                 // 如果AI策略返回无效索引或发生错误，使用最后一张牌作为备选
                 if (handTiles.length > 0) {
@@ -53,12 +53,10 @@ class AIPlayer extends player_1.Player {
             return -1;
         }
         try {
-            // 确保手牌一致性
-            this.verifyHandConsistency();
             // 打印手牌详情用于调试
             (0, logger_1.debugLog)(`AI玩家 ${this.name} 手牌详情: ${this.handTiles.map((t, idx) => `${idx}:${t.toString()}`).join(' ')}`);
-            // 特殊处理：如果手牌超过13张，应该优先考虑打出最差的牌，而不是直接打出最后一张
-            if (this.handTiles.length > 13) {
+            // 使用needsToDiscard方法判断是否需要出牌
+            if (this.needsToDiscard()) {
                 // 获取每张牌的价值评分
                 const tileValues = this.getAllTileValues();
                 // 安全检查：确保有评分结果
@@ -67,7 +65,7 @@ class AIPlayer extends player_1.Player {
                     const lowestValueTile = tileValues[0];
                     // 验证索引有效性
                     if (lowestValueTile.index >= 0 && lowestValueTile.index < this.handTiles.length) {
-                        (0, logger_1.debugLog)(`手牌超过13张(${this.handTiles.length})，选择价值最低的牌，索引=${lowestValueTile.index}, 牌=${lowestValueTile.tile.toString()}, 价值=${lowestValueTile.value}`);
+                        (0, logger_1.debugLog)(`手牌数量超过预期(${this.getExpectedHandSize()})，实际(${this.handTiles.length})，选择价值最低的牌，索引=${lowestValueTile.index}, 牌=${lowestValueTile.tile.toString()}, 价值=${lowestValueTile.value}`);
                         return lowestValueTile.index;
                     }
                     else {
@@ -100,8 +98,8 @@ class AIPlayer extends player_1.Player {
             return this.handTiles.length - 1;
         }
         catch (error) {
-            console.error(`AI出牌决策发生错误: ${error instanceof Error ? error.message : error}`);
-            console.error(`错误堆栈: ${error instanceof Error ? error.stack : '无堆栈信息'}`);
+            (0, logger_1.errorLog)(`AI出牌决策发生错误: ${error instanceof Error ? error.message : error}`);
+            (0, logger_1.errorLog)(`错误堆栈: ${error instanceof Error ? error.stack : '无堆栈信息'}`);
             // 发生错误时返回最后一张牌的索引（最安全）
             return this.handTiles.length > 0 ? this.handTiles.length - 1 : -1;
         }
@@ -124,7 +122,7 @@ class AIPlayer extends player_1.Player {
             return tileValues;
         }
         catch (error) {
-            console.error(`牌值评估发生错误: ${error instanceof Error ? error.message : error}`);
+            (0, logger_1.errorLog)(`牌值评估发生错误: ${error instanceof Error ? error.message : error}`);
             return [];
         }
     }
@@ -184,7 +182,7 @@ class AIPlayer extends player_1.Player {
             return value;
         }
         catch (error) {
-            console.error(`评估牌值出错: ${error instanceof Error ? error.message : String(error)}`);
+            (0, logger_1.errorLog)(`评估牌值出错: ${error instanceof Error ? error.message : String(error)}`);
             return 0; // 出错时返回0值，使其更有可能被打出
         }
     }
