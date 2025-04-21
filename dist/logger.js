@@ -201,7 +201,7 @@ function getGameStateLog(game) {
     let log = `\n=== 游戏状态 ===\n`;
     log += `当前玩家: ${game.currentPlayerIndex}\n`;
     log += `游戏状态: ${game.state}\n`;
-    log += `剩余牌数: ${game.remainingTiles}\n`;
+    log += `剩余牌数: ${game.getRemainingTiles()}\n`;
     log += `摸牌次数: ${game.drawCount}\n`;
     if (game.lastDiscardedTile) {
         log += `最后打出的牌: ${game.lastDiscardedTile.toString()}\n`;

@@ -10,12 +10,13 @@ var PlayerAction;
     PlayerAction["GANG"] = "\u6760";
     PlayerAction["HU"] = "\u80E1"; // 胡
 })(PlayerAction || (exports.PlayerAction = PlayerAction = {}));
-// 杠类型枚举
+// 杠牌类型
 var GangType;
 (function (GangType) {
-    GangType[GangType["MING_GANG"] = 0] = "MING_GANG";
-    GangType[GangType["AN_GANG"] = 1] = "AN_GANG";
-    GangType[GangType["BU_GANG"] = 2] = "BU_GANG"; // 补杠（碰了之后自己再摸到一张）
+    GangType["MING"] = "\u660E\u6760";
+    GangType["AN"] = "\u6697\u6760";
+    GangType["BU"] = "\u8865\u6760";
+    GangType["QIANG"] = "\u62A2\u6760"; // 抢杠
 })(GangType || (exports.GangType = GangType = {}));
 // 胡牌类型枚举
 var HuType;

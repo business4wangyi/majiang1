@@ -3,7 +3,7 @@ import * as sinon from 'sinon';
 import { DisplayManager, displayManager } from '../src/display-manager';
 import { Player, PlayerType } from '../src/player';
 import { Tile, TileType } from '../src/tile';
-import { GameState } from '../src/game-state';
+import { GameState } from '../src/game';
 import { Style } from '../src/display';
 
 describe('DisplayManager', () => {

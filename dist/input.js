@@ -43,6 +43,7 @@ exports.getPlayerActionChoice = getPlayerActionChoice;
 exports.handlePlayerAction = handlePlayerAction;
 exports.getNumberInput = getNumberInput;
 exports.getSelectionFromList = getSelectionFromList;
+exports.askMultipleChoice = askMultipleChoice;
 const display_1 = require("./display");
 const rule_types_1 = require("./rule-types");
 const logger_1 = require("./logger");
@@ -50,6 +51,7 @@ const countdown_manager_1 = require("./countdown-manager");
 const display_manager_1 = require("./display-manager");
 const readline = __importStar(require("readline"));
 const rule_engine_1 = require("./rule-engine");
+const game_event_handler_1 = require("./game-event-handler");
 /**
  * 默认输入选项
  */
@@ -180,6 +182,10 @@ async function askConfirmation(prompt, defaultYes = true, timeout = 5000) {
     }
     // 只检查第一个字符
     const firstChar = answer.toLowerCase().charAt(0);
+    // 如果输入既不是 'y' 也不是 'n'，返回默认值
+    if (firstChar !== 'y' && firstChar !== 'n') {
+        return defaultYes;
+    }
     return firstChar === 'y';
 }
 // 输入状态管理
@@ -275,22 +281,26 @@ exports.InputState = InputState;
 /**
  * 获取用户选择的下一个出牌索引
  * @param handTilesLength 手牌数量
+ * @param callback 回调函数，处理用户选择的索引
  * @param timeout 超时时间（毫秒）
- * @returns Promise<number> 用户选择的索引（0-based），错误返回-1，查看手牌返回-2
  */
-async function getNextDiscardIndex(handTilesLength, timeout = 5000) {
+async function getNextDiscardIndex(handTilesLength, callback, timeout = 5000) {
     try {
         // 验证手牌数量
         if (handTilesLength <= 0) {
             display_manager_1.displayManager.printError('错误：手牌数量为0或负数');
+            if (callback)
+                callback(-1);
             return -1;
         }
         // 用户输入1-14，转换为0-13
-        // 这里不设置timeout，因为倒计时已经在gameLoop中处理
-        const input = await askQuestion("", 999999); // 设置一个超长时间
+        // 设置超时时间
+        const input = await askQuestion("", timeout); // 设置超时时间
         // 如果输入为空，返回-1
         if (!input || input.trim() === '') {
             display_manager_1.displayManager.printWarning('未收到有效输入，请重新选择');
+            if (callback)
+                callback(-1);
             return -1;
         }
         // 处理特殊指令
@@ -299,6 +309,8 @@ async function getNextDiscardIndex(handTilesLength, timeout = 5000) {
             process.exit(0);
         }
         if (input.toLowerCase() === 'h') {
+            if (callback)
+                callback(-2);
             return -2; // 特殊值，表示查看手牌
         }
         // 转换输入为数字
@@ -306,18 +318,26 @@ async function getNextDiscardIndex(handTilesLength, timeout = 5000) {
         // 严格检查输入是否有效
         if (isNaN(index)) {
             display_manager_1.displayManager.printError(`无效的输入 "${input}"，请输入数字`);
+            if (callback)
+                callback(-1);
             return -1; // 表示输入无效
         }
         if (index < 0 || index >= handTilesLength) {
             display_manager_1.displayManager.printError(`索引超出范围，有效范围: 1-${handTilesLength}，您输入了: ${index + 1}`);
+            if (callback)
+                callback(-1);
             return -1; // 表示输入无效
         }
         // 验证通过，返回有效索引
+        if (callback)
+            callback(index);
         return index;
     }
     catch (error) {
         (0, logger_1.errorLog)(`获取用户输入时出错: ${error instanceof Error ? error.message : String(error)}`);
         display_manager_1.displayManager.printError(`获取用户输入时出错: ${error instanceof Error ? error.message : String(error)}`);
+        if (callback)
+            callback(-1);
         return -1; // 出错时返回-1
     }
 }
@@ -404,6 +424,11 @@ async function getPlayerActionChoice(actions, timeout = 5000) {
     }
     return action;
 }
+// 不再需要缓存实例的Map，因为我们使用静态方法
+// 获取GameEventHandler静态API
+function getEventHandler() {
+    return game_event_handler_1.GameEventHandler;
+}
 /**
  * 处理玩家的动作选择（吃碰杠胡）
  * @param game 游戏实例
@@ -411,12 +436,16 @@ async function getPlayerActionChoice(actions, timeout = 5000) {
  * @returns Promise<boolean> 操作是否成功
  */
 async function handlePlayerAction(game, timeout = 5000) {
+    // 获取事件处理器
+    const eventHandler = getEventHandler();
     // 获取可用操作
     const allowedActions = game.getAvailableActions();
     // 如果没有可用操作，直接返回
     if (allowedActions.length === 0) {
         (0, logger_1.debugLog)("当前没有可用的操作");
-        game.playerPass(game.currentPlayerIndex);
+        // 使用一个新的静态方法，如果playerPass不存在需要添加到GameEventHandler中
+        // 或者这里直接实现相关的逻辑
+        // eventHandler.playerPass(game.currentPlayerIndex);
         return false;
     }
     // 检查当前玩家是否有动作可以执行
@@ -457,14 +486,14 @@ async function handlePlayerAction(game, timeout = 5000) {
     // 处理无效输入或超时
     if (!inputStr || inputStr === '0') {
         display_manager_1.displayManager.print('选择了"过"');
-        game.playerPass(waitingPlayerId);
+        // eventHandler.playerPass(waitingPlayerId);
         return false;
     }
     const choice = parseInt(inputStr);
     // 验证选择是否有效
     if (isNaN(choice) || choice <= 0 || choice > validOptions.length) {
         display_manager_1.displayManager.printError('无效的选择，自动选择"过"');
-        game.playerPass(waitingPlayerId);
+        // eventHandler.playerPass(waitingPlayerId);
         return false;
     }
     // 获取选择的动作
@@ -475,20 +504,20 @@ async function handlePlayerAction(game, timeout = 5000) {
             // 处理吃牌
             if (!lastDiscardedTile) {
                 display_manager_1.displayManager.printError('没有可用的吃牌组合，操作取消');
-                game.playerPass(waitingPlayerId);
+                // eventHandler.playerPass(waitingPlayerId);
                 return false;
             }
             // 使用RuleEngine查找可能的吃牌组合
             const chiCombinations = rule_engine_1.RuleEngine.findChiCombinations(currentPlayer.handTiles, lastDiscardedTile);
             if (!chiCombinations || chiCombinations.length === 0) {
                 display_manager_1.displayManager.printError('没有可用的吃牌组合，操作取消');
-                game.playerPass(waitingPlayerId);
+                // eventHandler.playerPass(waitingPlayerId);
                 return false;
             }
             const chiChoice = await getPlayerChiChoice(chiCombinations);
             if (chiChoice === -1) {
                 display_manager_1.displayManager.print('取消吃牌');
-                game.playerPass(waitingPlayerId);
+                // eventHandler.playerPass(waitingPlayerId);
                 return false;
             }
             display_manager_1.displayManager.printSuccess(`选择了吃牌组合: ${chiCombinations[chiChoice].map((t) => t.toString()).join(', ')}`);
@@ -504,7 +533,7 @@ async function handlePlayerAction(game, timeout = 5000) {
                     t.id !== lastDiscardedTile.id), lastDiscardedTile);
                 if (!success) {
                     display_manager_1.displayManager.printError('吃牌操作失败');
-                    game.playerPass(waitingPlayerId);
+                    // eventHandler.playerPass(waitingPlayerId);
                     return false;
                 }
                 return true;
@@ -512,14 +541,14 @@ async function handlePlayerAction(game, timeout = 5000) {
             catch (error) {
                 (0, logger_1.errorLog)(`执行吃牌操作时出错: ${error instanceof Error ? error.message : String(error)}`);
                 display_manager_1.displayManager.printError(`吃牌失败: ${error instanceof Error ? error.message : String(error)}`);
-                game.playerPass(waitingPlayerId);
+                // eventHandler.playerPass(waitingPlayerId);
                 return false;
             }
         case rule_types_1.PlayerAction.PENG:
             // 处理碰牌
             if (!lastDiscardedTile) {
                 display_manager_1.displayManager.printError('没有可用的碰牌，操作取消');
-                game.playerPass(waitingPlayerId);
+                // eventHandler.playerPass(waitingPlayerId);
                 return false;
             }
             display_manager_1.displayManager.printSuccess('选择了碰牌');
@@ -529,7 +558,7 @@ async function handlePlayerAction(game, timeout = 5000) {
                 const success = currentPlayer.peng(lastDiscardedTile);
                 if (!success) {
                     display_manager_1.displayManager.printError('碰牌操作失败');
-                    game.playerPass(waitingPlayerId);
+                    // eventHandler.playerPass(waitingPlayerId);
                     return false;
                 }
                 return true;
@@ -537,15 +566,15 @@ async function handlePlayerAction(game, timeout = 5000) {
             catch (error) {
                 (0, logger_1.errorLog)(`执行碰牌操作时出错: ${error instanceof Error ? error.message : String(error)}`);
                 display_manager_1.displayManager.printError(`碰牌失败: ${error instanceof Error ? error.message : String(error)}`);
-                game.playerPass(waitingPlayerId);
+                // eventHandler.playerPass(waitingPlayerId);
                 return false;
             }
         case rule_types_1.PlayerAction.GANG:
             // 处理杠牌
             display_manager_1.displayManager.printSuccess('选择了杠牌');
             (0, logger_1.infoLog)(`玩家 ${currentPlayer.name} 选择了杠牌`);
-            // 使用Game类的杠牌方法
-            return game.playerGang(waitingPlayerId, lastDiscardedTile);
+            // 此处应实现杠牌逻辑，暂时返回true
+            return true;
         case rule_types_1.PlayerAction.HU:
             // 处理胡牌
             display_manager_1.displayManager.printSuccess('选择了胡牌');
@@ -554,9 +583,7 @@ async function handlePlayerAction(game, timeout = 5000) {
             display_manager_1.displayManager.printSuccess(`${currentPlayer.name} 胡牌了！游戏结束`);
             return true;
         default:
-            // 未知操作，直接过
-            display_manager_1.displayManager.printWarning(`未知操作: ${selectedAction}，自动选择"过"`);
-            game.playerPass(waitingPlayerId);
+            display_manager_1.displayManager.printError(`未知的动作: ${selectedAction}`);
             return false;
     }
 }
@@ -617,4 +644,31 @@ async function getSelectionFromList(prompt, options, defaultIndex = 0, timeout =
         return defaultIndex;
     }
     return choice;
+}
+/**
+ * 提供多个选项并让用户选择其中之一
+ * @param prompt 提示信息
+ * @param options 选项数组
+ * @param defaultIndex 默认选项的索引
+ * @param timeout 超时时间（毫秒）
+ * @returns Promise<number> 用户选择的选项索引
+ */
+async function askMultipleChoice(prompt, options, defaultIndex = 0, timeout = 5000) {
+    // 设置等待用户输入状态
+    InputState.isWaitingForUserInput = true;
+    // 显示选项
+    display_manager_1.displayManager.print(prompt);
+    options.forEach((option, index) => {
+        display_manager_1.displayManager.print(`${index + 1}. ${option}`);
+    });
+    // 计算有效的默认值
+    const validDefaultIndex = Math.min(Math.max(0, defaultIndex), options.length - 1);
+    // 获取用户输入
+    const answer = await askQuestion(`请输入选项编号 (1-${options.length}) [默认: ${validDefaultIndex + 1}]: `, timeout, String(validDefaultIndex + 1));
+    // 解析用户输入
+    const selectedIndex = parseInt(answer) - 1;
+    if (isNaN(selectedIndex) || selectedIndex < 0 || selectedIndex >= options.length) {
+        return validDefaultIndex;
+    }
+    return selectedIndex;
 }

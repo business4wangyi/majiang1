@@ -18,17 +18,21 @@ import {
   handlePlayerAction,
   getNumberInput,
   getSelectionFromList,
-  InputState
+  InputState,
+  InputOptions
 } from '../src/input';
 
 // 导入CountdownManager以便在测试中引用
 import { CountdownManager } from '../src/countdown-manager';
 
+import proxyquire from 'proxyquire';
+
 // 定义模拟readline接口
-interface MockReadlineInterface {
+interface MockReadlineInterface extends readline.Interface {
   question: sinon.SinonStub;
   close: sinon.SinonStub;
-  [key: string]: any;
+  on: sinon.SinonStub;
+  emit: sinon.SinonStub;
 }
 
 // 定义process.exit的类型
@@ -41,179 +45,376 @@ declare global {
 }
 
 describe('Input Module - 基本函数', () => {
-  // 跳过所有测试，因为我们无法直接模拟readline.createInterface
-  // 这是因为Node.js的readline模块中createInterface是只读属性
+  let clock: sinon.SinonFakeTimers;
+  let mockReadline: MockReadlineInterface;
   
-  // 我们将专注于测试InputState类，它是可以独立测试的
-  it('跳过测试说明 - 基本输入函数依赖于readline模块', () => {
-    console.log('input.test.ts中的大部分测试被跳过，因为无法直接模拟readline.createInterface');
-    expect(true).to.be.true;
+  beforeEach(() => {
+    clock = sinon.useFakeTimers();
+    mockReadline = {
+      question: sinon.stub(),
+      close: sinon.stub(),
+      on: sinon.stub(),
+    } as MockReadlineInterface;
+  });
+
+  afterEach(() => {
+    clock.restore();
+    sinon.restore();
+  });
+
+  describe('askQuestion', () => {
+    it('应在超时时返回默认值', async () => {
+      const timeoutMs = 1000;
+      const defaultValue = '默认值';
+      
+      const promise = askQuestion('测试问题', timeoutMs, defaultValue);
+      
+      // 前进时间超过超时时间
+      await clock.tickAsync(timeoutMs + 100);
+      
+      const result = await promise;
+      expect(result).to.equal(defaultValue);
+    });
+
+    it('应正确处理用户输入', async () => {
+      const userInput = '用户输入';
+      const timeoutMs = 1000;
+      
+      // 模拟用户在500ms时输入
+      setTimeout(() => {
+        // 触发用户输入
+        process.stdin.emit('data', Buffer.from(userInput + '\n'));
+      }, 500);
+      
+      const promise = askQuestion('测试问题');
+      await clock.tickAsync(600);
+      
+      const result = await promise;
+      expect(result).to.equal(userInput);
+    });
+
+    it('应正确处理空输入', async () => {
+      const timeoutMs = 1000;
+      
+      // 模拟用户输入空字符串
+      setTimeout(() => {
+        process.stdin.emit('data', Buffer.from('\n'));
+      }, 500);
+      
+      const promise = askQuestion('测试问题');
+      await clock.tickAsync(600);
+      
+      const result = await promise;
+      expect(result).to.equal('');
+    });
   });
 });
 
 describe('InputState', () => {
   let clock: sinon.SinonFakeTimers;
+  let countdownManagerStubs: {
+    isWaitingForUserInput: { get: sinon.SinonStub; set: sinon.SinonStub };
+    reset: sinon.SinonStub;
+    isCountdownActive: sinon.SinonStub;
+    getRemainingSeconds: sinon.SinonStub;
+    addTime: sinon.SinonStub;
+    reduceTime: sinon.SinonStub;
+    pauseCountdown: sinon.SinonStub;
+    resumeCountdown: sinon.SinonStub;
+    clearCountdown: sinon.SinonStub;
+    startCountdown: sinon.SinonStub;
+    setDebugMode: sinon.SinonStub;
+  };
   
-  // 声明存根变量
-  let isWaitingForUserInputGetter: sinon.SinonStub;
-  let isWaitingForUserInputSetter: sinon.SinonStub;
-  let resetStub: sinon.SinonStub;
-  let isCountdownActiveStub: sinon.SinonStub;
-  let getRemainingSecondsStub: sinon.SinonStub;
-  let addTimeStub: sinon.SinonStub;
-  let reduceTimeStub: sinon.SinonStub;
-  let pauseCountdownStub: sinon.SinonStub;
-  let resumeCountdownStub: sinon.SinonStub;
-  let clearCountdownStub: sinon.SinonStub;
-  let startCountdownStub: sinon.SinonStub;
-  let setDebugModeStub: sinon.SinonStub;
-  
-  // 存储创建的计时器以便后续清理
-  let createdTimers: NodeJS.Timeout[] = [];
-
   beforeEach(() => {
-    // 初始化模拟时钟
     clock = sinon.useFakeTimers();
     
-    // 清除计时器数组
-    createdTimers = [];
-    
-    // 模拟CountdownManager的方法
-    setDebugModeStub = sinon.stub(CountdownManager, 'setDebugMode');
-    
-    // 正确模拟 isWaitingForUserInput getter 和 setter
-    const isWaitingForUserInputStub = {
-      get: sinon.stub().returns(false),
-      set: sinon.stub()
+    // 初始化所有存根
+    countdownManagerStubs = {
+      isWaitingForUserInput: {
+        get: sinon.stub().returns(false),
+        set: sinon.stub()
+      },
+      reset: sinon.stub(),
+      isCountdownActive: sinon.stub().returns(false),
+      getRemainingSeconds: sinon.stub().returns(0),
+      addTime: sinon.stub().returns(true),
+      reduceTime: sinon.stub().returns(true),
+      pauseCountdown: sinon.stub().returns(true),
+      resumeCountdown: sinon.stub().returns(true),
+      clearCountdown: sinon.stub(),
+      startCountdown: sinon.stub().returns(setTimeout(() => {}, 0)),
+      setDebugMode: sinon.stub()
     };
     
-    // 使用Object.defineProperty替代直接存根get方法
-    Object.defineProperty(CountdownManager, 'isWaitingForUserInput', isWaitingForUserInputStub);
-    
-    // 保存getter和setter的引用以便在测试中验证
-    isWaitingForUserInputGetter = isWaitingForUserInputStub.get;
-    isWaitingForUserInputSetter = isWaitingForUserInputStub.set;
-    
-    resetStub = sinon.stub(CountdownManager, 'reset');
-    isCountdownActiveStub = sinon.stub(CountdownManager, 'isCountdownActive').returns(false);
-    getRemainingSecondsStub = sinon.stub(CountdownManager, 'getRemainingSeconds').returns(0);
-    addTimeStub = sinon.stub(CountdownManager, 'addTime').returns(true);
-    reduceTimeStub = sinon.stub(CountdownManager, 'reduceTime').returns(true);
-    pauseCountdownStub = sinon.stub(CountdownManager, 'pauseCountdown').returns(true);
-    resumeCountdownStub = sinon.stub(CountdownManager, 'resumeCountdown').returns(true);
-    clearCountdownStub = sinon.stub(CountdownManager, 'clearCountdown');
-    
-    // 使用假的setTimeout，但保存创建的计时器引用
-    startCountdownStub = sinon.stub(CountdownManager, 'startCountdown').callsFake((seconds, onComplete) => {
-      // 使用模拟时钟的setTimeout，这样可以避免创建真实的计时器
-      const timerId = setTimeout(onComplete, seconds * 1000);
-      createdTimers.push(timerId);
-      return timerId as any;
-    });
+    // 设置CountdownManager的存根
+    Object.defineProperty(CountdownManager, 'isWaitingForUserInput', countdownManagerStubs.isWaitingForUserInput);
+    sinon.stub(CountdownManager, 'reset').callsFake(countdownManagerStubs.reset);
+    sinon.stub(CountdownManager, 'isCountdownActive').callsFake(countdownManagerStubs.isCountdownActive);
+    sinon.stub(CountdownManager, 'getRemainingSeconds').callsFake(countdownManagerStubs.getRemainingSeconds);
+    sinon.stub(CountdownManager, 'addTime').callsFake(countdownManagerStubs.addTime);
+    sinon.stub(CountdownManager, 'reduceTime').callsFake(countdownManagerStubs.reduceTime);
+    sinon.stub(CountdownManager, 'pauseCountdown').callsFake(countdownManagerStubs.pauseCountdown);
+    sinon.stub(CountdownManager, 'resumeCountdown').callsFake(countdownManagerStubs.resumeCountdown);
+    sinon.stub(CountdownManager, 'clearCountdown').callsFake(countdownManagerStubs.clearCountdown);
+    sinon.stub(CountdownManager, 'startCountdown').callsFake(countdownManagerStubs.startCountdown);
+    sinon.stub(CountdownManager, 'setDebugMode').callsFake(countdownManagerStubs.setDebugMode);
   });
   
   afterEach(() => {
-    // 清理创建的所有计时器
-    createdTimers.forEach(timer => {
-      clearTimeout(timer);
-    });
-    
-    // 在恢复时钟前运行任何等待的计时器，确保它们不会在测试后运行
-    if (clock) {
-      clock.runAll();
-    }
-    
-    // 恢复所有存根
+    clock.restore();
     sinon.restore();
-    
-    // 恢复时钟
-    if (clock) {
-      clock.restore();
-    }
-    
-    // 确保CountdownManager也被重置
     CountdownManager.reset();
   });
   
-  it('应正确代理到CountdownManager', () => {
-    // 测试getter
-    InputState.isWaitingForUserInput;
-    expect(isWaitingForUserInputGetter.calledOnce).to.be.true;
-    
-    // 测试setter
-    InputState.isWaitingForUserInput = true;
-    expect(isWaitingForUserInputSetter.calledWith(true)).to.be.true;
-    
-    // 测试countdownInterval getter
-    InputState.countdownInterval;
-    expect(isCountdownActiveStub.called).to.be.true;
-    
-    // 测试currentCountdown getter
-    InputState.currentCountdown;
-    expect(getRemainingSecondsStub.called).to.be.true;
-    
-    // 测试clearCountdown方法
-    InputState.clearCountdown();
-    expect(clearCountdownStub.called).to.be.true;
-    
-    // 测试startCountdown方法
-    const mockCallback = sinon.stub();
-    InputState.startCountdown(5, mockCallback);
-    expect(startCountdownStub.calledWith(5, mockCallback)).to.be.true;
-    
-    // 测试isCountdownActive方法
-    InputState.isCountdownActive();
-    expect(isCountdownActiveStub.called).to.be.true;
-    
-    // 测试pauseCountdown方法
-    InputState.pauseCountdown();
-    expect(pauseCountdownStub.called).to.be.true;
-    
-    // 测试resumeCountdown方法
-    InputState.resumeCountdown();
-    expect(resumeCountdownStub.called).to.be.true;
-    
-    // 测试reset方法
-    InputState.reset();
-    expect(resetStub.called).to.be.true;
-    
-    // 测试setDebugMode方法
-    InputState.setDebugMode(true);
-    expect(setDebugModeStub.calledWith(true)).to.be.true;
+  describe('代理方法', () => {
+    it('应正确代理到CountdownManager的所有方法', () => {
+      // 测试getter和setter
+      InputState.isWaitingForUserInput;
+      expect(countdownManagerStubs.isWaitingForUserInput.get.calledOnce).to.be.true;
+      
+      InputState.isWaitingForUserInput = true;
+      expect(countdownManagerStubs.isWaitingForUserInput.set.calledWith(true)).to.be.true;
+      
+      // 测试countdownInterval和currentCountdown
+      countdownManagerStubs.isCountdownActive.returns(true);
+      countdownManagerStubs.getRemainingSeconds.returns(10);
+      
+      expect(InputState.countdownInterval).to.not.be.null;
+      expect(InputState.currentCountdown).to.equal(10);
+      
+      InputState.countdownInterval = null;
+      expect(countdownManagerStubs.clearCountdown.calledOnce).to.be.true;
+      
+      // 测试currentCountdown的设置
+      countdownManagerStubs.getRemainingSeconds.returns(10);
+      InputState.currentCountdown = 5;
+      expect(countdownManagerStubs.reduceTime.calledWith(5)).to.be.true;
+      
+      countdownManagerStubs.getRemainingSeconds.returns(5);
+      InputState.currentCountdown = 10;
+      expect(countdownManagerStubs.addTime.calledWith(5)).to.be.true;
+      
+      // 测试其他方法
+      InputState.clearCountdown();
+      expect(countdownManagerStubs.clearCountdown.called).to.be.true;
+      
+      const callback = () => {};
+      InputState.startCountdown(5, callback);
+      expect(countdownManagerStubs.startCountdown.calledWith(5, sinon.match.func)).to.be.true;
+      
+      InputState.pauseCountdown();
+      expect(countdownManagerStubs.pauseCountdown.called).to.be.true;
+      
+      InputState.resumeCountdown();
+      expect(countdownManagerStubs.resumeCountdown.called).to.be.true;
+      
+      InputState.reset();
+      expect(countdownManagerStubs.reset.called).to.be.true;
+      
+      InputState.setDebugMode(true);
+      expect(countdownManagerStubs.setDebugMode.calledWith(true)).to.be.true;
+      
+      InputState.isCountdownActive();
+      expect(countdownManagerStubs.isCountdownActive.called).to.be.true;
+    });
   });
   
-  it('countdownInterval setter应在设置为null时清除倒计时', () => {
-    isCountdownActiveStub.returns(true);
+  describe('倒计时控制', () => {
+    it('应正确处理倒计时的暂停和恢复', () => {
+      countdownManagerStubs.isCountdownActive.returns(true);
+      countdownManagerStubs.getRemainingSeconds.returns(10);
+      
+      // 测试暂停
+      InputState.pauseCountdown();
+      expect(countdownManagerStubs.pauseCountdown.calledOnce).to.be.true;
+      
+      // 测试恢复
+      InputState.resumeCountdown();
+      expect(countdownManagerStubs.resumeCountdown.calledOnce).to.be.true;
+    });
     
-    InputState.countdownInterval = null;
+    it('应正确处理倒计时时间的增减', () => {
+      countdownManagerStubs.isCountdownActive.returns(true);
+      countdownManagerStubs.getRemainingSeconds.returns(10);
+      
+      // 测试减少时间
+      InputState.currentCountdown = 5;
+      expect(countdownManagerStubs.reduceTime.calledWith(5)).to.be.true;
+      
+      // 测试增加时间
+      InputState.currentCountdown = 15;
+      expect(countdownManagerStubs.addTime.calledWith(5)).to.be.true;
+    });
     
-    expect(clearCountdownStub.called).to.be.true;
+    it('应正确处理倒计时的清除', () => {
+      countdownManagerStubs.isCountdownActive.returns(true);
+      
+      InputState.countdownInterval = null;
+      expect(countdownManagerStubs.clearCountdown.calledOnce).to.be.true;
+    });
+    
+    it('应在倒计时不活跃时忽略时间设置', () => {
+      countdownManagerStubs.isCountdownActive.returns(false);
+      
+      InputState.currentCountdown = 5;
+      expect(countdownManagerStubs.reduceTime.called).to.be.false;
+      expect(countdownManagerStubs.addTime.called).to.be.false;
+    });
   });
   
-  it('currentCountdown setter应更新倒计时时间', () => {
-    isCountdownActiveStub.returns(true);
-    getRemainingSecondsStub.returns(10);
+  describe('边界条件', () => {
+    it('应正确处理负数的倒计时时间', () => {
+      countdownManagerStubs.isCountdownActive.returns(true);
+      countdownManagerStubs.getRemainingSeconds.returns(10);
+      
+      InputState.currentCountdown = -5;
+      expect(countdownManagerStubs.reduceTime.called).to.be.false;
+      expect(countdownManagerStubs.addTime.called).to.be.false;
+    });
     
-    // 减少时间
-    InputState.currentCountdown = 5;
-    expect(reduceTimeStub.calledWith(5)).to.be.true;
-    
-    // 增加时间
-    getRemainingSecondsStub.returns(5);
-    InputState.currentCountdown = 10;
-    expect(addTimeStub.calledWith(5)).to.be.true;
+    it('应正确处理相同的倒计时时间', () => {
+      countdownManagerStubs.isCountdownActive.returns(true);
+      countdownManagerStubs.getRemainingSeconds.returns(10);
+      
+      InputState.currentCountdown = 10;
+      expect(countdownManagerStubs.reduceTime.called).to.be.false;
+      expect(countdownManagerStubs.addTime.called).to.be.false;
+    });
   });
-  
-  it('setDebugMode方法应正确调用CountdownManager的setDebugMode', () => {
-    // 测试启用调试模式
-    InputState.setDebugMode(true);
-    expect(setDebugModeStub.calledWith(true)).to.be.true;
+});
+
+describe('Input Functions', () => {
+  let mockReadline: MockReadlineInterface;
+  let clock: sinon.SinonFakeTimers;
+  let inputModule: any;
+
+  beforeEach(() => {
+    mockReadline = {
+      question: sinon.stub(),
+      close: sinon.stub(),
+      on: sinon.stub(),
+      emit: sinon.stub()
+    } as MockReadlineInterface;
     
-    // 测试禁用调试模式
-    InputState.setDebugMode(false);
-    expect(setDebugModeStub.calledWith(false)).to.be.true;
+    clock = sinon.useFakeTimers();
     
-    // 验证调用次数
-    expect(setDebugModeStub.callCount).to.equal(2);
+    // 使用 proxyquire 替换 readline 模块
+    inputModule = proxyquire('../src/input', {
+      'readline': {
+        createInterface: () => mockReadline
+      }
+    });
+  });
+
+  afterEach(() => {
+    clock.restore();
+  });
+
+  describe('askQuestion', () => {
+    it('should return user input', async () => {
+      mockReadline.question = sinon.stub().callsFake((_, callback) => callback('test input'));
+      const result = await inputModule.askQuestion('test question', 1000);
+      expect(result).to.equal('test input');
+    });
+
+    it('should handle timeout', async () => {
+      mockReadline.question = sinon.stub().callsFake(() => {});
+      const promise = inputModule.askQuestionWithOptions('test question', {
+        timeoutInMs: 100,
+        showCountdown: false,
+        defaultValue: 'default',
+        silentMode: true
+      });
+      
+      await clock.tickAsync(100);
+      const result = await promise;
+      expect(result).to.equal('default');
+    });
+
+    it('should handle empty input', async () => {
+      mockReadline.question = sinon.stub().callsFake((_, callback) => callback(''));
+      const result = await inputModule.askQuestionWithOptions('test question', {
+        timeoutInMs: 1000,
+        showCountdown: false,
+        defaultValue: 'default',
+        silentMode: true
+      });
+      expect(result).to.equal('');
+    });
+
+    it('should use default options when not provided', async () => {
+      mockReadline.question = sinon.stub().callsFake((_, callback) => callback('test input'));
+      const result = await inputModule.askQuestionWithOptions('test question');
+      expect(result).to.equal('test input');
+    });
+  });
+
+  describe('askQuestionWithOptions', () => {
+    it('should use provided options', async () => {
+      const question = '请输入：';
+      const options: InputOptions = {
+        timeoutInMs: 1000,
+        showCountdown: false,
+        defaultValue: '默认值',
+        silentMode: true
+      };
+
+      const promise = inputModule.askQuestionWithOptions(question, options);
+      clock.tick(1000);
+      
+      const result = await promise;
+      expect(result).to.equal(options.defaultValue);
+    });
+  });
+
+  describe('askConfirmation', () => {
+    it('should handle invalid input and return default value', async () => {
+      const question = '确认?';
+      const defaultValue = true;
+      const timeout = 1000;
+
+      mockReadline.question = sinon.stub().callsFake((_, callback) => callback('invalid'));
+      const promise = inputModule.askConfirmation(question, defaultValue, timeout);
+      await clock.tickAsync(0);
+      const result = await promise;
+      expect(result).to.equal(defaultValue);
+    });
+
+    it('should handle empty input and return default value', async () => {
+      const question = '确认?';
+      const defaultValue = true;
+      const timeout = 1000;
+
+      mockReadline.question = sinon.stub().callsFake((_, callback) => callback(''));
+      const promise = inputModule.askConfirmation(question, defaultValue, timeout);
+      await clock.tickAsync(0);
+      const result = await promise;
+      expect(result).to.equal(defaultValue);
+    });
+
+    it('should handle input with spaces and return correct value', async () => {
+      const question = '确认?';
+      const defaultValue = false;
+      const timeout = 1000;
+
+      mockReadline.question = sinon.stub().callsFake((_, callback) => callback(' y '));
+      const promise = inputModule.askConfirmation(question, defaultValue, timeout);
+      await clock.tickAsync(0);
+      const result = await promise;
+      expect(result).to.equal(true);
+    });
+
+    it('should handle timeout and return default value', async () => {
+      const question = '确认?';
+      const defaultValue = true;
+      const timeout = 1000;
+
+      mockReadline.question = sinon.stub().callsFake(() => {});
+      const promise = inputModule.askConfirmation(question, defaultValue, timeout);
+      await clock.tickAsync(1000);
+      const result = await promise;
+      expect(result).to.equal(defaultValue);
+    });
   });
 }); 

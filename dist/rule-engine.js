@@ -56,65 +56,150 @@ class RuleEngine {
     /**
      * 检查玩家是否可以杠
      * @param player 玩家
-     * @param tile 要杠的牌，如果为null则检查暗杠
+     * @param tile 要杠的牌，如果为null则检查暗杠或补杠
+     * @param gameState 游戏状态，包括当前玩家等信息
+     * @returns 杠牌检查结果
      */
-    static canGang(player, tile = null) {
-        // // 已经有14张牌时，只能自己杠（暗杠或补杠）
-        // if (player.handTiles.length >= 14 && tile !== null) {
-        //   return { canGang: false, gangType: null };
-        // }
-        // // 已经有13张牌或更多时，不能明杠他人的牌
-        // if (player.handTiles.length >= 13 && tile !== null) {
-        //   return { canGang: false, gangType: null };
-        // }
+    static canGang(player, tile = null, gameState = {}) {
+        // 检查明杠
         if (tile) {
-            // 检查是否可以杠别人打出的牌（明杠）
-            const sameTiles = player.handTiles.filter(t => t.type === tile.type && t.value === tile.value);
-            if (sameTiles.length === 3) {
+            const mingGangResult = this.checkMingGang(player, tile);
+            if (mingGangResult.canGang) {
+                return mingGangResult;
+            }
+            // 检查抢杠
+            if (gameState.currentPlayer && gameState.currentPlayer !== player) {
+                const qiangGangResult = this.checkQiangGang(player, tile, gameState.currentPlayer);
+                if (qiangGangResult.canGang) {
+                    return qiangGangResult;
+                }
+            }
+            return { canGang: false, gangType: null };
+        }
+        // 检查暗杠和补杠
+        else {
+            // 先检查暗杠
+            const anGangResult = this.checkAnGang(player);
+            if (anGangResult.canGang) {
+                return anGangResult;
+            }
+            // 再检查补杠
+            const buGangResult = this.checkBuGang(player, gameState.allPlayers || []);
+            if (buGangResult.canGang) {
+                return buGangResult;
+            }
+            return { canGang: false, gangType: null };
+        }
+    }
+    /**
+     * 检查明杠
+     * @param player 玩家
+     * @param tile 要杠的牌
+     * @returns 明杠检查结果
+     */
+    static checkMingGang(player, tile) {
+        // 检查是否有三张相同的牌
+        const sameTiles = player.handTiles.filter(t => t.type === tile.type && t.value === tile.value);
+        if (sameTiles.length === 3) {
+            return {
+                canGang: true,
+                gangType: rule_types_1.GangType.MING,
+                tiles: [...sameTiles, tile]
+            };
+        }
+        return { canGang: false, gangType: null };
+    }
+    /**
+     * 检查暗杠
+     * @param player 玩家
+     * @returns 暗杠检查结果
+     */
+    static checkAnGang(player) {
+        // 检查是否可以暗杠（手牌中有4张相同的牌）
+        const tileGroups = new Map();
+        for (const t of player.handTiles) {
+            const key = `${t.type}-${t.value}`;
+            if (!tileGroups.has(key)) {
+                tileGroups.set(key, { count: 0, tiles: [] });
+            }
+            const group = tileGroups.get(key);
+            group.count++;
+            group.tiles.push(t);
+        }
+        // 有4张相同的牌，可以暗杠
+        for (const [key, group] of tileGroups.entries()) {
+            if (group.count === 4) {
                 return {
                     canGang: true,
-                    gangType: rule_types_1.GangType.MING_GANG,
-                    tiles: [...sameTiles, tile]
+                    gangType: rule_types_1.GangType.AN,
+                    tiles: group.tiles
                 };
             }
         }
-        else {
-            // 检查是否可以暗杠（手牌中有4张相同的牌）
-            const tileGroups = new Map();
-            for (const t of player.handTiles) {
-                const key = `${t.type}-${t.value}`;
-                if (!tileGroups.has(key)) {
-                    tileGroups.set(key, { count: 0, tiles: [] });
-                }
-                const group = tileGroups.get(key);
-                group.count++;
-                group.tiles.push(t);
-            }
-            // 有4张相同的牌，可以暗杠
-            for (const [key, group] of tileGroups.entries()) {
-                if (group.count === 4) {
-                    return {
-                        canGang: true,
-                        gangType: rule_types_1.GangType.AN_GANG,
-                        tiles: group.tiles
-                    };
-                }
-            }
-            // 检查是否可以补杠（已经碰过的牌，再摸到第四张）
-            for (const set of player.revealedSets) {
-                if (set.type === 'PENG') {
-                    const firstTile = set.tiles[0];
-                    // 检查手牌中是否有相同的牌
-                    const matchingTile = player.handTiles.find(t => t.type === firstTile.type && t.value === firstTile.value);
-                    if (matchingTile) {
+        return { canGang: false, gangType: null };
+    }
+    /**
+     * 检查补杠
+     * @param player 玩家
+     * @param allPlayers 所有玩家，用于检查是否有人可以抢杠
+     * @returns 补杠检查结果
+     */
+    static checkBuGang(player, allPlayers = []) {
+        // 检查是否可以补杠（已经碰过的牌，再摸到第四张）
+        for (const set of player.revealedSets) {
+            if (set.type === 'PENG') {
+                const firstTile = set.tiles[0];
+                // 检查手牌中是否有相同的牌
+                const matchingTile = player.handTiles.find(t => t.type === firstTile.type && t.value === firstTile.value);
+                if (matchingTile) {
+                    // 检查是否有其他玩家可以抢杠
+                    const canBeRobbed = allPlayers.some(otherPlayer => {
+                        if (otherPlayer !== player) {
+                            const huResult = this.canHu(otherPlayer, matchingTile);
+                            return huResult;
+                        }
+                        return false;
+                    });
+                    if (canBeRobbed) {
                         return {
                             canGang: true,
-                            gangType: rule_types_1.GangType.BU_GANG,
+                            gangType: rule_types_1.GangType.QIANG,
                             tiles: [...set.tiles, matchingTile]
                         };
                     }
+                    return {
+                        canGang: true,
+                        gangType: rule_types_1.GangType.BU,
+                        tiles: [...set.tiles, matchingTile]
+                    };
                 }
             }
+        }
+        return { canGang: false, gangType: null };
+    }
+    /**
+     * 检查抢杠
+     * @param player 要抢杠的玩家
+     * @param tile 可能被抢杠的牌
+     * @param currentPlayer 当前玩家，正在尝试补杠
+     * @returns 抢杠检查结果
+     */
+    static checkQiangGang(player, tile, currentPlayer) {
+        // 检查当前玩家是否有一个碰的牌组，并且手中有对应的第四张牌
+        const hasPengSet = currentPlayer.revealedSets.some(set => set.type === 'PENG' && set.tiles[0].equals(tile));
+        // 检查玩家手中是否有这张牌（即将用于补杠）
+        const hasTileInHand = currentPlayer.handTiles.some(t => t.equals(tile));
+        if (!hasPengSet || !hasTileInHand) {
+            return { canGang: false, gangType: null };
+        }
+        // 检查抢杠玩家是否可以使用这张牌胡牌
+        const canHu = this.canHu(player, tile);
+        if (canHu) {
+            return {
+                canGang: true,
+                gangType: rule_types_1.GangType.QIANG,
+                tiles: [tile]
+            };
         }
         return { canGang: false, gangType: null };
     }
@@ -131,7 +216,7 @@ class RuleEngine {
             const sameTiles = player.handTiles.filter(t => t.type === tile.type && t.value === tile.value);
             if (sameTiles.length === 3) {
                 combinations.push({
-                    type: rule_types_1.GangType.MING_GANG,
+                    type: rule_types_1.GangType.MING,
                     tiles: [...sameTiles, tile]
                 });
             }
@@ -149,7 +234,7 @@ class RuleEngine {
         for (const [key, tiles] of tileGroups.entries()) {
             if (tiles.length === 4) {
                 combinations.push({
-                    type: rule_types_1.GangType.AN_GANG,
+                    type: rule_types_1.GangType.AN,
                     tiles: [...tiles]
                 });
             }
@@ -161,7 +246,7 @@ class RuleEngine {
                 const matchingTile = player.handTiles.find(t => t.type === firstTile.type && t.value === firstTile.value);
                 if (matchingTile) {
                     combinations.push({
-                        type: rule_types_1.GangType.BU_GANG,
+                        type: rule_types_1.GangType.BU,
                         tiles: [...set.tiles, matchingTile]
                     });
                 }

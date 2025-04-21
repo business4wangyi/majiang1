@@ -7,9 +7,8 @@
     "start": "node dist/index.js",
     "build": "tsc",
     "dev": "ts-node src/index.ts",
-    "test": "NODE_ENV=test mocha -r ts-node/register --exit 'tests/display.test.ts' 'tests/display-manager.test.ts' 'tests/game.test.ts' 'tests/game-flow.test.ts' 'tests/game-state.test.ts' 'tests/logger.test.ts' 'tests/rule-engine.test.ts' 'tests/score-calculator.test.ts' 'tests/win-conditions.test.ts' 'tests/countdown-manager.test.ts'",
-    "test:all": "NODE_ENV=test mocha -r ts-node/register --exit 'tests/**/*.test.ts'",
-    "test:win": "set NODE_ENV=test && mocha -r ts-node/register --exit 'tests/display.test.ts' 'tests/display-manager.test.ts' 'tests/game.test.ts' 'tests/game-flow.test.ts' 'tests/game-state.test.ts' 'tests/logger.test.ts' 'tests/rule-engine.test.ts' 'tests/score-calculator.test.ts' 'tests/win-conditions.test.ts' 'tests/countdown-manager.test.ts'"
+    "test": "NODE_ENV=test mocha -r ts-node/register --exit 'tests/**/*.test.ts'",
+    "test:win": "set NODE_ENV=test && mocha -r ts-node/register --exit 'tests/**/*.test.ts'"
   },
   "keywords": [
     "majiang",
@@ -26,11 +25,13 @@
     "@types/chai-spies": "^1.0.6",
     "@types/mocha": "^10.0.10",
     "@types/node": "^20.11.0",
+    "@types/proxyquire": "^1.3.31",
     "@types/readline-sync": "^1.4.8",
     "@types/sinon": "^17.0.4",
     "chai": "^4.5.0",
     "chai-spies": "^1.0.0",
     "mocha": "^11.1.0",
+    "proxyquire": "^2.1.3",
     "sinon": "^20.0.0",
     "ts-node": "^10.9.2",
     "typescript": "^5.3.3"

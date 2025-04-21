@@ -3,36 +3,76 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.GameFlow = void 0;
 exports.drawTile = drawTile;
 const player_1 = require("./player");
-const game_state_1 = require("./game-state");
-const rule_engine_1 = require("./rule-engine");
+const game_1 = require("./game");
+const tile_manager_1 = require("./tile-manager");
 const logger_1 = require("./logger");
 const display_manager_1 = require("./display-manager");
+/**
+ * GameFlow类 - 专注于游戏流程控制
+ *
+ * 负责：
+ * 1. 管理游戏的回合进行
+ * 2. 处理游戏阶段的转换
+ * 3. 控制玩家行动顺序
+ */
 class GameFlow {
-    constructor(gameState, tileManager, players) {
-        this.gameState = gameState;
+    constructor(game, tileManager, players) {
+        this.game = game;
         this.tileManager = tileManager;
         this.players = players;
     }
+    /**
+     * 启动游戏
+     */
     startGame() {
         display_manager_1.displayManager.print("开始初始化游戏...");
         // 检查玩家数量
         display_manager_1.displayManager.print(`游戏中共有 ${this.players.length} 名玩家`);
         // 初始化游戏状态
-        this.gameState.setState(game_state_1.GameState.INIT);
+        this.game.setState(game_1.GameState.INIT);
         display_manager_1.displayManager.print("重置牌山...");
+        // 确保使用的是 TileManager 单例
+        this.tileManager = tile_manager_1.TileManager.getInstance();
         this.tileManager.reset();
         display_manager_1.displayManager.print("开始发牌...");
         this.dealInitialTiles();
         // 设置第一个玩家为当前玩家，并设置状态为ACTING
-        this.gameState.setCurrentPlayerIndex(0);
+        this.game.setCurrentPlayerIndex(0);
         // 确保所有玩家状态正确
         for (let i = 0; i < this.players.length; i++) {
             this.updatePlayerState(i);
         }
         // 切换游戏状态为PLAYING
-        this.gameState.setState(game_state_1.GameState.PLAYING);
+        this.game.setState(game_1.GameState.PLAYING);
         display_manager_1.displayManager.printSuccess("游戏初始化完成，状态转为 PLAYING");
     }
+    /**
+     * 处理游戏启动时的初始化工作
+     */
+    prepareGameStart() {
+        (0, logger_1.infoLog)(`准备游戏启动...`);
+        // 确保当前玩家状态为ACTING，其他玩家为WAITING
+        const players = this.game.getAllPlayers();
+        for (let i = 0; i < players.length; i++) {
+            const player = players[i];
+            if (i === this.game.currentPlayerIndex) {
+                if (player.state !== player_1.PlayerState.ACTING) {
+                    (0, logger_1.infoLog)(`将当前玩家 ${player.name} 状态设置为 ACTING`);
+                    player.state = player_1.PlayerState.ACTING;
+                }
+            }
+            else {
+                if (player.state !== player_1.PlayerState.WAITING) {
+                    (0, logger_1.infoLog)(`将玩家 ${player.name} 状态设置为 WAITING`);
+                    player.state = player_1.PlayerState.WAITING;
+                }
+            }
+        }
+        (0, logger_1.infoLog)(`游戏准备就绪`);
+    }
+    /**
+     * 为所有玩家发初始手牌
+     */
     dealInitialTiles() {
         // 每个玩家发13张牌
         display_manager_1.displayManager.print(`开始为 ${this.players.length} 名玩家发初始手牌...`);
@@ -80,24 +120,57 @@ class GameFlow {
         }
         display_manager_1.displayManager.printDivider();
     }
-    currentPlayerDraw() {
-        const currentPlayer = this.players[this.gameState.currentPlayerIndex];
-        // 使用Player类的方法判断手牌数量是否合理
-        if (!currentPlayer.hasValidHandSize(false)) {
-            const expectedHandSize = currentPlayer.getExpectedHandSize(false);
-            (0, logger_1.debugLog)(`玩家 ${currentPlayer.name} 手牌数量不正确: ${currentPlayer.handTiles.length}，预期: ${expectedHandSize}`);
+    /**
+     * 为指定玩家摸一张牌
+     * @param game 游戏实例
+     * @param player 要摸牌的玩家
+     * @param notify 是否通知显示
+     * @param validate 是否验证手牌数量
+     * @param incrementCount 是否增加摸牌计数
+     * @returns 摸到的牌，或null表示没有摸到
+     */
+    drawTileForPlayer(player, options = {}) {
+        // 设置默认选项
+        const { notify = true, validate = false, incrementCount = false } = options;
+        // 验证手牌数量
+        if (validate && !player.hasValidHandSize(false)) {
+            const expectedHandSize = player.getExpectedHandSize(false);
+            (0, logger_1.debugLog)(`玩家 ${player.name} 手牌数量不正确: ${player.handTiles.length}，预期: ${expectedHandSize}`);
             return null;
         }
+        // 摸牌
         const tile = this.tileManager.drawTile();
         if (tile) {
-            currentPlayer.drawTile(tile);
-            this.gameState.incrementDrawCount();
-            display_manager_1.displayManager.addToTurnLog(`${currentPlayer.name} 摸了一张牌`);
+            player.drawTile(tile);
+            // 更新计数器
+            if (incrementCount) {
+                this.game.incrementDrawCount();
+            }
+            // 通知显示
+            if (notify) {
+                display_manager_1.displayManager.addToTurnLog(`${player.name} 摸了一张牌`);
+            }
+            return tile;
         }
-        return tile;
+        return null;
     }
+    /**
+     * 当前玩家摸牌
+     */
+    currentPlayerDraw() {
+        const currentPlayer = this.players[this.game.currentPlayerIndex];
+        // 使用新的通用方法
+        return this.drawTileForPlayer(currentPlayer, {
+            notify: true,
+            validate: true,
+            incrementCount: true
+        });
+    }
+    /**
+     * 当前玩家打出一张牌
+     */
     currentPlayerDiscard(tileIndex) {
-        const currentPlayer = this.players[this.gameState.currentPlayerIndex];
+        const currentPlayer = this.players[this.game.currentPlayerIndex];
         // 验证玩家状态
         if (currentPlayer.state !== player_1.PlayerState.ACTING) {
             display_manager_1.displayManager.printWarning(`玩家 ${currentPlayer.name} 不处于ACTING状态，当前状态: ${player_1.PlayerState[currentPlayer.state]}`);
@@ -160,7 +233,7 @@ class GameFlow {
             const discardedTile = currentPlayer.discardTile(tileIndex);
             // 如果成功打出，更新游戏状态
             if (discardedTile) {
-                this.gameState.setLastDiscardedTile(discardedTile);
+                this.game.setLastDiscardedTile(discardedTile);
                 display_manager_1.displayManager.printSuccess(`玩家 ${currentPlayer.name} 成功打出: ${discardedTile.toString()}`);
             }
             else {
@@ -173,114 +246,139 @@ class GameFlow {
             return null;
         }
     }
+    /**
+     * 进入下一个玩家的回合
+     */
     nextTurn() {
-        // 获取当前玩家
-        const currentPlayerIndex = this.gameState.currentPlayerIndex;
-        const currentPlayer = this.players[currentPlayerIndex];
-        // 将当前玩家状态设置为WAITING
-        if (currentPlayer.state !== player_1.PlayerState.WAITING) {
-            currentPlayer.state = player_1.PlayerState.WAITING;
-            (0, logger_1.debugLog)(`将玩家 ${currentPlayer.name} (索引: ${currentPlayerIndex}) 状态从 ACTING 切换为 WAITING`);
-        }
-        // 计算下一个玩家的索引
-        const nextPlayerIndex = (currentPlayerIndex + 1) % this.players.length;
-        // 设置下一个玩家为当前玩家
-        this.gameState.setCurrentPlayerIndex(nextPlayerIndex);
-        // 获取下一个玩家并设置其状态为ACTING
+        // 获取当前玩家并更新状态
+        const currentPlayer = this.players[this.game.currentPlayerIndex];
+        currentPlayer.state = player_1.PlayerState.WAITING;
+        display_manager_1.displayManager.print(`玩家 ${currentPlayer.name} 出牌结束，状态变为 WAITING`);
+        // 计算下一个玩家
+        const nextPlayerIndex = (this.game.currentPlayerIndex + 1) % this.players.length;
+        this.game.setCurrentPlayerIndex(nextPlayerIndex);
+        // 更新下一个玩家的状态
         const nextPlayer = this.players[nextPlayerIndex];
-        if (nextPlayer.state !== player_1.PlayerState.ACTING) {
-            nextPlayer.state = player_1.PlayerState.ACTING;
-            (0, logger_1.debugLog)(`将下一个玩家 ${nextPlayer.name} (索引: ${nextPlayerIndex}) 状态设置为 ACTING`);
+        nextPlayer.state = player_1.PlayerState.ACTING;
+        // 显示下一个玩家信息
+        display_manager_1.displayManager.printDivider();
+        display_manager_1.displayManager.printTitle(`轮到 ${nextPlayer.name} 行动 [手牌: ${nextPlayer.handTiles.length}张]`);
+        // 为下一个玩家摸牌
+        const drawnTile = this.currentPlayerDraw();
+        if (drawnTile) {
+            display_manager_1.displayManager.printSuccess(`玩家 ${nextPlayer.name} 摸了一张牌: ${nextPlayer.type === player_1.PlayerType.HUMAN ? drawnTile.toString() : '[暗牌]'}`);
         }
-        display_manager_1.displayManager.print(`当前玩家更新为: ${nextPlayer.name}, 手牌数量: ${nextPlayer.handTiles.length}`);
-    }
-    checkOtherPlayersActions(tile) {
-        const waitingPlayers = [];
-        const currentPlayerIndex = this.gameState.currentPlayerIndex;
-        for (let i = 0; i < this.players.length; i++) {
-            if (i === currentPlayerIndex)
-                continue;
-            const player = this.players[i];
-            const actions = rule_engine_1.RuleEngine.getAvailableActions(player, tile);
-            if (actions.length > 0) {
-                waitingPlayers.push(i);
-                player.state = player_1.PlayerState.WAITING;
-            }
+        else {
+            display_manager_1.displayManager.printWarning(`无法摸牌，牌山已空`);
         }
-        return waitingPlayers;
     }
+    /**
+     * 强制AI玩家出牌
+     */
     forceAIPlayerDiscard() {
-        for (const player of this.players) {
-            // 使用Player类的needsToDiscard方法判断是否需要出牌
-            if (player.type === player_1.PlayerType.AI && player.needsToDiscard()) {
-                (0, logger_1.debugLog)(`强制AI玩家 ${player.name} 出牌，手牌数量: ${player.handTiles.length}`);
-                // 使用AI策略选择要打出的牌
-                const tileToDiscard = player.handTiles[player.handTiles.length - 1];
-                if (tileToDiscard) {
-                    const tileIndex = player.handTiles.length - 1;
-                    const discarded = this.currentPlayerDiscard(tileIndex);
-                    if (discarded) {
-                        player.state = player_1.PlayerState.WAITING;
-                        return true;
-                    }
-                }
-                // 如果AI策略失败，强制打出最后一张牌
-                const lastIndex = player.handTiles.length - 1;
-                const discarded = this.currentPlayerDiscard(lastIndex);
-                if (discarded) {
-                    player.state = player_1.PlayerState.WAITING;
-                    return true;
-                }
-            }
+        // 获取当前玩家
+        const currentPlayer = this.players[this.game.currentPlayerIndex];
+        // 检查是否为AI玩家
+        if (currentPlayer.type !== player_1.PlayerType.AI) {
+            display_manager_1.displayManager.printWarning(`当前玩家不是AI，无法强制出牌`);
+            return false;
+        }
+        // 确保玩家处于可以出牌的状态
+        currentPlayer.state = player_1.PlayerState.ACTING;
+        // 使用AI决策获取出牌索引
+        const discardIndex = currentPlayer.getAIMove();
+        display_manager_1.displayManager.printWarning(`强制AI玩家 ${currentPlayer.name} 出牌，选择索引: ${discardIndex}`);
+        // 执行出牌
+        const discarded = this.currentPlayerDiscard(discardIndex);
+        if (discarded) {
+            display_manager_1.displayManager.printSuccess(`AI玩家 ${currentPlayer.name} 成功打出: ${discarded.toString()}`);
+            return true;
         }
         return false;
     }
-    // 更新玩家状态的辅助方法
+    /**
+     * 更新指定玩家的状态
+     */
     updatePlayerState(playerIndex) {
+        if (playerIndex < 0 || playerIndex >= this.players.length) {
+            return;
+        }
         const player = this.players[playerIndex];
-        const currentPlayerIndex = this.gameState.currentPlayerIndex;
-        if (playerIndex === currentPlayerIndex) {
-            if (player.state !== player_1.PlayerState.ACTING) {
-                player.state = player_1.PlayerState.ACTING;
-                (0, logger_1.debugLog)(`将玩家 ${player.name} (索引: ${playerIndex}) 状态设置为 ACTING`);
-            }
+        // 如果是当前玩家，设置为正在行动状态
+        if (playerIndex === this.game.currentPlayerIndex) {
+            player.state = player_1.PlayerState.ACTING;
         }
         else {
-            if (player.state !== player_1.PlayerState.WAITING) {
-                player.state = player_1.PlayerState.WAITING;
-                (0, logger_1.debugLog)(`将玩家 ${player.name} (索引: ${playerIndex}) 状态设置为 WAITING`);
-            }
+            // 否则设置为等待状态
+            player.state = player_1.PlayerState.WAITING;
         }
+        (0, logger_1.debugLog)(`更新玩家 ${player.name} 状态为 ${player_1.PlayerState[player.state]}`);
     }
 }
 exports.GameFlow = GameFlow;
 /**
- * 从牌山中摸牌并分配给玩家
+ * 为指定玩家摸一张牌
  * @param game 游戏实例
  * @param player 要摸牌的玩家
- * @param notify 是否通知（打印消息）
- * @returns 摸到的牌，如果牌山已空，返回null
+ * @param notify 是否通知显示
+ * @param validate 是否验证手牌数量
+ * @param incrementCount 是否增加摸牌计数
+ * @returns 摸到的牌，或null表示没有摸到
  */
-function drawTile(game, player, notify = true) {
-    // 检查牌山是否已空
-    if (game.remainingTiles <= 0) {
+function drawTile(game, player, notify = true, validate = false, incrementCount = false) {
+    try {
+        // 验证游戏和玩家实例
+        if (!game) {
+            (0, logger_1.errorLog)(`摸牌错误: 无效的游戏实例`);
+            return null;
+        }
+        if (!player) {
+            (0, logger_1.errorLog)(`摸牌错误: 无效的玩家实例`);
+            return null;
+        }
+        // 验证手牌数量
+        if (validate && !player.hasValidHandSize(false)) {
+            const expectedHandSize = player.getExpectedHandSize(false);
+            (0, logger_1.debugLog)(`玩家 ${player.name} 手牌数量不正确: ${player.handTiles.length}，预期: ${expectedHandSize}`);
+            return null;
+        }
+        // 摸牌前记录日志
+        (0, logger_1.debugLog)(`尝试为玩家 ${player.name} 摸牌，当前手牌数量: ${player.handTiles.length}`);
+        // 从牌山摸牌
+        const tileManager = game.getTileManager();
+        if (!tileManager) {
+            (0, logger_1.errorLog)(`摸牌错误: 无法获取牌管理器`);
+            return null;
+        }
+        const tile = tileManager.drawTile();
+        // 检查是否成功摸到牌
+        if (!tile) {
+            if (notify) {
+                display_manager_1.displayManager.printWarning(`牌山已空，${player.name} 无法摸牌`);
+            }
+            (0, logger_1.debugLog)(`玩家 ${player.name} 摸牌失败，牌山已空`);
+            return null;
+        }
+        // 将牌添加到玩家手中
+        player.drawTile(tile);
+        // 更新计数器
+        if (incrementCount) {
+            game.incrementDrawCount();
+            (0, logger_1.debugLog)(`游戏摸牌计数增加，当前总计: ${game.drawCount}`);
+        }
+        // 通知显示
         if (notify) {
-            (0, logger_1.debugLog)(`牌山已空，无法摸牌`);
+            display_manager_1.displayManager.addToTurnLog(`${player.name} 摸了一张牌`);
+            (0, logger_1.debugLog)(`玩家 ${player.name} 摸到牌: ${tile.toString()}`);
+        }
+        return tile;
+    }
+    catch (error) {
+        // 处理异常情况
+        (0, logger_1.errorLog)(`摸牌过程中发生错误: ${error instanceof Error ? error.message : String(error)}`);
+        if (notify) {
+            display_manager_1.displayManager.printError(`摸牌失败: ${error instanceof Error ? error.message : String(error)}`);
         }
         return null;
     }
-    // 从牌山中获取一张牌
-    const tile = game.drawTileForPlayer(player);
-    if (!tile) {
-        if (notify) {
-            (0, logger_1.debugLog)(`发生严重错误：虽然remainingTiles > 0，但无法从牌山中获取牌`);
-        }
-        return null;
-    }
-    // 记录最后摸到的牌（这已经在drawTileForPlayer中处理了）
-    // 通知
-    if (notify) {
-        (0, logger_1.debugLog)(`玩家 ${player.name} 摸了一张牌: ${tile.toString()}`);
-    }
-    return tile;
 }

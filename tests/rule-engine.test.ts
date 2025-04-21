@@ -135,7 +135,7 @@ describe('RuleEngine', () => {
       // 可以明杠
       const mingGangResult = RuleEngine.canGang(player, tile);
       expect(mingGangResult.canGang).to.be.true;
-      expect(mingGangResult.gangType).to.equal(GangType.MING_GANG);
+      expect(mingGangResult.gangType).to.equal(GangType.MING);
       
       // 测试暗杠 - 手牌中有四张相同的牌
       player.handTiles = [
@@ -148,7 +148,7 @@ describe('RuleEngine', () => {
       // 可以暗杠
       const anGangResult = RuleEngine.canGang(player);
       expect(anGangResult.canGang).to.be.true;
-      expect(anGangResult.gangType).to.equal(GangType.AN_GANG);
+      expect(anGangResult.gangType).to.equal(GangType.AN);
       
       // 测试补杠 - 之前碰过，手里又摸到一张
       player.handTiles = [
@@ -168,7 +168,7 @@ describe('RuleEngine', () => {
       // 可以补杠
       const buGangResult = RuleEngine.canGang(player);
       expect(buGangResult.canGang).to.be.true;
-      expect(buGangResult.gangType).to.equal(GangType.BU_GANG);
+      expect(buGangResult.gangType).to.equal(GangType.BU);
     });
     
     it('getAvailableActions应返回玩家可用的操作', () => {
@@ -211,7 +211,7 @@ describe('RuleEngine', () => {
       // 可以明杠
       const mingGangCombinations = RuleEngine.findGangCombinations(player, tile);
       expect(mingGangCombinations).to.have.lengthOf(1);
-      expect(mingGangCombinations[0].type).to.equal(GangType.MING_GANG);
+      expect(mingGangCombinations[0].type).to.equal(GangType.MING);
       expect(mingGangCombinations[0].tiles).to.have.lengthOf(4);
       
       // 测试暗杠
@@ -231,12 +231,12 @@ describe('RuleEngine', () => {
       expect(anGangCombinations).to.have.lengthOf(2);
       
       // 验证第一种杠
-      expect(anGangCombinations[0].type).to.equal(GangType.AN_GANG);
+      expect(anGangCombinations[0].type).to.equal(GangType.AN);
       expect(anGangCombinations[0].tiles).to.have.lengthOf(4);
       expect(anGangCombinations[0].tiles[0].value).to.equal(anGangCombinations[0].tiles[1].value);
       
       // 验证第二种杠
-      expect(anGangCombinations[1].type).to.equal(GangType.AN_GANG);
+      expect(anGangCombinations[1].type).to.equal(GangType.AN);
       expect(anGangCombinations[1].tiles).to.have.lengthOf(4);
       expect(anGangCombinations[1].tiles[0].value).to.equal(anGangCombinations[1].tiles[1].value);
       
@@ -267,7 +267,7 @@ describe('RuleEngine', () => {
       // 可以补杠1种
       const buGangCombinations = RuleEngine.findGangCombinations(player);
       expect(buGangCombinations).to.have.lengthOf(1);
-      expect(buGangCombinations[0].type).to.equal(GangType.BU_GANG);
+      expect(buGangCombinations[0].type).to.equal(GangType.BU);
       expect(buGangCombinations[0].tiles).to.have.lengthOf(4);
       expect(buGangCombinations[0].tiles[0].value).to.equal(1);
     });

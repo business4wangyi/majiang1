@@ -1,7 +1,7 @@
 import { Style, groupTilesByType, TileTypeNames, TileTypeOrder, analyzeHand, formatTileSet } from './display';
 import { Player } from './player';
 import { Tile, sortTiles } from './tile';
-import { GameState } from './game-state';
+import { GameState } from './game';
 import { Game } from './game';
 import { infoLog, warnLog, errorLog } from './logger';
 import { TileSet } from './rule-types';
@@ -411,7 +411,7 @@ export class DisplayManager {
     const stateInfo = [
       `当前玩家: ${game.getAllPlayers()[game.currentPlayerIndex].name}`,
       `游戏阶段: ${game.state}`,
-      `剩余牌数: ${game.remainingTiles}`,
+      `剩余牌数: ${game.getRemainingTiles()}`,
       `摸牌次数: ${game.drawCount}`,
       `最后打出的牌: ${game.lastDiscardedTile ? game.lastDiscardedTile.toString() : '无'}`
     ];

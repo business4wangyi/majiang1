@@ -2,11 +2,11 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Game = exports.GameState = void 0;
 const player_1 = require("./player");
-const game_state_1 = require("./game-state");
 const tile_manager_1 = require("./tile-manager");
 const rule_engine_1 = require("./rule-engine");
-const game_flow_1 = require("./game-flow");
 const display_manager_1 = require("./display-manager");
+const ai_player_1 = require("./ai-player");
+const human_player_1 = require("./human-player");
 // 游戏状态
 var GameState;
 (function (GameState) {
@@ -16,80 +16,93 @@ var GameState;
     GameState[GameState["WAITING_ACTION"] = 3] = "WAITING_ACTION";
     GameState[GameState["ENDED"] = 4] = "ENDED"; // 游戏结束
 })(GameState || (exports.GameState = GameState = {}));
-// 游戏类
+// 游戏类 - 只负责游戏状态管理和核心逻辑
 class Game {
     constructor(players) {
+        // 游戏状态相关属性
+        this.state = GameState.INIT;
+        this.currentPlayerIndex = 0;
+        this.lastDiscardedTile = null;
+        this.pendingAction = null;
+        this.bankerIndex = 0;
+        this.windRound = 0; // 0:东风圈, 1:南风圈, 2:西风圈, 3:北风圈
+        this.drawCount = 0;
+        this.lastDrawCount = 0;
         this.players = [];
-        this.gameState = new game_state_1.GameStateManager();
-        this.tileManager = new tile_manager_1.TileManager();
-        this.gameFlow = new game_flow_1.GameFlow(this.gameState, this.tileManager, players || []);
+        // 使用 TileManager 的单例实例
+        this.tileManager = tile_manager_1.TileManager.getInstance();
         this.players = players || [];
     }
-    startGame() {
-        this.gameFlow.startGame();
+    /**
+     * 设置游戏玩家
+     * @param autoPlayMode 是否启用自动打牌模式
+     */
+    setupPlayers(autoPlayMode) {
+        // 清空现有玩家列表
+        this.players = [];
+        if (autoPlayMode) {
+            // 自动模式：4个AI玩家
+            display_manager_1.displayManager.printTitle(`初始化游戏：4个AI玩家对弈`);
+            // 添加4个AI玩家
+            this.addPlayer(new ai_player_1.AIPlayer('东家(AI)'));
+            this.addPlayer(new ai_player_1.AIPlayer('南家(AI)'));
+            this.addPlayer(new ai_player_1.AIPlayer('西家(AI)'));
+            this.addPlayer(new ai_player_1.AIPlayer('北家(AI)'));
+        }
+        else {
+            // 手动模式：1个人类玩家 + 3个AI玩家
+            display_manager_1.displayManager.printTitle(`初始化游戏：1个人类玩家 + 3个AI玩家`);
+            // 添加1个人类玩家
+            this.addPlayer(new human_player_1.HumanPlayer('东家(玩家)'));
+        }
+        // 无论哪种模式，都添加3个AI玩家
+        this.addPlayer(new ai_player_1.AIPlayer('南家(AI)'));
+        this.addPlayer(new ai_player_1.AIPlayer('西家(AI)'));
+        this.addPlayer(new ai_player_1.AIPlayer('北家(AI)'));
+        display_manager_1.displayManager.printSuccess(`游戏玩家设置完成，共${this.players.length}名玩家`);
     }
-    currentPlayerDraw() {
-        return this.gameFlow.currentPlayerDraw();
+    // 状态管理方法
+    setState(newState) {
+        this.state = newState;
     }
-    currentPlayerDiscard(tileIndex) {
-        return this.gameFlow.currentPlayerDiscard(tileIndex);
-    }
-    nextTurn() {
-        this.gameFlow.nextTurn();
-    }
-    forceAIPlayerDiscard() {
-        return this.gameFlow.forceAIPlayerDiscard();
-    }
-    getPlayers() {
-        return this.players;
-    }
-    addPlayer(player) {
-        display_manager_1.displayManager.print(`添加玩家: ${player.name} (${player.type === player_1.PlayerType.AI ? 'AI' : '人类'})`);
-        this.players.push(player);
-        // 重新初始化GameFlow，确保玩家列表更新
-        this.gameFlow = new game_flow_1.GameFlow(this.gameState, this.tileManager, this.players);
-        display_manager_1.displayManager.print(`当前游戏共有 ${this.players.length} 名玩家`);
-    }
-    // 添加公共属性访问器
-    get state() {
-        return this.gameState.state;
-    }
-    get currentPlayerIndex() {
-        return this.gameState.currentPlayerIndex;
-    }
-    // 设置当前玩家索引
     setCurrentPlayerIndex(index) {
         if (index >= 0 && index < this.players.length) {
-            this.gameState.currentPlayerIndex = index;
+            this.currentPlayerIndex = index;
             display_manager_1.displayManager.print(`当前玩家索引已更新为: ${index}, 玩家: ${this.players[index].name}`);
         }
         else {
             display_manager_1.displayManager.printError(`无效的玩家索引: ${index}, 有效范围: 0-${this.players.length - 1}`);
         }
     }
-    get lastDiscardedTile() {
-        return this.gameState.lastDiscardedTile;
-    }
     setLastDiscardedTile(tile) {
-        this.gameState.setLastDiscardedTile(tile);
+        this.lastDiscardedTile = tile;
     }
-    get drawCount() {
-        return this.gameState.drawCount;
+    getLastDiscardedTile() {
+        return this.lastDiscardedTile;
     }
-    get remainingTiles() {
-        return this.tileManager.getRemainingTiles();
+    setPendingAction(action) {
+        this.pendingAction = action;
     }
-    getTotalTiles() {
-        return this.tileManager.getTotalTiles();
+    incrementDrawCount() {
+        this.drawCount++;
     }
-    getRemainingTiles() {
-        return this.tileManager.getRemainingTiles();
+    resetDrawCount() {
+        this.drawCount = 0;
     }
-    getTileManager() {
-        return this.tileManager;
+    setLastDrawCount(count) {
+        this.lastDrawCount = count;
+    }
+    // 玩家管理方法
+    getPlayers() {
+        return this.players;
+    }
+    addPlayer(player) {
+        display_manager_1.displayManager.print(`添加玩家: ${player.name} (${player.type === player_1.PlayerType.AI ? 'AI' : '人类'})`);
+        this.players.push(player);
+        display_manager_1.displayManager.print(`当前游戏共有 ${this.players.length} 名玩家`);
     }
     getCurrentPlayer() {
-        return this.players[this.gameState.currentPlayerIndex];
+        return this.players[this.currentPlayerIndex];
     }
     getPlayerByIndex(index) {
         return this.players[index];
@@ -97,80 +110,56 @@ class Game {
     getAllPlayers() {
         return [...this.players];
     }
+    // 游戏状态查询方法
     hasPlayerWithExcessTiles() {
         return this.players.some(p => p.needsToDiscard());
     }
     getPlayersWithExcessTiles() {
         return this.players.filter(p => p.needsToDiscard());
     }
+    // 牌管理方法
+    getRemainingTiles() {
+        return this.tileManager.getRemainingTiles();
+    }
+    getTotalTiles() {
+        return this.tileManager.getTotalTiles();
+    }
+    getTileManager() {
+        return this.tileManager;
+    }
+    // 规则相关方法
     getAvailableActions() {
-        // 获取当前玩家
         const currentPlayer = this.getCurrentPlayer();
         if (!currentPlayer) {
             return [];
         }
-        // 使用RuleEngine获取可用操作
-        return rule_engine_1.RuleEngine.getAvailableActions(currentPlayer, this.gameState.lastDiscardedTile);
+        return rule_engine_1.RuleEngine.getAvailableActions(currentPlayer, this.lastDiscardedTile);
     }
-    playerPass(playerId) {
-        // 获取玩家
-        const player = this.players[playerId];
-        if (!player) {
-            display_manager_1.displayManager.printError(`玩家ID ${playerId} 无效`);
-            return;
+    /**
+     * 重置游戏状态，准备开始新一局
+     */
+    reset() {
+        // 重置游戏状态
+        this.state = GameState.INIT;
+        this.lastDiscardedTile = null;
+        this.pendingAction = null;
+        this.drawCount = 0;
+        this.lastDrawCount = 0;
+        // 重置牌管理器
+        this.tileManager.reset();
+        // 重置所有玩家状态
+        for (const player of this.players) {
+            player.handTiles = [];
+            player.discardedTiles = [];
+            player.revealedSets = [];
+            player.flowerTiles = [];
+            player.state = player_1.PlayerState.WAITING;
+            player.lastDrawnTile = null;
         }
-        // 记录玩家选择"过"
-        display_manager_1.displayManager.printWarning(`玩家 ${player.name} 选择了"过"`);
-        // 如果是当前玩家，进入下一个回合
-        if (playerId === this.gameState.currentPlayerIndex) {
-            display_manager_1.displayManager.print(`当前玩家选择了"过"，进入下一个回合`);
-            this.nextTurn();
-        }
-        else {
-            // 如果不是当前玩家，可能是在响应其他玩家的动作
-            display_manager_1.displayManager.print(`玩家${playerId}选择了"过"，等待其他玩家响应或继续游戏`);
-            // 处理等待玩家的回应逻辑...
-            // (这部分逻辑可能需要访问gameFlow的内部状态，
-            // 具体实现可能需要根据GameFlow类的设计进一步修改)
-            if (this.gameState.state === GameState.WAITING_ACTION) {
-                // 检查是否所有玩家都已响应
-                // 如果是，恢复到PLAYING状态
-                this.gameState.state = GameState.PLAYING;
-            }
-        }
-    }
-    // 添加公共方法，直接从牌山抽牌给指定玩家
-    drawTileForPlayer(player) {
-        // 从牌山抽一张牌
-        const tile = this.tileManager.drawTile();
-        if (tile) {
-            // 将牌添加到玩家手牌中
-            player.drawTile(tile);
-            return tile;
-        }
-        return null;
-    }
-    playerGang(playerId, targetTile, isTestMode = false) {
-        const player = this.players[playerId];
-        if (!player) {
-            return false;
-        }
-        // 执行杠牌操作
-        const success = player.gang(targetTile);
-        if (!success) {
-            return false;
-        }
-        // 杠后摸牌
-        const tile = this.tileManager.drawTile();
-        if (tile) {
-            player.drawTile(tile);
-        }
-        // 检查杠后是否可以胡
-        if (rule_engine_1.RuleEngine.canHu(player)) {
-            display_manager_1.displayManager.printSuccess(`${player.name} 杠后胡牌！`);
-            return true;
-        }
-        return true;
+        // 设置庄家（可以轮换）
+        this.bankerIndex = (this.bankerIndex + 1) % this.players.length;
+        this.currentPlayerIndex = this.bankerIndex;
+        display_manager_1.displayManager.printSuccess("游戏状态已重置，准备开始新一局");
     }
 }
 exports.Game = Game;

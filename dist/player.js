@@ -9,7 +9,8 @@ var PlayerState;
 (function (PlayerState) {
     PlayerState[PlayerState["WAITING"] = 0] = "WAITING";
     PlayerState[PlayerState["ACTING"] = 1] = "ACTING";
-    PlayerState[PlayerState["FINISHED"] = 2] = "FINISHED"; // 已完成回合
+    PlayerState[PlayerState["FINISHED"] = 2] = "FINISHED";
+    PlayerState[PlayerState["WON"] = 3] = "WON"; // 胡牌获胜
 })(PlayerState || (exports.PlayerState = PlayerState = {}));
 // 玩家类型
 var PlayerType;
@@ -29,6 +30,8 @@ class Player {
         this.discardedTiles = [];
         // 已亮出的牌组（吃碰杠）
         this.revealedSets = [];
+        // 花牌集合
+        this.flowerTiles = [];
         // 当前状态
         this.state = PlayerState.WAITING;
         // 最后摸到的牌
@@ -82,16 +85,8 @@ class Player {
         try {
             // 克隆要打出的牌，确保有一个安全的副本
             const tileToDiscard = this.handTiles[tileIndex].clone();
-            // 记录操作前手牌数量，用于验证
-            const beforeCount = this.handTiles.length;
             // 使用splice安全地从手牌中移除这张牌
             const discarded = this.handTiles.splice(tileIndex, 1)[0];
-            // 验证操作后手牌数量
-            // if (this.handTiles.length !== beforeCount - 1) {
-            //   debugLog(`警告: 出牌后手牌数量异常，预期: ${beforeCount - 1}，实际: ${this.handTiles.length}`);
-            //   // 尝试修复手牌数组
-            //   this.verifyHandConsistency();
-            // }
             // 如果splice返回了undefined或null，使用之前克隆的牌作为备份
             if (!discarded) {
                 (0, logger_1.debugLog)(`警告: splice操作未返回牌，使用克隆的备份`);

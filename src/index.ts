@@ -1,12 +1,11 @@
 import { Game } from './game';
-import { AIPlayer } from './ai-player';
-import { HumanPlayer } from './human-player';
 import { gameLoop } from './gameLoop';
 import { Style } from './display';
 import { InputState, askQuestion } from './input';
 import { errorLog, setLogLevel, LogLevel } from './logger';
 import { displayManager } from './display-manager';
 import { CountdownManager } from './countdown-manager';
+import { GameEventHandler } from './game-event-handler';
 
 // 自动打牌模式标志（导出以在其他模块中使用）
 export let AUTO_PLAY_MODE = false; // 默认关闭自动打牌模式
@@ -89,27 +88,20 @@ async function startGame() {
     if (AUTO_PLAY_MODE) {
       // 自动模式下，禁用倒计时的调试输出
       InputState.setDebugMode(DEBUG_MODE);
-      
-      // 自动模式：4个AI玩家
-      displayManager.printTitle(`初始化游戏：4个AI玩家对弈`);
-      
-      // 添加1个AI玩家
-      game.addPlayer(new AIPlayer('东家(AI)'));
-    } else {
-      // 手动模式：1个人类玩家 + 3个AI玩家
-      displayManager.printTitle(`初始化游戏：1个人类玩家 + 3个AI玩家`);
-      
-      // 添加1个人类玩家
-      game.addPlayer(new HumanPlayer('东家(玩家)'));
-    }
-
-    // 添加3个AI玩家
-    game.addPlayer(new AIPlayer('南家(AI)'));
-    game.addPlayer(new AIPlayer('西家(AI)'));
-    game.addPlayer(new AIPlayer('北家(AI)'));
+    } 
     
+    // 使用新的方法设置玩家
+    game.setupPlayers(AUTO_PLAY_MODE);
+    
+    // 创建游戏流程控制器
+    const gameEventHandler = new GameEventHandler(
+      game,
+      game.getTileManager(),
+      game.getAllPlayers()
+    );
+
     // 开始游戏
-    game.startGame();
+    gameEventHandler.startGame();
     
     // 显示初始游戏状态
     displayManager.displayFullGameState(game);

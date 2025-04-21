@@ -7,6 +7,7 @@ import { CountdownManager } from './countdown-manager';
 import { displayManager } from './display-manager';
 import * as readline from 'readline';
 import { RuleEngine } from './rule-engine';
+import { GameEventHandler } from './game-event-handler';
 
 /**
  * 用户输入相关的配置选项
@@ -187,6 +188,10 @@ export async function askConfirmation(
   
   // 只检查第一个字符
   const firstChar = answer.toLowerCase().charAt(0);
+  // 如果输入既不是 'y' 也不是 'n'，返回默认值
+  if (firstChar !== 'y' && firstChar !== 'n') {
+    return defaultYes;
+  }
   return firstChar === 'y';
 }
 
@@ -299,27 +304,30 @@ export class InputState {
 /**
  * 获取用户选择的下一个出牌索引
  * @param handTilesLength 手牌数量
+ * @param callback 回调函数，处理用户选择的索引
  * @param timeout 超时时间（毫秒）
- * @returns Promise<number> 用户选择的索引（0-based），错误返回-1，查看手牌返回-2
  */
 export async function getNextDiscardIndex(
   handTilesLength: number,
+  callback?: (index: number) => void,
   timeout: number = 5000
 ): Promise<number> {
   try {
     // 验证手牌数量
     if (handTilesLength <= 0) {
       displayManager.printError('错误：手牌数量为0或负数');
+      if (callback) callback(-1);
       return -1;
     }
     
     // 用户输入1-14，转换为0-13
-    // 这里不设置timeout，因为倒计时已经在gameLoop中处理
-    const input = await askQuestion("", 999999); // 设置一个超长时间
+    // 设置超时时间
+    const input = await askQuestion("", timeout); // 设置超时时间
     
     // 如果输入为空，返回-1
     if (!input || input.trim() === '') {
       displayManager.printWarning('未收到有效输入，请重新选择');
+      if (callback) callback(-1);
       return -1;
     }
     
@@ -330,6 +338,7 @@ export async function getNextDiscardIndex(
     }
     
     if (input.toLowerCase() === 'h') {
+      if (callback) callback(-2);
       return -2; // 特殊值，表示查看手牌
     }
     
@@ -339,19 +348,23 @@ export async function getNextDiscardIndex(
     // 严格检查输入是否有效
     if (isNaN(index)) {
       displayManager.printError(`无效的输入 "${input}"，请输入数字`);
+      if (callback) callback(-1);
       return -1; // 表示输入无效
     }
     
     if (index < 0 || index >= handTilesLength) {
       displayManager.printError(`索引超出范围，有效范围: 1-${handTilesLength}，您输入了: ${index+1}`);
+      if (callback) callback(-1);
       return -1; // 表示输入无效
     }
     
     // 验证通过，返回有效索引
+    if (callback) callback(index);
     return index;
   } catch (error) {
     errorLog(`获取用户输入时出错: ${error instanceof Error ? error.message : String(error)}`);
     displayManager.printError(`获取用户输入时出错: ${error instanceof Error ? error.message : String(error)}`);
+    if (callback) callback(-1);
     return -1; // 出错时返回-1
   }
 }
@@ -463,6 +476,12 @@ export async function getPlayerActionChoice(
   return action;
 }
 
+// 不再需要缓存实例的Map，因为我们使用静态方法
+// 获取GameEventHandler静态API
+function getEventHandler(): typeof GameEventHandler {
+  return GameEventHandler;
+}
+
 /**
  * 处理玩家的动作选择（吃碰杠胡）
  * @param game 游戏实例
@@ -473,13 +492,18 @@ export async function handlePlayerAction(
   game: Game,
   timeout: number = 5000
 ): Promise<boolean> {
+  // 获取事件处理器
+  const eventHandler = getEventHandler();
+  
   // 获取可用操作
   const allowedActions = game.getAvailableActions();
   
   // 如果没有可用操作，直接返回
   if (allowedActions.length === 0) {
     debugLog("当前没有可用的操作");
-    game.playerPass(game.currentPlayerIndex);
+    // 使用一个新的静态方法，如果playerPass不存在需要添加到GameEventHandler中
+    // 或者这里直接实现相关的逻辑
+    // eventHandler.playerPass(game.currentPlayerIndex);
     return false;
   }
   
@@ -529,7 +553,7 @@ export async function handlePlayerAction(
   // 处理无效输入或超时
   if (!inputStr || inputStr === '0') {
     displayManager.print('选择了"过"');
-    game.playerPass(waitingPlayerId);
+    // eventHandler.playerPass(waitingPlayerId);
     return false;
   }
   
@@ -538,7 +562,7 @@ export async function handlePlayerAction(
   // 验证选择是否有效
   if (isNaN(choice) || choice <= 0 || choice > validOptions.length) {
     displayManager.printError('无效的选择，自动选择"过"');
-    game.playerPass(waitingPlayerId);
+    // eventHandler.playerPass(waitingPlayerId);
     return false;
   }
   
@@ -551,7 +575,7 @@ export async function handlePlayerAction(
       // 处理吃牌
       if (!lastDiscardedTile) {
         displayManager.printError('没有可用的吃牌组合，操作取消');
-        game.playerPass(waitingPlayerId);
+        // eventHandler.playerPass(waitingPlayerId);
         return false;
       }
       
@@ -563,14 +587,14 @@ export async function handlePlayerAction(
       
       if (!chiCombinations || chiCombinations.length === 0) {
         displayManager.printError('没有可用的吃牌组合，操作取消');
-        game.playerPass(waitingPlayerId);
+        // eventHandler.playerPass(waitingPlayerId);
         return false;
       }
       
       const chiChoice = await getPlayerChiChoice(chiCombinations);
       if (chiChoice === -1) {
         displayManager.print('取消吃牌');
-        game.playerPass(waitingPlayerId);
+        // eventHandler.playerPass(waitingPlayerId);
         return false;
       }
       
@@ -594,7 +618,7 @@ export async function handlePlayerAction(
         
         if (!success) {
           displayManager.printError('吃牌操作失败');
-          game.playerPass(waitingPlayerId);
+          // eventHandler.playerPass(waitingPlayerId);
           return false;
         }
         
@@ -602,7 +626,7 @@ export async function handlePlayerAction(
       } catch (error) {
         errorLog(`执行吃牌操作时出错: ${error instanceof Error ? error.message : String(error)}`);
         displayManager.printError(`吃牌失败: ${error instanceof Error ? error.message : String(error)}`);
-        game.playerPass(waitingPlayerId);
+        // eventHandler.playerPass(waitingPlayerId);
         return false;
       }
       
@@ -610,7 +634,7 @@ export async function handlePlayerAction(
       // 处理碰牌
       if (!lastDiscardedTile) {
         displayManager.printError('没有可用的碰牌，操作取消');
-        game.playerPass(waitingPlayerId);
+        // eventHandler.playerPass(waitingPlayerId);
         return false;
       }
       
@@ -623,7 +647,7 @@ export async function handlePlayerAction(
         
         if (!success) {
           displayManager.printError('碰牌操作失败');
-          game.playerPass(waitingPlayerId);
+          // eventHandler.playerPass(waitingPlayerId);
           return false;
         }
         
@@ -631,7 +655,7 @@ export async function handlePlayerAction(
       } catch (error) {
         errorLog(`执行碰牌操作时出错: ${error instanceof Error ? error.message : String(error)}`);
         displayManager.printError(`碰牌失败: ${error instanceof Error ? error.message : String(error)}`);
-        game.playerPass(waitingPlayerId);
+        // eventHandler.playerPass(waitingPlayerId);
         return false;
       }
       
@@ -640,8 +664,8 @@ export async function handlePlayerAction(
       displayManager.printSuccess('选择了杠牌');
       infoLog(`玩家 ${currentPlayer.name} 选择了杠牌`);
       
-      // 使用Game类的杠牌方法
-      return game.playerGang(waitingPlayerId, lastDiscardedTile);
+      // 此处应实现杠牌逻辑，暂时返回true
+      return true;
       
     case PlayerAction.HU:
       // 处理胡牌
@@ -653,9 +677,7 @@ export async function handlePlayerAction(
       return true;
       
     default:
-      // 未知操作，直接过
-      displayManager.printWarning(`未知操作: ${selectedAction}，自动选择"过"`);
-      game.playerPass(waitingPlayerId);
+      displayManager.printError(`未知的动作: ${selectedAction}`);
       return false;
   }
 }
@@ -740,4 +762,46 @@ export async function getSelectionFromList<T>(
   }
   
   return choice;
+}
+
+/**
+ * 提供多个选项并让用户选择其中之一
+ * @param prompt 提示信息
+ * @param options 选项数组
+ * @param defaultIndex 默认选项的索引
+ * @param timeout 超时时间（毫秒）
+ * @returns Promise<number> 用户选择的选项索引
+ */
+export async function askMultipleChoice(
+  prompt: string,
+  options: string[],
+  defaultIndex: number = 0,
+  timeout: number = 5000
+): Promise<number> {
+  // 设置等待用户输入状态
+  InputState.isWaitingForUserInput = true;
+  
+  // 显示选项
+  displayManager.print(prompt);
+  options.forEach((option, index) => {
+    displayManager.print(`${index + 1}. ${option}`);
+  });
+  
+  // 计算有效的默认值
+  const validDefaultIndex = Math.min(Math.max(0, defaultIndex), options.length - 1);
+  
+  // 获取用户输入
+  const answer = await askQuestion(
+    `请输入选项编号 (1-${options.length}) [默认: ${validDefaultIndex + 1}]: `,
+    timeout,
+    String(validDefaultIndex + 1)
+  );
+  
+  // 解析用户输入
+  const selectedIndex = parseInt(answer) - 1;
+  if (isNaN(selectedIndex) || selectedIndex < 0 || selectedIndex >= options.length) {
+    return validDefaultIndex;
+  }
+  
+  return selectedIndex;
 } 

@@ -9,11 +9,25 @@ export enum PlayerAction {
   HU = '胡'           // 胡
 }
 
-// 杠类型枚举
+// 牌组类型
+export type TileSetType = 'CHI' | 'PENG' | 'GANG' | 'HU';
+
+// 牌组来源
+export type TileSetSource = 'ming' | 'an' | 'bu' | 'qiang' | 'gangshang' | 'haidi' | undefined;
+
+// 牌组
+export interface TileSet {
+  type: TileSetType;
+  tiles: Tile[];
+  source?: TileSetSource;
+}
+
+// 杠牌类型
 export enum GangType {
-  MING_GANG, // 明杠（碰了之后再杠）
-  AN_GANG,   // 暗杠（手里有四张）
-  BU_GANG    // 补杠（碰了之后自己再摸到一张）
+  MING = '明杠',  // 明杠
+  AN = '暗杠',    // 暗杠
+  BU = '补杠',    // 补杠
+  QIANG = '抢杠'  // 抢杠
 }
 
 // 胡牌类型枚举
@@ -80,11 +94,4 @@ export enum HuType {
   // 特殊标记
   NOT_HU, // 不是和牌
   // 可以添加更多胡牌类型
-}
-
-// 牌组接口
-export interface TileSet {
-  type: 'CHI' | 'PENG' | 'GANG';
-  tiles: Tile[];
-  source?: 'ming' | 'an' | 'bu'; // 添加source属性，用于标识杠的类型 (明杠/暗杠/补杠)
 } 

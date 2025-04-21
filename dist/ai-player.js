@@ -4,7 +4,30 @@ exports.AIPlayer = void 0;
 const logger_1 = require("./logger");
 const player_1 = require("./player");
 const tile_1 = require("./tile");
+const display_manager_1 = require("./display-manager");
 class AIPlayer extends player_1.Player {
+    /**
+     * 计算AI思考延迟时间
+     * 在不同场景可能需要不同的延迟时间
+     * @param isQuickDecision 是否为快速决策（如响应他人出牌）
+     * @returns 毫秒数
+     */
+    static calculateDelay(isQuickDecision = false) {
+        if (isQuickDecision) {
+            return Math.floor(Math.random() * (600 - 300 + 1) + 300);
+        }
+        else {
+            return Math.floor(Math.random() * (2000 - 800 + 1) + 800);
+        }
+    }
+    /**
+     * 使AI决策暂停一小段时间，模拟思考过程
+     * @returns Promise<void>
+     */
+    static async pauseForThinking(isQuickDecision = false) {
+        const delayTime = AIPlayer.calculateDelay(isQuickDecision);
+        return new Promise(resolve => setTimeout(resolve, delayTime));
+    }
     constructor(name) {
         super(AIPlayer.idCounter++, name, player_1.PlayerType.AI);
         this.aiStrategy = {
@@ -42,6 +65,104 @@ class AIPlayer extends player_1.Player {
                 return null;
             }
         };
+    }
+    /**
+     * 处理AI玩家出牌流程
+     * @param gameEventHandler 游戏事件处理器
+     * @returns 出牌是否成功
+     */
+    async handleDiscard(gameEventHandler) {
+        // 检查AI玩家是否需要出牌
+        if (!this.needsToDiscard()) {
+            (0, logger_1.debugLog)(`AI玩家 ${this.name} 不需要出牌，手牌数量：${this.handTiles.length}`);
+            return false;
+        }
+        // 显示AI正在思考
+        (0, logger_1.infoLog)(`AI玩家 ${this.name} 正在思考出牌..., 当前手牌数量: ${this.handTiles.length}`);
+        display_manager_1.displayManager.printWarning(`AI玩家 ${this.name} 正在思考出牌...`);
+        // 安全检查：确保手牌不为空
+        if (this.handTiles.length === 0) {
+            display_manager_1.displayManager.printError(`错误: AI玩家 ${this.name} 没有手牌可出`);
+            return false;
+        }
+        // 模拟AI思考延迟
+        await AIPlayer.pauseForThinking();
+        try {
+            // 使用AI方法获取出牌决策
+            const discardIndex = this.getAIMove();
+            // 验证索引是否有效
+            if (discardIndex < 0 || discardIndex >= this.handTiles.length) {
+                (0, logger_1.debugLog)(`AI玩家 ${this.name} 返回的索引 ${discardIndex} 无效`);
+                display_manager_1.displayManager.printWarning(`AI玩家 ${this.name} 无法决定要打出哪张牌，随机选择`);
+                // 随机选择一张牌出牌
+                const randomIndex = Math.floor(Math.random() * this.handTiles.length);
+                // 执行出牌
+                const randomDiscard = gameEventHandler.currentPlayerDiscard(randomIndex);
+                if (randomDiscard) {
+                    display_manager_1.displayManager.printWarning(`AI玩家 ${this.name} 随机打出: ${randomDiscard.toString()}`);
+                    return true;
+                }
+                else {
+                    display_manager_1.displayManager.printError(`AI玩家 ${this.name} 随机出牌失败`);
+                    return false;
+                }
+            }
+            // 显示AI的思考过程
+            const tileToDiscard = this.handTiles[discardIndex];
+            if (!tileToDiscard) {
+                // 手牌索引存在但牌对象不存在的情况
+                display_manager_1.displayManager.printError(`错误: 索引 ${discardIndex} 处的牌对象不存在`);
+                // 尝试找到一个有效的牌
+                let validIndex = -1;
+                for (let i = 0; i < this.handTiles.length; i++) {
+                    if (this.handTiles[i]) {
+                        validIndex = i;
+                        break;
+                    }
+                }
+                if (validIndex >= 0) {
+                    display_manager_1.displayManager.printWarning(`使用备选有效索引 ${validIndex}`);
+                    const fallbackTile = gameEventHandler.currentPlayerDiscard(validIndex);
+                    return fallbackTile != null;
+                }
+                return false;
+            }
+            (0, logger_1.debugLog)(`AI玩家 ${this.name} 决定打出第${discardIndex + 1}张牌: ${tileToDiscard.toString()}`);
+            display_manager_1.displayManager.print(`AI玩家 ${this.name} 分析完成，选择打出: ${tileToDiscard.toString()}`);
+            // 执行出牌
+            const discardedTile = gameEventHandler.currentPlayerDiscard(discardIndex);
+            if (discardedTile) {
+                (0, logger_1.infoLog)(`AI玩家 ${this.name} 成功打出: ${discardedTile.toString()}`);
+                display_manager_1.displayManager.printSuccess(`AI玩家 ${this.name} 打出: ${discardedTile.toString()}`);
+                display_manager_1.displayManager.addToTurnLog(`${this.name} 打出了 ${discardedTile.toString()}`);
+                // 检查其他玩家是否可以对此牌进行操作
+                await gameEventHandler.checkOtherPlayersResponse(discardedTile);
+                return true;
+            }
+            else {
+                display_manager_1.displayManager.printError(`AI玩家 ${this.name} 出牌失败`);
+                return false;
+            }
+        }
+        catch (error) {
+            (0, logger_1.debugLog)(`AI玩家出牌出错: ${error instanceof Error ? error.message : String(error)}`);
+            display_manager_1.displayManager.printError(`AI玩家出牌出错: ${error instanceof Error ? error.message : String(error)}`);
+            try {
+                // 出错时，随机选择一张牌出牌
+                const fallbackIndex = Math.floor(Math.random() * this.handTiles.length);
+                (0, logger_1.infoLog)(`出错后的备用策略: 使用随机索引 ${fallbackIndex} 出牌`);
+                const fallbackTile = gameEventHandler.currentPlayerDiscard(fallbackIndex);
+                if (fallbackTile) {
+                    display_manager_1.displayManager.printWarning(`AI出错恢复：随机打出 ${fallbackTile.toString()}`);
+                    return true;
+                }
+            }
+            catch (fallbackError) {
+                (0, logger_1.debugLog)(`AI出牌恢复策略也失败: ${fallbackError instanceof Error ? fallbackError.message : String(fallbackError)}`);
+                display_manager_1.displayManager.printError(`AI玩家无法出牌，请检查游戏状态`);
+            }
+            return false;
+        }
     }
     // 获取AI出牌选择（优化版）
     getAIMove() {
@@ -137,47 +258,47 @@ class AIPlayer extends player_1.Player {
                 const sameTypeCount = this.handTiles.filter(t => t.type === tile.type && t.value === tile.value).length;
                 // 如果已经有2张或以上相同的牌，增加价值（形成刻子的可能性）
                 if (sameTypeCount >= 3) {
-                    value += 30; // 刻子已形成，价值高
+                    value += AIPlayer.AI_STRATEGY.HONOR_TILE_VALUES.TRIPLET; // 刻子已形成，价值高
                 }
                 else if (sameTypeCount >= 2) {
-                    value += 20; // 可能形成刻子的对子，价值中高
+                    value += AIPlayer.AI_STRATEGY.HONOR_TILE_VALUES.PAIR; // 可能形成刻子的对子，价值中高
                 }
                 else if (sameTypeCount === 1) {
-                    value += 8; // 对子有一定价值
+                    value += AIPlayer.AI_STRATEGY.HONOR_TILE_VALUES.SINGLE_PAIR; // 对子有一定价值
                 }
                 else {
-                    value -= 5; // 单独的风牌或字牌价值较低
+                    value += AIPlayer.AI_STRATEGY.HONOR_TILE_VALUES.ISOLATED; // 单独的风牌或字牌价值较低
                 }
             }
             else {
                 // 数字牌的价值评估
                 // 检查是否是刻子的一部分
                 if (this.isPartOfSet(tile)) {
-                    value += 25; // 已经是刻子一部分的牌价值高
+                    value += AIPlayer.AI_STRATEGY.WEIGHTS.TRIPLET; // 已经是刻子一部分的牌价值高
                 }
                 // 检查是否是对子的一部分
                 if (this.isPartOfPair(tile)) {
-                    value += 10; // 对子有一定价值
+                    value += AIPlayer.AI_STRATEGY.WEIGHTS.PAIR; // 对子有一定价值
                 }
                 // 检查是否可能形成顺子
                 value += this.getSequenceValue(tile);
                 // 考虑当前手牌中的主导类型
                 const dominantType = this.getDominantType();
                 if (tile.type === dominantType) {
-                    value += 5; // 属于主导类型的牌价值稍高
+                    value += AIPlayer.AI_STRATEGY.WEIGHTS.DOMINANT_TYPE; // 属于主导类型的牌价值稍高
                 }
                 // 边张和孤张策略：边牌(1和9)如果没有形成搭子，价值更低
                 if ((tile.value === 1 || tile.value === 9) && !this.hasAdjacentTiles(tile)) {
-                    value -= 3; // 单独的边张价值降低
+                    value += AIPlayer.AI_STRATEGY.WEIGHTS.EDGE_TILE; // 单独的边张价值降低
                 }
                 // 中间牌更有灵活性，略微提高价值
                 if (tile.value >= 4 && tile.value <= 6) {
-                    value += 2; // 中间牌略微加分
+                    value += AIPlayer.AI_STRATEGY.WEIGHTS.MIDDLE_TILE; // 中间牌略微加分
                 }
             }
             // 如果是最后摸的牌，稍微降低价值使其更容易被打出（优化流畅性）
             if (this.lastDrawnTile && tile.id === this.lastDrawnTile.id) {
-                value -= 2;
+                value += AIPlayer.AI_STRATEGY.WEIGHTS.LAST_DRAWN;
             }
             return value;
         }
@@ -232,7 +353,7 @@ class AIPlayer extends player_1.Player {
             const hasNeighbor = this.handTiles.some(t => t.type === tile.type && t.value === i);
             if (hasNeighbor) {
                 // 邻近牌价值随距离递减
-                value += 5 - Math.abs(tileValue - i);
+                value += AIPlayer.AI_STRATEGY.WEIGHTS.SEQUENCE - Math.abs(tileValue - i);
             }
         }
         // 检查是否已经形成或接近顺子
@@ -242,7 +363,7 @@ class AIPlayer extends player_1.Player {
             value += possibleSequences.length * 3;
             // 检查有多少顺子只缺一张牌
             const almostComplete = possibleSequences.filter(seq => seq.count >= 2);
-            value += almostComplete.length * 5;
+            value += almostComplete.length * AIPlayer.AI_STRATEGY.WEIGHTS.NEAR_COMPLETE;
         }
         return value;
     }
@@ -314,3 +435,26 @@ class AIPlayer extends player_1.Player {
 }
 exports.AIPlayer = AIPlayer;
 AIPlayer.idCounter = 1;
+/**
+ * AI策略相关常量
+ */
+AIPlayer.AI_STRATEGY = {
+    // 牌的基础评分权重
+    WEIGHTS: {
+        PAIR: 10, // 对子
+        TRIPLET: 25, // 刻子
+        SEQUENCE: 8, // 顺子贡献
+        NEAR_COMPLETE: 5, // 接近完成的组合
+        DOMINANT_TYPE: 5, // 主导类型
+        EDGE_TILE: -3, // 边张惩罚
+        MIDDLE_TILE: 2, // 中间牌奖励
+        LAST_DRAWN: -2 // 最后摸的牌略微降低价值，更容易打出
+    },
+    // 字牌和风牌的评分
+    HONOR_TILE_VALUES: {
+        TRIPLET: 30, // 刻子
+        PAIR: 20, // 对子
+        SINGLE_PAIR: 8, // 单个对子
+        ISOLATED: -5 // 孤立的牌
+    }
+};

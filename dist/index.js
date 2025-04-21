@@ -2,14 +2,13 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.DEBUG_MODE = exports.AUTO_PLAY_MODE = void 0;
 const game_1 = require("./game");
-const ai_player_1 = require("./ai-player");
-const human_player_1 = require("./human-player");
 const gameLoop_1 = require("./gameLoop");
 const display_1 = require("./display");
 const input_1 = require("./input");
 const logger_1 = require("./logger");
 const display_manager_1 = require("./display-manager");
 const countdown_manager_1 = require("./countdown-manager");
+const game_event_handler_1 = require("./game-event-handler");
 // 自动打牌模式标志（导出以在其他模块中使用）
 exports.AUTO_PLAY_MODE = false; // 默认关闭自动打牌模式
 // 调试模式开关（导出以在其他模块中使用）
@@ -74,23 +73,13 @@ async function startGame() {
         if (exports.AUTO_PLAY_MODE) {
             // 自动模式下，禁用倒计时的调试输出
             input_1.InputState.setDebugMode(exports.DEBUG_MODE);
-            // 自动模式：4个AI玩家
-            display_manager_1.displayManager.printTitle(`初始化游戏：4个AI玩家对弈`);
-            // 添加1个AI玩家
-            game.addPlayer(new ai_player_1.AIPlayer('东家(AI)'));
         }
-        else {
-            // 手动模式：1个人类玩家 + 3个AI玩家
-            display_manager_1.displayManager.printTitle(`初始化游戏：1个人类玩家 + 3个AI玩家`);
-            // 添加1个人类玩家
-            game.addPlayer(new human_player_1.HumanPlayer('东家(玩家)'));
-        }
-        // 添加3个AI玩家
-        game.addPlayer(new ai_player_1.AIPlayer('南家(AI)'));
-        game.addPlayer(new ai_player_1.AIPlayer('西家(AI)'));
-        game.addPlayer(new ai_player_1.AIPlayer('北家(AI)'));
+        // 使用新的方法设置玩家
+        game.setupPlayers(exports.AUTO_PLAY_MODE);
+        // 创建游戏流程控制器
+        const gameEventHandler = new game_event_handler_1.GameEventHandler(game, game.getTileManager(), game.getAllPlayers());
         // 开始游戏
-        game.startGame();
+        gameEventHandler.startGame();
         // 显示初始游戏状态
         display_manager_1.displayManager.displayFullGameState(game);
         // 启动游戏主循环
