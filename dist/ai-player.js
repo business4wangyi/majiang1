@@ -74,19 +74,22 @@ class AIPlayer extends player_1.Player {
     async handleDiscard(gameEventHandler) {
         // 检查AI玩家是否需要出牌
         if (!this.needsToDiscard()) {
-            (0, logger_1.debugLog)(`AI玩家 ${this.name} 不需要出牌，手牌数量：${this.handTiles.length}`);
-            return false;
+            (0, logger_1.errorLog)(`AI玩家 ${this.name} 不需要出牌，手牌数量：${this.handTiles.length}`);
+            (0, logger_1.errorLog)('游戏错误检查原因');
+            process.exit(0);
         }
         // 显示AI正在思考
         (0, logger_1.infoLog)(`AI玩家 ${this.name} 正在思考出牌..., 当前手牌数量: ${this.handTiles.length}`);
         display_manager_1.displayManager.printWarning(`AI玩家 ${this.name} 正在思考出牌...`);
         // 安全检查：确保手牌不为空
         if (this.handTiles.length === 0) {
-            display_manager_1.displayManager.printError(`错误: AI玩家 ${this.name} 没有手牌可出`);
-            return false;
+            (0, logger_1.errorLog)(`AI玩家 ${this.name} 不需要出牌，手牌数量：${this.handTiles.length}`);
+            (0, logger_1.errorLog)('游戏错误检查原因');
+            process.exit(0);
         }
         // 模拟AI思考延迟
         await AIPlayer.pauseForThinking();
+        console.log('pauseForThinking');
         try {
             // 使用AI方法获取出牌决策
             const discardIndex = this.getAIMove();
@@ -100,11 +103,12 @@ class AIPlayer extends player_1.Player {
                 const randomDiscard = gameEventHandler.currentPlayerDiscard(randomIndex);
                 if (randomDiscard) {
                     display_manager_1.displayManager.printWarning(`AI玩家 ${this.name} 随机打出: ${randomDiscard.toString()}`);
-                    return true;
+                    return randomDiscard;
                 }
                 else {
                     display_manager_1.displayManager.printError(`AI玩家 ${this.name} 随机出牌失败`);
-                    return false;
+                    (0, logger_1.errorLog)('游戏错误检查原因');
+                    process.exit(0);
                 }
             }
             // 显示AI的思考过程
@@ -123,26 +127,20 @@ class AIPlayer extends player_1.Player {
                 if (validIndex >= 0) {
                     display_manager_1.displayManager.printWarning(`使用备选有效索引 ${validIndex}`);
                     const fallbackTile = gameEventHandler.currentPlayerDiscard(validIndex);
-                    return fallbackTile != null;
+                    return fallbackTile;
                 }
-                return false;
+                display_manager_1.displayManager.printError(`AI玩家 ${this.name} 随机出牌失败`);
+                (0, logger_1.errorLog)('游戏错误检查原因');
+                process.exit(0);
             }
             (0, logger_1.debugLog)(`AI玩家 ${this.name} 决定打出第${discardIndex + 1}张牌: ${tileToDiscard.toString()}`);
             display_manager_1.displayManager.print(`AI玩家 ${this.name} 分析完成，选择打出: ${tileToDiscard.toString()}`);
             // 执行出牌
             const discardedTile = gameEventHandler.currentPlayerDiscard(discardIndex);
-            if (discardedTile) {
-                (0, logger_1.infoLog)(`AI玩家 ${this.name} 成功打出: ${discardedTile.toString()}`);
-                display_manager_1.displayManager.printSuccess(`AI玩家 ${this.name} 打出: ${discardedTile.toString()}`);
-                display_manager_1.displayManager.addToTurnLog(`${this.name} 打出了 ${discardedTile.toString()}`);
-                // 检查其他玩家是否可以对此牌进行操作
-                await gameEventHandler.checkOtherPlayersResponse(discardedTile);
-                return true;
-            }
-            else {
-                display_manager_1.displayManager.printError(`AI玩家 ${this.name} 出牌失败`);
-                return false;
-            }
+            (0, logger_1.infoLog)(`AI玩家 ${this.name} 成功打出: ${discardedTile.toString()}`);
+            display_manager_1.displayManager.printSuccess(`AI玩家 ${this.name} 打出: ${discardedTile.toString()}`);
+            display_manager_1.displayManager.addToTurnLog(`${this.name} 打出了 ${discardedTile.toString()}`);
+            return discardedTile;
         }
         catch (error) {
             (0, logger_1.debugLog)(`AI玩家出牌出错: ${error instanceof Error ? error.message : String(error)}`);
@@ -154,14 +152,15 @@ class AIPlayer extends player_1.Player {
                 const fallbackTile = gameEventHandler.currentPlayerDiscard(fallbackIndex);
                 if (fallbackTile) {
                     display_manager_1.displayManager.printWarning(`AI出错恢复：随机打出 ${fallbackTile.toString()}`);
-                    return true;
+                    return fallbackTile;
                 }
             }
             catch (fallbackError) {
                 (0, logger_1.debugLog)(`AI出牌恢复策略也失败: ${fallbackError instanceof Error ? fallbackError.message : String(fallbackError)}`);
                 display_manager_1.displayManager.printError(`AI玩家无法出牌，请检查游戏状态`);
             }
-            return false;
+            (0, logger_1.errorLog)('游戏错误检查原因');
+            process.exit(0);
         }
     }
     // 获取AI出牌选择（优化版）

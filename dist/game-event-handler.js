@@ -1,7 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.GameEventHandler = void 0;
-exports.handleEmptyTileDeck = handleEmptyTileDeck;
 const game_1 = require("./game");
 const display_manager_1 = require("./display-manager");
 const input_1 = require("./input");
@@ -45,6 +44,15 @@ class GameEventHandler {
         for (let i = 0; i < this.players.length; i++) {
             this.updatePlayerState(i);
         }
+        // 为庄家（第一个玩家）摸一张牌
+        const firstPlayer = this.players[0];
+        display_manager_1.displayManager.printTitle(`庄家 ${firstPlayer.name} 开局摸牌`);
+        const drawnTile = this.drawTileForPlayer(firstPlayer, {
+            notify: true,
+            incrementCount: true
+        });
+        // 游戏启动时摸牌必定有牌
+        display_manager_1.displayManager.printSuccess(`庄家 ${firstPlayer.name} 摸了一张牌: ${firstPlayer.type === player_1.PlayerType.HUMAN ? drawnTile.toString() : '[暗牌]'}`);
         // 切换游戏状态为PLAYING
         this.game.setState(game_1.GameState.PLAYING);
         display_manager_1.displayManager.printSuccess("游戏初始化完成，状态转为 PLAYING");
@@ -94,17 +102,13 @@ class GameEventHandler {
             // 每轮为每个玩家发指定数量的牌
             for (const player of this.players) {
                 for (let i = 0; i < cardsPerPlayer; i++) {
-                    const tile = this.tileManager.drawTile();
-                    if (tile) {
-                        player.drawTile(tile);
-                        (0, logger_1.debugLog)(`给玩家 ${player.name} 发牌: ${tile.toString()}, 当前手牌数量: ${player.handTiles.length}`);
-                    }
-                    else {
-                        display_manager_1.displayManager.printError(`给玩家 ${player.name} 发牌失败，牌山已空，无法继续游戏`);
-                        (0, logger_1.errorLog)(`给玩家 ${player.name} 发牌失败，牌山已空，无法继续游戏`);
-                        // 在实际应用中，这里可以添加退出程序的代码
-                        process.exit(1);
-                    }
+                    // 游戏启动时摸牌必定有牌
+                    const tile = this.drawTileForPlayer(player, {
+                        notify: false,
+                        validate: false,
+                        incrementCount: false
+                    });
+                    (0, logger_1.debugLog)(`给玩家 ${player.name} 发牌: ${tile.toString()}, 当前手牌数量: ${player.handTiles.length}`);
                 }
             }
         }
@@ -124,7 +128,7 @@ class GameEventHandler {
         display_manager_1.displayManager.printDivider();
     }
     /**
-     * 为指定玩家摸一张牌
+     * 为指定玩家摸一张牌。gameLoop在摸牌前已经确保了牌山有牌
      * @param player 要摸牌的玩家
      * @param options 摸牌选项
      * @returns 摸到的牌，或null表示没有摸到
@@ -135,32 +139,31 @@ class GameEventHandler {
         // 验证手牌数量
         if (validate && !player.hasValidHandSize(false)) {
             const expectedHandSize = player.getExpectedHandSize(false);
-            (0, logger_1.debugLog)(`玩家 ${player.name} 手牌数量不正确: ${player.handTiles.length}，预期: ${expectedHandSize}`);
-            return null;
+            (0, logger_1.errorLog)(`玩家 ${player.name} 手牌数量不正确: ${player.handTiles.length}，预期: ${expectedHandSize}`);
+            (0, logger_1.errorLog)(`退出游戏排查问题`);
+            process.exit(0);
         }
         // 检查牌山是否还有牌
         if (this.tileManager.getRemainingTiles() === 0) {
-            display_manager_1.displayManager.printWarning("牌山已空，无法摸牌");
-            return null;
+            (0, logger_1.errorLog)(`牌山已空，无法摸牌,gameLoop没有确保牌山有牌`);
+            (0, logger_1.errorLog)(`退出游戏排查问题`);
+            process.exit(0);
         }
         // 摸牌
         const tile = this.tileManager.drawTile();
-        if (tile) {
-            player.drawTile(tile);
-            // 更新计数器
-            if (incrementCount) {
-                this.game.incrementDrawCount();
-            }
-            // 通知显示
-            if (notify) {
-                display_manager_1.displayManager.addToTurnLog(`${player.name} 摸了一张牌`);
-            }
-            return tile;
+        player.drawTile(tile);
+        // 更新计数器
+        if (incrementCount) {
+            this.game.incrementDrawCount();
         }
-        return null;
+        // 通知显示
+        if (notify) {
+            display_manager_1.displayManager.addToTurnLog(`${player.name} 摸了一张牌`);
+        }
+        return tile;
     }
     /**
-     * 当前玩家摸牌
+     * 当前玩家摸牌.gameLoop在摸牌前已经确保了牌山有牌
      */
     currentPlayerDraw() {
         const currentPlayer = this.players[this.game.currentPlayerIndex];
@@ -172,11 +175,30 @@ class GameEventHandler {
             }
         }
         // 正常摸牌
-        return this.drawTileForPlayer(currentPlayer, {
+        const drawnTile = this.drawTileForPlayer(currentPlayer, {
             notify: true,
             validate: true,
             incrementCount: true
         });
+        // 摸牌后，检查当前玩家是否可以自摸胡牌
+        (0, logger_1.debugLog)(`玩家 ${currentPlayer.name} 摸到了 ${drawnTile.toString()}`);
+        // 检查当前玩家是否可以自摸胡牌
+        const huResult = rule_engine_1.RuleEngine.getHuDetails(currentPlayer, null, { isDrawn: true });
+        if (huResult.canHu) {
+            (0, logger_1.debugLog)(`玩家 ${currentPlayer.name} 自摸胡牌！`);
+            // 显示胡牌信息
+            display_manager_1.displayManager.printSuccess(`${currentPlayer.name} 胡牌类型: ${huResult.description}`);
+            // 计算得分
+            const scoreResult = rule_engine_1.RuleEngine.calculateScore(currentPlayer, huResult.huType, { isSelfDrawn: true });
+            display_manager_1.displayManager.printSuccess(`得分: ${scoreResult.score}`);
+            display_manager_1.displayManager.printSuccess(`得分详情: ${JSON.stringify(scoreResult.details)}`);
+            // 设置玩家状态为胡牌
+            currentPlayer.state = player_1.PlayerState.WON;
+            display_manager_1.displayManager.printSuccess(`${currentPlayer.name} 自摸胡牌！游戏结束！`);
+            // 设置游戏状态为结束
+            this.game.setState(game_1.GameState.ENDED);
+        }
+        return drawnTile;
     }
     /**
      * 当前玩家打出一张牌
@@ -186,82 +208,21 @@ class GameEventHandler {
         // 验证玩家状态
         if (currentPlayer.state !== player_1.PlayerState.ACTING) {
             display_manager_1.displayManager.printWarning(`玩家 ${currentPlayer.name} 不处于ACTING状态，当前状态: ${player_1.PlayerState[currentPlayer.state]}`);
-            // 如果是AI玩家且手牌超过预期数量，强制允许出牌以保持游戏流畅
-            if (currentPlayer.type === player_1.PlayerType.AI && currentPlayer.needsToDiscard()) {
-                display_manager_1.displayManager.printWarning(`AI玩家手牌超过预期数量，强制允许出牌以维持游戏状态正确性`);
-                currentPlayer.state = player_1.PlayerState.ACTING;
-            }
-            else {
-                return null;
-            }
+            (0, logger_1.errorLog)('游戏错误，排查问题');
+            process.exit(0);
         }
-        // 验证索引是否有效（加强验证和错误处理）
-        if (tileIndex === undefined || tileIndex === null) {
-            display_manager_1.displayManager.printError(`严重错误: 出牌索引为undefined或null`);
-            return null;
-        }
-        if (tileIndex < 0 || tileIndex >= currentPlayer.handTiles.length) {
-            display_manager_1.displayManager.printError(`无效的出牌索引: ${tileIndex}，有效范围: 0-${currentPlayer.handTiles.length - 1}`);
-            // 对于AI玩家，自动修正索引
-            if (currentPlayer.type === player_1.PlayerType.AI && currentPlayer.handTiles.length > 0) {
-                const correctedIndex = Math.min(currentPlayer.handTiles.length - 1, Math.max(0, tileIndex));
-                display_manager_1.displayManager.printWarning(`AI玩家索引已修正为有效值: ${correctedIndex}`);
-                tileIndex = correctedIndex;
-            }
-            else {
-                // 人类玩家输入无效索引，直接返回null
-                display_manager_1.displayManager.printError(`请输入有效的牌索引（1-${currentPlayer.handTiles.length}）`);
-                return null;
-            }
-        }
-        // 确保选择的牌有效
-        if (!currentPlayer.handTiles[tileIndex]) {
-            display_manager_1.displayManager.printError(`错误: 索引${tileIndex}处的牌无效`);
-            // 对于AI玩家，尝试找到一个有效的牌索引
-            if (currentPlayer.type === player_1.PlayerType.AI && currentPlayer.handTiles.length > 0) {
-                // 遍历寻找有效的牌
-                let foundValidTile = false;
-                for (let i = 0; i < currentPlayer.handTiles.length; i++) {
-                    if (currentPlayer.handTiles[i]) {
-                        tileIndex = i;
-                        display_manager_1.displayManager.printSuccess(`找到有效牌索引: ${tileIndex}`);
-                        foundValidTile = true;
-                        break;
-                    }
-                }
-                // 再次检查
-                if (!foundValidTile || !currentPlayer.handTiles[tileIndex]) {
-                    display_manager_1.displayManager.printError(`严重错误: 无法找到有效的牌索引`);
-                    return null;
-                }
-            }
-            else {
-                // 人类玩家选择的牌无效，直接返回null
-                return null;
-            }
-        }
-        try {
-            // 使用player.discardTile方法，该方法已经增强了安全性和错误处理
-            const discardedTile = currentPlayer.discardTile(tileIndex);
-            // 如果成功打出，更新游戏状态
-            if (discardedTile) {
-                this.game.setLastDiscardedTile(discardedTile);
-                display_manager_1.displayManager.printSuccess(`玩家 ${currentPlayer.name} 成功打出: ${discardedTile.toString()}`);
-            }
-            else {
-                display_manager_1.displayManager.printError(`玩家 ${currentPlayer.name} 出牌失败`);
-            }
-            return discardedTile;
-        }
-        catch (error) {
-            display_manager_1.displayManager.printError(`出牌过程中发生错误: ${error instanceof Error ? error.message : String(error)}`);
-            return null;
-        }
+        // 使用player.discardTile方法，该方法已经增强了安全性和错误处理
+        const discardedTile = currentPlayer.discardTile(tileIndex);
+        // 如果成功打出，更新游戏状态
+        this.game.setLastDiscardedTile(discardedTile);
+        display_manager_1.displayManager.printSuccess(`玩家 ${currentPlayer.name} 成功打出: ${discardedTile.toString()}`);
+        return discardedTile;
     }
     /**
      * 进入下一个玩家的回合
+     * @param skipDraw 是否跳过摸牌步骤，在吃碰杠后切换玩家时应设为true
      */
-    nextTurn() {
+    nextTurn(skipDraw = false) {
         // 获取当前玩家并更新状态
         const currentPlayer = this.players[this.game.currentPlayerIndex];
         currentPlayer.state = player_1.PlayerState.WAITING;
@@ -275,13 +236,9 @@ class GameEventHandler {
         // 显示下一个玩家信息
         display_manager_1.displayManager.printDivider();
         display_manager_1.displayManager.printTitle(`轮到 ${nextPlayer.name} 行动 [手牌: ${nextPlayer.handTiles.length}张]`);
-        // 为下一个玩家摸牌
-        const drawnTile = this.currentPlayerDraw();
-        if (drawnTile) {
-            display_manager_1.displayManager.printSuccess(`玩家 ${nextPlayer.name} 摸了一张牌: ${nextPlayer.type === player_1.PlayerType.HUMAN ? drawnTile.toString() : '[暗牌]'}`);
-        }
-        else {
-            display_manager_1.displayManager.printWarning(`无法摸牌，牌山已空`);
+        // 只有在非跳过摸牌的情况下才为下一个玩家摸牌
+        if (!skipDraw) {
+            this.currentPlayerDraw();
         }
     }
     /**
@@ -293,42 +250,21 @@ class GameEventHandler {
         // 检查是否为AI玩家
         if (currentPlayer.type !== player_1.PlayerType.AI) {
             display_manager_1.displayManager.printWarning(`当前玩家不是AI，无法强制出牌`);
-            return false;
         }
         // 确保玩家处于可以出牌的状态
         currentPlayer.state = player_1.PlayerState.ACTING;
-        try {
-            // 优先使用AIPlayer的handleDiscard方法
-            if (currentPlayer instanceof ai_player_1.AIPlayer) {
-                return await currentPlayer.handleDiscard(this);
-            }
-            // 如果不是AIPlayer实例，使用基本方法
-            // 使用AI决策获取出牌索引
-            if (typeof currentPlayer.getAIMove === 'function') {
-                const discardIndex = currentPlayer.getAIMove();
-                display_manager_1.displayManager.printWarning(`强制AI玩家 ${currentPlayer.name} 出牌，选择索引: ${discardIndex}`);
-                // 执行出牌
-                const discarded = this.currentPlayerDiscard(discardIndex);
-                if (discarded) {
-                    display_manager_1.displayManager.printSuccess(`AI玩家 ${currentPlayer.name} 成功打出: ${discarded.toString()}`);
-                    return true;
-                }
-            }
-            else {
-                // 没有getAIMove方法，随机选择一张牌
-                const randomIndex = Math.floor(Math.random() * currentPlayer.handTiles.length);
-                const discarded = this.currentPlayerDiscard(randomIndex);
-                if (discarded) {
-                    display_manager_1.displayManager.printSuccess(`AI玩家 ${currentPlayer.name} 随机打出: ${discarded.toString()}`);
-                    return true;
-                }
-            }
-            return false;
+        // 优先使用AIPlayer的handleDiscard方法
+        if (currentPlayer instanceof ai_player_1.AIPlayer) {
+            await currentPlayer.handleDiscard(this);
+            return;
         }
-        catch (error) {
-            display_manager_1.displayManager.printError(`强制AI出牌出错: ${error instanceof Error ? error.message : String(error)}`);
-            return false;
-        }
+        // 如果不是AIPlayer实例，使用基本方法
+        // 使用AI决策获取出牌索引
+        const discardIndex = currentPlayer.getRandomMove();
+        display_manager_1.displayManager.printWarning(`强制AI玩家 ${currentPlayer.name} 出牌，选择索引: ${discardIndex}`);
+        // 执行出牌
+        const discarded = this.currentPlayerDiscard(discardIndex);
+        display_manager_1.displayManager.printSuccess(`AI玩家 ${currentPlayer.name} 成功打出: ${discarded.toString()}`);
     }
     /**
      * 更新指定玩家的状态
@@ -356,16 +292,22 @@ class GameEventHandler {
     checkGameEnd() {
         // 检查是否有玩家胡牌
         const players = this.game.getAllPlayers();
-        for (const player of players) {
-            if (this.checkHu(player)) {
-                display_manager_1.displayManager.printSuccess(`${player.name} 胡牌了！游戏结束！`);
-                return true;
-            }
+        // 只检查已经被标记为胜利的玩家，而不主动检查所有玩家是否可以胡牌
+        const wonPlayer = players.find(player => player.state === player_1.PlayerState.WON);
+        if (wonPlayer) {
+            (0, logger_1.debugLog)(`检测到玩家 ${wonPlayer.name} 已经胡牌，游戏结束`);
+            display_manager_1.displayManager.printSuccess(`${wonPlayer.name} 胡牌了！游戏结束！`);
+            // 设置游戏状态为结束
+            this.game.setState(game_1.GameState.ENDED);
+            return true;
         }
         // 检查牌山是否为空且所有玩家都过牌
         if (this.tileManager.getRemainingTiles() === 0) {
             const allPlayersPassed = players.every(player => player.state === player_1.PlayerState.FINISHED);
             if (allPlayersPassed) {
+                (0, logger_1.debugLog)(`牌山已空且所有玩家都已过牌，游戏流局`);
+                // 设置游戏状态为结束
+                this.game.setState(game_1.GameState.ENDED);
                 return true;
             }
         }
@@ -388,6 +330,8 @@ class GameEventHandler {
             const scoreResult = rule_engine_1.RuleEngine.calculateScore(player, huType, { isSelfDrawn: tile === null });
             display_manager_1.displayManager.printSuccess(`得分: ${scoreResult.score}`);
             display_manager_1.displayManager.printSuccess(`得分详情: ${JSON.stringify(scoreResult.details)}`);
+            // 设置玩家状态为胡牌
+            player.state = player_1.PlayerState.WON;
         }
         return result.canHu;
     }
@@ -431,7 +375,7 @@ class GameEventHandler {
      * @param tile 要碰的牌
      * @returns 是否成功碰牌
      */
-    handlePeng(player, tile) {
+    async handlePeng(player, tile) {
         // 使用 RuleEngine 检查是否可以碰
         if (!rule_engine_1.RuleEngine.canPeng(player, tile)) {
             display_manager_1.displayManager.printError(`${player.name} 没有足够的牌进行碰牌`);
@@ -441,6 +385,15 @@ class GameEventHandler {
         const result = player.peng(tile);
         if (result) {
             display_manager_1.displayManager.printSuccess(`${player.name} 碰了 ${tile.toString()}`);
+            // 碰牌成功后，设置该玩家为当前玩家
+            const playerIndex = this.players.findIndex(p => p.id === player.id);
+            if (playerIndex !== -1) {
+                this.game.setCurrentPlayerIndex(playerIndex);
+                // 更新玩家状态
+                player.state = player_1.PlayerState.ACTING;
+                // 要求玩家出牌
+                await this.requirePlayerToDiscard(player, "碰");
+            }
         }
         else {
             display_manager_1.displayManager.printError(`${player.name} 碰牌失败`);
@@ -453,7 +406,7 @@ class GameEventHandler {
      * @param tile 要杠的牌
      * @returns 是否成功杠牌
      */
-    handleGang(player, tile = null) {
+    async handleGang(player, tile = null) {
         // 准备游戏状态信息
         const gameState = {
             currentPlayer: this.game.getCurrentPlayer(),
@@ -470,19 +423,19 @@ class GameEventHandler {
         switch (gangResult.gangType) {
             case rule_types_1.GangType.MING:
                 // 明杠
-                gangSuccess = this.handleMingGang(player, tile);
+                gangSuccess = await this.handleMingGang(player, tile);
                 break;
             case rule_types_1.GangType.AN:
                 // 暗杠
-                gangSuccess = this.handleAnGang(player);
+                gangSuccess = await this.handleAnGang(player);
                 break;
             case rule_types_1.GangType.BU:
                 // 补杠
-                gangSuccess = this.handleBuGang(player);
+                gangSuccess = await this.handleBuGang(player);
                 break;
             case rule_types_1.GangType.QIANG:
                 // 抢杠
-                gangSuccess = this.handleQiangGang(player, gangResult.tiles || []);
+                gangSuccess = await this.handleQiangGang(player, gangResult.tiles || []);
                 break;
             default:
                 display_manager_1.displayManager.printError(`未知的杠牌类型`);
@@ -515,17 +468,33 @@ class GameEventHandler {
      * @param tile 要杠的牌
      * @returns 是否成功杠牌（包括杠上开花检查）
      */
-    handleMingGang(player, tile) {
+    async handleMingGang(player, tile) {
         // 执行明杠
         const gangSuccess = this.executeMingGang(player, tile);
         // 明杠成功后，检查杠上开花
         if (gangSuccess) {
-            // 如果牌山为空，直接返回成功
+            // 设置该玩家为当前玩家
+            const playerIndex = this.players.findIndex(p => p.id === player.id);
+            if (playerIndex !== -1) {
+                this.game.setCurrentPlayerIndex(playerIndex);
+                // 更新玩家状态
+                player.state = player_1.PlayerState.ACTING;
+            }
+            // 如果牌山为空，直接返回成功，但仍需出牌
             if (this.tileManager.getRemainingTiles() === 0) {
                 display_manager_1.displayManager.printWarning(`牌山已空，无法摸牌进行杠上开花`);
+                // 要求玩家出牌
+                await this.requirePlayerToDiscard(player, "杠");
                 return true;
             }
-            return this.checkGangShangKaiHua(player);
+            // 杠上开花
+            const huResult = await this.checkGangShangKaiHua(player);
+            // 如果没有胡牌，需要出牌
+            if (!huResult) {
+                // 要求玩家出牌
+                await this.requirePlayerToDiscard(player, "杠");
+            }
+            return true;
         }
         return false;
     }
@@ -534,10 +503,24 @@ class GameEventHandler {
      * @param player 要暗杠的玩家
      * @returns 是否成功暗杠
      */
-    handleAnGang(player) {
+    async handleAnGang(player) {
         // 暗杠使用 player.gang(null) 方法
         if (player.gang(null)) {
             display_manager_1.displayManager.printSuccess(`${player.name} 暗杠了一组牌`);
+            // 暗杠成功后，应该摸牌
+            this.drawTileForPlayer(player, { notify: true });
+            // 检查是否可以胡牌
+            const huResult = rule_engine_1.RuleEngine.getHuDetails(player, null, { isDrawn: true, isAfterKong: true });
+            if (huResult.canHu) {
+                display_manager_1.displayManager.printSuccess(`${player.name} 暗杠后胡牌！类型：${huResult.description}`);
+                // 设置玩家状态为胡牌
+                player.state = player_1.PlayerState.WON;
+                // 设置游戏状态为结束
+                this.game.setState(game_1.GameState.ENDED);
+                return true;
+            }
+            // 暗杠后需要出牌
+            await this.requirePlayerToDiscard(player, "暗杠");
             return true;
         }
         return false;
@@ -546,21 +529,21 @@ class GameEventHandler {
      * 检查杠上开花
      * 在成功杠牌后调用，检查摸到的牌是否可以胡牌
      * @param player 要检查的玩家
-     * @returns 是否成功杠上开花
+     * @returns 是否成功胡牌
      */
-    checkGangShangKaiHua(player) {
+    async checkGangShangKaiHua(player) {
         // 记录杠牌成功
         display_manager_1.displayManager.printSuccess(`${player.name} 杠牌成功，摸一张新牌`);
         // 摸一张牌
         const drawnTile = this.drawTileForPlayer(player, { notify: true });
-        if (!drawnTile) {
-            display_manager_1.displayManager.printWarning(`牌山已空，无法摸牌`);
-            return false;
-        }
         // 检查是否可以胡牌，并指定游戏状态为杠上开花
         const huResult = rule_engine_1.RuleEngine.getHuDetails(player, null, { isDrawn: true, isAfterKong: true });
         if (huResult.canHu) {
             display_manager_1.displayManager.printSuccess(`${player.name} 杠上开花胡牌！类型：${huResult.description}`);
+            // 设置玩家状态为胡牌
+            player.state = player_1.PlayerState.WON;
+            // 设置游戏状态为结束
+            this.game.setState(game_1.GameState.ENDED);
             return true;
         }
         else {
@@ -579,13 +562,15 @@ class GameEventHandler {
         if (this.tileManager.getRemainingTiles() !== 1)
             return false;
         // 摸最后一张牌
-        const drawnTile = this.drawTileForPlayer(player, { notify: true });
-        if (!drawnTile)
-            return false;
+        this.drawTileForPlayer(player, { notify: true });
         // 检查是否可以胡牌，并指定游戏状态为海底捞月
         const huResult = rule_engine_1.RuleEngine.getHuDetails(player, null, { isDrawn: true, isLastTile: true });
         if (huResult.canHu) {
             display_manager_1.displayManager.printSuccess(`${player.name} 海底捞月胡牌！类型：${huResult.description}`);
+            // 设置玩家状态为胡牌
+            player.state = player_1.PlayerState.WON;
+            // 设置游戏状态为结束
+            this.game.setState(game_1.GameState.ENDED);
             return true;
         }
         return false;
@@ -633,6 +618,15 @@ class GameEventHandler {
         const result = player.chi(handTilesToUse, tile);
         if (result) {
             display_manager_1.displayManager.printSuccess(`${player.name} 吃了 ${tile.toString()}`);
+            // 吃牌成功后，设置该玩家为当前玩家
+            const playerIndex = this.players.findIndex(p => p.id === player.id);
+            if (playerIndex !== -1) {
+                this.game.setCurrentPlayerIndex(playerIndex);
+                // 更新玩家状态
+                player.state = player_1.PlayerState.ACTING;
+                // 要求玩家出牌
+                await this.requirePlayerToDiscard(player, "吃");
+            }
         }
         else {
             display_manager_1.displayManager.printError(`${player.name} 吃牌失败`);
@@ -668,10 +662,20 @@ class GameEventHandler {
      * @param player 要补杠的玩家
      * @returns 是否成功补杠
      */
-    handleBuGang(player) {
+    async handleBuGang(player) {
         // 补杠使用 player.gang(null) 方法
         if (player.gang(null)) {
             display_manager_1.displayManager.printSuccess(`${player.name} 补杠了一组牌`);
+            // 补杠成功后，应该摸牌
+            this.drawTileForPlayer(player, { notify: true });
+            // 检查是否可以胡牌
+            const huResult = rule_engine_1.RuleEngine.getHuDetails(player, null, { isDrawn: true, isAfterKong: true });
+            if (huResult.canHu) {
+                display_manager_1.displayManager.printSuccess(`${player.name} 补杠后胡牌！类型：${huResult.description}`);
+                return true;
+            }
+            // 补杠后需要出牌
+            await this.requirePlayerToDiscard(player, "补杠");
             return true;
         }
         return false;
@@ -682,7 +686,7 @@ class GameEventHandler {
      * @param tiles 被抢杠的牌
      * @returns 是否成功抢杠
      */
-    handleQiangGang(player, tiles) {
+    async handleQiangGang(player, tiles) {
         if (tiles.length === 0)
             return false;
         // 抢杠的处理比较特殊，需要获取当前玩家正在补杠的牌
@@ -719,14 +723,15 @@ class GameEventHandler {
         player.flowerTiles.push(flowerTile);
         display_manager_1.displayManager.printSuccess(`${player.name} 摸到花牌: ${tile.toString()}`);
         // 摸一张新牌
-        const newTile = this.drawTileForPlayer(player, { notify: true });
-        if (newTile) {
-            display_manager_1.displayManager.printSuccess(`${player.name} 补牌: ${newTile.toString()}`);
-            // 检查补到的牌是否可以胡牌
-            if (rule_engine_1.RuleEngine.canHu(player, null, { isDrawn: true })) {
-                display_manager_1.displayManager.printSuccess(`${player.name} 补花后胡牌！`);
-                return true;
-            }
+        this.drawTileForPlayer(player, { notify: true });
+        // 检查补到的牌是否可以胡牌
+        if (rule_engine_1.RuleEngine.canHu(player, null, { isDrawn: true })) {
+            display_manager_1.displayManager.printSuccess(`${player.name} 补花后胡牌！`);
+            // 设置玩家状态为胡牌
+            player.state = player_1.PlayerState.WON;
+            // 设置游戏状态为结束
+            this.game.setState(game_1.GameState.ENDED);
+            return true;
         }
         return true;
     }
@@ -844,59 +849,29 @@ class GameEventHandler {
         const currentPlayer = this.game.getCurrentPlayer();
         // 显示当前玩家的手牌
         display_manager_1.displayManager.displayPlayerHand(currentPlayer);
-        // 标记正在等待用户输入
-        input_1.InputState.isWaitingForUserInput = true;
         // 如果是AI玩家，则使用AI策略处理
         if (currentPlayer.type === player_1.PlayerType.AI) {
-            try {
-                // 使用AIPlayer的处理方法
-                if (currentPlayer instanceof ai_player_1.AIPlayer) {
-                    await currentPlayer.handleDiscard(this);
-                }
-                else {
-                    // 如果不是AIPlayer实例但类型是AI，使用基本AI逻辑
-                    (0, logger_1.infoLog)(`AI玩家 ${currentPlayer.name} 不是AIPlayer实例，使用基本AI逻辑处理`);
-                    // 确保玩家对象有getAIMove方法
-                    if (typeof currentPlayer.getAIMove === 'function') {
-                        const discardIndex = currentPlayer.getAIMove();
-                        const discardedTile = this.currentPlayerDiscard(discardIndex);
-                        if (discardedTile) {
-                            display_manager_1.displayManager.printSuccess(`${currentPlayer.name} 打出了 ${discardedTile.toString()}`);
-                            display_manager_1.displayManager.addToTurnLog(`${currentPlayer.name} 打出了 ${discardedTile.toString()}`);
-                            // 检查其他玩家是否可以对此牌进行操作
-                            await this.checkOtherPlayersResponse(discardedTile);
-                        }
-                    }
-                    else {
-                        // 没有getAIMove方法，随机选择一张牌
-                        (0, logger_1.debugLog)(`AI玩家 ${currentPlayer.name} 没有getAIMove方法，随机选择一张牌`);
-                        const randomIndex = Math.floor(Math.random() * currentPlayer.handTiles.length);
-                        const discardedTile = this.currentPlayerDiscard(randomIndex);
-                        if (discardedTile) {
-                            display_manager_1.displayManager.printSuccess(`${currentPlayer.name} 随机打出了 ${discardedTile.toString()}`);
-                        }
-                    }
-                }
+            let discardedTile = null;
+            // 使用AIPlayer的处理方法
+            if (currentPlayer instanceof ai_player_1.AIPlayer) {
+                discardedTile = await currentPlayer.handleDiscard(this);
             }
-            catch (error) {
-                (0, logger_1.errorLog)(`AI玩家行动出错: ${error instanceof Error ? error.message : String(error)}`);
-                display_manager_1.displayManager.printError(`AI玩家行动出错: ${error instanceof Error ? error.message : String(error)}`);
-                // 出错时，尝试随机出牌以保持游戏流程
-                try {
-                    const randomIndex = Math.floor(Math.random() * currentPlayer.handTiles.length);
-                    const fallbackTile = this.currentPlayerDiscard(randomIndex);
-                    if (fallbackTile) {
-                        display_manager_1.displayManager.printWarning(`AI出错恢复：随机打出 ${fallbackTile.toString()}`);
-                    }
-                }
-                catch (fallbackError) {
-                    (0, logger_1.debugLog)(`AI出牌恢复策略也失败: ${fallbackError instanceof Error ? fallbackError.message : String(fallbackError)}`);
-                }
+            else {
+                // 如果不是AIPlayer实例但类型是AI，使用基本AI逻辑
+                (0, logger_1.infoLog)(`AI玩家 ${currentPlayer.name} 不是AIPlayer实例，使用基本AI逻辑处理`);
+                const discardIndex = currentPlayer.getRandomMove();
+                discardedTile = this.currentPlayerDiscard(discardIndex);
+            }
+            display_manager_1.displayManager.printSuccess(`${currentPlayer.name} 打出了 ${discardedTile.toString()}`);
+            display_manager_1.displayManager.addToTurnLog(`${currentPlayer.name} 打出了 ${discardedTile.toString()}`);
+            // 检查其他玩家是否可以对此牌进行操作
+            const hasResponse = await this.checkOtherPlayersResponse(discardedTile);
+            // 如果没有玩家响应，则进入下一回合
+            if (!hasResponse) {
+                this.nextTurn();
             }
             // 重置状态
             input_1.InputState.isWaitingForUserInput = false;
-            // 确保游戏继续进行
-            this.nextTurn();
         }
         else if (currentPlayer.type === player_1.PlayerType.HUMAN) {
             // 人类玩家
@@ -912,14 +887,15 @@ class GameEventHandler {
         // 获取玩家输入
         display_manager_1.displayManager.printWarning('请输入您要打出的牌的序号:');
         // 获取用户输入的索引
-        (0, input_1.getNextDiscardIndex)(player.handTiles.length, (tileIndex) => {
+        (0, input_1.getNextDiscardIndex)(player.handTiles.length, async (tileIndex) => {
             if (tileIndex !== -1) {
                 const discardedTile = this.currentPlayerDiscard(tileIndex);
-                if (discardedTile) {
-                    display_manager_1.displayManager.printSuccess(`${player.name} 打出了 ${discardedTile.toString()}`);
-                    display_manager_1.displayManager.addToTurnLog(`${player.name} 打出了 ${discardedTile.toString()}`);
-                    // 检查其他玩家是否可以对此牌进行操作
-                    this.checkOtherPlayersResponse(discardedTile);
+                display_manager_1.displayManager.printSuccess(`${player.name} 打出了 ${discardedTile.toString()}`);
+                display_manager_1.displayManager.addToTurnLog(`${player.name} 打出了 ${discardedTile.toString()}`);
+                // 检查其他玩家是否可以对此牌进行操作
+                const hasResponse = await this.checkOtherPlayersResponse(discardedTile);
+                // 如果没有玩家响应，则进入下一回合
+                if (!hasResponse) {
                     this.nextTurn();
                 }
             }
@@ -929,69 +905,98 @@ class GameEventHandler {
     }
     /**
      * 检查其他玩家是否可以对打出的牌进行响应
+     * @returns 是否有玩家进行了响应（吃碰杠胡）
      */
     async checkOtherPlayersResponse(discardedTile) {
         if (!discardedTile)
-            return;
+            return false;
         const currentPlayer = this.game.getCurrentPlayer();
         const allPlayers = this.game.getAllPlayers();
         const otherPlayers = allPlayers.filter(p => p.id !== currentPlayer.id);
+        (0, logger_1.debugLog)(`检查其他玩家对 ${discardedTile.toString()} 的响应`);
         // 按照优先级检查响应：胡 > 杠 > 碰 > 吃
         // 先检查是否有人可以胡牌
         const canHuPlayers = otherPlayers.filter(p => rule_engine_1.RuleEngine.canHu(p, discardedTile));
         if (canHuPlayers.length > 0) {
-            // 如果有多人可以胡，一般是按座次顺序，这里简化为第一个玩家
-            const huPlayer = canHuPlayers[0];
+            (0, logger_1.debugLog)(`发现 ${canHuPlayers.length} 名玩家可以胡 ${discardedTile.toString()}`);
+            // 根据座次顺序获取胡牌玩家顺序
+            const huPlayer = canHuPlayers.find(player => player.id === this.game.currentPlayerIndex);
+            (0, logger_1.debugLog)(`选择 ${huPlayer.name} 进行胡牌处理`);
             if (huPlayer.type === player_1.PlayerType.AI) {
                 // AI玩家自动胡牌
+                (0, logger_1.debugLog)(`AI玩家 ${huPlayer.name} 自动选择胡牌`);
                 this.handlePlayerHu(huPlayer, discardedTile);
-                return;
+                return true;
             }
             else {
                 // 人类玩家选择是否胡牌
                 display_manager_1.displayManager.printWarning(`${huPlayer.name}，您可以胡 ${discardedTile.toString()}`);
                 const want = await (0, input_1.askQuestion)("是否胡牌？(y/n)");
                 if (want.toLowerCase() === 'y') {
+                    (0, logger_1.debugLog)(`人类玩家 ${huPlayer.name} 选择胡牌`);
                     this.handlePlayerHu(huPlayer, discardedTile);
-                    return;
+                    return true;
+                }
+                else {
+                    (0, logger_1.debugLog)(`人类玩家 ${huPlayer.name} 选择不胡牌`);
                 }
             }
         }
         // 检查是否有人可以杠牌
         const canGangPlayers = otherPlayers.filter(p => rule_engine_1.RuleEngine.canGang(p, discardedTile, { currentPlayer: currentPlayer, allPlayers: allPlayers }).canGang);
         if (canGangPlayers.length > 0) {
+            (0, logger_1.debugLog)(`发现 ${canGangPlayers.length} 名玩家可以杠 ${discardedTile.toString()}`);
             const gangPlayer = canGangPlayers[0];
             if (gangPlayer.type === player_1.PlayerType.AI) {
                 // AI玩家自动杠牌
-                this.handleGang(gangPlayer, discardedTile);
-                return;
+                (0, logger_1.debugLog)(`AI玩家 ${gangPlayer.name} 自动选择杠牌`);
+                const gangSuccess = await this.handleGang(gangPlayer, discardedTile);
+                if (gangSuccess) {
+                    return true;
+                }
             }
             else {
                 // 人类玩家选择是否杠牌
                 display_manager_1.displayManager.printWarning(`${gangPlayer.name}，您可以杠 ${discardedTile.toString()}`);
                 const want = await (0, input_1.askQuestion)("是否杠牌？(y/n)");
                 if (want.toLowerCase() === 'y') {
-                    this.handleGang(gangPlayer, discardedTile);
-                    return;
+                    (0, logger_1.debugLog)(`人类玩家 ${gangPlayer.name} 选择杠牌`);
+                    const gangSuccess = await this.handleGang(gangPlayer, discardedTile);
+                    if (gangSuccess) {
+                        return true;
+                    }
+                }
+                else {
+                    (0, logger_1.debugLog)(`人类玩家 ${gangPlayer.name} 选择不杠牌`);
                 }
             }
         }
         // 检查是否有人可以碰牌
         const canPengPlayers = otherPlayers.filter(p => rule_engine_1.RuleEngine.canPeng(p, discardedTile));
         if (canPengPlayers.length > 0) {
+            (0, logger_1.debugLog)(`发现 ${canPengPlayers.length} 名玩家可以碰 ${discardedTile.toString()}`);
             const pengPlayer = canPengPlayers[0];
             if (pengPlayer.type === player_1.PlayerType.AI) {
                 // AI玩家自动碰牌
-                this.handlePeng(pengPlayer, discardedTile);
-                return;
+                (0, logger_1.debugLog)(`AI玩家 ${pengPlayer.name} 自动选择碰牌`);
+                const pengSuccess = await this.handlePeng(pengPlayer, discardedTile);
+                if (pengSuccess) {
+                    return true;
+                }
             }
             else {
                 // 人类玩家选择是否碰牌
                 display_manager_1.displayManager.printWarning(`${pengPlayer.name}，您可以碰 ${discardedTile.toString()}`);
                 const want = await (0, input_1.askQuestion)("是否碰牌？(y/n)");
                 if (want.toLowerCase() === 'y') {
-                    this.handlePeng(pengPlayer, discardedTile);
-                    return;
+                    (0, logger_1.debugLog)(`人类玩家 ${pengPlayer.name} 选择碰牌`);
+                    const pengSuccess = await this.handlePeng(pengPlayer, discardedTile);
+                    if (pengSuccess) {
+                        return true;
+                    }
+                }
+                else {
+                    (0, logger_1.debugLog)(`人类玩家 ${pengPlayer.name} 选择不碰牌`);
                 }
             }
         }
@@ -999,19 +1004,33 @@ class GameEventHandler {
         const nextPlayerIndex = (this.game.currentPlayerIndex + 1) % allPlayers.length;
         const nextPlayer = allPlayers[nextPlayerIndex];
         if (rule_engine_1.RuleEngine.canChi(nextPlayer, discardedTile)) {
+            (0, logger_1.debugLog)(`下家 ${nextPlayer.name} 可以吃 ${discardedTile.toString()}`);
             if (nextPlayer.type === player_1.PlayerType.AI) {
                 // AI玩家自动吃牌
-                await this.handleChi(nextPlayer, discardedTile);
+                (0, logger_1.debugLog)(`AI玩家 ${nextPlayer.name} 自动选择吃牌`);
+                const chiSuccess = await this.handleChi(nextPlayer, discardedTile);
+                if (chiSuccess) {
+                    return true;
+                }
             }
             else {
                 // 人类玩家选择是否吃牌
                 display_manager_1.displayManager.printWarning(`${nextPlayer.name}，您可以吃 ${discardedTile.toString()}`);
                 const want = await (0, input_1.askQuestion)("是否吃牌？(y/n)");
                 if (want.toLowerCase() === 'y') {
-                    await this.handleChi(nextPlayer, discardedTile);
+                    (0, logger_1.debugLog)(`人类玩家 ${nextPlayer.name} 选择吃牌`);
+                    const chiSuccess = await this.handleChi(nextPlayer, discardedTile);
+                    if (chiSuccess) {
+                        return true;
+                    }
+                }
+                else {
+                    (0, logger_1.debugLog)(`人类玩家 ${nextPlayer.name} 选择不吃牌`);
                 }
             }
         }
+        (0, logger_1.debugLog)(`所有玩家对 ${discardedTile.toString()} 的响应检查完成`);
+        return false;
     }
     /**
      * 处理超时情况下的动作
@@ -1027,13 +1046,11 @@ class GameEventHandler {
                     await this.forceAIPlayerDiscard();
                 }
                 else {
-                    // 人类玩家，使用getAIMove和currentPlayerDiscard
-                    const discardIndex = player.getAIMove();
+                    // 随机选择一张牌
+                    const discardIndex = player.getRandomMove();
                     const discardedTile = this.currentPlayerDiscard(discardIndex);
-                    if (discardedTile) {
-                        display_manager_1.displayManager.printWarning(`由于超时，系统为玩家 ${player.name} 自动打出: ${discardedTile.toString()}`);
-                        this.nextTurn();
-                    }
+                    display_manager_1.displayManager.printWarning(`由于超时，系统为玩家 ${player.name} 自动打出: ${discardedTile.toString()}`);
+                    this.nextTurn();
                 }
             }
         }
@@ -1075,7 +1092,6 @@ class GameEventHandler {
         else {
             display_manager_1.displayManager.printWarning("游戏结束，感谢参与！");
             process.exit(0);
-            return false;
         }
     }
     /**
@@ -1096,9 +1112,27 @@ class GameEventHandler {
         display_manager_1.displayManager.print(`剩余牌数: ${this.game.getRemainingTiles()}`);
         display_manager_1.displayManager.printDivider();
     }
+    /**
+     * 要求玩家打出一张牌
+     * 在吃碰杠操作后调用，确保玩家完成出牌动作
+     * @param player 需要出牌的玩家
+     * @param actionType 之前执行的动作类型（吃/碰/杠）
+     */
+    async requirePlayerToDiscard(player, actionType) {
+        // 要求玩家出牌
+        if (player.type === player_1.PlayerType.AI) {
+            // AI玩家自动出牌
+            display_manager_1.displayManager.printWarning(`AI玩家 ${player.name} ${actionType}后需要打出一张牌`);
+            // 等待100毫秒，让界面有时间更新
+            await new Promise(resolve => setTimeout(resolve, 100));
+            // 使用AI策略选择一张牌打出
+            await this.handleCurrentPlayerAction();
+        }
+        else {
+            // 人类玩家选择出牌
+            display_manager_1.displayManager.printWarning(`${player.name}，${actionType}后请选择一张牌打出`);
+            // 人类玩家的出牌会在游戏循环中处理
+        }
+    }
 }
 exports.GameEventHandler = GameEventHandler;
-// 导出静态方法
-async function handleEmptyTileDeck(game) {
-    return GameEventHandler.handleEmptyTileDeck(game);
-}

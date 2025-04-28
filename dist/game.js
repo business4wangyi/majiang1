@@ -43,11 +43,8 @@ class Game {
         if (autoPlayMode) {
             // 自动模式：4个AI玩家
             display_manager_1.displayManager.printTitle(`初始化游戏：4个AI玩家对弈`);
-            // 添加4个AI玩家
+            // 添加1个AI玩家
             this.addPlayer(new ai_player_1.AIPlayer('东家(AI)'));
-            this.addPlayer(new ai_player_1.AIPlayer('南家(AI)'));
-            this.addPlayer(new ai_player_1.AIPlayer('西家(AI)'));
-            this.addPlayer(new ai_player_1.AIPlayer('北家(AI)'));
         }
         else {
             // 手动模式：1个人类玩家 + 3个AI玩家
@@ -55,7 +52,7 @@ class Game {
             // 添加1个人类玩家
             this.addPlayer(new human_player_1.HumanPlayer('东家(玩家)'));
         }
-        // 无论哪种模式，都添加3个AI玩家
+        // 添加3个AI玩家
         this.addPlayer(new ai_player_1.AIPlayer('南家(AI)'));
         this.addPlayer(new ai_player_1.AIPlayer('西家(AI)'));
         this.addPlayer(new ai_player_1.AIPlayer('北家(AI)'));

@@ -101,11 +101,13 @@ export class AIPlayer extends Player {
    * @param gameEventHandler 游戏事件处理器
    * @returns 出牌是否成功
    */
-  public async handleDiscard(gameEventHandler: GameEventHandler): Promise<boolean> {
+  public async handleDiscard(gameEventHandler: GameEventHandler): Promise<Tile> {
+
     // 检查AI玩家是否需要出牌
     if (!this.needsToDiscard()) {
-      debugLog(`AI玩家 ${this.name} 不需要出牌，手牌数量：${this.handTiles.length}`);
-      return false;
+      errorLog(`AI玩家 ${this.name} 不需要出牌，手牌数量：${this.handTiles.length}`);
+      errorLog('游戏错误检查原因')
+      process.exit(0)
     }
     
     // 显示AI正在思考
@@ -114,12 +116,14 @@ export class AIPlayer extends Player {
     
     // 安全检查：确保手牌不为空
     if (this.handTiles.length === 0) {
-      displayManager.printError(`错误: AI玩家 ${this.name} 没有手牌可出`);
-      return false;
+      errorLog(`AI玩家 ${this.name} 不需要出牌，手牌数量：${this.handTiles.length}`);
+      errorLog('游戏错误检查原因')
+      process.exit(0)
     }
     
     // 模拟AI思考延迟
     await AIPlayer.pauseForThinking();
+    console.log('pauseForThinking')
     
     try {
       // 使用AI方法获取出牌决策
@@ -138,10 +142,11 @@ export class AIPlayer extends Player {
         
         if (randomDiscard) {
           displayManager.printWarning(`AI玩家 ${this.name} 随机打出: ${randomDiscard.toString()}`);
-          return true;
+          return randomDiscard;
         } else {
           displayManager.printError(`AI玩家 ${this.name} 随机出牌失败`);
-          return false;
+          errorLog('游戏错误检查原因')
+          process.exit(0)
         }
       }
       
@@ -163,10 +168,12 @@ export class AIPlayer extends Player {
         if (validIndex >= 0) {
           displayManager.printWarning(`使用备选有效索引 ${validIndex}`);
           const fallbackTile = gameEventHandler.currentPlayerDiscard(validIndex);
-          return fallbackTile != null;
+          return fallbackTile
         }
         
-        return false;
+        displayManager.printError(`AI玩家 ${this.name} 随机出牌失败`);
+        errorLog('游戏错误检查原因')
+        process.exit(0)
       }
       
       debugLog(`AI玩家 ${this.name} 决定打出第${discardIndex + 1}张牌: ${tileToDiscard.toString()}`);
@@ -175,19 +182,11 @@ export class AIPlayer extends Player {
       // 执行出牌
       const discardedTile = gameEventHandler.currentPlayerDiscard(discardIndex);
       
-      if (discardedTile) {
-        infoLog(`AI玩家 ${this.name} 成功打出: ${discardedTile.toString()}`);
-        displayManager.printSuccess(`AI玩家 ${this.name} 打出: ${discardedTile.toString()}`);
-        displayManager.addToTurnLog(`${this.name} 打出了 ${discardedTile.toString()}`);
-        
-        // 检查其他玩家是否可以对此牌进行操作
-        await gameEventHandler.checkOtherPlayersResponse(discardedTile);
-        
-        return true;
-      } else {
-        displayManager.printError(`AI玩家 ${this.name} 出牌失败`);
-        return false;
-      }
+      infoLog(`AI玩家 ${this.name} 成功打出: ${discardedTile.toString()}`);
+      displayManager.printSuccess(`AI玩家 ${this.name} 打出: ${discardedTile.toString()}`);
+      displayManager.addToTurnLog(`${this.name} 打出了 ${discardedTile.toString()}`);
+      
+      return discardedTile;
       
     } catch (error) {
       debugLog(`AI玩家出牌出错: ${error instanceof Error ? error.message : String(error)}`);
@@ -202,14 +201,15 @@ export class AIPlayer extends Player {
         
         if (fallbackTile) {
           displayManager.printWarning(`AI出错恢复：随机打出 ${fallbackTile.toString()}`);
-          return true;
+          return fallbackTile;
         }
       } catch (fallbackError) {
         debugLog(`AI出牌恢复策略也失败: ${fallbackError instanceof Error ? fallbackError.message : String(fallbackError)}`);
         displayManager.printError(`AI玩家无法出牌，请检查游戏状态`);
       }
       
-      return false;
+      errorLog('游戏错误检查原因')
+      process.exit(0)
     }
   }
 
@@ -241,6 +241,11 @@ export class AIPlayer extends Player {
           // 验证索引有效性
           if (lowestValueTile.index >= 0 && lowestValueTile.index < this.handTiles.length) {
             debugLog(`手牌数量超过预期(${this.getExpectedHandSize()})，实际(${this.handTiles.length})，选择价值最低的牌，索引=${lowestValueTile.index}, 牌=${lowestValueTile.tile.toString()}, 价值=${lowestValueTile.value}`);
+            if (this.handTiles.length > this.getExpectedHandSize() + 1) {
+              displayManager.displayPlayerHand(this)
+              errorLog(`退出游戏排查问题`);
+              process.exit(0);
+            }
             return lowestValueTile.index;
           } else {
             debugLog(`警告: 评分结果索引无效 ${lowestValueTile.index}，使用备选策略`);

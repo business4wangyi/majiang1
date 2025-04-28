@@ -67,13 +67,20 @@ export class Player {
   }
 
   // 打出一张牌
-  discardTile(tileIndex: number): Tile | null {
+  discardTile(tileIndex: number): Tile {
     debugLog(`玩家${this.name}尝试打出索引${tileIndex}的牌，当前手牌数量: ${this.handTiles.length}`);
     
     // 如果手牌为空，无法打出
     if (this.handTiles.length === 0) {
-      debugLog(`错误: 玩家${this.name}没有手牌可出`);
-      return null;
+      errorLog(`错误: 玩家${this.name}没有手牌可出`);
+      errorLog(`游戏错误，排查原因`);
+      process.exit(0)
+    }
+
+    // 验证索引是否有效（加强验证和错误处理）
+    if (tileIndex === undefined || tileIndex === null) {
+      errorLog(`严重错误: 出牌索引为undefined或null`);
+      process.exit(0);
     }
     
     // 索引范围检查与修正（对所有玩家类型都进行修正）
@@ -91,7 +98,12 @@ export class Player {
     if (tileIndex < 0 || tileIndex >= this.handTiles.length) {
       errorLog(`严重错误: 索引修正后仍然无效: ${tileIndex}`);
       process.exit(1);
-      return null;
+    }
+
+        // 确保选择的牌有效
+    if (!this.handTiles[tileIndex]) {
+      errorLog(`错误: 索引${tileIndex}处的牌无效`);
+      process.exit(0);
     }
     
     try {
@@ -121,10 +133,10 @@ export class Player {
     } catch (error) {
       errorLog(`打牌过程发生错误: ${error instanceof Error ? error.message : String(error)}`);
       errorLog(`错误堆栈: ${error instanceof Error ? error.stack : '无堆栈信息'}`);
-      
+      errorLog(`退出游戏排查问题`);
       // 不再使用任何非标准的备用方法，而是直接返回失败
       debugLog(`出牌失败，玩家状态可能不一致`);
-      return null;
+      process.exit(0)
     }
   }
 
@@ -198,11 +210,10 @@ export class Player {
       
       // 添加到已亮出的牌组，并标记为明杠
       // 注意：虽然在UI上是四张牌，但实际上在计算总牌数时，我们需要确保不会重复计数
-      // targetTile是从另一个玩家的弃牌中移除的，因此我们需要使用其克隆版本
       // 以防止重复计数或引用同一个对象
       this.revealedSets.push({
         type: 'GANG',
-        tiles: [...sameTiles, targetTile.clone()], // 使用克隆避免可能的引用问题
+        tiles: [...sameTiles, targetTile],
         source: 'ming' // 明杠
       });
       
@@ -296,9 +307,10 @@ export class Player {
     }).join(' ');
   }
 
-  // AI玩家简单策略：随机出牌
-  getAIMove(): number {
-    return Math.floor(Math.random() * this.handTiles.length);
+  // 玩家简单策略：摸到的牌
+  getRandomMove(): number {
+    // 打出最后摸到的牌Index
+    return this.handTiles.length - 1
   }
 
   /**
@@ -314,15 +326,15 @@ export class Player {
     // 基础应有牌数，正常为13张，摸牌/准备胡牌时为14张
     const baseHandSize = isMahjong ? 14 : 13;
     
-    // 杠会增加一张牌
-    const gangCount = this.revealedSets.filter(set => set.type === 'GANG').length;
+    // 杠会增加一张牌(3张手牌+1张额外的)
+    const gangCount = this.getGangCount();
     
-    // 吃和碰都会各减少2张手牌（因为每次吃碰都用了2张手牌，有1张是别人的牌）
+    // 吃和碰都会各减少3张手牌
     const chiCount = this.revealedSets.filter(set => set.type === 'CHI').length;
     const pengCount = this.revealedSets.filter(set => set.type === 'PENG').length;
     
     // 调整预期手牌数量
-    return baseHandSize + gangCount - (chiCount * 2) - (pengCount * 2);
+    return baseHandSize - (gangCount * 3) - (chiCount * 3) - (pengCount * 3);
   }
 
   /**
@@ -364,6 +376,14 @@ export class Player {
   }
 
   /**
+   * 获取玩家已杠的牌副数
+   * @returns 杠牌副数
+   */
+  public getGangCount(): number {
+    return this.revealedSets.filter(set => set.type === 'GANG').length;
+  }
+
+  /**
    * 判断玩家当前手牌数量是否合理
    * @param isMahjong 是否在判断和牌状态
    * @returns 手牌数量是否合理
@@ -392,6 +412,6 @@ export class Player {
   public needsToDiscard(): boolean {
     const expectedHandSize = this.getExpectedHandSize(false);
     // 如果手牌数量超过预期，需要打出
-    return this.handTiles.length > expectedHandSize;
+    return (this.handTiles.length + this.revealedSets.length) > expectedHandSize;
   }
 } 

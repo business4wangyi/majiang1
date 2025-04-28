@@ -20,7 +20,7 @@ export enum LogLevel {
 // 配置参数
 const CONFIG = {
   // 当前日志级别 - 可以通过setLogLevel函数修改
-  currentLogLevel: LogLevel.INFO,
+  currentLogLevel: LogLevel.DEBUG,
   
   // 日志文件相关配置
   logDir: path.join(process.cwd(), 'logs'),
@@ -82,9 +82,7 @@ export function log(level: LogLevel, message: string, includeTimestamp: boolean 
   const logMessage = `${timestamp}${prefix} ${message}`;
   
   // 控制台输出（根据级别）
-  if (level >= LogLevel.WARNING) {
-    console.log(logMessage);
-  }
+  console.log(logMessage);
   
   // 添加到日志缓冲区
   logBuffer.push(logMessage);
@@ -187,7 +185,7 @@ function getGameStateLog(game: Game): string {
   log += `摸牌次数: ${game.drawCount}\n`;
   
   if (game.lastDiscardedTile) {
-    log += `最后打出的牌: ${game.lastDiscardedTile.toString()}\n`;
+    log += `上次打出的牌: ${game.lastDiscardedTile.toString()}\n`;
   }
   
   log += `\n=== 玩家信息 ===\n`;

@@ -1207,4 +1207,184 @@ describe('WinConditions', () => {
       expect(WinConditions.isEightFlowers(player, fourSameFlowers)).to.be.false;
     });
   });
+
+  describe('非法牌型测试', () => {
+    it('isStandardHu应正确识别四归一牌型不能胡牌', () => {
+      // 有四张相同的牌（四归一）不能胡牌
+      const fourOfAKindTiles = [
+        ...createTiles(TileType.WAN, [1, 1, 1, 1, 2, 3, 4, 5, 6, 7, 8, 9, 9, 9])
+      ];
+      expect(WinConditions.isStandardHu(fourOfAKindTiles)).to.be.false;
+
+      // 有四张相同的牌（四张2万）不能胡牌
+      const fourOfAKindTiles2 = [
+        ...createTiles(TileType.WAN, [1, 1, 2, 2, 2, 2, 3, 3, 3, 4, 5, 6, 7, 8])
+      ];
+      expect(WinConditions.isStandardHu(fourOfAKindTiles2)).to.be.false;
+    });
+
+    it('isStandardHu应正确识别无法组合成标准牌型的牌', () => {
+      // 无法组成4组+1对的牌型
+      const badFormationTiles = [
+        ...createTiles(TileType.WAN, [1, 2, 2, 3, 4, 5, 6, 7, 8, 9]), 
+        ...createTiles(TileType.TIAO, [1, 2, 3, 4])
+      ];
+      expect(WinConditions.isStandardHu(badFormationTiles)).to.be.false;
+    });
+
+    it('canHu应对13张牌的非胡牌型返回false', () => {
+      // 13张牌，不是听牌状态的牌型
+      const player = createTestPlayer([
+        ...createTiles(TileType.WAN, [1, 2, 3, 4, 5, 6]),
+        ...createTiles(TileType.TIAO, [1, 2, 3, 4, 5, 6]),
+        new Tile(TileType.TONG, 1, 13)
+      ]);
+      
+      const result = WinConditions.canHu(player);
+      expect(result.canHu).to.be.false;
+      expect(result.huType).to.equal(HuType.NOT_HU);
+
+      // 另一种13张牌，无法形成胡牌型（杂乱无章的牌）
+      const player2 = createTestPlayer([
+        ...createTiles(TileType.WAN, [1, 3, 5, 7, 9]),
+        ...createTiles(TileType.TIAO, [2, 4, 6, 8]),
+        ...createTiles(TileType.TONG, [1, 3, 5, 7])
+      ]);
+      
+      const result2 = WinConditions.canHu(player2);
+      expect(result2.canHu).to.be.false;
+      expect(result2.huType).to.equal(HuType.NOT_HU);
+    });
+
+    it('canHu应对14张牌的非胡牌型返回false', () => {
+      // 14张牌，但包含四张相同的牌
+      const player = createTestPlayer([
+        ...createTiles(TileType.WAN, [1, 1, 1, 1, 2, 3, 4, 5, 6, 7, 8, 9, 9, 9])
+      ]);
+      
+      const result = WinConditions.canHu(player, null, { isDrawn: true });
+      expect(result.canHu).to.be.false;
+      expect(result.huType).to.equal(HuType.NOT_HU);
+
+      // 另一种14张牌，无法组成任何胡牌型
+      const player2 = createTestPlayer([
+        ...createTiles(TileType.WAN, [1, 2, 2, 3, 4, 5, 6, 7, 8, 9]), 
+        ...createTiles(TileType.TIAO, [1, 2, 3, 4])
+      ]);
+      
+      const result2 = WinConditions.canHu(player2, null, { isDrawn: true });
+      expect(result2.canHu).to.be.false;
+      expect(result2.huType).to.equal(HuType.NOT_HU);
+    });
+
+    it('canHu应正确识别七对子中有超过2张相同牌的情况', () => {
+      // 七对子中有三张相同的牌
+      const player = createTestPlayer([
+        ...createTiles(TileType.WAN, [1, 1, 1, 2, 2, 3, 3], 1),
+        ...createTiles(TileType.TIAO, [4, 4, 5, 5, 6, 6, 7], 8)
+      ]);
+      
+      const result = WinConditions.canHu(player);
+      expect(result.canHu).to.be.false;
+      expect(result.huType).to.equal(HuType.NOT_HU);
+    });
+
+    it('canHu应正确识别十三幺缺少关键牌的情况', () => {
+      // 缺少两张关键牌的十三幺
+      const player = createTestPlayer([
+        ...createTiles(TileType.WAN, [1, 9], 1),
+        ...createTiles(TileType.TIAO, [1, 9], 3),
+        ...createTiles(TileType.TONG, [1, 9], 5),
+        ...createTiles(TileType.FENG, [1, 2, 3], 7),  // 缺少北风
+        ...createTiles(TileType.JIAN, [1, 2], 10),    // 缺少白
+        new Tile(TileType.WAN, 1, 12)                 // 多一张1万作为对子
+      ]);
+      
+      const result = WinConditions.canHu(player);
+      expect(result.canHu).to.be.false;
+      expect(result.huType).to.equal(HuType.NOT_HU);
+      
+      // 加入缺少的牌后测试是否变为有效
+      const completePlayer = createTestPlayer([
+        ...createTiles(TileType.WAN, [1, 9], 1),
+        ...createTiles(TileType.TIAO, [1, 9], 3),
+        ...createTiles(TileType.TONG, [1, 9], 5),
+        ...createTiles(TileType.FENG, [1, 2, 3, 4], 7), 
+        ...createTiles(TileType.JIAN, [1, 2, 3], 11),
+        new Tile(TileType.WAN, 1, 14)                  // 对子
+      ]);
+      
+      const completeResult = WinConditions.canHu(completePlayer, null, { isDrawn: true });
+      expect(completeResult.canHu).to.be.true;
+      expect(completeResult.huType).to.equal(HuType.THIRTEEN_ORPHANS);
+    });
+
+    it('canHu应正确识别九莲宝灯缺失关键牌的情况', () => {
+      // 缺少关键牌的九莲宝灯
+      const player = createTestPlayer([
+        ...createTiles(TileType.WAN, [1, 1, 2, 3, 4, 5, 6, 7, 8, 9, 9], 1), // 缺少一张1万和一张9万
+        ...createTiles(TileType.TIAO, [5, 6], 12)  // 其他牌，破坏清一色
+      ]);
+      
+      const result = WinConditions.canHu(player, null, { isDrawn: true });
+      expect(result.canHu).to.be.false;
+      expect(result.huType).to.equal(HuType.NOT_HU);
+      
+      // 改为有效的九莲宝灯
+      const completePlayer = createTestPlayer([
+        ...createTiles(TileType.WAN, [1, 1, 1, 2, 3, 4, 5, 6, 7, 8, 9, 9, 9], 1),
+        new Tile(TileType.WAN, 2, 14)  // 第14张牌
+      ]);
+      
+      const completeResult = WinConditions.canHu(completePlayer, null, { isDrawn: true });
+      expect(completeResult.canHu).to.be.true;
+    });
+
+    it('canHu应对存在多余牌的不完整牌型返回false', () => {
+      // 存在多余无法组合的牌
+      const player = createTestPlayer([
+        // 刻子
+        ...createTiles(TileType.WAN, [1, 1, 1], 1),
+        // 顺子
+        ...createTiles(TileType.WAN, [2, 3, 4], 4),
+        // 顺子
+        ...createTiles(TileType.TIAO, [3, 4, 5], 7),
+        // 对子
+        ...createTiles(TileType.FENG, [1, 1], 10),
+        // 多余无法组合的牌
+        ...createTiles(TileType.TONG, [2, 5, 8], 12),
+        new Tile(TileType.JIAN, 1, 15)
+      ]);
+      
+      // 即使提供了第14张牌，也无法构成和牌
+      const result = WinConditions.canHu(player, new Tile(TileType.TONG, 7, 16), { isDrawn: false });
+      expect(result.canHu).to.be.false;
+      expect(result.huType).to.equal(HuType.NOT_HU);
+    });
+
+    it('canHu应对缺少对子的牌型返回false', () => {
+      // 四组牌但缺少对子
+      const player = createTestPlayer([
+        // 刻子
+        ...createTiles(TileType.WAN, [1, 1, 1], 1),
+        // 顺子
+        ...createTiles(TileType.WAN, [2, 3, 4], 4),
+        // 顺子
+        ...createTiles(TileType.TIAO, [3, 4, 5], 7),
+        // 顺子
+        ...createTiles(TileType.TONG, [7, 8, 9], 10),
+        // 单牌
+        new Tile(TileType.FENG, 1, 13)
+      ]);
+      
+      // 提供的第14张牌不能构成对子
+      const result = WinConditions.canHu(player, new Tile(TileType.FENG, 2, 14));
+      expect(result.canHu).to.be.false;
+      expect(result.huType).to.equal(HuType.NOT_HU);
+      
+      // 提供能构成对子的牌则可以胡
+      const completeResult = WinConditions.canHu(player, new Tile(TileType.FENG, 1, 14));
+      expect(completeResult.canHu).to.be.true;
+    });
+  });
 }); 

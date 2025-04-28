@@ -64,8 +64,14 @@ class Player {
         (0, logger_1.debugLog)(`玩家${this.name}尝试打出索引${tileIndex}的牌，当前手牌数量: ${this.handTiles.length}`);
         // 如果手牌为空，无法打出
         if (this.handTiles.length === 0) {
-            (0, logger_1.debugLog)(`错误: 玩家${this.name}没有手牌可出`);
-            return null;
+            (0, logger_1.errorLog)(`错误: 玩家${this.name}没有手牌可出`);
+            (0, logger_1.errorLog)(`游戏错误，排查原因`);
+            process.exit(0);
+        }
+        // 验证索引是否有效（加强验证和错误处理）
+        if (tileIndex === undefined || tileIndex === null) {
+            (0, logger_1.errorLog)(`严重错误: 出牌索引为undefined或null`);
+            process.exit(0);
         }
         // 索引范围检查与修正（对所有玩家类型都进行修正）
         if (tileIndex < 0 || tileIndex >= this.handTiles.length) {
@@ -80,7 +86,11 @@ class Player {
         if (tileIndex < 0 || tileIndex >= this.handTiles.length) {
             (0, logger_1.errorLog)(`严重错误: 索引修正后仍然无效: ${tileIndex}`);
             process.exit(1);
-            return null;
+        }
+        // 确保选择的牌有效
+        if (!this.handTiles[tileIndex]) {
+            (0, logger_1.errorLog)(`错误: 索引${tileIndex}处的牌无效`);
+            process.exit(0);
         }
         try {
             // 克隆要打出的牌，确保有一个安全的副本
@@ -104,9 +114,10 @@ class Player {
         catch (error) {
             (0, logger_1.errorLog)(`打牌过程发生错误: ${error instanceof Error ? error.message : String(error)}`);
             (0, logger_1.errorLog)(`错误堆栈: ${error instanceof Error ? error.stack : '无堆栈信息'}`);
+            (0, logger_1.errorLog)(`退出游戏排查问题`);
             // 不再使用任何非标准的备用方法，而是直接返回失败
             (0, logger_1.debugLog)(`出牌失败，玩家状态可能不一致`);
-            return null;
+            process.exit(0);
         }
     }
     // 吃牌
@@ -255,9 +266,10 @@ class Player {
             return `${typeText}[${set.tiles.map(t => t.toString()).join(',')}]`;
         }).join(' ');
     }
-    // AI玩家简单策略：随机出牌
-    getAIMove() {
-        return Math.floor(Math.random() * this.handTiles.length);
+    // 玩家简单策略：摸到的牌
+    getRandomMove() {
+        // 打出最后摸到的牌Index
+        return this.handTiles.length - 1;
     }
     /**
      * 计算玩家当前应该拥有的手牌数量（不包括已亮出的牌组）
@@ -346,7 +358,7 @@ class Player {
     needsToDiscard() {
         const expectedHandSize = this.getExpectedHandSize(false);
         // 如果手牌数量超过预期，需要打出
-        return this.handTiles.length > expectedHandSize;
+        return (this.handTiles.length + this.revealedSets.length) > expectedHandSize;
     }
 }
 exports.Player = Player;

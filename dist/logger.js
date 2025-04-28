@@ -114,9 +114,7 @@ function log(level, message, includeTimestamp = true) {
     const timestamp = includeTimestamp ? `${new Date().toISOString()} ` : '';
     const logMessage = `${timestamp}${prefix} ${message}`;
     // 控制台输出（根据级别）
-    if (level >= LogLevel.WARNING) {
-        console.log(logMessage);
-    }
+    console.log(logMessage);
     // 添加到日志缓冲区
     logBuffer.push(logMessage);
     // 如果缓冲区过大，写入文件并清空

@@ -25,10 +25,10 @@ async function startGame() {
     displayManager.printTitle(`欢迎来到麻将游戏！`);
     displayManager.printColored(`是否启用自动打牌模式？在此模式下，4个AI玩家将自动对弈。`, Style.CYAN);
     displayManager.printColored(`输入 'y' 启用自动模式，'n' 进入手动模式 [默认: y]`, Style.YELLOW);
-    displayManager.printColored(`5秒内无选择将自动启用自动模式`, Style.RED);
+    displayManager.printColored(`1秒内无选择将自动启用自动模式`, Style.RED);
     
     // 直接使用简单的askQuestion，避免使用askConfirmation可能引入的复杂性
-    const autoModeInput = await askQuestion("", 5000, "y");
+    const autoModeInput = await askQuestion("", 1000, "y");
     
     // 手动清理倒计时显示
     CountdownManager.clearCountdownDisplay();
@@ -49,10 +49,10 @@ async function startGame() {
     // 提示用户选择是否启用调试模式
     displayManager.printColored(`是否启用调试模式？在此模式下，将显示更多日志详情。`, Style.CYAN);
     displayManager.printColored(`输入 'd' 启用调试模式，其他键不启用 [默认: 启用]`, Style.YELLOW);
-    displayManager.printColored(`5秒内无选择将启用调试模式`, Style.RED);
+    displayManager.printColored(`1秒内无选择将不启用调试模式`, Style.RED);
     
     // 直接使用askQuestion
-    const debugModeInput = await askQuestion("", 5000, "d");
+    const debugModeInput = await askQuestion("", 1000, " ");
     
     // 手动清理倒计时显示
     CountdownManager.clearCountdownDisplay();
@@ -71,7 +71,7 @@ async function startGame() {
     } else {
       displayManager.printSuccess(`已选择: 不启用调试模式`);
 
-      setLogLevel(LogLevel.INFO);
+      setLogLevel(LogLevel.NONE);
       InputState.setDebugMode(false);
     }
     
@@ -99,12 +99,6 @@ async function startGame() {
       game.getTileManager(),
       game.getAllPlayers()
     );
-
-    // 开始游戏
-    gameEventHandler.startGame();
-    
-    // 显示初始游戏状态
-    displayManager.displayFullGameState(game);
     
     // 启动游戏主循环
     await gameLoop(game);

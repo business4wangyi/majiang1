@@ -10,14 +10,14 @@ const display_manager_1 = require("./display-manager");
 const countdown_manager_1 = require("./countdown-manager");
 const game_event_handler_1 = require("./game-event-handler");
 const tile_manager_1 = require("./tile-manager");
-// 导入重构后的模块
-const game_event_handler_2 = require("./game-event-handler");
 // 游戏循环检查间隔（毫秒）
 const GAME_LOOP_INTERVAL = 100;
 // 游戏循环检查标志
 let isProcessingGameLoop = false;
 // 游戏流程控制器
 let gameEventHandler;
+// 添加标志变量，用于跟踪玩家是否执行过操作
+let hasPlayerActed = false;
 /**
  * 游戏主循环 - 负责游戏的主循环逻辑和输入处理
  */
@@ -26,14 +26,14 @@ async function gameLoop(game) {
     display_manager_1.displayManager.printSuccess(`游戏主循环启动...`);
     // 初始化游戏流程控制器
     gameEventHandler = new game_event_handler_1.GameEventHandler(game, tile_manager_1.TileManager.getInstance(), game.getAllPlayers());
-    // 游戏启动时的初始化工作
+    // 确保玩家状态正确
     gameEventHandler.prepareGameStart();
-    // 开始第一局游戏
-    gameEventHandler.startGame();
+    // 重置玩家行动标志
+    hasPlayerActed = false;
     // 上一个玩家状态缓存，用于检测变化
-    let previousPlayerState = null;
+    let previousPlayerState = player_1.PlayerState.WAITING;
     // 上一个游戏状态缓存，用于检测变化
-    let previousGameState = null;
+    let previousGameState = game_1.GameState.INIT;
     // 初始化游戏循环计时器
     let gameLoopInterval = null;
     // 游戏循环主函数
@@ -47,7 +47,6 @@ async function gameLoop(game) {
         try {
             // 检查游戏状态变化
             if (previousGameState !== game.state) {
-                (0, logger_1.debugLog)(`游戏状态变化: ${previousGameState} -> ${game.state}`);
                 if (index_1.DEBUG_MODE) {
                     display_manager_1.displayManager.printWarning(`游戏状态变化: ${previousGameState} -> ${game.state}`);
                 }
@@ -63,23 +62,25 @@ async function gameLoop(game) {
             if (index_1.DEBUG_MODE) {
                 (0, logger_1.debugLog)(`当前游戏状态: 玩家=${game.currentPlayerIndex}, 阶段=${game.state}`);
             }
-            // 检查游戏是否结束
-            if (gameEventHandler.checkGameEnd()) {
+            // 只有在玩家已经执行过操作后才检查游戏是否结束
+            if (hasPlayerActed && gameEventHandler.checkGameEnd()) {
                 // 设置游戏状态为结束
                 game.setState(game_1.GameState.ENDED);
-                // 处理游戏结束事件
-                await gameEventHandler.handleGameEnd();
-                isProcessingGameLoop = false;
+                // 等待下一个循环游戏状态变更处理
                 return;
             }
-            // 如果是自动模式，检查剩余牌数，可能需要结束游戏
-            if (index_1.AUTO_PLAY_MODE && game.getRemainingTiles() <= 0) {
+            // 检查剩余牌数，可能需要结束游戏
+            if (game.getRemainingTiles() <= 0) {
                 // 牌山已空，结束游戏
-                if (await (0, game_event_handler_2.handleEmptyTileDeck)(game)) {
-                    // 如果用户选择继续游戏，则重置状态
+                if (await game_event_handler_1.GameEventHandler.handleEmptyTileDeck(game)) {
+                    // 如果用户选择继续游戏，则重置状态和游戏
                     input_1.InputState.isWaitingForUserInput = false;
-                    // 重新启动游戏
-                    gameEventHandler.startGame();
+                    // 重置游戏状态但不重新发牌
+                    game.reset();
+                    // 继续游戏流程
+                    gameEventHandler.prepareGameStart();
+                    // 重置玩家行动标志
+                    hasPlayerActed = false;
                 }
                 else {
                     // 用户选择结束游戏
@@ -95,22 +96,6 @@ async function gameLoop(game) {
             if (input_1.InputState.isWaitingForUserInput) {
                 isProcessingGameLoop = false;
                 return;
-            }
-            // 如果启用了自动打牌模式，检查是否有超出张数的玩家
-            if (index_1.AUTO_PLAY_MODE) {
-                const playersWithExcessTiles = game.getPlayersWithExcessTiles();
-                if (playersWithExcessTiles.length > 0) {
-                    // 有玩家已摸牌，需要出牌
-                    for (const player of playersWithExcessTiles) {
-                        if (player.id === game.currentPlayerIndex) {
-                            (0, logger_1.infoLog)(`自动模式: 检测到当前玩家 ${player.name} 手牌数量为 ${player.handTiles.length}，需要出牌`);
-                            display_manager_1.displayManager.printWarning(`自动模式: 检测到当前玩家 ${player.name} 手牌数量为 ${player.handTiles.length}，需要出牌`);
-                            // 强制AI玩家出牌
-                            await gameEventHandler.forceAIPlayerDiscard();
-                            break;
-                        }
-                    }
-                }
             }
             // 获取当前玩家
             const currentPlayer = game.getCurrentPlayer();
@@ -132,6 +117,12 @@ async function gameLoop(game) {
                     await gameEventHandler.checkSpecialActions(currentPlayer);
                     // 执行玩家的回合操作
                     await gameEventHandler.handleCurrentPlayerAction();
+                    // 标记玩家已经执行过操作
+                    hasPlayerActed = true;
+                    // 重置状态
+                    input_1.InputState.isWaitingForUserInput = false;
+                    // 下一回合
+                    gameEventHandler.nextTurn();
                 }
             }
         }
