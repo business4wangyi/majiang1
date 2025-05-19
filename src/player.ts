@@ -326,15 +326,12 @@ export class Player {
     // 基础应有牌数，正常为13张，摸牌/准备胡牌时为14张
     const baseHandSize = isMahjong ? 14 : 13;
     
-    // 杠会增加一张牌(3张手牌+1张额外的)
-    const gangCount = this.getGangCount();
-    
     // 吃和碰都会各减少3张手牌
     const chiCount = this.revealedSets.filter(set => set.type === 'CHI').length;
     const pengCount = this.revealedSets.filter(set => set.type === 'PENG').length;
     
     // 调整预期手牌数量
-    return baseHandSize - (gangCount * 3) - (chiCount * 3) - (pengCount * 3);
+    return baseHandSize - (chiCount * 3) - (pengCount * 3);
   }
 
   /**
@@ -411,7 +408,7 @@ export class Player {
    */
   public needsToDiscard(): boolean {
     const expectedHandSize = this.getExpectedHandSize(false);
-    // 如果手牌数量超过预期，需要打出
-    return (this.handTiles.length + this.revealedSets.length) > expectedHandSize;
+    // 如果总牌数超过预期，需要打出
+    return this.getTotalTileCount() > expectedHandSize;
   }
 } 

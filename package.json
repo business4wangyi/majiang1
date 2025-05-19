@@ -7,8 +7,8 @@
     "start": "node dist/index.js",
     "build": "tsc",
     "dev": "ts-node src/index.ts",
-    "test": "NODE_ENV=test mocha -r ts-node/register --exit 'tests/**/*.test.ts'",
-    "test:win": "set NODE_ENV=test && mocha -r ts-node/register --exit 'tests/**/*.test.ts'"
+    "test": "mocha -r ts-node/register tests/**/*.test.ts",
+    "test:watch": "mocha -r ts-node/register --watch tests/**/*.test.ts"
   },
   "keywords": [
     "majiang",

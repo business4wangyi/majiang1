@@ -186,6 +186,11 @@ class AIPlayer extends player_1.Player {
                     // 验证索引有效性
                     if (lowestValueTile.index >= 0 && lowestValueTile.index < this.handTiles.length) {
                         (0, logger_1.debugLog)(`手牌数量超过预期(${this.getExpectedHandSize()})，实际(${this.handTiles.length})，选择价值最低的牌，索引=${lowestValueTile.index}, 牌=${lowestValueTile.tile.toString()}, 价值=${lowestValueTile.value}`);
+                        if (this.handTiles.length > this.getExpectedHandSize() + 1) {
+                            display_manager_1.displayManager.displayPlayerHand(this);
+                            (0, logger_1.errorLog)(`退出游戏排查问题`);
+                            process.exit(0);
+                        }
                         return lowestValueTile.index;
                     }
                     else {

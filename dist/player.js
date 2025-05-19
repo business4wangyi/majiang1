@@ -180,11 +180,10 @@ class Player {
             }
             // 添加到已亮出的牌组，并标记为明杠
             // 注意：虽然在UI上是四张牌，但实际上在计算总牌数时，我们需要确保不会重复计数
-            // targetTile是从另一个玩家的弃牌中移除的，因此我们需要使用其克隆版本
             // 以防止重复计数或引用同一个对象
             this.revealedSets.push({
                 type: 'GANG',
-                tiles: [...sameTiles, targetTile.clone()], // 使用克隆避免可能的引用问题
+                tiles: [...sameTiles, targetTile],
                 source: 'ming' // 明杠
             });
             return true;
@@ -283,13 +282,11 @@ class Player {
     getExpectedHandSize(isMahjong = false) {
         // 基础应有牌数，正常为13张，摸牌/准备胡牌时为14张
         const baseHandSize = isMahjong ? 14 : 13;
-        // 杠会增加一张牌
-        const gangCount = this.revealedSets.filter(set => set.type === 'GANG').length;
-        // 吃和碰都会各减少2张手牌（因为每次吃碰都用了2张手牌，有1张是别人的牌）
+        // 吃和碰都会各减少3张手牌
         const chiCount = this.revealedSets.filter(set => set.type === 'CHI').length;
         const pengCount = this.revealedSets.filter(set => set.type === 'PENG').length;
         // 调整预期手牌数量
-        return baseHandSize + gangCount - (chiCount * 2) - (pengCount * 2);
+        return baseHandSize - (chiCount * 3) - (pengCount * 3);
     }
     /**
      * 计算玩家实际持有的总牌数（手牌+已亮出的牌组）
@@ -331,6 +328,13 @@ class Player {
         return handTileCount + revealedTileCount;
     }
     /**
+     * 获取玩家已杠的牌副数
+     * @returns 杠牌副数
+     */
+    getGangCount() {
+        return this.revealedSets.filter(set => set.type === 'GANG').length;
+    }
+    /**
      * 判断玩家当前手牌数量是否合理
      * @param isMahjong 是否在判断和牌状态
      * @returns 手牌数量是否合理
@@ -357,8 +361,8 @@ class Player {
      */
     needsToDiscard() {
         const expectedHandSize = this.getExpectedHandSize(false);
-        // 如果手牌数量超过预期，需要打出
-        return (this.handTiles.length + this.revealedSets.length) > expectedHandSize;
+        // 如果总牌数超过预期，需要打出
+        return this.getTotalTileCount() > expectedHandSize;
     }
 }
 exports.Player = Player;

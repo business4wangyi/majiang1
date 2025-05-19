@@ -2,6 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Game = exports.GameState = void 0;
 const player_1 = require("./player");
+const rule_types_1 = require("./rule-types");
 const tile_manager_1 = require("./tile-manager");
 const rule_engine_1 = require("./rule-engine");
 const display_manager_1 = require("./display-manager");
@@ -130,7 +131,40 @@ class Game {
         if (!currentPlayer) {
             return [];
         }
-        return rule_engine_1.RuleEngine.getAvailableActions(currentPlayer, this.lastDiscardedTile);
+        // 如果游戏状态不是等待动作，返回空数组
+        if (this.state !== GameState.WAITING_ACTION) {
+            return [];
+        }
+        // 如果有待处理的动作，返回该动作允许的操作
+        if (this.pendingAction) {
+            return this.pendingAction.allowedActions;
+        }
+        // 如果是当前玩家的回合，检查是否需要打牌
+        if (currentPlayer.needsToDiscard()) {
+            return [rule_types_1.PlayerAction.PASS]; // 暂时只允许过牌，实际打牌操作由其他逻辑处理
+        }
+        // 如果是其他玩家的回合，检查是否可以吃碰杠胡
+        if (this.lastDiscardedTile) {
+            const actions = [];
+            // 检查是否可以吃
+            if (rule_engine_1.RuleEngine.canChi(currentPlayer, this.lastDiscardedTile)) {
+                actions.push(rule_types_1.PlayerAction.CHI);
+            }
+            // 检查是否可以碰
+            if (rule_engine_1.RuleEngine.canPeng(currentPlayer, this.lastDiscardedTile)) {
+                actions.push(rule_types_1.PlayerAction.PENG);
+            }
+            // 检查是否可以杠
+            if (rule_engine_1.RuleEngine.canGang(currentPlayer, this.lastDiscardedTile)) {
+                actions.push(rule_types_1.PlayerAction.GANG);
+            }
+            // 检查是否可以胡
+            if (rule_engine_1.RuleEngine.canHu(currentPlayer, this.lastDiscardedTile)) {
+                actions.push(rule_types_1.PlayerAction.HU);
+            }
+            return actions;
+        }
+        return [];
     }
     /**
      * 重置游戏状态，准备开始新一局

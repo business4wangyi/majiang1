@@ -77,7 +77,6 @@ describe('ScoreCalculator', () => {
     
     it('应该根据和牌类型正确计算基本分数 - 特殊情况', () => {
       // 测试特殊情况
-      expect(ScoreCalculator.calculateBaseScore(HuType.LAST_TILE_DRAW, false, false)).to.equal(1);
       expect(ScoreCalculator.calculateBaseScore(HuType.LAST_TILE, false, false)).to.equal(1);
       expect(ScoreCalculator.calculateBaseScore(HuType.KONG_FLOWER, false, false)).to.equal(1);
       expect(ScoreCalculator.calculateBaseScore(HuType.ROBBING_KONG, false, false)).to.equal(1);

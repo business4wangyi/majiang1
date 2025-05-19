@@ -69,14 +69,13 @@ var HuType;
     HuType[HuType["KNITTED_STRAIGHT"] = 43] = "KNITTED_STRAIGHT";
     HuType[HuType["ALL_TERMINALS"] = 44] = "ALL_TERMINALS";
     HuType[HuType["MIXED_TERMINALS"] = 45] = "MIXED_TERMINALS";
-    HuType[HuType["LAST_TILE_DRAW"] = 46] = "LAST_TILE_DRAW";
-    HuType[HuType["LAST_TILE"] = 47] = "LAST_TILE";
-    HuType[HuType["KONG_FLOWER"] = 48] = "KONG_FLOWER";
-    HuType[HuType["ROBBING_KONG"] = 49] = "ROBBING_KONG";
+    HuType[HuType["LAST_TILE"] = 46] = "LAST_TILE";
+    HuType[HuType["KONG_FLOWER"] = 47] = "KONG_FLOWER";
+    HuType[HuType["ROBBING_KONG"] = 48] = "ROBBING_KONG";
     // 花牌相关（需要系统支持花牌）
-    HuType[HuType["EIGHT_FLOWERS"] = 50] = "EIGHT_FLOWERS";
-    HuType[HuType["FOUR_FLOWERS"] = 51] = "FOUR_FLOWERS";
+    HuType[HuType["EIGHT_FLOWERS"] = 49] = "EIGHT_FLOWERS";
+    HuType[HuType["FOUR_FLOWERS"] = 50] = "FOUR_FLOWERS";
     // 特殊标记
-    HuType[HuType["NOT_HU"] = 52] = "NOT_HU";
+    HuType[HuType["NOT_HU"] = 51] = "NOT_HU";
     // 可以添加更多胡牌类型
 })(HuType || (exports.HuType = HuType = {}));

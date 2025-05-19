@@ -63,7 +63,7 @@ var LogLevel;
 // 配置参数
 const CONFIG = {
     // 当前日志级别 - 可以通过setLogLevel函数修改
-    currentLogLevel: LogLevel.INFO,
+    currentLogLevel: LogLevel.DEBUG,
     // 日志文件相关配置
     logDir: path.join(process.cwd(), 'logs'),
     logFilePrefix: 'game-log-',
@@ -202,7 +202,7 @@ function getGameStateLog(game) {
     log += `剩余牌数: ${game.getRemainingTiles()}\n`;
     log += `摸牌次数: ${game.drawCount}\n`;
     if (game.lastDiscardedTile) {
-        log += `最后打出的牌: ${game.lastDiscardedTile.toString()}\n`;
+        log += `上次打出的牌: ${game.lastDiscardedTile.toString()}\n`;
     }
     log += `\n=== 玩家信息 ===\n`;
     allPlayers.forEach((player, index) => {

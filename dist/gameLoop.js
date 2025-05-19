@@ -7,7 +7,6 @@ const logger_1 = require("./logger");
 const input_1 = require("./input");
 const index_1 = require("./index");
 const display_manager_1 = require("./display-manager");
-const countdown_manager_1 = require("./countdown-manager");
 const game_event_handler_1 = require("./game-event-handler");
 const tile_manager_1 = require("./tile-manager");
 // 游戏循环检查间隔（毫秒）
@@ -28,6 +27,10 @@ async function gameLoop(game) {
     gameEventHandler = new game_event_handler_1.GameEventHandler(game, tile_manager_1.TileManager.getInstance(), game.getAllPlayers());
     // 确保玩家状态正确
     gameEventHandler.prepareGameStart();
+    // 开始游戏
+    gameEventHandler.startGame();
+    // 显示初始游戏状态
+    display_manager_1.displayManager.displayFullGameState(game);
     // 重置玩家行动标志
     hasPlayerActed = false;
     // 上一个玩家状态缓存，用于检测变化
@@ -77,6 +80,10 @@ async function gameLoop(game) {
                     input_1.InputState.isWaitingForUserInput = false;
                     // 重置游戏状态但不重新发牌
                     game.reset();
+                    // 开始游戏
+                    gameEventHandler.startGame();
+                    // 显示初始游戏状态
+                    display_manager_1.displayManager.displayFullGameState(game);
                     // 继续游戏流程
                     gameEventHandler.prepareGameStart();
                     // 重置玩家行动标志
@@ -114,14 +121,16 @@ async function gameLoop(game) {
                     // 设置为正在等待输入，防止多次处理
                     input_1.InputState.isWaitingForUserInput = true;
                     // 检查是否可以进行特殊操作（胡、杠等）
-                    await gameEventHandler.checkSpecialActions(currentPlayer);
+                    let noNeedsToDiscard = await gameEventHandler.checkSpecialActions(currentPlayer);
                     // 执行玩家的回合操作
-                    await gameEventHandler.handleCurrentPlayerAction();
+                    if (!noNeedsToDiscard)
+                        await gameEventHandler.handleCurrentPlayerDiscard();
                     // 标记玩家已经执行过操作
                     hasPlayerActed = true;
                     // 重置状态
                     input_1.InputState.isWaitingForUserInput = false;
                     // 下一回合
+                    (0, logger_1.debugLog)('gameLoopInterval');
                     gameEventHandler.nextTurn();
                 }
             }
@@ -136,17 +145,16 @@ async function gameLoop(game) {
                 clearInterval(gameLoopInterval);
                 gameLoopInterval = null;
             }
-            const continueGame = await (0, input_1.askQuestion)("游戏发生错误，是否尝试继续？(y/n)");
-            if (continueGame.toLowerCase() === 'y') {
-                // 如果继续，重置一些状态并重新启动循环
-                input_1.InputState.isWaitingForUserInput = false;
-                countdown_manager_1.CountdownManager.clearCountdownDisplay();
-                gameLoop(game);
-            }
-            else {
-                // 退出程序
-                process.exit(1);
-            }
+            // const continueGame = await askQuestion("游戏发生错误，是否尝试继续？(y/n)");
+            // if (continueGame.toLowerCase() === 'y') {
+            //   // 如果继续，重置一些状态并重新启动循环
+            //   InputState.isWaitingForUserInput = false;
+            //   CountdownManager.clearCountdownDisplay();
+            //   gameLoop(game);
+            // } else {
+            // 退出程序
+            process.exit(1);
+            // }
         }
         finally {
             // 标记为处理完毕

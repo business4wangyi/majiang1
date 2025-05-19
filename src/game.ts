@@ -166,10 +166,49 @@ export class Game {
       return [];
     }
     
-    return RuleEngine.getAvailableActions(
-      currentPlayer, 
-      this.lastDiscardedTile
-    );
+    // 如果游戏状态不是等待动作，返回空数组
+    if (this.state !== GameState.WAITING_ACTION) {
+      return [];
+    }
+    
+    // 如果有待处理的动作，返回该动作允许的操作
+    if (this.pendingAction) {
+      return this.pendingAction.allowedActions;
+    }
+    
+    // 如果是当前玩家的回合，检查是否需要打牌
+    if (currentPlayer.needsToDiscard()) {
+      return [PlayerAction.PASS]; // 暂时只允许过牌，实际打牌操作由其他逻辑处理
+    }
+    
+    // 如果是其他玩家的回合，检查是否可以吃碰杠胡
+    if (this.lastDiscardedTile) {
+      const actions: PlayerAction[] = [];
+      
+      // 检查是否可以吃
+      if (RuleEngine.canChi(currentPlayer, this.lastDiscardedTile)) {
+        actions.push(PlayerAction.CHI);
+      }
+      
+      // 检查是否可以碰
+      if (RuleEngine.canPeng(currentPlayer, this.lastDiscardedTile)) {
+        actions.push(PlayerAction.PENG);
+      }
+      
+      // 检查是否可以杠
+      if (RuleEngine.canGang(currentPlayer, this.lastDiscardedTile)) {
+        actions.push(PlayerAction.GANG);
+      }
+      
+      // 检查是否可以胡
+      if (RuleEngine.canHu(currentPlayer, this.lastDiscardedTile)) {
+        actions.push(PlayerAction.HU);
+      }
+      
+      return actions;
+    }
+    
+    return [];
   }
 
   /**

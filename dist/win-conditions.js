@@ -94,6 +94,33 @@ class WinConditions {
         }
         return setCount === requiredSets && pairCount >= requiredPairs;
     }
+    /**
+     * 检查一个牌组是否是有效的组合（顺子、刻子或杠）
+     */
+    static isValidSet(set) {
+        const tiles = set.tiles;
+        switch (set.type) {
+            case 'CHI': // 顺子
+                if (tiles.length !== 3)
+                    return false;
+                if (!this.isNumberTile(tiles[0]))
+                    return false;
+                return tiles[0].type === tiles[1].type && tiles[0].type === tiles[2].type &&
+                    tiles[1].value === tiles[0].value + 1 && tiles[2].value === tiles[0].value + 2;
+            case 'PENG': // 刻子
+                if (tiles.length !== 3)
+                    return false;
+                return tiles[0].type === tiles[1].type && tiles[0].type === tiles[2].type &&
+                    tiles[0].value === tiles[1].value && tiles[0].value === tiles[2].value;
+            case 'GANG': // 杠
+                if (tiles.length !== 4)
+                    return false;
+                return tiles[0].type === tiles[1].type && tiles[0].type === tiles[2].type && tiles[0].type === tiles[3].type &&
+                    tiles[0].value === tiles[1].value && tiles[0].value === tiles[2].value && tiles[0].value === tiles[3].value;
+            default:
+                return false;
+        }
+    }
     // =============== 胡牌判断函数 ===============
     /**
      * 判断和牌类型
@@ -234,7 +261,6 @@ class WinConditions {
             // 标准和牌型
             { check: () => this.isStandardHu(handTiles), type: rule_types_1.HuType.PING_HU },
             // 流程相关的特殊和牌类型
-            { check: () => this.isLastTileDraw(gameState), type: rule_types_1.HuType.LAST_TILE_DRAW },
             { check: () => this.isLastTile(gameState), type: rule_types_1.HuType.LAST_TILE },
             { check: () => this.isKongFlower(gameState), type: rule_types_1.HuType.KONG_FLOWER },
             { check: () => this.isRobbingKong(gameState), type: rule_types_1.HuType.ROBBING_KONG },
@@ -374,7 +400,7 @@ class WinConditions {
                 };
             }
             // 4. 检查标准和牌
-            if (this.isStandardHu(tempPlayer.handTiles)) {
+            if (this.isStandardHu(tempPlayer.handTiles, tempPlayer.revealedSets)) {
                 const huType = this.getHuType(tempPlayer, updatedGameState, extraOptions);
                 return {
                     canHu: true,
@@ -539,7 +565,6 @@ class WinConditions {
             [rule_types_1.HuType.KNITTED_STRAIGHT]: "组合龙特殊形式",
             [rule_types_1.HuType.ALL_TERMINALS]: "全幺九",
             [rule_types_1.HuType.MIXED_TERMINALS]: "混幺九",
-            [rule_types_1.HuType.LAST_TILE_DRAW]: "妙手回春",
             [rule_types_1.HuType.LAST_TILE]: "海底捞月",
             [rule_types_1.HuType.KONG_FLOWER]: "杠上开花",
             [rule_types_1.HuType.ROBBING_KONG]: "抢杠和",
@@ -609,25 +634,42 @@ class WinConditions {
     /**
      * 判断牌组是否为标准胡牌型（4组+1对）
      */
-    static isStandardHu(tiles) {
-        // 标准型必须是14张牌
-        if (tiles.length !== 14)
+    static isStandardHu(tiles, revealedSets = []) {
+        // 计算总牌数，考虑杠牌的情况
+        const totalTiles = tiles.length + revealedSets.reduce((sum, set) => sum + set.tiles.length, 0);
+        // 标准型必须是14张牌（包括明牌）
+        if (totalTiles !== 14)
             return false;
-        // 获取牌的计数
-        const tileCount = this.countTiles(tiles);
-        // 检查是否存在四张相同的牌 (四归一)，如果有则返回false
-        // 因为标准胡牌中最多只能有杠（明杠、暗杠），而这些通常会在revealedSets中
+        // 获取牌的计数（包括明牌）
+        const allTiles = [...tiles, ...revealedSets.flatMap(set => set.tiles)];
+        const tileCount = this.countTiles(allTiles);
+        // 检查是否存在四张以上相同的牌
         for (const count of tileCount.values()) {
-            if (count > 3)
+            if (count > 4)
                 return false;
         }
-        // 进行标准的胡牌检查
-        return this.canFormSetsRecursive(tiles);
+        // 检查明牌组合是否都是有效的
+        for (const set of revealedSets) {
+            if (!this.isValidSet(set)) {
+                return false;
+            }
+        }
+        // 计算已有的组合数量
+        const revealedSetCount = revealedSets.length;
+        // 计算手牌中还需要的组合数量
+        // 标准和牌需要4个组合（顺子或刻子）和1个对子
+        // 每个明牌组合减少1个需要的组合
+        const requiredSetsInHand = 4 - revealedSetCount;
+        // 如果明牌组合已经超过4个，说明不是标准和牌
+        if (revealedSetCount > 4)
+            return false;
+        // 检查手牌是否能组成剩余需要的组合
+        return this.canFormSetsRecursive(tiles, 0, [], requiredSetsInHand);
     }
     /**
-     * 递归检查是否能组成4组+1对
+     * 递归检查是否能组成指定数量的组合+1对
      */
-    static canFormSetsRecursive(tiles, depth = 0, combineHistory = []) {
+    static canFormSetsRecursive(tiles, depth = 0, combineHistory = [], requiredSets = 4) {
         // 检查递归深度，防止无限递归
         if (depth > 20)
             return false;
@@ -652,7 +694,8 @@ class WinConditions {
                 const remainingTiles = [...sortedTiles];
                 remainingTiles.splice(i, 2);
                 const historyEntry = `对子(${sortedTiles[i].toString()},${sortedTiles[i + 1].toString()})`;
-                if (this.canFormTriples(remainingTiles, depth + 1, [...combineHistory, historyEntry])) {
+                // 检查剩余牌是否能组成指定数量的组合
+                if (this.canFormTriples(remainingTiles, depth + 1, [...combineHistory, historyEntry], requiredSets)) {
                     return true;
                 }
             }
@@ -660,14 +703,20 @@ class WinConditions {
         return false;
     }
     /**
-     * 检查剩余牌是否能组成刻子和顺子
+     * 检查剩余牌是否能组成指定数量的刻子和顺子
      */
-    static canFormTriples(tiles, depth, combineHistory) {
+    static canFormTriples(tiles, depth, combineHistory, requiredSets) {
         // 如果没有牌了，说明已经成功组合
         if (tiles.length === 0)
             return true;
         // 如果牌数不是3的倍数，无法组成
         if (tiles.length % 3 !== 0)
+            return false;
+        // 如果需要的组合数量为0但还有剩余牌，说明不是标准和牌
+        if (requiredSets === 0 && tiles.length > 0)
+            return false;
+        // 如果剩余牌的数量不足以组成需要的组合数量，返回false
+        if (tiles.length < requiredSets * 3)
             return false;
         // 检查牌的数量，防止有过多重复牌
         const tileCount = this.countTiles(tiles);
@@ -689,7 +738,7 @@ class WinConditions {
                 // 取出刻子后，继续检查剩余牌
                 const remainingTiles = [...sortedTiles];
                 remainingTiles.splice(i, 3);
-                if (this.canFormTriples(remainingTiles, depth + 1, [...combineHistory])) {
+                if (this.canFormTriples(remainingTiles, depth + 1, [...combineHistory], requiredSets - 1)) {
                     return true;
                 }
             }
@@ -712,7 +761,7 @@ class WinConditions {
             remainingTiles.splice(tile3Index, 1);
             remainingTiles.splice(tile2Index, 1);
             remainingTiles.splice(i, 1);
-            if (this.canFormTriples(remainingTiles, depth + 1, [...combineHistory])) {
+            if (this.canFormTriples(remainingTiles, depth + 1, [...combineHistory], requiredSets - 1)) {
                 return true;
             }
         }

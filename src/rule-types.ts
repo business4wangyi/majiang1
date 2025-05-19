@@ -82,7 +82,6 @@ export enum HuType {
   KNITTED_STRAIGHT, // 组合龙特殊形式
   ALL_TERMINALS, // 全幺九 - 由幺九牌组成的和牌
   MIXED_TERMINALS, // 混幺九 - 由幺九牌和字牌组成的和牌
-  LAST_TILE_DRAW, // 妙手回春 - 摸到牌墙最后一张牌和牌
   LAST_TILE, // 海底捞月 - 抓到最后一张牌和牌
   KONG_FLOWER, // 杠上开花 - 摸杠牌后和牌
   ROBBING_KONG, // 抢杠和 - 别人补杠时和牌

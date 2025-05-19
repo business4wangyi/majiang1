@@ -156,9 +156,6 @@ export class ScoreCalculator {
       case HuType.KNITTED_STRAIGHT:
         baseScore = 5;
         break;
-      case HuType.LAST_TILE_DRAW:
-        baseScore = 1;
-        break;
       case HuType.LAST_TILE:
         baseScore = 1;
         break;
@@ -549,12 +546,6 @@ export class ScoreCalculator {
           name: "组合龙特殊形式",
           description: "组合龙特殊形式",
           baseScore: 5
-        };
-      case HuType.LAST_TILE_DRAW:
-        return {
-          name: "妙手回春",
-          description: "妙手回春",
-          baseScore: 1
         };
       case HuType.LAST_TILE:
         return {
