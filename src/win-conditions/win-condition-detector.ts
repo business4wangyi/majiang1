@@ -195,9 +195,11 @@ export class WinConditionRegistry {
     },
     extraOptions?: {
       flowers?: Tile[]
-    }
+    },
+    excludeDetectors: Function[] = []
   ): WinConditionDetector[] {
     return this.detectors.filter(detector => 
+      !excludeDetectors.includes(detector.constructor) &&
       detector.detect(handTiles, revealedSets || [], player, gameState, extraOptions)
     );
   }

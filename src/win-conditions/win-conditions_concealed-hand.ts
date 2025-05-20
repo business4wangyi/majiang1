@@ -2,6 +2,7 @@ import { Tile } from '../tile';
 import { TileSet, HuType } from '../rule-types';
 import { Player } from '../player';
 import { BaseWinConditionDetector, WinConditionRegistry } from './win-condition-detector';
+import { WinConditions } from './win-conditions-main';
 
 /**
  * 门前清检测器
@@ -30,6 +31,9 @@ export class ConcealedHandDetector extends BaseWinConditionDetector {
       flowers?: Tile[]
     }
   ): boolean {
+    // 先判断是否为标准胡牌型
+    const fakePlayer = player || { handTiles, revealedSets } as Player;
+    if (!WinConditions.canHu(fakePlayer, null, gameState, extraOptions, [ConcealedHandDetector]).canHu) return false;
     // 门前清：没有明牌
     return revealedSets.length === 0;
   }

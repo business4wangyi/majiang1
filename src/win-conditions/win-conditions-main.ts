@@ -17,6 +17,7 @@ export class WinConditions {
    * @param targetTile 目标牌（可选）
    * @param gameState 游戏状态
    * @param extraOptions 额外选项
+   * @param excludeDetectors 排除的检测器
    * @returns 胡牌检测结果
    */
   static canHu(
@@ -30,7 +31,8 @@ export class WinConditions {
     } = {},
     extraOptions: {
       flowers?: Tile[]
-    } = {}
+    } = {},
+    excludeDetectors: Function[] = []
   ): { 
     canHu: boolean, 
     huType: HuType,
@@ -115,7 +117,8 @@ export class WinConditions {
       revealedSets,
       player,
       gameState,
-      extraOptions
+      extraOptions,
+      excludeDetectors
     );
     
     // 如果没有匹配的检测器，返回不能胡牌

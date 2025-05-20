@@ -8,7 +8,7 @@ const player_1 = require("./player");
 const logger_1 = require("./logger");
 const tile_1 = require("./tile");
 const tile_manager_1 = require("./tile-manager");
-const win_conditions_1 = require("./win-conditions");
+const index_1 = require("./win-conditions/index");
 const rule_types_1 = require("./rule-types");
 const rule_engine_1 = require("./rule-engine");
 const ai_player_1 = require("./ai-player");
@@ -336,7 +336,7 @@ class GameEventHandler {
         // 如果可以胡牌，记录胡牌类型
         if (result.canHu) {
             const huType = result.huType;
-            const description = result.description || win_conditions_1.WinConditions.getHuTypeDescription(huType);
+            const description = result.description || index_1.WinConditions.getHuTypeDescription(huType);
             display_manager_1.displayManager.printSuccess(`${player.name} 胡牌类型: ${description}`);
             // 计算得分
             const scoreResult = rule_engine_1.RuleEngine.calculateScore(player, huType, { isSelfDrawn: tile === null });

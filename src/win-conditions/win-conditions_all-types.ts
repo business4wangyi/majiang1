@@ -2,6 +2,7 @@ import { Tile, TileType } from '../tile';
 import { TileSet, HuType } from '../rule-types';
 import { Player } from '../player';
 import { BaseWinConditionDetector, WinConditionRegistry } from './win-condition-detector';
+import { WinConditions } from './win-conditions-main';
 
 /**
  * 五门齐检测器
@@ -30,6 +31,9 @@ export class AllTypesDetector extends BaseWinConditionDetector {
       flowers?: Tile[]
     }
   ): boolean {
+    // 先判断是否为标准胡牌型
+    const fakePlayer = player || { handTiles, revealedSets } as Player;
+    if (!WinConditions.canHu(fakePlayer, null, gameState, extraOptions, [AllTypesDetector]).canHu) return false;
     // 获取所有牌
     const allTiles = this.getAllTiles(handTiles, revealedSets);
     
