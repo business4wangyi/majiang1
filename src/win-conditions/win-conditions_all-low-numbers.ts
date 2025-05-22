@@ -75,7 +75,7 @@ export class AllLowNumbersDetector extends BaseWinConditionDetector {
            tile.value <= 3;
   }
 
-  private isValidSet(set: TileSet): boolean {
+  protected isValidSet(set: TileSet): boolean {
     if (!set.tiles.every(tile => this.isLowNumber(tile))) {
       return false;
     }
@@ -103,29 +103,25 @@ export class AllLowNumbersDetector extends BaseWinConditionDetector {
     }
   }
 
-  private findPairs(tiles: Tile[]): Tile[][] {
+  protected findPairs(handTiles: Tile[]): Tile[][] {
     const pairs: Tile[][] = [];
-    const seen = new Set<string>();
-
-    for (let i = 0; i < tiles.length - 1; i++) {
-      for (let j = i + 1; j < tiles.length; j++) {
-        const tile1 = tiles[i];
-        const tile2 = tiles[j];
-        
-        if (tile1.type === tile2.type && tile1.value === tile2.value) {
-          const key = `${tile1.type}-${tile1.value}`;
-          if (!seen.has(key)) {
-            pairs.push([tile1, tile2]);
-            seen.add(key);
-          }
-        }
+    const tileCount = new Map<string, Tile[]>();
+    for (const tile of handTiles) {
+      const key = `${tile.type}-${tile.value}`;
+      if (!tileCount.has(key)) {
+        tileCount.set(key, []);
+      }
+      tileCount.get(key)!.push(tile);
+    }
+    for (const tiles of tileCount.values()) {
+      if (tiles.length >= 2) {
+        pairs.push([tiles[0], tiles[1]]);
       }
     }
-
     return pairs;
   }
 
-  private canFormSets(handTiles: Tile[], revealedSets: TileSet[]): boolean {
+  protected canFormSets(handTiles: Tile[], revealedSets: TileSet[]): boolean {
     // 如果没有手牌，检查明牌是否足够
     if (handTiles.length === 0) {
       return revealedSets.length === 4;

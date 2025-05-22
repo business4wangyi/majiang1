@@ -123,7 +123,6 @@ export class AIPlayer extends Player {
     
     // 模拟AI思考延迟
     await AIPlayer.pauseForThinking();
-    console.log('pauseForThinking')
     
     try {
       // 使用AI方法获取出牌决策

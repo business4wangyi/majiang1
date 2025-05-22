@@ -8,6 +8,7 @@ import { BaseWinConditionDetector, WinConditionRegistry } from './win-condition-
  * 全不靠：由不相邻的单张数牌和字牌组成的特殊和牌
  */
 export class FullyIsolatedDetector extends BaseWinConditionDetector {
+  public isBaseWin = true;
   protected name = '全不靠';
   protected description = '由不相邻的单张牌组成的特殊和牌';
   protected scoreValue = 56;
@@ -30,17 +31,12 @@ export class FullyIsolatedDetector extends BaseWinConditionDetector {
       flowers?: Tile[]
     }
   ): boolean {
-    // 调试信息
-    console.log("======= 全不靠检测开始 =======");
-    console.log(`手牌数量: ${handTiles.length}, 明牌数量: ${revealedSets.length}`);
     
     // 打印手牌信息
     const handInfo = handTiles.map(t => `${t.type}:${t.value}`).join(', ');
-    console.log(`手牌: ${handInfo}`);
     
     // 1. 全不靠必须是13张牌，没有明牌
     if (handTiles.length !== 13 || revealedSets.length > 0) {
-      console.log("不满足条件1: 张数不是13张或有明牌");
       return false;
     }
     
@@ -54,7 +50,6 @@ export class FullyIsolatedDetector extends BaseWinConditionDetector {
       tileMap.set(key, tileMap.get(key)! + 1);
       
       if (tileMap.get(key)! > 1) {
-        console.log(`不满足条件2: 有重复牌 ${tile.type}:${tile.value}`);
         return false; // 有重复牌
       }
     }
@@ -67,17 +62,14 @@ export class FullyIsolatedDetector extends BaseWinConditionDetector {
       tile.type === TileType.FENG || tile.type === TileType.JIAN
     );
     
-    console.log(`万子: ${wanTiles.length}张, 条子: ${tiaoTiles.length}张, 筒子: ${tongTiles.length}张, 字牌: ${honorTiles.length}张`);
     
     // 4. 检查每种花色是否最多有3张牌
     if (wanTiles.length > 3 || tiaoTiles.length > 3 || tongTiles.length > 3) {
-      console.log("不满足条件4: 某种花色超过3张");
       return false;
     }
     
     // 5. 检查是否有字牌
     if (honorTiles.length === 0) {
-      console.log("不满足条件5: 没有字牌");
       return false;
     }
     
@@ -86,15 +78,12 @@ export class FullyIsolatedDetector extends BaseWinConditionDetector {
     const tiaoIsolated = this.areIsolated(tiaoTiles);
     const tongIsolated = this.areIsolated(tongTiles);
     
-    console.log(`万子互不相邻: ${wanIsolated}, 条子互不相邻: ${tiaoIsolated}, 筒子互不相邻: ${tongIsolated}`);
     
     if (!wanIsolated || !tiaoIsolated || !tongIsolated) {
-      console.log("不满足条件6: 数牌不是互不相邻");
       return false;
     }
     
     // 满足所有条件，是全不靠
-    console.log("======= 全不靠检测通过 =======");
     return true;
   }
   

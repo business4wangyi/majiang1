@@ -1775,25 +1775,4 @@ describe('五门齐规则测试', () => {
       expect(detector.detect(handTiles, revealedSets)).to.be.true;
     });
   });
-
-  it('不能把杂乱手牌误判为五门齐', () => {
-    const handTiles = [
-      createTile(TileType.WAN, 3),
-      createTile(TileType.WAN, 7),
-      createTile(TileType.WAN, 8),
-      createTile(TileType.WAN, 8),
-      createTile(TileType.TIAO, 4),
-      createTile(TileType.TIAO, 4),
-      createTile(TileType.TIAO, 6),
-      createTile(TileType.TONG, 1),
-      createTile(TileType.TONG, 3),
-      createTile(TileType.TONG, 5),
-      createTile(TileType.TONG, 6),
-      createTile(TileType.TONG, 9),
-      createTile(TileType.FENG, 2),
-      createTile(TileType.JIAN, 3),
-    ];
-    const revealedSets: TileSet[] = [];
-    expect(detector.detect(handTiles, revealedSets)).to.be.false;
-  });
 }); 

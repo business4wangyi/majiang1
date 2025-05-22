@@ -1025,6 +1025,9 @@ export class GameEventHandler {
     const huDetails = RuleEngine.getHuDetails(player, tile);
     
     if (huDetails.canHu) {
+      // 如果是荣和，把胡的牌加到手牌
+      player.handTiles.push(tile!);
+
       displayManager.printSuccess(`${player.name} 胡牌！胡牌类型: ${huDetails.description}`);
       
       // 计算得分
@@ -1053,20 +1056,20 @@ export class GameEventHandler {
     // 显示当前玩家的手牌
     displayManager.displayPlayerHand(currentPlayer);
 
-
     // 如果是AI玩家，则使用AI策略处理
     if (currentPlayer.type === PlayerType.AI) {
 
-      let discardedTile = null
+      let discardedTile = null;
       // 使用AIPlayer的处理方法
       if (currentPlayer instanceof AIPlayer) {
-
+        infoLog(`使用AIPlayer的处理方法`);
         discardedTile = await currentPlayer.handleDiscard(this);
       } else {
         // 如果不是AIPlayer实例但类型是AI，使用基本AI逻辑
         infoLog(`AI玩家 ${currentPlayer.name} 不是AIPlayer实例，使用基本AI逻辑处理`);
 
         const discardIndex = currentPlayer.getRandomMove();
+        infoLog(`选择的弃牌索引: ${discardIndex}`);
         discardedTile = this.currentPlayerDiscard(discardIndex);
       }
 
@@ -1131,30 +1134,30 @@ export class GameEventHandler {
       RuleEngine.canHu(p, discardedTile)
     );
     
-    if (canHuPlayers.length > 0) {
-      debugLog(`发现 ${canHuPlayers.length} 名玩家可以胡 ${discardedTile.toString()}`);
-      
-      // 根据座次顺序获取胡牌玩家顺序
-      const huPlayer = canHuPlayers.find(player => player.id === this.game.currentPlayerIndex);
-      debugLog(`选择 ${huPlayer!.name} 进行胡牌处理`);
-      
-      if (huPlayer!.type === PlayerType.AI) {
-        // AI玩家自动胡牌
-        debugLog(`AI玩家 ${huPlayer!.name} 自动选择胡牌`);
-        this.handlePlayerHu(huPlayer!, discardedTile);
-        return true;
+    let hasHu = false;
+    for (const huPlayer of canHuPlayers) {
+      debugLog(`检测玩家 ${huPlayer.name}（类型: ${huPlayer.type === PlayerType.AI ? 'AI' : '人类'}）是否胡牌`);
+      if (huPlayer.type === PlayerType.AI) {
+        debugLog(`AI玩家 ${huPlayer.name} 自动胡牌`);
+        this.handlePlayerHu(huPlayer, discardedTile);
+        hasHu = true;
       } else {
-        // 人类玩家选择是否胡牌
-        displayManager.printWarning(`${huPlayer!.name}，您可以胡 ${discardedTile.toString()}`);
+        displayManager.printWarning(`${huPlayer.name}，您可以胡 ${discardedTile.toString()}`);
         const want = await askQuestion("是否胡牌？(y/n)");
         if (want.toLowerCase() === 'y') {
-          debugLog(`人类玩家 ${huPlayer!.name} 选择胡牌`);
-          this.handlePlayerHu(huPlayer!, discardedTile);
-          return true;
+          debugLog(`人类玩家 ${huPlayer.name} 选择胡牌`);
+          this.handlePlayerHu(huPlayer, discardedTile);
+          hasHu = true;
         } else {
-          debugLog(`人类玩家 ${huPlayer!.name} 选择不胡牌`);
+          debugLog(`人类玩家 ${huPlayer.name} 选择不胡牌`);
         }
       }
+    }
+    if (hasHu) {
+      debugLog(`有玩家胡牌，响应流程结束`);
+      return true;
+    } else if (canHuPlayers.length > 0) {
+      debugLog(`所有可胡玩家均未胡牌，继续检查杠/碰/吃`);
     }
     
     // 检查是否有人可以杠牌

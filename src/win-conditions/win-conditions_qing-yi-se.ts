@@ -8,6 +8,7 @@ import { BaseWinConditionDetector, WinConditionRegistry } from './win-condition-
  * 清一色：由同一种花色的序数牌组成的和牌
  */
 export class QingYiSeDetector extends BaseWinConditionDetector {
+  public isBaseWin = true;
   protected name = '清一色';
   protected description = '由同一种花色的序数牌组成的和牌';
   protected scoreValue = 24;

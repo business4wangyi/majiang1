@@ -8,6 +8,7 @@ import { BaseWinConditionDetector, WinConditionRegistry } from './win-condition-
  * 十三幺：由一、九牌加上所有字牌各一张，再加上其中任意一张组成的特殊和牌
  */
 export class ThirteenOrphansDetector extends BaseWinConditionDetector {
+  public isBaseWin = true;
   protected name = '十三幺';
   protected description = '由一、九牌加上所有字牌各一张，再加上其中任意一张组成的特殊和牌';
   protected scoreValue = 88; // 十三幺是高分牌型

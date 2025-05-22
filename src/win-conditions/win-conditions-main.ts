@@ -38,6 +38,7 @@ export class WinConditions {
     huType: HuType,
     description?: string
   } {
+    // 方案二：不再自动分析调用栈，递归排除由 detectAll 统一传递
     let handTiles = [...player.handTiles];
     const revealedSets = player.revealedSets || [];
     
@@ -111,17 +112,18 @@ export class WinConditions {
       };
     }
 
-    // 获取所有适用的胡牌检测器
+    // 获取所有适用的基础胡牌检测器
     const matchedDetectors = WinConditionRegistry.detectAll(
       handTiles,
       revealedSets,
       player,
       gameState,
       extraOptions,
-      excludeDetectors
+      excludeDetectors,
+      true // 只检测基础胡牌检测器
     );
     
-    // 如果没有匹配的检测器，返回不能胡牌
+    // 如果没有匹配的基础检测器，返回不能胡牌
     if (matchedDetectors.length === 0) {
       return {
         canHu: false,

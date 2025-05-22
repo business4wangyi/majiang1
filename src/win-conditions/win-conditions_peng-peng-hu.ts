@@ -8,6 +8,7 @@ import { BaseWinConditionDetector, WinConditionRegistry } from './win-condition-
  * 碰碰胡：由四个刻子（杠）和一个对子组成的和牌
  */
 export class PengPengHuDetector extends BaseWinConditionDetector {
+  public isBaseWin = true;
   protected name = '碰碰胡';
   protected description = '由四个刻子（杠）和一个对子组成的和牌';
   protected scoreValue = 32;

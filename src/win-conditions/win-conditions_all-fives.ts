@@ -8,6 +8,7 @@ import { BaseWinConditionDetector, WinConditionRegistry } from './win-condition-
  * 全带五：每组牌（刻子、顺子、对子）都包含数字5的和牌
  */
 export class AllFivesDetector extends BaseWinConditionDetector {
+  public isBaseWin = false;
   protected name = '全带五';
   protected description = '和牌时，每组牌都包含数字5';
   protected scoreValue = 16;

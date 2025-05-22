@@ -8,6 +8,7 @@ import { BaseWinConditionDetector, WinConditionRegistry } from './win-condition-
  * 七对子：由七个对子组成的和牌
  */
 export class SevenPairsDetector extends BaseWinConditionDetector {
+  public isBaseWin = true;
   protected name = '七对子';
   protected description = '由七个对子组成的和牌';
   protected scoreValue = 24;

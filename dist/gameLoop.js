@@ -136,10 +136,10 @@ async function gameLoop(game) {
             }
         }
         catch (error) {
-            (0, logger_1.errorLog)(`游戏循环发生错误: ${error instanceof Error ? error.message : String(error)}`, error instanceof Error ? error : undefined);
-            display_manager_1.displayManager.printError(`游戏循环发生错误: ${error instanceof Error ? error.message : String(error)}`);
+            (0, logger_1.errorLog)(`游戏循环发生错误: ${error instanceof Error ? error.message : String(error)}\n${error instanceof Error ? error.stack : ''}`, error instanceof Error ? error : undefined);
+            display_manager_1.displayManager.printError(`游戏循环发生错误: ${error instanceof Error ? error.message : String(error)}\n${error instanceof Error ? error.stack : ''}`);
             // 游戏循环出错，保存日志
-            await (0, logger_1.saveGameLogToFile)(game, `游戏循环出错-${error}`);
+            await (0, logger_1.saveGameLogToFile)(game, `game loop error-${error}`);
             // 错误发生时，询问用户是否继续
             if (gameLoopInterval) {
                 clearInterval(gameLoopInterval);

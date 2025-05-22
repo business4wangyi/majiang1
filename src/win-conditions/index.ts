@@ -12,7 +12,7 @@ export { AllHonorsDetector } from './win-conditions_all-honors';
 export { OutsideHandDetector } from './win-conditions_outside-hand';
 export { PengPengHuDetector } from './win-conditions_peng-peng-hu';
 export { ConcealedHandDetector } from './win-conditions_concealed-hand';
-export { SelfDrawnDetector } from './win-conditions_self-drawn';
+// export { SelfDrawnDetector } from './win-conditions_self-drawn';
 export { KongFlowerDetector } from './win-conditions_kong-flower';
 export { RobbingKongDetector } from './win-conditions_robbing-kong';
 export { LastTileDetector } from './win-conditions_last-tile';

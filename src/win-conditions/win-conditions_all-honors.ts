@@ -5,12 +5,13 @@ import { BaseWinConditionDetector, WinConditionRegistry } from './win-condition-
 
 /**
  * 字一色检测器
- * 字一色：全部由字牌（风牌、箭牌）组成的和牌
+ * 字一色：和牌时所有牌都是字牌（风牌和箭牌）
  */
 export class AllHonorsDetector extends BaseWinConditionDetector {
+  public isBaseWin = true;
   protected name = '字一色';
-  protected description = '和牌时，所有牌都是字牌';
-  protected scoreValue = 64;
+  protected description = '和牌时所有牌都是字牌（风牌和箭牌）';
+  protected scoreValue = 16;
   protected huType = HuType.ALL_HONORS;
   
   protected isHonorTile(tile: Tile): boolean {
@@ -43,7 +44,7 @@ export class AllHonorsDetector extends BaseWinConditionDetector {
 
   public detect(
     handTiles: Tile[], 
-    revealedSets: TileSet[] = [], 
+    revealedSets: TileSet[], 
     player?: Player | null,
     gameState?: {
       isLastTile?: boolean,
@@ -55,136 +56,78 @@ export class AllHonorsDetector extends BaseWinConditionDetector {
       flowers?: Tile[]
     }
   ): boolean {
-    // 检查是否有牌
-    if (handTiles.length === 0 && revealedSets.length === 0) {
+    
+    // 1. 检查总牌数
+    const allTiles = this.getAllTiles(handTiles, revealedSets);
+    if (allTiles.length !== 14) {
       return false;
     }
-
-    // 检查所有牌是否都是字牌
-    const allTilesValid = this.allTilesSatisfy(
-      handTiles,
-      revealedSets,
-      (tile: Tile) => this.isHonorTile(tile)
-    );
-    if (!allTilesValid) {
-      return false;
+    
+    // 2. 检查是否有重复牌
+    const tileCount = new Map<string, number>();
+    for (const tile of allTiles) {
+      const key = `${tile.type}-${tile.value}`;
+      tileCount.set(key, (tileCount.get(key) || 0) + 1);
+      if (tileCount.get(key)! > 4) {
+        return false;
+      }
     }
-
-    // 检查明牌是否都是合法的组合
+    
+    // 3. 检查明牌是否合法
     for (const set of revealedSets) {
       if (!this.isValidSet(set)) {
         return false;
       }
     }
-
-    // 计算总牌数，杠牌在计算时视为3张
-    let totalTiles = handTiles.length;
-    for (const set of revealedSets) {
-      if (set.type === 'GANG') {
-        totalTiles += 3;  // 杠牌在计算时视为3张
-      } else {
-        totalTiles += set.tiles.length;
-      }
-    }
-
-    // 检查总牌数是否合法
-    if (totalTiles !== 14) {
+    
+    // 4. 检查是否所有牌都是字牌
+    if (!this.allTilesSatisfy(handTiles, revealedSets, tile => 
+      tile.type === TileType.FENG || tile.type === TileType.JIAN
+    )) {
       return false;
     }
-
-    // 检查是否可以和牌
-    return this.canFormWinningHand(handTiles, revealedSets);
+    
+    // 5. 检查是否有对子
+    const pairs = this.findPairs(handTiles);
+    if (pairs.length === 0) {
+      return false;
+    }
+    
+    // 6. 检查是否可以形成有效的和牌组合
+    let hasValidCombination = false;
+    for (const pair of pairs) {
+      const remainingTiles = handTiles.filter(tile => 
+        !pair.some(pairTile => pairTile.id === tile.id)
+      );
+      if (this.canFormSetsWithHonors(remainingTiles, revealedSets)) {
+        hasValidCombination = true;
+        break;
+      }
+    }
+    if (!hasValidCombination) {
+      return false;
+    }
+    
+    return true;
   }
 
-  private canFormWinningHand(handTiles: Tile[], revealedSets: TileSet[]): boolean {
-    // 计算已经形成的组合数
-    const formedSets = revealedSets.length;
-    const remainingTiles = [...handTiles];
-    const remainingSets = 4 - formedSets;
-
-    // 如果没有剩余组合需要形成，检查是否只剩下一对
-    if (remainingSets === 0) {
-      return remainingTiles.length === 2 && remainingTiles[0].equals(remainingTiles[1]);
+  /**
+   * 检查是否可以形成有效的和牌组合（只考虑字牌）
+   */
+  private canFormSetsWithHonors(handTiles: Tile[], revealedSets: TileSet[]): boolean {
+    // 如果没有手牌，检查明牌是否足够
+    if (handTiles.length === 0) {
+      return revealedSets.length === 4;
     }
 
-    // 如果剩余的牌不足以形成组合，返回false
-    if (remainingTiles.length < remainingSets * 3) {
-      return false;
-    }
-
-    // 统计每种牌的数量
-    const countMap = new Map<string, {count: number, tile: Tile}>();
-    for (const tile of remainingTiles) {
-      const key = `${tile.type}_${tile.value}`;
-      if (!countMap.has(key)) {
-        countMap.set(key, {count: 0, tile});
-      }
-      countMap.get(key)!.count++;
-    }
-
-    // 尝试每种牌作为对子
-    for (const [key, {count, tile}] of countMap.entries()) {
-      if (count >= 2) {
-        // 移除对子
-        const pairTiles = remainingTiles.filter(t => t.equals(tile)).slice(0, 2);
-        const otherTiles = remainingTiles.filter(t => !pairTiles.some(pt => pt.id === t.id));
-        
-        // 尝试形成剩余的组合
-        if (this.canFormSets(otherTiles, remainingSets)) {
-          return true;
-        }
-      }
-    }
-
-    return false;
-  }
-
-  private canFormSets(tiles: Tile[], numSets: number): boolean {
-    // 如果没有剩余组合需要形成，返回true
-    if (numSets === 0) {
-      return tiles.length === 0;
-    }
-
-    // 如果剩余的牌不足以形成组合，返回false
-    if (tiles.length < numSets * 3) {
-      return false;
-    }
-
-    // 统计每种牌的数量
-    const countMap = new Map<string, {count: number, tile: Tile}>();
-    for (const tile of tiles) {
-      const key = `${tile.type}_${tile.value}`;
-      if (!countMap.has(key)) {
-        countMap.set(key, {count: 0, tile});
-      }
-      countMap.get(key)!.count++;
-    }
-
-    // 先尝试形成杠子
-    for (const [key, {count, tile}] of countMap.entries()) {
-      if (count >= 4) {
-        // 移除4张相同的牌
-        const gangTiles = tiles.filter(t => t.equals(tile)).slice(0, 4);
-        const otherTiles = tiles.filter(t => !gangTiles.some(gt => gt.id === t.id));
-        
-        // 尝试形成剩余的组合
-        if (this.canFormSets(otherTiles, numSets - 1)) {
-          return true;
-        }
-      }
-    }
-
-    // 再尝试形成刻子
-    for (const [key, {count, tile}] of countMap.entries()) {
-      if (count >= 3) {
-        // 移除3张相同的牌
-        const pungTiles = tiles.filter(t => t.equals(tile)).slice(0, 3);
-        const otherTiles = tiles.filter(t => !pungTiles.some(pt => pt.id === t.id));
-        
-        // 尝试形成剩余的组合
-        if (this.canFormSets(otherTiles, numSets - 1)) {
-          return true;
-        }
+    // 尝试形成刻子（字牌只能形成刻子）
+    const pungs = this.findPungs(handTiles);
+    for (const pung of pungs) {
+      const remainingTiles = handTiles.filter(tile => 
+        !pung.some(pungTile => pungTile.id === tile.id)
+      );
+      if (this.canFormSetsWithHonors(remainingTiles, [...revealedSets, { type: 'PENG', tiles: pung }])) {
+        return true;
       }
     }
 

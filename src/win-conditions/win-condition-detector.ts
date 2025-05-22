@@ -8,6 +8,11 @@ import { Player } from '../player';
  */
 export interface WinConditionDetector {
   /**
+   * 是否为基础胡牌检测器（true=基础胡牌，false=加番）
+   */
+  isBaseWin: boolean;
+  
+  /**
    * 获取胡牌类型名称
    */
   getName(): string;
@@ -34,6 +39,7 @@ export interface WinConditionDetector {
    * @param player 玩家信息（可选）
    * @param gameState 游戏状态信息（可选）
    * @param extraOptions 额外选项（可选）
+   * @param excludeDetectors 排除的检测器（可选）
    * @returns 是否满足胡牌条件
    */
   detect(
@@ -48,7 +54,8 @@ export interface WinConditionDetector {
     },
     extraOptions?: {
       flowers?: Tile[]
-    }
+    },
+    excludeDetectors?: Function[]
   ): boolean;
 }
 
@@ -57,6 +64,10 @@ export interface WinConditionDetector {
  * 提供了一些通用的功能
  */
 export abstract class BaseWinConditionDetector implements WinConditionDetector {
+  /**
+   * 是否为基础胡牌检测器（true=基础胡牌，false=加番）
+   */
+  public isBaseWin: boolean = false;
   protected abstract name: string;
   protected abstract description: string;
   protected abstract scoreValue: number;
@@ -90,7 +101,8 @@ export abstract class BaseWinConditionDetector implements WinConditionDetector {
     },
     extraOptions?: {
       flowers?: Tile[]
-    }
+    },
+    excludeDetectors?: Function[]
   ): boolean;
   
   /**
@@ -151,6 +163,158 @@ export abstract class BaseWinConditionDetector implements WinConditionDetector {
     const allTiles = this.getAllTiles(handTiles, revealedSets);
     return allTiles.every(predicate);
   }
+
+  /**
+   * 检查牌组是否合法
+   */
+  protected isValidSet(set: TileSet): boolean {
+    switch (set.type) {
+      case 'CHI':
+        // 顺子必须是同花色且连续的
+        if (set.tiles.length !== 3) return false;
+        const [t1, t2, t3] = set.tiles;
+        if (t1.type !== t2.type || t2.type !== t3.type) return false;
+        if (t1.type === TileType.FENG || t1.type === TileType.JIAN) return false;
+        const values = [t1.value, t2.value, t3.value].sort((a, b) => a - b);
+        return values[1] === values[0] + 1 && values[2] === values[1] + 1;
+
+      case 'PENG':
+        // 刻子必须是三张相同的牌
+        if (set.tiles.length !== 3) return false;
+        const [p1, p2, p3] = set.tiles;
+        return p1.type === p2.type && p2.type === p3.type &&
+               p1.value === p2.value && p2.value === p3.value;
+
+      case 'GANG':
+        // 杠必须是四张相同的牌
+        if (set.tiles.length !== 4) return false;
+        const [g1, g2, g3, g4] = set.tiles;
+        return g1.type === g2.type && g2.type === g3.type && g3.type === g4.type &&
+               g1.value === g2.value && g2.value === g3.value && g3.value === g4.value;
+
+      default:
+        return false;
+    }
+  }
+
+  /**
+   * 查找手牌中的对子
+   */
+  protected findPairs(handTiles: Tile[]): Tile[][] {
+    const pairs: Tile[][] = [];
+    const tileCount = new Map<string, Tile[]>();
+    
+    // 按牌型和点数分组
+    for (const tile of handTiles) {
+      const key = `${tile.type}-${tile.value}`;
+      if (!tileCount.has(key)) {
+        tileCount.set(key, []);
+      }
+      tileCount.get(key)!.push(tile);
+    }
+    
+    // 找出所有对子
+    for (const tiles of tileCount.values()) {
+      if (tiles.length >= 2) {
+        pairs.push([tiles[0], tiles[1]]);
+      }
+    }
+    
+    return pairs;
+  }
+
+  /**
+   * 检查是否可以形成有效的和牌组合
+   */
+  protected canFormSets(handTiles: Tile[], revealedSets: TileSet[]): boolean {
+    // 如果没有手牌，检查明牌是否足够
+    if (handTiles.length === 0) {
+      return revealedSets.length === 4;
+    }
+
+    // 尝试形成顺子
+    const chows = this.findChows(handTiles);
+    for (const chow of chows) {
+      const remainingTiles = handTiles.filter(tile => 
+        !chow.some(chowTile => chowTile.id === tile.id)
+      );
+      if (this.canFormSets(remainingTiles, [...revealedSets, { type: 'CHI', tiles: chow }])) {
+        return true;
+      }
+    }
+
+    // 尝试形成刻子
+    const pungs = this.findPungs(handTiles);
+    for (const pung of pungs) {
+      const remainingTiles = handTiles.filter(tile => 
+        !pung.some(pungTile => pungTile.id === tile.id)
+      );
+      if (this.canFormSets(remainingTiles, [...revealedSets, { type: 'PENG', tiles: pung }])) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  /**
+   * 查找手牌中可能的顺子
+   */
+  private findChows(handTiles: Tile[]): Tile[][] {
+    const chows: Tile[][] = [];
+    const tileMap = new Map<string, Tile[]>();
+    
+    // 按花色分组
+    for (const tile of handTiles) {
+      if (tile.type === TileType.FENG || tile.type === TileType.JIAN) continue;
+      const key = `${tile.type}-${tile.value}`;
+      if (!tileMap.has(key)) {
+        tileMap.set(key, []);
+      }
+      tileMap.get(key)!.push(tile);
+    }
+    
+    // 对每种花色，尝试形成顺子
+    for (const [type, value] of [TileType.WAN, TileType.TIAO, TileType.TONG].entries()) {
+      for (let i = 1; i <= 7; i++) {
+        const t1 = tileMap.get(`${type}-${i}`);
+        const t2 = tileMap.get(`${type}-${i + 1}`);
+        const t3 = tileMap.get(`${type}-${i + 2}`);
+        
+        if (t1 && t2 && t3 && t1.length > 0 && t2.length > 0 && t3.length > 0) {
+          chows.push([t1[0], t2[0], t3[0]]);
+        }
+      }
+    }
+    
+    return chows;
+  }
+
+  /**
+   * 查找手牌中可能的刻子
+   */
+  protected findPungs(handTiles: Tile[]): Tile[][] {
+    const pungs: Tile[][] = [];
+    const tileMap = new Map<string, Tile[]>();
+    
+    // 按牌型和点数分组
+    for (const tile of handTiles) {
+      const key = `${tile.type}-${tile.value}`;
+      if (!tileMap.has(key)) {
+        tileMap.set(key, []);
+      }
+      tileMap.get(key)!.push(tile);
+    }
+    
+    // 找出所有可能的刻子
+    for (const tiles of tileMap.values()) {
+      if (tiles.length >= 3) {
+        pungs.push([tiles[0], tiles[1], tiles[2]]);
+      }
+    }
+    
+    return pungs;
+  }
 }
 
 /**
@@ -196,11 +360,20 @@ export class WinConditionRegistry {
     extraOptions?: {
       flowers?: Tile[]
     },
-    excludeDetectors: Function[] = []
+    excludeDetectors?: Function[],
+    baseOnly: boolean = false
   ): WinConditionDetector[] {
     return this.detectors.filter(detector => 
-      !excludeDetectors.includes(detector.constructor) &&
-      detector.detect(handTiles, revealedSets || [], player, gameState, extraOptions)
+      (!baseOnly || detector.isBaseWin) &&
+      !excludeDetectors?.includes(detector.constructor) &&
+      detector.detect(
+        handTiles, 
+        revealedSets || [], 
+        player, 
+        gameState, 
+        extraOptions, 
+        [...(excludeDetectors || []), detector.constructor]
+      )
     );
   }
 } 

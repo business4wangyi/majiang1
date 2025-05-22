@@ -11,6 +11,7 @@ export class PingHuDetector extends BaseWinConditionDetector {
   public readonly description = '由四组顺子或刻子和一个对子组成的和牌';
   public readonly scoreValue = 1;
   public readonly huType = HuType.PING_HU;
+  public isBaseWin = true;
 
   public detect(
     handTiles: Tile[],
@@ -169,7 +170,7 @@ export class PingHuDetector extends BaseWinConditionDetector {
   /**
    * 检查明牌组合是否合法
    */
-  private isValidSet(set: TileSet): boolean {
+  protected isValidSet(set: TileSet): boolean {
     if (set.type === 'CHI') {
       // 检查顺子
       if (set.tiles.length !== 3) return false;

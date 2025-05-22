@@ -8,6 +8,7 @@ import { BaseWinConditionDetector, WinConditionRegistry } from './win-condition-
  * 混一色：由一种花色的序数牌及字牌组成的和牌
  */
 export class HalfFlushDetector extends BaseWinConditionDetector {
+  public isBaseWin = false;
   protected name = '混一色';
   protected description = '由一种花色的序数牌及字牌组成的和牌';
   protected scoreValue = 40;

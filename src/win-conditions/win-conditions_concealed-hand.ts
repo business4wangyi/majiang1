@@ -2,24 +2,23 @@ import { Tile } from '../tile';
 import { TileSet, HuType } from '../rule-types';
 import { Player } from '../player';
 import { BaseWinConditionDetector, WinConditionRegistry } from './win-condition-detector';
-import { WinConditions } from './win-conditions-main';
 
 /**
  * 门前清检测器
- * 门前清：和牌时手牌全是暗牌，没有明牌
+ * 门前清：和牌时没有吃、碰、明杠，所有牌都是自己摸的
  */
 export class ConcealedHandDetector extends BaseWinConditionDetector {
   protected name = '门前清';
-  protected description = '和牌时手牌全是暗牌，没有明牌';
-  protected scoreValue = 8;
-  protected huType = HuType.CONCEALED_HAND;
+  protected description = '和牌时没有吃、碰、明杠，所有牌都是自己摸的';
+  protected scoreValue = 2;
+  protected huType = HuType.PING_HU;
   
   /**
    * 检测是否为门前清
    */
   detect(
     handTiles: Tile[], 
-    revealedSets: TileSet[] = [], 
+    revealedSets: TileSet[], 
     player?: Player | null,
     gameState?: {
       isLastTile?: boolean,
@@ -31,11 +30,52 @@ export class ConcealedHandDetector extends BaseWinConditionDetector {
       flowers?: Tile[]
     }
   ): boolean {
-    // 先判断是否为标准胡牌型
-    const fakePlayer = player || { handTiles, revealedSets } as Player;
-    if (!WinConditions.canHu(fakePlayer, null, gameState, extraOptions, [ConcealedHandDetector]).canHu) return false;
-    // 门前清：没有明牌
-    return revealedSets.length === 0;
+
+    // 1. 检查总牌数
+    const allTiles = this.getAllTiles(handTiles, revealedSets);
+    if (allTiles.length !== 14) {
+      return false;
+    }
+    
+    // 2. 检查是否有重复牌
+    const tileCount = new Map<string, number>();
+    for (const tile of allTiles) {
+      const key = `${tile.type}-${tile.value}`;
+      tileCount.set(key, (tileCount.get(key) || 0) + 1);
+      if (tileCount.get(key)! > 4) {
+        return false;
+      }
+    }
+    
+    // 3. 检查明牌是否合法
+    for (const set of revealedSets) {
+      if (!this.isValidSet(set)) {
+        return false;
+      }
+    }
+    
+    // 4. 检查是否有明牌（门前清要求没有明牌）
+    if (revealedSets.length > 0) {
+      return false;
+    }
+    
+    // 5. 检查是否可以形成有效的和牌组合
+    const pairs = this.findPairs(handTiles);
+    if (pairs.length === 0) {
+      return false;
+    }
+    
+    // 尝试每个对子
+    for (const pair of pairs) {
+      const remainingTiles = handTiles.filter(tile => 
+        !pair.some(pairTile => pairTile.id === tile.id)
+      );
+      if (this.canFormSets(remainingTiles, [])) {
+        return true;
+      }
+    }
+    
+    return false;
   }
 }
 

@@ -4,17 +4,20 @@ import { Player } from '../player';
 import { BaseWinConditionDetector, WinConditionRegistry } from './win-condition-detector';
 
 /**
- * 缺一门检测器
+ * 缺一门检测器（仅加番，不做胡牌判定）
  * 缺一门：和牌中缺少某一种花色的数牌
+ * 注意：本检测器只在已经胡牌的前提下作为加番条件生效
  */
 export class OneVoidedSuitDetector extends BaseWinConditionDetector {
   protected name = '缺一门';
   protected description = '和牌中缺少某一种花色的数牌';
   protected scoreValue = 4;
   protected huType = HuType.ONE_VOIDED_SUIT;
+  // 只做加番，不做基础胡牌判定
+  public isBaseWin = false;
   
   /**
-   * 检测是否为缺一门
+   * 检测是否为缺一门（只做加番判定）
    */
   detect(
     handTiles: Tile[], 
@@ -54,5 +57,5 @@ export class OneVoidedSuitDetector extends BaseWinConditionDetector {
   }
 }
 
-// 注册缺一门检测器
+// 注册缺一门检测器，只做加番
 WinConditionRegistry.register(new OneVoidedSuitDetector()); 

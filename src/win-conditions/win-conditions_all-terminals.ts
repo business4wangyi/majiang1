@@ -7,6 +7,7 @@ import { BaseWinConditionDetector } from './win-condition-detector';
  * 全幺九：由幺九牌（一、九）和字牌组成的和牌
  */
 export class AllTerminalsDetector extends BaseWinConditionDetector {
+  public isBaseWin = true;
   protected name = '全幺九';
   protected description = '由幺九牌组成的和牌';
   protected scoreValue = 32;

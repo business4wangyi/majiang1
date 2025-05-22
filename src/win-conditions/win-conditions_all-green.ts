@@ -8,6 +8,7 @@ import { BaseWinConditionDetector, WinConditionRegistry } from './win-condition-
  * 绿一色：由全绿色牌（竹牌23468及发）组成的和牌
  */
 export class AllGreenDetector extends BaseWinConditionDetector {
+  public isBaseWin = true;
   protected name = '全绿';
   protected description = '和牌时，所有牌都是绿色的';
   protected scoreValue = 88; // 绿一色是高分牌型

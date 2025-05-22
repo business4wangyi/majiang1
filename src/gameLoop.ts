@@ -171,11 +171,11 @@ export async function gameLoop(game: Game): Promise<void> {
         }
       }
     } catch (error) {
-      errorLog(`游戏循环发生错误: ${error instanceof Error ? error.message : String(error)}`, error instanceof Error ? error : undefined);
-      displayManager.printError(`游戏循环发生错误: ${error instanceof Error ? error.message : String(error)}`);
+      errorLog(`游戏循环发生错误: ${error instanceof Error ? error.message : String(error)}\n${error instanceof Error ? error.stack : ''}`, error instanceof Error ? error : undefined);
+      displayManager.printError(`游戏循环发生错误: ${error instanceof Error ? error.message : String(error)}\n${error instanceof Error ? error.stack : ''}`);
       
       // 游戏循环出错，保存日志
-      await saveGameLogToFile(game, `游戏循环出错-${error}`);
+      await saveGameLogToFile(game, `game loop error-${error}`);
       
       // 错误发生时，询问用户是否继续
       if (gameLoopInterval) {

@@ -231,14 +231,14 @@ export class DisplayManager {
       // 记录无样式的版本到日志
       infoLog(`${player.name}的手牌（${player.handTiles.length}张）: ${player.handTiles.map(t => t.toString()).join(' ')}`);
       // 记录已亮出的手牌
-      infoLog(`已亮出的手牌（${revealedTiles.length}张）: ${player.revealedSets.map(set => formatTileSet(set)).join(' ')}`);
+      infoLog(`已亮出的手牌（${revealedTiles.length}张）: ${revealedTiles.join(' ')}`);
       // 记录最后摸到的牌
       if (player.lastDrawnTile) {
         infoLog(`摸到的牌: ${player.lastDrawnTile.toString()}`);
       }
     }
 
-    console.log(`\n${Style.BOLD}${Style.CYAN}${player.name}的手牌（${player.handTiles.length}张）:${Style.RESET}`);
+    console.log(`\n${Style.BOLD}${Style.CYAN}${player.name}的手牌（${player.handTiles.length}张）: ${player.handTiles.map(t => t.toString()).join(' ')}${Style.RESET}`);
 
     // 按照类型顺序显示已亮出的手牌
     console.log(`\n已亮出的手牌（${revealedTiles.length}张）: ${revealedTiles.join(' ')}`);
