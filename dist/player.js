@@ -54,10 +54,30 @@ class Player {
             (0, logger_1.debugLog)(`警告: 摸牌后手牌数量异常，预期: ${beforeCount + 1}，实际: ${this.handTiles.length}`);
         }
         this.sortHand();
+        this.sortRevealedSets();
     }
     // 整理手牌（排序）
     sortHand() {
         this.handTiles = (0, tile_1.sortTiles)(this.handTiles);
+    }
+    // 整理明牌（排序）
+    sortRevealedSets() {
+        const typeOrder = { 'CHI': 0, 'PENG': 1, 'GANG': 2 };
+        this.revealedSets.sort((a, b) => {
+            // 只对CHI/PENG/GANG排序，其他类型排在最后
+            const aOrder = typeOrder[a.type] ?? 99;
+            const bOrder = typeOrder[b.type] ?? 99;
+            if (aOrder !== bOrder) {
+                return aOrder - bOrder;
+            }
+            // 再按第一张牌的花色和点数排序
+            const aFirst = a.tiles[0];
+            const bFirst = b.tiles[0];
+            if (aFirst.type !== bFirst.type) {
+                return aFirst.type.localeCompare(bFirst.type);
+            }
+            return aFirst.value - bFirst.value;
+        });
     }
     // 打出一张牌
     discardTile(tileIndex) {
@@ -139,6 +159,8 @@ class Player {
             type: 'CHI',
             tiles: [...tiles, targetTile]
         });
+        this.sortHand();
+        this.sortRevealedSets();
         return true;
     }
     // 碰牌
@@ -160,6 +182,8 @@ class Player {
             type: 'PENG',
             tiles: [...sameTiles, targetTile]
         });
+        this.sortHand();
+        this.sortRevealedSets();
         return true;
     }
     // 杠牌
@@ -186,6 +210,8 @@ class Player {
                 tiles: [...sameTiles, targetTile],
                 source: 'ming' // 明杠
             });
+            this.sortHand();
+            this.sortRevealedSets();
             return true;
         }
         else {
@@ -212,6 +238,8 @@ class Player {
                         tiles: [...tiles],
                         source: 'an' // 暗杠
                     });
+                    this.sortHand();
+                    this.sortRevealedSets();
                     return true;
                 }
             }
@@ -230,6 +258,8 @@ class Player {
                         set.type = 'GANG';
                         set.tiles.push(fourthTile);
                         set.source = 'bu'; // 补杠
+                        this.sortHand();
+                        this.sortRevealedSets();
                         return true;
                     }
                 }
@@ -285,8 +315,9 @@ class Player {
         // 吃和碰都会各减少3张手牌
         const chiCount = this.revealedSets.filter(set => set.type === 'CHI').length;
         const pengCount = this.revealedSets.filter(set => set.type === 'PENG').length;
-        // 调整预期手牌数量
-        return baseHandSize - (chiCount * 3) - (pengCount * 3);
+        const gangCount = this.revealedSets.filter(set => set.type === 'GANG').length;
+        // 如果有加杠、暗杠等类型，也要加上
+        return baseHandSize - (chiCount * 3) - (pengCount * 3) - (gangCount * 3);
     }
     /**
      * 计算玩家实际持有的总牌数（手牌+已亮出的牌组）

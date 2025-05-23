@@ -35,7 +35,6 @@ export class TileManager {
     this.tiles = shuffleTiles(createFullTileSet());
     this.totalTiles = this.tiles.length;
     this.remainingTiles = this.totalTiles;
-    infoLog(`牌山初始化完成，总牌数: ${this.totalTiles}, 剩余牌数: ${this.remainingTiles}`);
     displayManager.printSuccess(`牌山初始化完成，总牌数: ${this.totalTiles}, 剩余牌数: ${this.remainingTiles}`);
     
     // 验证牌山大小是否合理

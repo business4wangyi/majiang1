@@ -38,7 +38,7 @@ export class DisplayManager {
    * @param message 要显示的消息
    * @param logToFile 是否同时记录到日志文件
    */
-  public print(message: string, logToFile: boolean = false): void {
+  public print(message: string, logToFile: boolean = true): void {
     console.log(message);
     if (logToFile) {
       infoLog(message);
@@ -51,7 +51,7 @@ export class DisplayManager {
    * @param style 应用的样式（来自Style枚举）
    * @param logToFile 是否同时记录到日志文件
    */
-  public printColored(message: string, style: string, logToFile: boolean = false): void {
+  public printColored(message: string, style: string, logToFile: boolean = true): void {
     console.log(`${style}${message}${Style.RESET}`);
     if (logToFile) {
       infoLog(message);
@@ -63,7 +63,7 @@ export class DisplayManager {
    * @param title 标题文本
    * @param logToFile 是否同时记录到日志文件
    */
-  public printTitle(title: string, logToFile: boolean = false): void {
+  public printTitle(title: string, logToFile: boolean = true): void {
     const separator = '='.repeat(title.length + 4);
     console.log(`\n${Style.BOLD}${separator}${Style.RESET}`);
     console.log(`${Style.BOLD}= ${title} =${Style.RESET}`);
@@ -80,7 +80,7 @@ export class DisplayManager {
    * @param length 分隔线长度，默认为50
    * @param logToFile 是否同时记录到日志文件
    */
-  public printDivider(char: string = '-', length: number = 50, logToFile: boolean = false): void {
+  public printDivider(char: string = '-', length: number = 50, logToFile: boolean = true): void {
     const divider = `\n${char.repeat(length)}\n`;
     this.print(divider);
     
@@ -96,7 +96,7 @@ export class DisplayManager {
    * @param message 提示消息
    * @param logToFile 是否同时记录到日志文件
    */
-  public printPrompt(message: string, logToFile: boolean = false): void {
+  public printPrompt(message: string, logToFile: boolean = true): void {
     console.log(`${Style.CYAN}> ${message}${Style.RESET}`);
     if (logToFile) {
       infoLog(`提示: ${message}`);
@@ -108,7 +108,7 @@ export class DisplayManager {
    * @param message 提示消息
    * @param logToFile 是否同时记录到日志文件
    */
-  public printActionPrompt(message: string, logToFile: boolean = false): void {
+  public printActionPrompt(message: string, logToFile: boolean = true): void {
     this.print('');
     this.printColored(`➤ ${message}`, Style.CYAN);
     
@@ -211,63 +211,51 @@ export class DisplayManager {
   //=== 游戏状态显示方法 ===
   
   /**
+   * 打印调试消息
+   */
+  public printDebug(message: string, logToFile: boolean = true): void {
+    this.printColored(message, Style.DIM, logToFile);
+  }
+  /**
+   * 打印信息消息
+   */
+  public printInfo(message: string, logToFile: boolean = true): void {
+    this.printColored(message, Style.RESET, logToFile);
+  }
+  
+  /**
    * 显示玩家手牌（详细版）
    * @param player 玩家对象
    * @param showIndices 是否显示索引
    * @param logToFile 是否记录到日志文件
    */
-  public displayPlayerHand(player: Player, showIndices: boolean = false, logToFile: boolean = false): void {
-
+  public displayPlayerHand(player: Player, showIndices: boolean = false, logToFile: boolean = true): void {
     const revealedTiles = player.revealedSets.flatMap(set => set.tiles);
-
-    // 显示摸到的牌（如果存在）
+    // 显示得到的牌（如果存在）
     if (player.lastDrawnTile) {
-      console.log(`\n${Style.BOLD}${Style.YELLOW}摸到的牌: ${player.lastDrawnTile.toString()}${Style.RESET}`);
-    }
-    
-    console.log('');
-    
-    if (logToFile) {
-      // 记录无样式的版本到日志
-      infoLog(`${player.name}的手牌（${player.handTiles.length}张）: ${player.handTiles.map(t => t.toString()).join(' ')}`);
-      // 记录已亮出的手牌
-      infoLog(`已亮出的手牌（${revealedTiles.length}张）: ${revealedTiles.join(' ')}`);
-      // 记录最后摸到的牌
-      if (player.lastDrawnTile) {
-        infoLog(`摸到的牌: ${player.lastDrawnTile.toString()}`);
-      }
+      this.printColored(`\n${player.name}得到的牌: ${player.lastDrawnTile.toString()}`, Style.BOLD + Style.YELLOW);
     }
 
-    console.log(`\n${Style.BOLD}${Style.CYAN}${player.name}的手牌（${player.handTiles.length}张）: ${player.handTiles.map(t => t.toString()).join(' ')}${Style.RESET}`);
+    this.printColored(`\n${player.name}的手牌（${player.handTiles.length}张）: ${player.handTiles.map(t => t.toString()).join(' ')}`, Style.BOLD + Style.CYAN);
+    this.print(`\n已亮出的手牌（${revealedTiles.length}张）: ${revealedTiles.join(' ')}`);
+    this.print(`\n杠牌副数（${player.getGangCount()}副）`);
 
-    // 按照类型顺序显示已亮出的手牌
-    console.log(`\n已亮出的手牌（${revealedTiles.length}张）: ${revealedTiles.join(' ')}`);
-
-    // 显示杠牌副数
-    console.log(`\n杠牌副数（${player.getGangCount()}张）`);
-
-    // 使用display.ts中的函数按类型分组
-    const tilesByType = groupTilesByType(player.handTiles);
-    
-    // 按照类型顺序显示牌
-    for (const type of TileTypeOrder) {
-      const typeString = type as string;
-      const tiles = tilesByType.get(typeString);
-      if (tiles && tiles.length > 0) {
-        const sortedTiles = sortTiles(tiles);
-        
-        console.log(`${Style.BOLD}${TileTypeNames[typeString]}:${Style.RESET} ${
-          sortedTiles.map((tile, index) => {
-            const isLastDrawn = player.lastDrawnTile && tile.id === player.lastDrawnTile.id;
-            const displayIndex = player.handTiles.indexOf(tile) + 1;
-            if (isLastDrawn) {
-              return `${showIndices ? displayIndex + ':' : ''}${Style.BOLD}${Style.YELLOW}${tile.toString()}${Style.RESET}`;
-            }
-            return `${showIndices ? displayIndex + ':' : ''}${tile.toString()}`;
-          }).join(' ')
-        }`);
-      }
-    }
+    // const tilesByType = groupTilesByType(player.handTiles);
+    // for (const type of TileTypeOrder) {
+    //   const typeString = type as string;
+    //   const tiles = tilesByType.get(typeString);
+    //   if (tiles && tiles.length > 0) {
+    //     const sortedTiles = sortTiles(tiles);
+    //     this.printColored(`${TileTypeNames[typeString]}: ${sortedTiles.map((tile, index) => {
+    //       const isLastDrawn = player.lastDrawnTile && tile.id === player.lastDrawnTile.id;
+    //       const displayIndex = player.handTiles.indexOf(tile) + 1;
+    //       if (isLastDrawn) {
+    //         return `${showIndices ? displayIndex + ':' : ''}${Style.BOLD}${Style.YELLOW}${tile.toString()}${Style.RESET}`;
+    //       }
+    //       return `${showIndices ? displayIndex + ':' : ''}${tile.toString()}`;
+    //     }).join(' ')}`, Style.BOLD);
+    //   }
+    // }
   }
   
   /**
@@ -277,36 +265,26 @@ export class DisplayManager {
    * @param highlightLast 是否高亮最后一张牌
    * @param logToFile 是否同时记录到日志文件
    */
-  public displayHand(player: Player, showIndices: boolean = false, highlightLast: boolean = false, logToFile: boolean = false): void {
+  public displayHand(player: Player, showIndices: boolean = false, highlightLast: boolean = false, logToFile: boolean = true): void {
     const handTiles = player.handTiles;
-    
     if (handTiles.length === 0) {
       this.print(`${player.name}的手牌（0张）: 无`, logToFile);
       return;
     }
-    
     let handDisplay = `${player.name}的手牌（${handTiles.length}张）: `;
-    
     handTiles.forEach((tile: Tile, index: number) => {
       let tileDisplay = tile.toString();
-      
-      // 为最后一张牌添加高亮（如果指定）
       if (highlightLast && index === handTiles.length - 1) {
         tileDisplay = `${Style.YELLOW}${tileDisplay}${Style.RESET}`;
       }
-      
-      // 添加索引（如果指定）
       if (showIndices) {
         handDisplay += `[${index}]${tileDisplay} `;
       } else {
         handDisplay += `${tileDisplay} `;
       }
     });
-    
     this.print(handDisplay);
-    
     if (logToFile) {
-      // 记录无样式的版本到日志
       const logHandDisplay = `${player.name}的手牌: ${handTiles.map(t => t.toString()).join(' ')}`;
       infoLog(logHandDisplay);
     }
@@ -317,17 +295,14 @@ export class DisplayManager {
    * @param player 玩家对象
    * @param logToFile 是否同时记录到日志文件
    */
-  public displayDiscardedTiles(player: Player, logToFile: boolean = false): void {
+  public displayDiscardedTiles(player: Player, logToFile: boolean = true): void {
     const discardedTiles = player.discardedTiles;
-    
     if (discardedTiles.length === 0) {
       this.print(`${player.name}的弃牌（0张）: 无`, logToFile);
       return;
     }
-    
     let discardDisplay = `${player.name}的弃牌（${discardedTiles.length}张）: `;
     discardDisplay += discardedTiles.map((tile: Tile) => tile.toString()).join(' ');
-    
     this.print(discardDisplay, logToFile);
   }
   
@@ -336,22 +311,18 @@ export class DisplayManager {
    * @param player 玩家对象
    * @param logToFile 是否记录到日志文件
    */
-  public displayPlayerMelds(player: Player, logToFile: boolean = false): void {
+  public displayPlayerMelds(player: Player, logToFile: boolean = true): void {
     if (player.revealedSets.length === 0) {
       return;
     }
-    
     this.print(`${player.name}的副露（${player.revealedSets.length}组）:`);
-    
     player.revealedSets.forEach((set: TileSet) => {
       const setDisplay = formatTileSet(set);
       this.print(`  ${setDisplay}`);
-      
       if (logToFile) {
         infoLog(`${player.name}的副露（${player.revealedSets.length}组）: ${setDisplay}`);
       }
     });
-    
     this.print('');
   }
   
@@ -362,8 +333,7 @@ export class DisplayManager {
    * @param logToFile 是否记录到日志文件
    */
   public displayAIAction(player: Player, action: string, logToFile: boolean = true): void {
-    // console.log(`${Style.CYAN}${Style.BOLD}AI玩家 ${player.name} ${action}${Style.RESET}`);
-    
+    this.printColored(`AI玩家 ${player.name} ${action}`, Style.CYAN + Style.BOLD);
     if (logToFile) {
       infoLog(`AI玩家 ${player.name} ${action}`);
       this.addToTurnLog(`AI玩家 ${player.name} ${action}`);
@@ -376,7 +346,7 @@ export class DisplayManager {
    * @param handDescription 手牌描述
    */
   public displayAIThinking(player: Player, handDescription: string): void {
-    console.log(`${Style.DIM}AI玩家 ${player.name} 思考中: ${handDescription}${Style.RESET}`);
+    this.printColored(`AI玩家 ${player.name} 思考中: ${handDescription}`, Style.DIM);
   }
   
   /**
@@ -385,16 +355,11 @@ export class DisplayManager {
    */
   public displayHandAnalysis(player: Player): void {
     const analysis = analyzeHand(player);
-    
     if (analysis.length === 0) {
       return;
     }
-    
-    this.print(`\n${player.name}的手牌分析:`);
-    analysis.forEach(item => {
-      this.print(`  - ${item}`);
-    });
-    this.print('');
+    this.printTitle('手牌分析');
+    analysis.forEach(line => this.print(line));
   }
   
   /**
@@ -402,14 +367,14 @@ export class DisplayManager {
    * @param player 玩家对象
    */
   public displayActionPrompt(player: Player): void {
-    console.log(`\n${player.name}，请选择操作:`);
-    console.log('1. 摸牌');
-    console.log('2. 吃');
-    console.log('3. 碰');
-    console.log('4. 杠');
-    console.log('5. 胡');
-    console.log('q. 退出游戏');
-    console.log('请输入选项:');
+    this.printTitle(`${player.name}，请选择操作:`);
+    this.print('1. 摸牌');
+    this.print('2. 吃');
+    this.print('3. 碰');
+    this.print('4. 杠');
+    this.print('5. 胡');
+    this.print('q. 退出游戏');
+    this.print('请输入选项:');
   }
   
   /**
@@ -418,8 +383,7 @@ export class DisplayManager {
    * @param logToTurnLog 是否记录到回合日志
    */
   public displayFullGameState(game: Game, logToTurnLog: boolean = false): void {
-    this.printTitle('游戏状态', true);
-    
+    infoLog('=== 完整游戏状态 ===');
     const stateInfo = [
       `当前玩家: ${game.getAllPlayers()[game.currentPlayerIndex].name}`,
       `游戏阶段: ${game.state}`,
@@ -427,22 +391,24 @@ export class DisplayManager {
       `摸牌次数: ${game.drawCount}`,
       `上次打出的牌: ${game.lastDiscardedTile ? game.lastDiscardedTile.toString() : '无'}`
     ];
-    
     stateInfo.forEach(info => {
-      this.print(info, true);
+      infoLog(info);
       if (logToTurnLog) {
         this.addToTurnLog(info);
       }
     });
-    
-    this.print('');
-    
+
     // 显示每个玩家的信息
     game.getAllPlayers().forEach(player => {
-      this.displayHand(player, false, false, true);
-      this.displayPlayerMelds(player, true);
-      this.displayDiscardedTiles(player, true);
+      infoLog(`${player.name}的手牌（${player.handTiles.length}张）: ${player.handTiles.map(t => t.toString()).join(' ')}`);
+      if (player.revealedSets.length > 0) {
+        infoLog(`${player.name}的副露（${player.revealedSets.length}组）: ${player.revealedSets.map(set => set.tiles.map(t => t.toString()).join(',')).join(' | ')}`);
+      }
+      if (player.discardedTiles.length > 0) {
+        infoLog(`${player.name}的弃牌（${player.discardedTiles.length}张）: ${player.discardedTiles.map(t => t.toString()).join(' ')}`);
+      }
     });
+    infoLog('========================');
   }
   
   /**
@@ -460,7 +426,7 @@ export class DisplayManager {
     gameState: GameState,
     logToTurnLog: boolean = false
   ): void {
-    this.printTitle('游戏状态', true); // 总是记录到日志文件
+    this.printTitle('游戏状态');
     
     const stateInfo = [
       `当前玩家: ${currentPlayerName}`,
@@ -470,13 +436,11 @@ export class DisplayManager {
     ];
     
     stateInfo.forEach(info => {
-      this.print(info, true); // 总是记录到日志文件
+      this.print(info, true);
       if (logToTurnLog) {
         this.addToTurnLog(info);
       }
     });
-    
-    this.print(''); // 空行
   }
 }
 

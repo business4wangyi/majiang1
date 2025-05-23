@@ -79,8 +79,7 @@ class AIPlayer extends player_1.Player {
             process.exit(0);
         }
         // 显示AI正在思考
-        (0, logger_1.infoLog)(`AI玩家 ${this.name} 正在思考出牌..., 当前手牌数量: ${this.handTiles.length}`);
-        display_manager_1.displayManager.printWarning(`AI玩家 ${this.name} 正在思考出牌...`);
+        (0, logger_1.debugLog)(`AI玩家 ${this.name} 正在思考出牌...`);
         // 安全检查：确保手牌不为空
         if (this.handTiles.length === 0) {
             (0, logger_1.errorLog)(`AI玩家 ${this.name} 不需要出牌，手牌数量：${this.handTiles.length}`);
@@ -89,24 +88,23 @@ class AIPlayer extends player_1.Player {
         }
         // 模拟AI思考延迟
         await AIPlayer.pauseForThinking();
-        console.log('pauseForThinking');
         try {
             // 使用AI方法获取出牌决策
             const discardIndex = this.getAIMove();
             // 验证索引是否有效
             if (discardIndex < 0 || discardIndex >= this.handTiles.length) {
                 (0, logger_1.debugLog)(`AI玩家 ${this.name} 返回的索引 ${discardIndex} 无效`);
-                display_manager_1.displayManager.printWarning(`AI玩家 ${this.name} 无法决定要打出哪张牌，随机选择`);
+                (0, logger_1.debugLog)(`AI玩家 ${this.name} 无法决定要打出哪张牌，随机选择`);
                 // 随机选择一张牌出牌
                 const randomIndex = Math.floor(Math.random() * this.handTiles.length);
                 // 执行出牌
                 const randomDiscard = gameEventHandler.currentPlayerDiscard(randomIndex);
                 if (randomDiscard) {
-                    display_manager_1.displayManager.printWarning(`AI玩家 ${this.name} 随机打出: ${randomDiscard.toString()}`);
+                    (0, logger_1.debugLog)(`AI玩家 ${this.name} 随机打出: ${randomDiscard.toString()}`);
                     return randomDiscard;
                 }
                 else {
-                    display_manager_1.displayManager.printError(`AI玩家 ${this.name} 随机出牌失败`);
+                    (0, logger_1.debugLog)(`AI玩家 ${this.name} 随机出牌失败`);
                     (0, logger_1.errorLog)('游戏错误检查原因');
                     process.exit(0);
                 }
@@ -115,7 +113,7 @@ class AIPlayer extends player_1.Player {
             const tileToDiscard = this.handTiles[discardIndex];
             if (!tileToDiscard) {
                 // 手牌索引存在但牌对象不存在的情况
-                display_manager_1.displayManager.printError(`错误: 索引 ${discardIndex} 处的牌对象不存在`);
+                (0, logger_1.debugLog)(`错误: 索引 ${discardIndex} 处的牌对象不存在`);
                 // 尝试找到一个有效的牌
                 let validIndex = -1;
                 for (let i = 0; i < this.handTiles.length; i++) {
@@ -125,39 +123,38 @@ class AIPlayer extends player_1.Player {
                     }
                 }
                 if (validIndex >= 0) {
-                    display_manager_1.displayManager.printWarning(`使用备选有效索引 ${validIndex}`);
+                    (0, logger_1.debugLog)(`使用备选有效索引 ${validIndex}`);
                     const fallbackTile = gameEventHandler.currentPlayerDiscard(validIndex);
                     return fallbackTile;
                 }
-                display_manager_1.displayManager.printError(`AI玩家 ${this.name} 随机出牌失败`);
+                (0, logger_1.debugLog)(`AI玩家 ${this.name} 随机出牌失败`);
                 (0, logger_1.errorLog)('游戏错误检查原因');
                 process.exit(0);
             }
             (0, logger_1.debugLog)(`AI玩家 ${this.name} 决定打出第${discardIndex + 1}张牌: ${tileToDiscard.toString()}`);
-            display_manager_1.displayManager.print(`AI玩家 ${this.name} 分析完成，选择打出: ${tileToDiscard.toString()}`);
+            (0, logger_1.debugLog)(`AI玩家 ${this.name} 分析完成，选择打出: ${tileToDiscard.toString()}`);
             // 执行出牌
             const discardedTile = gameEventHandler.currentPlayerDiscard(discardIndex);
-            (0, logger_1.infoLog)(`AI玩家 ${this.name} 成功打出: ${discardedTile.toString()}`);
-            display_manager_1.displayManager.printSuccess(`AI玩家 ${this.name} 打出: ${discardedTile.toString()}`);
-            display_manager_1.displayManager.addToTurnLog(`${this.name} 打出了 ${discardedTile.toString()}`);
+            // displayManager.printSuccess(`AI玩家 ${this.name} 打出: ${discardedTile.toString()}`);
+            // displayManager.addToTurnLog(`${this.name} 打出了 ${discardedTile.toString()}`);
             return discardedTile;
         }
         catch (error) {
             (0, logger_1.debugLog)(`AI玩家出牌出错: ${error instanceof Error ? error.message : String(error)}`);
-            display_manager_1.displayManager.printError(`AI玩家出牌出错: ${error instanceof Error ? error.message : String(error)}`);
+            (0, logger_1.debugLog)(`AI玩家出牌出错: ${error instanceof Error ? error.message : String(error)}`);
             try {
                 // 出错时，随机选择一张牌出牌
                 const fallbackIndex = Math.floor(Math.random() * this.handTiles.length);
-                (0, logger_1.infoLog)(`出错后的备用策略: 使用随机索引 ${fallbackIndex} 出牌`);
+                (0, logger_1.debugLog)(`出错后的备用策略: 使用随机索引 ${fallbackIndex} 出牌`);
                 const fallbackTile = gameEventHandler.currentPlayerDiscard(fallbackIndex);
                 if (fallbackTile) {
-                    display_manager_1.displayManager.printWarning(`AI出错恢复：随机打出 ${fallbackTile.toString()}`);
+                    (0, logger_1.debugLog)(`AI出错恢复：随机打出 ${fallbackTile.toString()}`);
                     return fallbackTile;
                 }
             }
             catch (fallbackError) {
                 (0, logger_1.debugLog)(`AI出牌恢复策略也失败: ${fallbackError instanceof Error ? fallbackError.message : String(fallbackError)}`);
-                display_manager_1.displayManager.printError(`AI玩家无法出牌，请检查游戏状态`);
+                (0, logger_1.debugLog)(`AI玩家无法出牌，请检查游戏状态`);
             }
             (0, logger_1.errorLog)('游戏错误检查原因');
             process.exit(0);

@@ -70,7 +70,7 @@ const CONFIG = {
     // 缓冲区大小
     maxLogBuffer: 1000,
     // 日志前缀
-    debugPrefix: '[麻将调试信息]'
+    debugPrefix: ''
 };
 // 日志前缀样式 - 使用ANSI转义序列直接定义颜色
 const LOG_STYLES = {
@@ -107,6 +107,7 @@ function getLogLevel() {
  */
 function log(level, message, includeTimestamp = true) {
     // 如果日志级别低于当前设置，则不记录
+    // 打印level和CONFIG.currentLogLevel
     if (level < CONFIG.currentLogLevel) {
         return;
     }
@@ -167,6 +168,11 @@ function errorLog(message, error) {
 function aiThinkingLog(aiName, message) {
     debugLog(`[${aiName}思考] ${message}`);
 }
+// ANSI颜色去除工具
+function removeAnsiColors(str) {
+    // 匹配所有ANSI转义序列
+    return str.replace(/\x1b\[[0-9;]*m/g, '');
+}
 /**
  * 将缓冲区中的日志写入文件
  */
@@ -179,9 +185,10 @@ function flushLogBuffer() {
         if (!fs.existsSync(CONFIG.logDir)) {
             fs.mkdirSync(CONFIG.logDir, { recursive: true });
         }
-        // 写入日志文件
+        // 写入日志文件前，去除所有颜色控制符
         const logPath = path.join(CONFIG.logDir, currentLogFile);
-        fs.appendFileSync(logPath, logBuffer.join('\n') + '\n');
+        const plainLog = logBuffer.map(removeAnsiColors).join('\n') + '\n';
+        fs.appendFileSync(logPath, plainLog);
         // 清空缓冲区
         logBuffer = [];
     }

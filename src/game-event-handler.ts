@@ -27,7 +27,7 @@ export class GameEventHandler {
    * 启动游戏
    */
   public startGame(): void {
-    displayManager.print("开始初始化游戏...");
+    displayManager.print("开始游戏...");
     
     // 检查玩家数量
     displayManager.print(`游戏中共有 ${this.players.length} 名玩家`);
@@ -49,6 +49,10 @@ export class GameEventHandler {
     for (let i = 0; i < this.players.length; i++) {
       this.updatePlayerState(i);
     }
+
+    // 切换游戏状态为PLAYING
+    this.game.setState(GameState.PLAYING);
+    displayManager.printSuccess("游戏初始化完成，状态转为 PLAYING");
     
     // 为庄家（第一个玩家）摸一张牌
     const firstPlayer = this.players[0];
@@ -60,17 +64,13 @@ export class GameEventHandler {
     
     // 游戏启动时摸牌必定有牌
     displayManager.printSuccess(`庄家 ${firstPlayer.name} 摸了一张牌: ${firstPlayer.type === PlayerType.HUMAN ? drawnTile.toString() : '[暗牌]'}`);
-    
-    // 切换游戏状态为PLAYING
-    this.game.setState(GameState.PLAYING);
-    displayManager.printSuccess("游戏初始化完成，状态转为 PLAYING");
   }
 
   /**
    * 处理游戏启动时的初始化工作
    */
   public prepareGameStart(): void {
-    infoLog(`准备游戏启动...`);
+    infoLog(`准备启动游戏...`);
     
     // 确保当前玩家状态为ACTING，其他玩家为WAITING
     const players = this.game.getAllPlayers();
@@ -139,12 +139,12 @@ export class GameEventHandler {
         displayManager.printError(`严重错误: 玩家 ${player.name} 手牌数量不正确 (${player.handTiles.length}/${expectedHandSize})，游戏无法继续`);
         return;
       }
-      
       // 排序玩家手牌
       player.sortHand();
-      displayManager.print(`玩家 ${player.name} 最终手牌数量: ${player.handTiles.length}`);
+      // 只在发牌结束时打印详细手牌
+      displayManager.displayPlayerHand(player);
     }
-    
+    // 只打印一次分隔线
     displayManager.printDivider();
   }
 
@@ -232,7 +232,7 @@ export class GameEventHandler {
     if (huResult.canHu) {
       debugLog(`玩家 ${currentPlayer.name} 自摸胡牌！`);
       // 显示胡牌信息
-      displayManager.printSuccess(`${currentPlayer.name} 胡牌类型: ${huResult.description}`);
+      displayManager.printSuccess(`${currentPlayer.name} 胡牌类型: ${huResult.huType}, 胡牌描述: ${huResult.description}`);
       
       // 计算得分
       const scoreResult = RuleEngine.calculateScore(currentPlayer, huResult.huType, { isSelfDrawn: true });
@@ -306,6 +306,8 @@ export class GameEventHandler {
     // 显示下一个玩家信息
     displayManager.printDivider();
     displayManager.printTitle(`轮到 ${nextPlayer.name} 行动 [手牌: ${nextPlayer.handTiles.length}张] [已亮出牌： ${nextPlayer.revealedSets.flatMap(set => set.tiles).length}张] [合计${nextPlayer.getTotalTileCount()}张]`);
+    // 普通回合只打印简要手牌
+    displayManager.displayHand(nextPlayer, false, false, true);
     
     // 只有在非跳过摸牌的情况下才为下一个玩家摸牌
     if (!skipDraw) {
@@ -416,7 +418,7 @@ export class GameEventHandler {
     if (result.canHu) {
       const huType = result.huType;
       const description = result.description || WinConditions.getHuTypeDescription(huType);
-      displayManager.printSuccess(`${player.name} 胡牌类型: ${description}`);
+      displayManager.printSuccess(`${player.name} 胡牌类型: ${huType}, 胡牌描述: ${description}`);
       
       // 计算得分
       const scoreResult = RuleEngine.calculateScore(player, huType, { isSelfDrawn: tile === null });
@@ -464,12 +466,14 @@ export class GameEventHandler {
     const players = game.getAllPlayers();
     for (const player of players) {
       displayManager.print(`玩家 ${player.name}:`);
-      displayManager.print(`- 手牌数量: ${player.handTiles.length}: ${player.handTiles.map(t => t.toString()).join(' ')}`);
+      displayManager.print(`- 手牌: ${player.handTiles.map(t => t.toString()).join(' ')}`);
+      displayManager.print(`- 手牌数量: ${player.handTiles.length}`);
       displayManager.print(`- 已亮出牌组: ${player.revealedSets.length}组: ${player.revealedSets.map(set => `${set.tiles.map(t => t.toString()).join(' ')} (${set.type})`).join(' ')}`);
       displayManager.print(`- 状态: ${PlayerState[player.state]}`);
     }
     
     displayManager.print(`总摸牌次数: ${game.drawCount}`);
+    displayManager.print(`剩余牌数: ${game.getRemainingTiles()}`);
     displayManager.printDivider();
   }
 
@@ -499,7 +503,10 @@ export class GameEventHandler {
         
         // 更新玩家状态
         player.state = PlayerState.ACTING;
-        
+
+        // 更新玩家的最后一张牌
+        player.lastDrawnTile = tile;
+
         // 要求玩家出牌
         await this.requirePlayerToDiscard(player, "碰");
       }
@@ -600,6 +607,9 @@ export class GameEventHandler {
         // 更新玩家状态
         this.updatePlayerState(playerIndex)
       }
+
+      // 更新玩家的最后一张牌
+      player.lastDrawnTile = tile;
       
       // 如果牌山为空，直接返回成功，但仍需出牌
       if (this.tileManager.getRemainingTiles() === 0) {
@@ -789,6 +799,9 @@ export class GameEventHandler {
         
         // 更新玩家状态
         player.state = PlayerState.ACTING;
+
+        // 更新玩家的最后一张牌
+        player.lastDrawnTile = tile;
         
         // 要求玩家出牌
         await this.requirePlayerToDiscard(player, "吃");
@@ -1028,7 +1041,7 @@ export class GameEventHandler {
       // 如果是荣和，把胡的牌加到手牌
       player.handTiles.push(tile!);
 
-      displayManager.printSuccess(`${player.name} 胡牌！胡牌类型: ${huDetails.description}`);
+      displayManager.printSuccess(`${player.name} ${huDetails.description}`);
       
       // 计算得分
       const scoreResult = RuleEngine.calculateScore(player, huDetails.huType, { isSelfDrawn: false });
@@ -1062,11 +1075,11 @@ export class GameEventHandler {
       let discardedTile = null;
       // 使用AIPlayer的处理方法
       if (currentPlayer instanceof AIPlayer) {
-        infoLog(`使用AIPlayer的处理方法`);
+        debugLog(`使用AIPlayer的处理方法`);
         discardedTile = await currentPlayer.handleDiscard(this);
       } else {
         // 如果不是AIPlayer实例但类型是AI，使用基本AI逻辑
-        infoLog(`AI玩家 ${currentPlayer.name} 不是AIPlayer实例，使用基本AI逻辑处理`);
+        debugLog(`AI玩家 ${currentPlayer.name} 不是AIPlayer实例，使用基本AI逻辑处理`);
 
         const discardIndex = currentPlayer.getRandomMove();
         infoLog(`选择的弃牌索引: ${discardIndex}`);
@@ -1074,7 +1087,7 @@ export class GameEventHandler {
       }
 
       displayManager.printSuccess(`${currentPlayer.name} 打出了 ${discardedTile.toString()}`);
-      displayManager.addToTurnLog(`${currentPlayer.name} 打出了 ${discardedTile.toString()}`);
+      // displayManager.addToTurnLog(`${currentPlayer.name} 打出了 ${discardedTile.toString()}`);
         
       // 检查其他玩家是否可以对此牌进行操作
       await this.checkOtherPlayersResponse(discardedTile);
@@ -1101,7 +1114,7 @@ export class GameEventHandler {
         const discardedTile = this.currentPlayerDiscard(tileIndex);
 
         displayManager.printSuccess(`${player.name} 打出了 ${discardedTile.toString()}`);
-        displayManager.addToTurnLog(`${player.name} 打出了 ${discardedTile.toString()}`);
+        // displayManager.addToTurnLog(`${player.name} 打出了 ${discardedTile.toString()}`);
         
         // 检查其他玩家是否可以对此牌进行操作
         await this.checkOtherPlayersResponse(discardedTile);
@@ -1342,7 +1355,7 @@ export class GameEventHandler {
     for (const player of players) {
       displayManager.print(`玩家 ${player.name}:`);
       displayManager.print(`- 手牌: ${player.handTiles.map(t => t.toString()).join(' ')}`);
-      displayManager.print(`- 手牌数量: ${player.handTiles.length}: ${player.handTiles.map(t => t.toString()).join(' ')}`);
+      displayManager.print(`- 手牌数量: ${player.handTiles.length}`);
       displayManager.print(`- 已亮出牌组: ${player.revealedSets.length}组: ${player.revealedSets.map(set => `${set.tiles.map(t => t.toString()).join(' ')} (${set.type})`).join(' ')}`);
       displayManager.print(`- 状态: ${PlayerState[player.state]}`);
     }

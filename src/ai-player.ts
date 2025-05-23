@@ -111,8 +111,7 @@ export class AIPlayer extends Player {
     }
     
     // 显示AI正在思考
-    infoLog(`AI玩家 ${this.name} 正在思考出牌..., 当前手牌数量: ${this.handTiles.length}`);
-    displayManager.printWarning(`AI玩家 ${this.name} 正在思考出牌...`);
+    debugLog(`AI玩家 ${this.name} 正在思考出牌...`);
     
     // 安全检查：确保手牌不为空
     if (this.handTiles.length === 0) {
@@ -131,7 +130,7 @@ export class AIPlayer extends Player {
       // 验证索引是否有效
       if (discardIndex < 0 || discardIndex >= this.handTiles.length) {
         debugLog(`AI玩家 ${this.name} 返回的索引 ${discardIndex} 无效`);
-        displayManager.printWarning(`AI玩家 ${this.name} 无法决定要打出哪张牌，随机选择`);
+        debugLog(`AI玩家 ${this.name} 无法决定要打出哪张牌，随机选择`);
         
         // 随机选择一张牌出牌
         const randomIndex = Math.floor(Math.random() * this.handTiles.length);
@@ -140,10 +139,10 @@ export class AIPlayer extends Player {
         const randomDiscard = gameEventHandler.currentPlayerDiscard(randomIndex);
         
         if (randomDiscard) {
-          displayManager.printWarning(`AI玩家 ${this.name} 随机打出: ${randomDiscard.toString()}`);
+          debugLog(`AI玩家 ${this.name} 随机打出: ${randomDiscard.toString()}`);
           return randomDiscard;
         } else {
-          displayManager.printError(`AI玩家 ${this.name} 随机出牌失败`);
+          debugLog(`AI玩家 ${this.name} 随机出牌失败`);
           errorLog('游戏错误检查原因')
           process.exit(0)
         }
@@ -153,7 +152,7 @@ export class AIPlayer extends Player {
       const tileToDiscard = this.handTiles[discardIndex];
       if (!tileToDiscard) {
         // 手牌索引存在但牌对象不存在的情况
-        displayManager.printError(`错误: 索引 ${discardIndex} 处的牌对象不存在`);
+        debugLog(`错误: 索引 ${discardIndex} 处的牌对象不存在`);
         
         // 尝试找到一个有效的牌
         let validIndex = -1;
@@ -165,46 +164,45 @@ export class AIPlayer extends Player {
         }
         
         if (validIndex >= 0) {
-          displayManager.printWarning(`使用备选有效索引 ${validIndex}`);
+          debugLog(`使用备选有效索引 ${validIndex}`);
           const fallbackTile = gameEventHandler.currentPlayerDiscard(validIndex);
           return fallbackTile
         }
         
-        displayManager.printError(`AI玩家 ${this.name} 随机出牌失败`);
+        debugLog(`AI玩家 ${this.name} 随机出牌失败`);
         errorLog('游戏错误检查原因')
         process.exit(0)
       }
       
       debugLog(`AI玩家 ${this.name} 决定打出第${discardIndex + 1}张牌: ${tileToDiscard.toString()}`);
-      displayManager.print(`AI玩家 ${this.name} 分析完成，选择打出: ${tileToDiscard.toString()}`);
+      debugLog(`AI玩家 ${this.name} 分析完成，选择打出: ${tileToDiscard.toString()}`);
       
       // 执行出牌
       const discardedTile = gameEventHandler.currentPlayerDiscard(discardIndex);
       
-      infoLog(`AI玩家 ${this.name} 成功打出: ${discardedTile.toString()}`);
-      displayManager.printSuccess(`AI玩家 ${this.name} 打出: ${discardedTile.toString()}`);
-      displayManager.addToTurnLog(`${this.name} 打出了 ${discardedTile.toString()}`);
+      // displayManager.printSuccess(`AI玩家 ${this.name} 打出: ${discardedTile.toString()}`);
+      // displayManager.addToTurnLog(`${this.name} 打出了 ${discardedTile.toString()}`);
       
       return discardedTile;
       
     } catch (error) {
       debugLog(`AI玩家出牌出错: ${error instanceof Error ? error.message : String(error)}`);
-      displayManager.printError(`AI玩家出牌出错: ${error instanceof Error ? error.message : String(error)}`);
+      debugLog(`AI玩家出牌出错: ${error instanceof Error ? error.message : String(error)}`);
       
       try {
         // 出错时，随机选择一张牌出牌
         const fallbackIndex = Math.floor(Math.random() * this.handTiles.length);
-        infoLog(`出错后的备用策略: 使用随机索引 ${fallbackIndex} 出牌`);
+        debugLog(`出错后的备用策略: 使用随机索引 ${fallbackIndex} 出牌`);
         
         const fallbackTile = gameEventHandler.currentPlayerDiscard(fallbackIndex);
         
         if (fallbackTile) {
-          displayManager.printWarning(`AI出错恢复：随机打出 ${fallbackTile.toString()}`);
+          debugLog(`AI出错恢复：随机打出 ${fallbackTile.toString()}`);
           return fallbackTile;
         }
       } catch (fallbackError) {
         debugLog(`AI出牌恢复策略也失败: ${fallbackError instanceof Error ? fallbackError.message : String(fallbackError)}`);
-        displayManager.printError(`AI玩家无法出牌，请检查游戏状态`);
+        debugLog(`AI玩家无法出牌，请检查游戏状态`);
       }
       
       errorLog('游戏错误检查原因')

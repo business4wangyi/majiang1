@@ -99,12 +99,9 @@ export class FullyIsolatedDetector extends BaseWinConditionDetector {
     // 对牌值排序
     const values = tiles.map(tile => tile.value).sort((a, b) => a - b);
     
-    console.log(`检查间隔: [${values.join(', ')}]`);
-    
     // 检查相邻牌值的间隔是否大于2
     for (let i = 1; i < values.length; i++) {
       if (values[i] - values[i - 1] <= 2) {
-        console.log(`间隔不足: ${values[i]} - ${values[i - 1]} = ${values[i] - values[i - 1]}`);
         return false; // 相邻或相隔1张牌
       }
     }

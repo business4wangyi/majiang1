@@ -151,9 +151,8 @@ class CountdownManager {
      */
     static set isWaitingForUserInput(value) {
         if (this._isWaitingForUserInput !== value) {
-            this._isWaitingForUserInput = value;
             if (this.debugMode) {
-                (0, logger_1.infoLog)(`等待用户输入状态更改为: ${value}`);
+                (0, logger_1.infoLog)(`等待用户输入状态更改为: ${this._isWaitingForUserInput}`);
             }
             // 如果不再等待用户输入，确保倒计时被清除
             if (!value && this.activeCountdown) {

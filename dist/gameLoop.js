@@ -21,7 +21,6 @@ let hasPlayerActed = false;
  * 游戏主循环 - 负责游戏的主循环逻辑和输入处理
  */
 async function gameLoop(game) {
-    (0, logger_1.infoLog)(`游戏主循环启动...`);
     display_manager_1.displayManager.printSuccess(`游戏主循环启动...`);
     // 初始化游戏流程控制器
     gameEventHandler = new game_event_handler_1.GameEventHandler(game, tile_manager_1.TileManager.getInstance(), game.getAllPlayers());
@@ -51,7 +50,7 @@ async function gameLoop(game) {
             // 检查游戏状态变化
             if (previousGameState !== game.state) {
                 if (index_1.DEBUG_MODE) {
-                    display_manager_1.displayManager.printWarning(`游戏状态变化: ${previousGameState} -> ${game.state}`);
+                    display_manager_1.displayManager.print(`游戏状态变化: ${previousGameState} -> ${game.state}`);
                 }
                 previousGameState = game.state;
                 // 如果状态变为ENDED，进行结算
@@ -108,9 +107,8 @@ async function gameLoop(game) {
             const currentPlayer = game.getCurrentPlayer();
             // 检查当前玩家状态变化
             if (previousPlayerState !== currentPlayer.state) {
-                (0, logger_1.debugLog)(`玩家状态变化: ${previousPlayerState} -> ${currentPlayer.state}`);
                 if (index_1.DEBUG_MODE) {
-                    display_manager_1.displayManager.printWarning(`玩家状态变化: ${previousPlayerState} -> ${currentPlayer.state}`);
+                    display_manager_1.displayManager.print(`玩家状态变化: ${previousPlayerState} -> ${currentPlayer.state}`);
                 }
                 previousPlayerState = currentPlayer.state;
             }

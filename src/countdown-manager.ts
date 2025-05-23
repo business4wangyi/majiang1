@@ -210,10 +210,9 @@ export class CountdownManager {
    */
   public static set isWaitingForUserInput(value: boolean) {
     if (this._isWaitingForUserInput !== value) {
-      this._isWaitingForUserInput = value;
       
       if (this.debugMode) {
-        infoLog(`等待用户输入状态更改为: ${value}`);
+        infoLog(`等待用户输入状态更改为: ${this._isWaitingForUserInput}`);
       }
       
       // 如果不再等待用户输入，确保倒计时被清除

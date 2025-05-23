@@ -51,8 +51,6 @@ class Tile {
     }
     // 获取牌的文本表示
     toString() {
-        // 打印Tile的type和value
-        (0, logger_1.debugLog)(`Tile: ${this.type}, ${this.value}`);
         if (this.type === TileType.FENG) {
             return `${fengNames[this.value]}${this.type}`;
         }

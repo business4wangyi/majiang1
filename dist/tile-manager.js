@@ -33,7 +33,6 @@ class TileManager {
         this.tiles = (0, tile_1.shuffleTiles)((0, tile_1.createFullTileSet)());
         this.totalTiles = this.tiles.length;
         this.remainingTiles = this.totalTiles;
-        (0, logger_1.infoLog)(`牌山初始化完成，总牌数: ${this.totalTiles}, 剩余牌数: ${this.remainingTiles}`);
         display_manager_1.displayManager.printSuccess(`牌山初始化完成，总牌数: ${this.totalTiles}, 剩余牌数: ${this.remainingTiles}`);
         // 验证牌山大小是否合理
         if (this.totalTiles < 136) {

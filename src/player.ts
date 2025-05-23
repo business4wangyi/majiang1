@@ -59,11 +59,32 @@ export class Player {
     }
     
     this.sortHand();
+    this.sortRevealedSets();
   }
 
   // 整理手牌（排序）
   sortHand(): void {
     this.handTiles = sortTiles(this.handTiles);
+  }
+
+  // 整理明牌（排序）
+  sortRevealedSets(): void {
+    const typeOrder: Record<'CHI' | 'PENG' | 'GANG', number> = { 'CHI': 0, 'PENG': 1, 'GANG': 2 };
+    this.revealedSets.sort((a, b) => {
+      // 只对CHI/PENG/GANG排序，其他类型排在最后
+      const aOrder = typeOrder[a.type as 'CHI' | 'PENG' | 'GANG'] ?? 99;
+      const bOrder = typeOrder[b.type as 'CHI' | 'PENG' | 'GANG'] ?? 99;
+      if (aOrder !== bOrder) {
+        return aOrder - bOrder;
+      }
+      // 再按第一张牌的花色和点数排序
+      const aFirst = a.tiles[0];
+      const bFirst = b.tiles[0];
+      if (aFirst.type !== bFirst.type) {
+        return aFirst.type.localeCompare(bFirst.type);
+      }
+      return aFirst.value - bFirst.value;
+    });
   }
 
   // 打出一张牌
@@ -162,6 +183,8 @@ export class Player {
       tiles: [...tiles, targetTile]
     });
     
+    this.sortHand();
+    this.sortRevealedSets();
     return true;
   }
   
@@ -187,6 +210,8 @@ export class Player {
       tiles: [...sameTiles, targetTile]
     });
     
+    this.sortHand();
+    this.sortRevealedSets();
     return true;
   }
   
@@ -217,6 +242,8 @@ export class Player {
         source: 'ming' // 明杠
       });
       
+      this.sortHand();
+      this.sortRevealedSets();
       return true;
     } else {
       // 暗杠或补杠：检查手牌中有没有四张相同的牌
@@ -245,6 +272,8 @@ export class Player {
             source: 'an' // 暗杠
           });
           
+          this.sortHand();
+          this.sortRevealedSets();
           return true;
         }
       }
@@ -267,6 +296,8 @@ export class Player {
             set.tiles.push(fourthTile);
             set.source = 'bu'; // 补杠
             
+            this.sortHand();
+            this.sortRevealedSets();
             return true;
           }
         }
@@ -329,9 +360,9 @@ export class Player {
     // 吃和碰都会各减少3张手牌
     const chiCount = this.revealedSets.filter(set => set.type === 'CHI').length;
     const pengCount = this.revealedSets.filter(set => set.type === 'PENG').length;
-    
-    // 调整预期手牌数量
-    return baseHandSize - (chiCount * 3) - (pengCount * 3);
+    const gangCount = this.revealedSets.filter(set => set.type === 'GANG').length;
+    // 如果有加杠、暗杠等类型，也要加上
+    return baseHandSize - (chiCount * 3) - (pengCount * 3) - (gangCount * 3);
   }
 
   /**

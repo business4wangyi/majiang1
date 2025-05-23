@@ -43,9 +43,9 @@ async function startGame() {
         // 提示用户选择是否启用调试模式
         display_manager_1.displayManager.printColored(`是否启用调试模式？在此模式下，将显示更多日志详情。`, display_1.Style.CYAN);
         display_manager_1.displayManager.printColored(`输入 'd' 启用调试模式，其他键不启用 [默认: 启用]`, display_1.Style.YELLOW);
-        display_manager_1.displayManager.printColored(`1秒内无选择将不启用调试模式`, display_1.Style.RED);
+        display_manager_1.displayManager.printColored(`1秒内无选择将启用调试模式`, display_1.Style.RED);
         // 直接使用askQuestion
-        const debugModeInput = await (0, input_1.askQuestion)("", 1000, " ");
+        const debugModeInput = await (0, input_1.askQuestion)("", 1000, "d");
         // 手动清理倒计时显示
         countdown_manager_1.CountdownManager.clearCountdownDisplay();
         // 解析用户选择
@@ -54,7 +54,7 @@ async function startGame() {
         // 根据调试模式设置日志级别
         if (exports.DEBUG_MODE) {
             display_manager_1.displayManager.printSuccess(`已选择: 启用调试模式，将显示更多日志详情`);
-            (0, logger_1.setLogLevel)(logger_1.LogLevel.DEBUG);
+            (0, logger_1.setLogLevel)(logger_1.LogLevel.INFO);
             display_manager_1.displayManager.printColored(`已启用调试模式，将记录详细日志信息`, display_1.Style.BOLD + display_1.Style.CYAN);
             input_1.InputState.setDebugMode(true);
         }

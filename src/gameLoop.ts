@@ -31,7 +31,7 @@ let hasPlayerActed = false;
  * 游戏主循环 - 负责游戏的主循环逻辑和输入处理
  */
 export async function gameLoop(game: Game): Promise<void> {
-  infoLog(`游戏主循环启动...`);
+
   displayManager.printSuccess(`游戏主循环启动...`);
   
   // 初始化游戏流程控制器
@@ -76,7 +76,7 @@ export async function gameLoop(game: Game): Promise<void> {
       // 检查游戏状态变化
       if (previousGameState !== game.state) {
         if (DEBUG_MODE) {
-          displayManager.printWarning(`游戏状态变化: ${previousGameState} -> ${game.state}`);
+          displayManager.print(`游戏状态变化: ${previousGameState} -> ${game.state}`);
         }
         previousGameState = game.state;
         
@@ -139,9 +139,9 @@ export async function gameLoop(game: Game): Promise<void> {
       
       // 检查当前玩家状态变化
       if (previousPlayerState !== currentPlayer.state) {
-        debugLog(`玩家状态变化: ${previousPlayerState} -> ${currentPlayer.state}`);
+
         if (DEBUG_MODE) {
-          displayManager.printWarning(`玩家状态变化: ${previousPlayerState} -> ${currentPlayer.state}`);
+          displayManager.print(`玩家状态变化: ${previousPlayerState} -> ${currentPlayer.state}`);
         }
         previousPlayerState = currentPlayer.state;
       }
