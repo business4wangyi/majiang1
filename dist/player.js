@@ -38,6 +38,10 @@ class Player {
         this.lastDrawnTile = null;
         // 分数
         this.score = 0;
+        // 新增：统计字段
+        this.winCount = 0; // 胜利局数
+        this.loseCount = 0; // 失败局数
+        this.totalGames = 0; // 总局数
     }
     // 添加一张牌到手牌
     drawTile(tile) {

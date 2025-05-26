@@ -48,11 +48,11 @@ async function startGame() {
     
     // 提示用户选择是否启用调试模式
     displayManager.printColored(`是否启用调试模式？在此模式下，将显示更多日志详情。`, Style.CYAN);
-    displayManager.printColored(`输入 'd' 启用调试模式，其他键不启用 [默认: 启用]`, Style.YELLOW);
+    displayManager.printColored(`输入 'd' 启用调试模式，其他键不启用 [默认: 不启用]`, Style.YELLOW);
     displayManager.printColored(`1秒内无选择将启用调试模式`, Style.RED);
     
     // 直接使用askQuestion
-    const debugModeInput = await askQuestion("", 1000, "d");
+    const debugModeInput = await askQuestion("", 1000, "");
     
     // 手动清理倒计时显示
     CountdownManager.clearCountdownDisplay();

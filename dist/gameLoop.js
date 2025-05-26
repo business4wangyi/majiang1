@@ -23,7 +23,7 @@ let hasPlayerActed = false;
 async function gameLoop(game) {
     display_manager_1.displayManager.printSuccess(`游戏主循环启动...`);
     // 初始化游戏流程控制器
-    gameEventHandler = new game_event_handler_1.GameEventHandler(game, tile_manager_1.TileManager.getInstance(), game.getAllPlayers());
+    gameEventHandler = new game_event_handler_1.GameEventHandler(game, tile_manager_1.TileManager.getInstance());
     // 确保玩家状态正确
     gameEventHandler.prepareGameStart();
     // 开始游戏
@@ -55,7 +55,29 @@ async function gameLoop(game) {
                 previousGameState = game.state;
                 // 如果状态变为ENDED，进行结算
                 if (game.state === game_1.GameState.ENDED) {
-                    await gameEventHandler.handleGameEnd();
+                    const result = await gameEventHandler.handleGameEnd();
+                    switch (result) {
+                        case 0: // GameEndResult.RESTART_AUTO_GAME
+                            input_1.InputState.isWaitingForUserInput = false;
+                            game.reset();
+                            gameEventHandler.startGame();
+                            display_manager_1.displayManager.displayFullGameState(game);
+                            gameEventHandler.prepareGameStart();
+                            hasPlayerActed = false;
+                            break;
+                        case 1: // GameEndResult.AUTO_PLAY_COMPLETED
+                        case 2: // GameEndResult.USER_EXIT
+                            if (gameLoopInterval) {
+                                clearInterval(gameLoopInterval);
+                                gameLoopInterval = null;
+                            }
+                            isProcessingGameLoop = false;
+                            process.exit(0);
+                            return;
+                        case 3: // GameEndResult.NORMAL_END
+                        default:
+                            break;
+                    }
                     isProcessingGameLoop = false;
                     return;
                 }
@@ -138,21 +160,21 @@ async function gameLoop(game) {
             display_manager_1.displayManager.printError(`游戏循环发生错误: ${error instanceof Error ? error.message : String(error)}\n${error instanceof Error ? error.stack : ''}`);
             // 游戏循环出错，保存日志
             await (0, logger_1.saveGameLogToFile)(game, `game loop error-${error}`);
-            // 错误发生时，询问用户是否继续
+            // 错误发生时，判断是否为特殊终止错误
+            if (error instanceof Error && error.message === 'TILE_DECK_EMPTY') {
+                await gameEventHandler.handleGameEnd();
+                if (gameLoopInterval) {
+                    clearInterval(gameLoopInterval);
+                    gameLoopInterval = null;
+                }
+                return;
+            }
+            // 其它错误，直接退出
             if (gameLoopInterval) {
                 clearInterval(gameLoopInterval);
                 gameLoopInterval = null;
             }
-            // const continueGame = await askQuestion("游戏发生错误，是否尝试继续？(y/n)");
-            // if (continueGame.toLowerCase() === 'y') {
-            //   // 如果继续，重置一些状态并重新启动循环
-            //   InputState.isWaitingForUserInput = false;
-            //   CountdownManager.clearCountdownDisplay();
-            //   gameLoop(game);
-            // } else {
-            // 退出程序
             process.exit(1);
-            // }
         }
         finally {
             // 标记为处理完毕

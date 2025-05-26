@@ -11,6 +11,7 @@ import { RuleEngine } from './rule-engine';
 import { AIPlayer } from './ai-player';
 import { DEBUG_MODE, AUTO_PLAY_MODE } from './index';
 import { AUTO_PLAY_ROUNDS } from './config';
+import { ScoreCalculator } from './score-calculator';
 
 /**
  * 游戏事件处理器类
@@ -24,6 +25,8 @@ export class GameEventHandler {
   ) {}
 
   private currentRound = 1;
+  private lastWinBySelfDrawn: boolean = false; // 记录本局胡牌是否自摸
+  private lastLoserIndex: number = -1; // 记录点炮者索引（荣和时）
 
   /**
    * 启动游戏
@@ -241,18 +244,18 @@ export class GameEventHandler {
     // 检查当前玩家是否可以自摸胡牌
     const huResult = RuleEngine.getHuDetails(currentPlayer, null, { isDrawn: true, isLastTile: this.tileManager.getRemainingTiles() === 0 });
     if (huResult.canHu) {
-      debugLog(`玩家 ${currentPlayer.name} 自摸胡牌！`);
+      const winTypeInfo = ScoreCalculator.getWinTypeInfo(huResult.huType);
+      displayManager.printSuccess(`${currentPlayer.name} 自摸胡牌！游戏结束！`);
       // 显示胡牌信息
-      displayManager.printSuccess(`${currentPlayer.name} 胡牌类型: ${huResult.huType}, 胡牌描述: ${huResult.description}`);
+      displayManager.printSuccess(`${currentPlayer.name} 胡牌类型: ${winTypeInfo.name}, 胡牌描述: ${huResult.description}`);
       
       // 计算得分
       const scoreResult = RuleEngine.calculateScore(currentPlayer, huResult.huType, { isSelfDrawn: true });
       displayManager.printSuccess(`得分: ${scoreResult.score}`);
-      displayManager.printSuccess(`得分详情: ${JSON.stringify(scoreResult.details)}`);
       
       // 设置玩家状态为胡牌
       currentPlayer.state = PlayerState.WON;
-      displayManager.printSuccess(`${currentPlayer.name} 自摸胡牌！游戏结束！`);
+      
       
       // 设置游戏状态为结束
       this.game.setState(GameState.ENDED);
@@ -428,8 +431,9 @@ export class GameEventHandler {
     // 如果可以胡牌，记录胡牌类型
     if (result.canHu) {
       const huType = result.huType;
+      const winTypeInfo = ScoreCalculator.getWinTypeInfo(huType);
       const description = result.description || WinConditions.getHuTypeDescription(huType);
-      displayManager.printSuccess(`${player.name} 胡牌类型: ${huType}, 胡牌描述: ${description}`);
+      displayManager.printSuccess(`${player.name} 胡牌类型: ${winTypeInfo.name}, 胡牌描述: ${description}`);
       
       // 计算得分
       const scoreResult = RuleEngine.calculateScore(player, huType, { isSelfDrawn: tile === null });
@@ -1042,20 +1046,24 @@ export class GameEventHandler {
   public handlePlayerHu(player: Player, tile: Tile | null): void {
     // 获取胡牌详情
     const huDetails = RuleEngine.getHuDetails(player, tile);
-    
     if (huDetails.canHu) {
       // 如果是荣和，把胡的牌加到手牌
-      player.handTiles.push(tile!);
-
-      displayManager.printSuccess(`${player.name} ${huDetails.description}`);
-      
+      if (tile) {
+        player.handTiles.push(tile);
+        this.lastWinBySelfDrawn = false;
+        // 记录点炮者索引（当前出牌玩家）
+        this.lastLoserIndex = this.game.currentPlayerIndex;
+      } else {
+        this.lastWinBySelfDrawn = true;
+        this.lastLoserIndex = -1;
+      }
+      const winTypeInfo = ScoreCalculator.getWinTypeInfo(huDetails.huType);
+      displayManager.printSuccess(`${player.name} ${winTypeInfo.name} ${huDetails.description}`);
       // 计算得分
-      const scoreResult = RuleEngine.calculateScore(player, huDetails.huType, { isSelfDrawn: false });
+      const scoreResult = RuleEngine.calculateScore(player, huDetails.huType, { isSelfDrawn: !tile });
       displayManager.printSuccess(`得分: ${scoreResult.score}`);
-      
       // 设置玩家状态为赢
       player.state = PlayerState.WON;
-      
       // 设置游戏状态为结束
       this.game.setState(GameState.ENDED);
     } else {
@@ -1311,7 +1319,7 @@ export class GameEventHandler {
    * 处理游戏结束
    */
   public async handleGameEnd(): Promise<GameEndResult> {
-    displayManager.printTitle("游戏结束");
+
     // 检查是否有玩家胡牌
     const players = this.game.getAllPlayers();
     let winningPlayer: Player | null = null;
@@ -1321,10 +1329,57 @@ export class GameEventHandler {
         break;
       }
     }
+    // 统计胜负局数和总局数，并结算分数
+    let isSelfDrawn = false;
+    let winnerScore = 0;
+    let loserScore = 0;
+    let loserIndex = -1;
+    let huType = null;
     if (winningPlayer) {
-      displayManager.printSuccess(`恭喜 ${winningPlayer.name} 胡牌获胜！`);
-    } else {
-      displayManager.printWarning("游戏流局，无人胡牌");
+      // 判断是否自摸
+      const huDetails = RuleEngine.getHuDetails(winningPlayer, null, { isDrawn: true });
+      isSelfDrawn = huDetails.canHu;
+      huType = huDetails.huType;
+      // 计算赢家得分
+      if (huType) {
+        const scoreResult = RuleEngine.calculateScore(winningPlayer, huType, { isSelfDrawn: true });
+        winnerScore = scoreResult.score;
+      }
+    }
+    for (const player of players) {
+      player.totalGames++;
+      if (winningPlayer) {
+        if (player === winningPlayer) {
+          player.winCount++;
+          // 分数结算在下方统一处理
+        } else {
+          player.loseCount++;
+        }
+      } else {
+        // 流局不计胜负
+      }
+    }
+    // 分数结算
+    if (winningPlayer) {
+      if (this.lastWinBySelfDrawn) {
+        // 自摸，赢家加分，其他人扣分
+        for (const player of players) {
+          if (player === winningPlayer) {
+            player.score += winnerScore * (players.length - 1);
+          } else {
+            player.score -= winnerScore;
+          }
+        }
+        displayManager.printSuccess(`【自摸】${winningPlayer.name} 自摸胡牌，其他玩家各扣 ${winnerScore} 分！`);
+      } else if (!this.lastWinBySelfDrawn && huType && this.lastLoserIndex !== -1) {
+        // 荣和，点炮者扣分，赢家加分，其他人不变
+        const loser = players[this.lastLoserIndex];
+        const scoreResult = RuleEngine.calculateScore(winningPlayer, huType, { isSelfDrawn: false });
+        winnerScore = scoreResult.score;
+        winningPlayer.score += winnerScore;
+        loser.score -= winnerScore;
+        displayManager.printSuccess(`【荣和】${winningPlayer.name} 荣和，${loser.name} 点炮，${loser.name} 扣 ${winnerScore} 分！`);
+      }
     }
     // 显示游戏结算
     this.displayGameSummary();
@@ -1365,6 +1420,11 @@ export class GameEventHandler {
       displayManager.print(`- 手牌数量: ${player.handTiles.length}`);
       displayManager.print(`- 已亮出牌组: ${player.revealedSets.length}组: ${player.revealedSets.map(set => `${set.tiles.map(t => t.toString()).join(' ')} (${set.type})`).join(' ')}`);
       displayManager.print(`- 状态: ${PlayerState[player.state]}`);
+      // 新增统计信息输出
+      displayManager.print(`- 当前分数: ${player.score}`);
+      displayManager.print(`- 总局数: ${player.totalGames}`);
+      displayManager.print(`- 胜利局数: ${player.winCount}`);
+      displayManager.print(`- 失败局数: ${player.loseCount}`);
     }
     
     displayManager.print(`总摸牌次数: ${this.game.drawCount}`);

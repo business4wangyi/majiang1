@@ -42,10 +42,10 @@ async function startGame() {
         await new Promise(resolve => setTimeout(resolve, 500));
         // 提示用户选择是否启用调试模式
         display_manager_1.displayManager.printColored(`是否启用调试模式？在此模式下，将显示更多日志详情。`, display_1.Style.CYAN);
-        display_manager_1.displayManager.printColored(`输入 'd' 启用调试模式，其他键不启用 [默认: 启用]`, display_1.Style.YELLOW);
+        display_manager_1.displayManager.printColored(`输入 'd' 启用调试模式，其他键不启用 [默认: 不启用]`, display_1.Style.YELLOW);
         display_manager_1.displayManager.printColored(`1秒内无选择将启用调试模式`, display_1.Style.RED);
         // 直接使用askQuestion
-        const debugModeInput = await (0, input_1.askQuestion)("", 1000, "d");
+        const debugModeInput = await (0, input_1.askQuestion)("", 1000, "");
         // 手动清理倒计时显示
         countdown_manager_1.CountdownManager.clearCountdownDisplay();
         // 解析用户选择
@@ -77,7 +77,7 @@ async function startGame() {
         // 使用新的方法设置玩家
         game.setupPlayers(exports.AUTO_PLAY_MODE);
         // 创建游戏流程控制器
-        const gameEventHandler = new game_event_handler_1.GameEventHandler(game, game.getTileManager(), game.getAllPlayers());
+        const gameEventHandler = new game_event_handler_1.GameEventHandler(game, game.getTileManager());
         // 启动游戏主循环
         await (0, gameLoop_1.gameLoop)(game);
     }

@@ -33,6 +33,10 @@ export class Player {
   lastDrawnTile: Tile | null = null;
   // 分数
   score: number = 0;
+  // 新增：统计字段
+  winCount: number = 0; // 胜利局数
+  loseCount: number = 0; // 失败局数
+  totalGames: number = 0; // 总局数
   
   constructor(
     public id: number,
