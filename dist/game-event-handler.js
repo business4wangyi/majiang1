@@ -12,6 +12,8 @@ const win_conditions_1 = require("./win-conditions");
 const rule_types_1 = require("./rule-types");
 const rule_engine_1 = require("./rule-engine");
 const ai_player_1 = require("./ai-player");
+const index_1 = require("./index");
+const config_1 = require("./config");
 /**
  * 游戏事件处理器类
  * 负责处理游戏中的特殊事件，如牌山空、手牌数量异常等
@@ -22,6 +24,7 @@ class GameEventHandler {
         this.game = game;
         this.tileManager = tileManager;
         this.players = players;
+        this.currentRound = 1;
     }
     /**
      * 启动游戏
@@ -1112,20 +1115,36 @@ class GameEventHandler {
         }
         // 显示游戏结算
         this.displayGameSummary();
-        // 询问是否开始新局
-        const startNewGame = await (0, input_1.askQuestion)("是否开始新一局游戏？(y/n)");
-        if (startNewGame.toLowerCase() === 'y') {
-            // 重置游戏状态
-            this.game.reset();
-            // 重置输入状态
-            input_1.InputState.isWaitingForUserInput = false;
-            // 启动新游戏
-            this.startGame();
-            return true;
+        if (index_1.AUTO_PLAY_MODE) {
+            if (this.currentRound < config_1.AUTO_PLAY_ROUNDS) {
+                display_manager_1.displayManager.printWarning(`自动模式：第${this.currentRound}局结束，准备进入第${this.currentRound + 1}局`);
+                this.currentRound++;
+                this.game.reset();
+                input_1.InputState.isWaitingForUserInput = false;
+                this.startGame();
+                return true;
+            }
+            else {
+                display_manager_1.displayManager.printWarning(`自动模式已完成${config_1.AUTO_PLAY_ROUNDS}局，游戏结束！`);
+                process.exit(0);
+            }
         }
         else {
-            display_manager_1.displayManager.printWarning("游戏结束，感谢参与！");
-            process.exit(0);
+            // 询问是否开始新局
+            const startNewGame = await (0, input_1.askQuestion)("是否开始新一局游戏？(y/n)");
+            if (startNewGame.toLowerCase() === 'y') {
+                // 重置游戏状态
+                this.game.reset();
+                // 重置输入状态
+                input_1.InputState.isWaitingForUserInput = false;
+                // 启动新游戏
+                this.startGame();
+                return true;
+            }
+            else {
+                display_manager_1.displayManager.printWarning("游戏结束，感谢参与！");
+                process.exit(0);
+            }
         }
     }
     /**

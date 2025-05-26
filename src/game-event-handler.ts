@@ -9,7 +9,8 @@ import { WinConditions } from './win-conditions';
 import { GangType, PlayerAction } from './rule-types';
 import { RuleEngine } from './rule-engine';
 import { AIPlayer } from './ai-player';
-import { DEBUG_MODE } from './index';
+import { DEBUG_MODE, AUTO_PLAY_MODE } from './index';
+import { AUTO_PLAY_ROUNDS } from './config';
 
 /**
  * 游戏事件处理器类
@@ -20,17 +21,27 @@ export class GameEventHandler {
   constructor(
     private game: Game,
     private tileManager: TileManager,
-    private players: Player[]
   ) {}
+
+  private currentRound = 1;
 
   /**
    * 启动游戏
    */
   public startGame(): void {
+    // 新一局前重置所有玩家状态和牌
+    for (const player of this.game.getAllPlayers()) {
+      player.state = PlayerState.WAITING;
+      player.handTiles = [];
+      player.discardedTiles = [];
+      player.revealedSets = [];
+      player.flowerTiles = [];
+      player.lastDrawnTile = null;
+    }
     displayManager.print("开始游戏...");
     
     // 检查玩家数量
-    displayManager.print(`游戏中共有 ${this.players.length} 名玩家`);
+    displayManager.print(`游戏中共有 ${this.game.getAllPlayers().length} 名玩家`);
     
     // 初始化游戏状态
     this.game.setState(GameState.INIT);
@@ -46,7 +57,7 @@ export class GameEventHandler {
     this.game.setCurrentPlayerIndex(0);
     
     // 确保所有玩家状态正确
-    for (let i = 0; i < this.players.length; i++) {
+    for (let i = 0; i < this.game.getAllPlayers().length; i++) {
       this.updatePlayerState(i);
     }
 
@@ -55,7 +66,7 @@ export class GameEventHandler {
     displayManager.printSuccess("游戏初始化完成，状态转为 PLAYING");
     
     // 为庄家（第一个玩家）摸一张牌
-    const firstPlayer = this.players[0];
+    const firstPlayer = this.game.getAllPlayers()[0];
     displayManager.printTitle(`庄家 ${firstPlayer.name} 开局摸牌`);
     const drawnTile = this.drawTileForPlayer(firstPlayer, { 
       notify: true, 
@@ -97,10 +108,10 @@ export class GameEventHandler {
    */
   private dealInitialTiles(): void {
     // 每个玩家发13张牌
-    displayManager.print(`开始为 ${this.players.length} 名玩家发初始手牌...`);
+    displayManager.print(`开始为 ${this.game.getAllPlayers().length} 名玩家发初始手牌...`);
     
     // 确保所有玩家的手牌和弃牌数组都已初始化并清空
-    for (const player of this.players) {
+    for (const player of this.game.getAllPlayers()) {
       player.handTiles = [];
       player.discardedTiles = [];
       debugLog(`重置玩家 ${player.name} 的手牌和弃牌堆`);
@@ -116,7 +127,7 @@ export class GameEventHandler {
       displayManager.print(`第${roundIndex + 1}轮发牌: 每人${cardsPerPlayer}张`);
       
       // 每轮为每个玩家发指定数量的牌
-      for (const player of this.players) {
+      for (const player of this.game.getAllPlayers()) {
         for (let i = 0; i < cardsPerPlayer; i++) {
           // 游戏启动时摸牌必定有牌
           const tile = this.drawTileForPlayer(player, {
@@ -132,7 +143,7 @@ export class GameEventHandler {
     
     // 验证每位玩家手牌数量
     displayManager.printTitle("发牌完成，最终玩家手牌状态");
-    for (const player of this.players) {
+    for (const player of this.game.getAllPlayers()) {
       // 使用Player类的方法判断手牌数量是否合理
       const expectedHandSize = player.getExpectedHandSize(false);
       if (!player.hasValidHandSize(false)) {
@@ -174,14 +185,14 @@ export class GameEventHandler {
       errorLog(`玩家 ${player.name} 手牌数量不正确: ${player.handTiles.length}，预期: ${expectedHandSize}`);
       displayManager.displayPlayerHand(player)
       errorLog(`退出游戏排查问题`);
-      process.exit(0);
+      throw new Error('HAND_SIZE_INVALID');
     }
 
     // 检查牌山是否还有牌
     if (this.tileManager.getRemainingTiles() === 0) {
       errorLog(`牌山已空，无法摸牌,gameLoop没有确保牌山有牌`);
       errorLog(`退出游戏排查问题`);
-      process.exit(0);
+      throw new Error('TILE_DECK_EMPTY');
     }
 
     // 摸牌
@@ -207,7 +218,7 @@ export class GameEventHandler {
   public currentPlayerDraw(): Tile {
     debugLog('当前玩家摸牌')
 
-    const currentPlayer = this.players[this.game.currentPlayerIndex];
+    const currentPlayer = this.game.getAllPlayers()[this.game.currentPlayerIndex];
     
     // 检查是否是海底捞月的情况（剩余一张牌）
     // if (this.tileManager.getRemainingTiles() === 1) {
@@ -254,13 +265,13 @@ export class GameEventHandler {
    * 当前玩家打出一张牌
    */
   public currentPlayerDiscard(tileIndex: number): Tile {
-    const currentPlayer = this.players[this.game.currentPlayerIndex];
+    const currentPlayer = this.game.getAllPlayers()[this.game.currentPlayerIndex];
     
     // 验证玩家状态
     if (currentPlayer.state !== PlayerState.ACTING) {
       displayManager.printWarning(`玩家 ${currentPlayer.name} 不处于ACTING状态，当前状态: ${PlayerState[currentPlayer.state]}`);
       errorLog('游戏错误，排查问题');
-      process.exit(0);
+      throw new Error('PLAYER_STATE_INVALID');
     }
     
     // 使用player.discardTile方法，该方法已经增强了安全性和错误处理
@@ -291,19 +302,19 @@ export class GameEventHandler {
     }
 
     // 获取当前玩家并更新状态
-    const currentPlayer = this.players[this.game.currentPlayerIndex];
+    const currentPlayer = this.game.getAllPlayers()[this.game.currentPlayerIndex];
     currentPlayer.state = PlayerState.WAITING;
     displayManager.print(`玩家 ${currentPlayer.name} 出牌结束，状态变为 WAITING`);
     
     // 计算下一个玩家
-    const nextPlayerIndex = (this.game.currentPlayerIndex + 1) % this.players.length;
+    const nextPlayerIndex = (this.game.currentPlayerIndex + 1) % this.game.getAllPlayers().length;
     this.game.setCurrentPlayerIndex(nextPlayerIndex);
     
     // 更新下一个玩家的状态
-    const nextPlayer = this.players[nextPlayerIndex];
     this.updatePlayerState(nextPlayerIndex)
     
     // 显示下一个玩家信息
+    const nextPlayer = this.game.getAllPlayers()[nextPlayerIndex];
     displayManager.printDivider();
     displayManager.printTitle(`轮到 ${nextPlayer.name} 行动 [手牌: ${nextPlayer.handTiles.length}张] [已亮出牌： ${nextPlayer.revealedSets.flatMap(set => set.tiles).length}张] [合计${nextPlayer.getTotalTileCount()}张]`);
     // 普通回合只打印简要手牌
@@ -320,7 +331,7 @@ export class GameEventHandler {
    */
   public async forceAIPlayerDiscard(): Promise<void> {
     // 获取当前玩家
-    const currentPlayer = this.players[this.game.currentPlayerIndex];
+    const currentPlayer = this.game.getAllPlayers()[this.game.currentPlayerIndex];
     
     // 检查是否为AI玩家
     if (currentPlayer.type !== PlayerType.AI) {
@@ -351,11 +362,11 @@ export class GameEventHandler {
    * 更新指定玩家的状态
    */
   private updatePlayerState(playerIndex: number): void {
-    if (playerIndex < 0 || playerIndex >= this.players.length) {
+    if (playerIndex < 0 || playerIndex >= this.game.getAllPlayers().length) {
       return;
     }
     
-    const player = this.players[playerIndex];
+    const player = this.game.getAllPlayers()[playerIndex];
     
     // 如果是当前玩家，设置为正在行动状态
     if (playerIndex === this.game.currentPlayerIndex) {
@@ -441,18 +452,13 @@ export class GameEventHandler {
     // 显示警告信息
     displayManager.printWarning(`牌山已空，无法继续摸牌！`);
     displayManager.printDivider();
-    
     // 记录游戏状态
     infoLog(`牌山已空，总共摸牌次数: ${game.drawCount}`);
-    
     // 设置游戏状态为结束
     game.state = GameState.ENDED;
-    
     // 显示游戏总结
     this.displayGameSummary(game);
-    
     // 询问用户是否开始新局
-    process.exit(0)
     return await askConfirmation("牌山已空，是否开始新局？", true, 10000);
   }
   
@@ -497,7 +503,7 @@ export class GameEventHandler {
       displayManager.printSuccess(`${player.name} 碰了 ${tile.toString()}`);
       
       // 碰牌成功后，设置该玩家为当前玩家
-      const playerIndex = this.players.findIndex(p => p.id === player.id);
+      const playerIndex = this.game.getAllPlayers().findIndex(p => p.id === player.id);
       if (playerIndex !== -1) {
         this.game.setCurrentPlayerIndex(playerIndex);
         
@@ -599,7 +605,7 @@ export class GameEventHandler {
     // 明杠成功后，检查杠上开花
     if (gangSuccess) {
       // 设置该玩家为当前玩家
-      const playerIndex = this.players.findIndex(p => p.id === player.id);
+      const playerIndex = this.game.getAllPlayers().findIndex(p => p.id === player.id);
       if (playerIndex !== -1) {
 
         this.game.setCurrentPlayerIndex(playerIndex);
@@ -793,7 +799,7 @@ export class GameEventHandler {
       displayManager.printSuccess(`${player.name} 吃了 ${tile.toString()}`);
       
       // 吃牌成功后，设置该玩家为当前玩家
-      const playerIndex = this.players.findIndex(p => p.id === player.id);
+      const playerIndex = this.game.getAllPlayers().findIndex(p => p.id === player.id);
       if (playerIndex !== -1) {
         this.game.setCurrentPlayerIndex(playerIndex);
         
@@ -850,7 +856,7 @@ export class GameEventHandler {
       displayManager.printSuccess(`${player.name} 补杠了一组牌`);
 
       // 设置该玩家为当前玩家
-      const playerIndex = this.players.findIndex(p => p.id === player.id);
+      const playerIndex = this.game.getAllPlayers().findIndex(p => p.id === player.id);
       if (playerIndex !== -1) {
 
         this.game.setCurrentPlayerIndex(playerIndex);
@@ -1120,7 +1126,7 @@ export class GameEventHandler {
         await this.checkOtherPlayersResponse(discardedTile);
       } else {
         errorLog('程序错误排查问题')
-        process.exit(0)
+        throw new Error('HAND_SIZE_INVALID');
       }
 
     });
@@ -1297,50 +1303,51 @@ export class GameEventHandler {
       }
     } else {
       errorLog('程序错误，排查问题')
-      process.exit(0)
+      throw new Error('PLAYER_STATE_INVALID');
     }
   }
 
   /**
    * 处理游戏结束
    */
-  public async handleGameEnd(): Promise<boolean> {
+  public async handleGameEnd(): Promise<GameEndResult> {
     displayManager.printTitle("游戏结束");
-    
     // 检查是否有玩家胡牌
     const players = this.game.getAllPlayers();
     let winningPlayer: Player | null = null;
-    
     for (const player of players) {
       if (player.state === PlayerState.WON) {
         winningPlayer = player;
         break;
       }
     }
-    
     if (winningPlayer) {
       displayManager.printSuccess(`恭喜 ${winningPlayer.name} 胡牌获胜！`);
-      // 可以添加胡牌类型和分数的显示
     } else {
       displayManager.printWarning("游戏流局，无人胡牌");
     }
-    
     // 显示游戏结算
     this.displayGameSummary();
-    
-    // 询问是否开始新局
-    const startNewGame = await askQuestion("是否开始新一局游戏？(y/n)");
-    if (startNewGame.toLowerCase() === 'y') {
-      // 重置游戏状态
-      this.game.reset();
-      // 重置输入状态
-      InputState.isWaitingForUserInput = false;
-      // 启动新游戏
-      this.startGame();
-      return true;
+    if (AUTO_PLAY_MODE) {
+      if (this.currentRound < AUTO_PLAY_ROUNDS) {
+        displayManager.printWarning(`自动模式：第${this.currentRound}局结束，准备进入第${this.currentRound + 1}局`);
+        this.currentRound++;
+        return GameEndResult.RESTART_AUTO_GAME;
+      } else {
+        displayManager.printWarning(`自动模式已完成${AUTO_PLAY_ROUNDS}局，游戏结束！`);
+        return GameEndResult.AUTO_PLAY_COMPLETED;
+      }
     } else {
-      displayManager.printWarning("游戏结束，感谢参与！");
-      process.exit(0);
+      const startNewGame = await askQuestion("是否开始新一局游戏？(y/n)");
+      if (startNewGame.toLowerCase() === 'y') {
+        this.game.reset();
+        InputState.isWaitingForUserInput = false;
+        this.startGame();
+        return GameEndResult.RESTART_AUTO_GAME;
+      } else {
+        displayManager.printWarning("游戏结束，感谢参与！");
+        return GameEndResult.USER_EXIT;
+      }
     }
   }
 
@@ -1388,4 +1395,11 @@ export class GameEventHandler {
       // 人类玩家的出牌会在游戏循环中处理
     }
   }
+}
+
+export enum GameEndResult {
+  RESTART_AUTO_GAME,
+  AUTO_PLAY_COMPLETED,
+  USER_EXIT,
+  NORMAL_END
 }

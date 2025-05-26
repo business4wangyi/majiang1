@@ -96,8 +96,7 @@ async function startGame() {
     // 创建游戏流程控制器
     const gameEventHandler = new GameEventHandler(
       game,
-      game.getTileManager(),
-      game.getAllPlayers()
+      game.getTileManager()
     );
     
     // 启动游戏主循环
