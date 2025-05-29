@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.gameLoop = gameLoop;
+exports.runAutoGameLoop = runAutoGameLoop;
+exports.runInteractiveGameLoop = runInteractiveGameLoop;
 const game_1 = require("./game");
 const player_1 = require("./player");
 const logger_1 = require("./logger");
@@ -9,6 +10,8 @@ const index_1 = require("./index");
 const display_manager_1 = require("./display-manager");
 const game_event_handler_1 = require("./game-event-handler");
 const tile_manager_1 = require("./tile-manager");
+const index_2 = require("./index");
+const config_1 = require("./config/config");
 // 游戏循环检查间隔（毫秒）
 const GAME_LOOP_INTERVAL = 100;
 // 游戏循环检查标志
@@ -18,46 +21,53 @@ let gameEventHandler;
 // 添加标志变量，用于跟踪玩家是否执行过操作
 let hasPlayerActed = false;
 /**
- * 游戏主循环 - 负责游戏的主循环逻辑和输入处理
+ * 自动模式主循环：批量AI对弈
  */
-async function gameLoop(game) {
-    display_manager_1.displayManager.printSuccess(`游戏主循环启动...`);
-    // 初始化游戏流程控制器
-    gameEventHandler = new game_event_handler_1.GameEventHandler(game, tile_manager_1.TileManager.getInstance());
-    // 确保玩家状态正确
-    gameEventHandler.prepareGameStart();
-    // 开始游戏
-    gameEventHandler.startGame();
-    // 显示初始游戏状态
-    display_manager_1.displayManager.displayFullGameState(game);
-    // 重置玩家行动标志
-    hasPlayerActed = false;
-    // 上一个玩家状态缓存，用于检测变化
-    let previousPlayerState = player_1.PlayerState.WAITING;
-    // 上一个游戏状态缓存，用于检测变化
-    let previousGameState = game_1.GameState.INIT;
-    // 初始化游戏循环计时器
-    let gameLoopInterval = null;
-    // 游戏循环主函数
-    gameLoopInterval = setInterval(async () => {
-        // 防止多个循环同时执行
-        if (isProcessingGameLoop) {
-            return;
+async function runAutoGameLoop(game, rounds) {
+    display_manager_1.displayManager.printSuccess(`自动模式主循环启动...`);
+    const gameEventHandler = new game_event_handler_1.GameEventHandler(game, tile_manager_1.TileManager.getInstance());
+    for (let i = 0; i < rounds; i++) {
+        await gameEventHandler.safeStartGameAndEnd();
+        // 只在不是最后一局时重置
+        if (i < rounds - 1) {
+            game.reset();
         }
-        // 标记为正在处理
+    }
+}
+/**
+ * 人工交互模式主循环：定时器+输入检测
+ */
+async function runInteractiveGameLoop(game) {
+    display_manager_1.displayManager.printSuccess(`人工交互模式主循环启动...`);
+    // 以下为原有gameLoop主循环逻辑
+    gameEventHandler = new game_event_handler_1.GameEventHandler(game, tile_manager_1.TileManager.getInstance());
+    gameEventHandler.prepareGameStart();
+    gameEventHandler.startGame();
+    display_manager_1.displayManager.displayFullGameState(game);
+    hasPlayerActed = false;
+    let previousPlayerState = player_1.PlayerState.WAITING;
+    let previousGameState = game_1.GameState.INIT;
+    let gameLoopInterval = null;
+    gameLoopInterval = setInterval(async () => {
+        if (isProcessingGameLoop)
+            return;
         isProcessingGameLoop = true;
         try {
-            // 检查游戏状态变化
             if (previousGameState !== game.state) {
-                if (index_1.DEBUG_MODE) {
+                if (index_1.DEBUG_MODE)
                     display_manager_1.displayManager.print(`游戏状态变化: ${previousGameState} -> ${game.state}`);
-                }
                 previousGameState = game.state;
-                // 如果状态变为ENDED，进行结算
                 if (game.state === game_1.GameState.ENDED) {
                     const result = await gameEventHandler.handleGameEnd();
                     switch (result) {
                         case 0: // GameEndResult.RESTART_AUTO_GAME
+                            if (typeof gameEventHandler !== 'undefined') {
+                                if (index_2.AUTO_PLAY_MODE) {
+                                    const rounds = config_1.AUTO_PLAY_ROUNDS || 0;
+                                    const round = gameEventHandler.currentRound;
+                                    console.log(`[DEBUG] 自动模式: 当前局号: ${round}, 总局数: ${rounds}`);
+                                }
+                            }
                             input_1.InputState.isWaitingForUserInput = false;
                             game.reset();
                             gameEventHandler.startGame();
@@ -82,36 +92,22 @@ async function gameLoop(game) {
                     return;
                 }
             }
-            // 仅在调试模式下打印游戏状态信息
-            if (index_1.DEBUG_MODE) {
+            if (index_1.DEBUG_MODE)
                 (0, logger_1.debugLog)(`当前游戏状态: 玩家=${game.currentPlayerIndex}, 阶段=${game.state}`);
-            }
-            // 只有在玩家已经执行过操作后才检查游戏是否结束
             if (hasPlayerActed && gameEventHandler.checkGameEnd()) {
-                // 设置游戏状态为结束
                 game.setState(game_1.GameState.ENDED);
-                // 等待下一个循环游戏状态变更处理
                 return;
             }
-            // 检查剩余牌数，可能需要结束游戏
             if (game.getRemainingTiles() <= 0) {
-                // 牌山已空，结束游戏
                 if (await game_event_handler_1.GameEventHandler.handleEmptyTileDeck(game)) {
-                    // 如果用户选择继续游戏，则重置状态和游戏
                     input_1.InputState.isWaitingForUserInput = false;
-                    // 重置游戏状态但不重新发牌
                     game.reset();
-                    // 开始游戏
                     gameEventHandler.startGame();
-                    // 显示初始游戏状态
                     display_manager_1.displayManager.displayFullGameState(game);
-                    // 继续游戏流程
                     gameEventHandler.prepareGameStart();
-                    // 重置玩家行动标志
                     hasPlayerActed = false;
                 }
                 else {
-                    // 用户选择结束游戏
                     if (gameLoopInterval) {
                         clearInterval(gameLoopInterval);
                         gameLoopInterval = null;
@@ -120,36 +116,24 @@ async function gameLoop(game) {
                     return;
                 }
             }
-            // 如果当前正在等待用户输入，则跳过本次循环
             if (input_1.InputState.isWaitingForUserInput) {
                 isProcessingGameLoop = false;
                 return;
             }
-            // 获取当前玩家
             const currentPlayer = game.getCurrentPlayer();
-            // 检查当前玩家状态变化
             if (previousPlayerState !== currentPlayer.state) {
-                if (index_1.DEBUG_MODE) {
+                if (index_1.DEBUG_MODE)
                     display_manager_1.displayManager.print(`玩家状态变化: ${previousPlayerState} -> ${currentPlayer.state}`);
-                }
                 previousPlayerState = currentPlayer.state;
             }
-            // 处理当前玩家的回合
             if (currentPlayer.state === player_1.PlayerState.ACTING) {
-                // 如果未设置玩家为等待输入状态，需要处理当前玩家的操作
                 if (!input_1.InputState.isWaitingForUserInput) {
-                    // 设置为正在等待输入，防止多次处理
                     input_1.InputState.isWaitingForUserInput = true;
-                    // 检查是否可以进行特殊操作（胡、杠等）
                     let noNeedsToDiscard = await gameEventHandler.checkSpecialActions(currentPlayer);
-                    // 执行玩家的回合操作
                     if (!noNeedsToDiscard)
                         await gameEventHandler.handleCurrentPlayerDiscard();
-                    // 标记玩家已经执行过操作
                     hasPlayerActed = true;
-                    // 重置状态
                     input_1.InputState.isWaitingForUserInput = false;
-                    // 下一回合
                     (0, logger_1.debugLog)('gameLoopInterval');
                     gameEventHandler.nextTurn();
                 }
@@ -158,9 +142,7 @@ async function gameLoop(game) {
         catch (error) {
             (0, logger_1.errorLog)(`游戏循环发生错误: ${error instanceof Error ? error.message : String(error)}\n${error instanceof Error ? error.stack : ''}`, error instanceof Error ? error : undefined);
             display_manager_1.displayManager.printError(`游戏循环发生错误: ${error instanceof Error ? error.message : String(error)}\n${error instanceof Error ? error.stack : ''}`);
-            // 游戏循环出错，保存日志
             await (0, logger_1.saveGameLogToFile)(game, `game loop error-${error}`);
-            // 错误发生时，判断是否为特殊终止错误
             if (error instanceof Error && error.message === 'TILE_DECK_EMPTY') {
                 await gameEventHandler.handleGameEnd();
                 if (gameLoopInterval) {
@@ -169,7 +151,6 @@ async function gameLoop(game) {
                 }
                 return;
             }
-            // 其它错误，直接退出
             if (gameLoopInterval) {
                 clearInterval(gameLoopInterval);
                 gameLoopInterval = null;
@@ -177,7 +158,6 @@ async function gameLoop(game) {
             process.exit(1);
         }
         finally {
-            // 标记为处理完毕
             isProcessingGameLoop = false;
         }
     }, GAME_LOOP_INTERVAL);

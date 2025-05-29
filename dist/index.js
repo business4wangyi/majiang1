@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.DEBUG_MODE = exports.AUTO_PLAY_MODE = void 0;
+require("./performance-injector");
 const game_1 = require("./game");
 const gameLoop_1 = require("./gameLoop");
 const display_1 = require("./display");
@@ -9,10 +10,14 @@ const logger_1 = require("./logger");
 const display_manager_1 = require("./display-manager");
 const countdown_manager_1 = require("./countdown-manager");
 const game_event_handler_1 = require("./game-event-handler");
+const performance_monitor_1 = require("./performance-monitor");
+const config_1 = require("./config/config");
 // 自动打牌模式标志（导出以在其他模块中使用）
 exports.AUTO_PLAY_MODE = false; // 默认关闭自动打牌模式
 // 调试模式开关（导出以在其他模块中使用）
 exports.DEBUG_MODE = false; // 默认关闭调试模式
+// 程序启动时记录全局启动时间
+performance_monitor_1.PerformanceMonitor.markProgramStart();
 /**
  * 启动游戏
  */
@@ -45,7 +50,7 @@ async function startGame() {
         display_manager_1.displayManager.printColored(`输入 'd' 启用调试模式，其他键不启用 [默认: 不启用]`, display_1.Style.YELLOW);
         display_manager_1.displayManager.printColored(`1秒内无选择将启用调试模式`, display_1.Style.RED);
         // 直接使用askQuestion
-        const debugModeInput = await (0, input_1.askQuestion)("", 1000, "");
+        const debugModeInput = await (0, input_1.askQuestion)("", 1000, "d");
         // 手动清理倒计时显示
         countdown_manager_1.CountdownManager.clearCountdownDisplay();
         // 解析用户选择
@@ -54,7 +59,7 @@ async function startGame() {
         // 根据调试模式设置日志级别
         if (exports.DEBUG_MODE) {
             display_manager_1.displayManager.printSuccess(`已选择: 启用调试模式，将显示更多日志详情`);
-            (0, logger_1.setLogLevel)(logger_1.LogLevel.INFO);
+            (0, logger_1.setLogLevel)(logger_1.LogLevel.DEBUG);
             display_manager_1.displayManager.printColored(`已启用调试模式，将记录详细日志信息`, display_1.Style.BOLD + display_1.Style.CYAN);
             input_1.InputState.setDebugMode(true);
         }
@@ -79,11 +84,17 @@ async function startGame() {
         // 创建游戏流程控制器
         const gameEventHandler = new game_event_handler_1.GameEventHandler(game, game.getTileManager());
         // 启动游戏主循环
-        await (0, gameLoop_1.gameLoop)(game);
+        if (exports.AUTO_PLAY_MODE) {
+            await (0, gameLoop_1.runAutoGameLoop)(game, config_1.AUTO_PLAY_ROUNDS);
+        }
+        else {
+            await (0, gameLoop_1.runInteractiveGameLoop)(game);
+        }
     }
     catch (error) {
         (0, logger_1.errorLog)("游戏启动发生错误:", error instanceof Error ? error : new Error(String(error)));
         // 如果发生错误，退出程序
+        performance_monitor_1.PerformanceMonitor.markProgramEnd();
         process.exit(1);
     }
 }

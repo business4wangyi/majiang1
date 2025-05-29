@@ -10,8 +10,9 @@ import { GangType, PlayerAction } from './rule-types';
 import { RuleEngine } from './rule-engine';
 import { AIPlayer } from './ai-player';
 import { DEBUG_MODE, AUTO_PLAY_MODE } from './index';
-import { AUTO_PLAY_ROUNDS } from './config';
+import { AUTO_PLAY_ROUNDS } from './config/config';
 import { ScoreCalculator } from './score-calculator';
+import { runAutoGameLoop, runInteractiveGameLoop } from './gameLoop';
 
 /**
  * 游戏事件处理器类
@@ -19,14 +20,65 @@ import { ScoreCalculator } from './score-calculator';
  * 同时也负责游戏流程控制
  */
 export class GameEventHandler {
+  protected game: Game;
+  protected tileManager: TileManager;
   constructor(
-    private game: Game,
-    private tileManager: TileManager,
-  ) {}
+    game: Game,
+    tileManager: TileManager,
+  ) {
+    this.game = game;
+    this.tileManager = tileManager;
+  }
 
-  private currentRound = 1;
+  public currentRound = 0;
   private lastWinBySelfDrawn: boolean = false; // 记录本局胡牌是否自摸
   private lastLoserIndex: number = -1; // 记录点炮者索引（荣和时）
+
+  /**
+   * 启动游戏
+   */
+  public async safeStartGameAndEnd(): Promise<void> {
+    try {
+      this.startGame();
+      
+      // 实现主循环，确保游戏正常进行
+      debugLog(`[DEBUG] 安全模式局内循环开始: currentRound=${this.currentRound}`);
+      
+      // 模拟游戏主循环直到游戏结束
+      while (this.game.state === GameState.PLAYING) {
+        // 获取当前玩家
+        const currentPlayer = this.game.getCurrentPlayer();
+        
+        // 检查特殊操作
+        let specialAction = await this.checkSpecialActions(currentPlayer);
+        
+        // 如果没有特殊操作，正常出牌
+        if (!specialAction) {
+          await this.handleCurrentPlayerDiscard();
+        }
+        
+        // 检查游戏是否结束
+        if (this.checkGameEnd()) {
+          break;
+        }
+        
+        // 如果牌山已空，结束游戏
+        if (this.game.getRemainingTiles() <= 0) {
+          this.game.setState(GameState.ENDED);
+          break;
+        }
+        
+        // 下一回合
+        this.nextTurn();
+      }
+      
+      debugLog(`[DEBUG] 安全模式局内循环结束: currentRound=${this.currentRound}`);
+    } catch (e) {
+      debugLog(`[DEBUG] round exception: ${e instanceof Error ? e.stack : e}`);
+    } finally {
+      await this.handleGameEnd();
+    }
+  }
 
   /**
    * 启动游戏
@@ -109,7 +161,7 @@ export class GameEventHandler {
   /**
    * 为所有玩家发初始手牌
    */
-  private dealInitialTiles(): void {
+  public dealInitialTiles(): void {
     // 每个玩家发13张牌
     displayManager.print(`开始为 ${this.game.getAllPlayers().length} 名玩家发初始手牌...`);
     
@@ -173,8 +225,6 @@ export class GameEventHandler {
     validate?: boolean,       // 是否验证手牌数量
     incrementCount?: boolean  // 是否增加摸牌计数
   } = {}): Tile {
-    debugLog('为指定玩家摸一张牌')
-
     // 设置默认选项
     const { 
       notify = true, 
@@ -364,21 +414,16 @@ export class GameEventHandler {
   /**
    * 更新指定玩家的状态
    */
-  private updatePlayerState(playerIndex: number): void {
+  public updatePlayerState(playerIndex: number): void {
     if (playerIndex < 0 || playerIndex >= this.game.getAllPlayers().length) {
       return;
     }
-    
     const player = this.game.getAllPlayers()[playerIndex];
-    
-    // 如果是当前玩家，设置为正在行动状态
     if (playerIndex === this.game.currentPlayerIndex) {
       player.state = PlayerState.ACTING;
     } else {
-      // 否则设置为等待状态
       player.state = PlayerState.WAITING;
     }
-    
     debugLog(`更新玩家 ${player.name} 状态为 ${PlayerState[player.state]}`);
   }
 
@@ -462,7 +507,11 @@ export class GameEventHandler {
     game.state = GameState.ENDED;
     // 显示游戏总结
     this.displayGameSummary(game);
-    // 询问用户是否开始新局
+    // 自动模式下直接进入下一局
+    if (AUTO_PLAY_MODE) {
+      return true;
+    }
+    // 询问用户是否开始新局（仅人工模式）
     return await askConfirmation("牌山已空，是否开始新局？", true, 10000);
   }
   
@@ -1101,7 +1150,6 @@ export class GameEventHandler {
       }
 
       displayManager.printSuccess(`${currentPlayer.name} 打出了 ${discardedTile.toString()}`);
-      // displayManager.addToTurnLog(`${currentPlayer.name} 打出了 ${discardedTile.toString()}`);
         
       // 检查其他玩家是否可以对此牌进行操作
       await this.checkOtherPlayersResponse(discardedTile);
@@ -1128,7 +1176,6 @@ export class GameEventHandler {
         const discardedTile = this.currentPlayerDiscard(tileIndex);
 
         displayManager.printSuccess(`${player.name} 打出了 ${discardedTile.toString()}`);
-        // displayManager.addToTurnLog(`${player.name} 打出了 ${discardedTile.toString()}`);
         
         // 检查其他玩家是否可以对此牌进行操作
         await this.checkOtherPlayersResponse(discardedTile);
@@ -1383,16 +1430,19 @@ export class GameEventHandler {
     }
     // 显示游戏结算
     this.displayGameSummary();
+    
     if (AUTO_PLAY_MODE) {
       if (this.currentRound < AUTO_PLAY_ROUNDS) {
+        // 不是最后一局，正常输出本局统计
         displayManager.printWarning(`自动模式：第${this.currentRound}局结束，准备进入第${this.currentRound + 1}局`);
-        this.currentRound++;
         return GameEndResult.RESTART_AUTO_GAME;
       } else {
+        // 最后一局，输出本局统计和总计
         displayManager.printWarning(`自动模式已完成${AUTO_PLAY_ROUNDS}局，游戏结束！`);
         return GameEndResult.AUTO_PLAY_COMPLETED;
       }
     } else {
+      // 人工模式下也确保调用
       const startNewGame = await askQuestion("是否开始新一局游戏？(y/n)");
       if (startNewGame.toLowerCase() === 'y') {
         this.game.reset();
@@ -1400,6 +1450,7 @@ export class GameEventHandler {
         this.startGame();
         return GameEndResult.RESTART_AUTO_GAME;
       } else {
+        // 人工模式退出时，也输出总计
         displayManager.printWarning("游戏结束，感谢参与！");
         return GameEndResult.USER_EXIT;
       }

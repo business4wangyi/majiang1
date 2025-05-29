@@ -1,17 +1,23 @@
+import './performance-injector';
 import { Game } from './game';
-import { gameLoop } from './gameLoop';
+import { runAutoGameLoop, runInteractiveGameLoop } from './gameLoop';
 import { Style } from './display';
 import { InputState, askQuestion } from './input';
 import { errorLog, setLogLevel, LogLevel } from './logger';
 import { displayManager } from './display-manager';
 import { CountdownManager } from './countdown-manager';
 import { GameEventHandler } from './game-event-handler';
+import { PerformanceMonitor } from './performance-monitor';
+import { AUTO_PLAY_ROUNDS } from './config/config';
 
 // 自动打牌模式标志（导出以在其他模块中使用）
 export let AUTO_PLAY_MODE = false; // 默认关闭自动打牌模式
 
 // 调试模式开关（导出以在其他模块中使用）
 export let DEBUG_MODE = false; // 默认关闭调试模式
+
+// 程序启动时记录全局启动时间
+PerformanceMonitor.markProgramStart();
 
 /**
  * 启动游戏
@@ -65,7 +71,7 @@ async function startGame() {
     if (DEBUG_MODE) {
       displayManager.printSuccess(`已选择: 启用调试模式，将显示更多日志详情`);
 
-      setLogLevel(LogLevel.INFO);
+      setLogLevel(LogLevel.DEBUG);
       displayManager.printColored(`已启用调试模式，将记录详细日志信息`, Style.BOLD + Style.CYAN);
       InputState.setDebugMode(true);
     } else {
@@ -100,12 +106,17 @@ async function startGame() {
     );
     
     // 启动游戏主循环
-    await gameLoop(game);
+    if (AUTO_PLAY_MODE) {
+      await runAutoGameLoop(game, AUTO_PLAY_ROUNDS);
+    } else {
+      await runInteractiveGameLoop(game);
+    }
     
   } catch (error) {
     errorLog("游戏启动发生错误:", error instanceof Error ? error : new Error(String(error)));
 
     // 如果发生错误，退出程序
+    PerformanceMonitor.markProgramEnd();
     process.exit(1);
   }
 }

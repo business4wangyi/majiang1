@@ -2,6 +2,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { Game } from './game';
 import { displayManager } from './display-manager';
+import { perfMonitor } from './performance-monitor';
 
 /**
  * 日志系统 - 提供全面的日志记录功能
@@ -18,7 +19,7 @@ export enum LogLevel {
 }
 
 // 配置参数
-const CONFIG = {
+export const CONFIG = {
   // 当前日志级别 - 可以通过setLogLevel函数修改
   currentLogLevel: LogLevel.DEBUG,
   
@@ -47,6 +48,16 @@ const currentLogFile = `${CONFIG.logFilePrefix}${new Date().toISOString().replac
 
 // 日志缓冲区
 let logBuffer: string[] = [];
+
+let perfLogTimestamp = process.env.PERF_LOG_TS || '';
+export function getPerfLogFileName() {
+  if (!perfLogTimestamp) {
+    const now = new Date();
+    const pad = (n: number) => n.toString().padStart(2, '0');
+    perfLogTimestamp = `${now.getFullYear()}${pad(now.getMonth()+1)}${pad(now.getDate())}-${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
+  }
+  return `performance-summary-${perfLogTimestamp}.log`;
+}
 
 /**
  * 设置日志级别
@@ -80,7 +91,7 @@ export function log(level: LogLevel, message: string, includeTimestamp: boolean 
   }
   
   const prefix = LOG_STYLES[level] || '';
-  const timestamp = includeTimestamp ? `${new Date().toISOString()} ` : '';
+  const timestamp = includeTimestamp ? `${new Date().toLocaleString('zh-CN', { hour12: false })} ` : '';
   const logMessage = `${timestamp}${prefix} ${message}`;
   
   // 控制台输出（根据级别）
@@ -276,4 +287,21 @@ process.on('unhandledRejection', (reason) => {
     errorLog(`未处理的Promise拒绝: ${String(reason)}`);
   }
   flushLogBuffer();
-}); 
+});
+
+/**
+ * 保存性能统计日志到单独文件
+ * @param content 性能统计内容
+ */
+export let savePerformanceLogToFile: (content: string) => void = function(content: string): void {
+  try {
+    const perfLogDir = CONFIG.logDir;
+    const perfLogFile = path.join(perfLogDir, getPerfLogFileName());
+    if (!fs.existsSync(perfLogDir)) {
+      fs.mkdirSync(perfLogDir, { recursive: true });
+    }
+    fs.appendFileSync(perfLogFile, content + '\n');
+  } catch (error) {
+    errorLog(`无法写入性能日志文件: ${error instanceof Error ? error.message : String(error)}`);
+  }
+}; 

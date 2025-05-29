@@ -33,7 +33,8 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.LogLevel = void 0;
+exports.savePerformanceLogToFile = exports.CONFIG = exports.LogLevel = void 0;
+exports.getPerfLogFileName = getPerfLogFileName;
 exports.setLogLevel = setLogLevel;
 exports.getLogLevel = getLogLevel;
 exports.log = log;
@@ -61,7 +62,7 @@ var LogLevel;
     LogLevel[LogLevel["NONE"] = 100] = "NONE"; // 不记录日志
 })(LogLevel || (exports.LogLevel = LogLevel = {}));
 // 配置参数
-const CONFIG = {
+exports.CONFIG = {
     // 当前日志级别 - 可以通过setLogLevel函数修改
     currentLogLevel: LogLevel.DEBUG,
     // 日志文件相关配置
@@ -74,22 +75,31 @@ const CONFIG = {
 };
 // 日志前缀样式 - 使用ANSI转义序列直接定义颜色
 const LOG_STYLES = {
-    [LogLevel.DEBUG]: `\x1b[2m[DEBUG] ${CONFIG.debugPrefix}\x1b[0m`,
-    [LogLevel.INFO]: `\x1b[32m[INFO] ${CONFIG.debugPrefix}\x1b[0m`,
-    [LogLevel.WARNING]: `\x1b[33m[WARNING] ${CONFIG.debugPrefix}\x1b[0m`,
-    [LogLevel.ERROR]: `\x1b[31m[ERROR] ${CONFIG.debugPrefix}\x1b[0m`,
+    [LogLevel.DEBUG]: `\x1b[2m[DEBUG] ${exports.CONFIG.debugPrefix}\x1b[0m`,
+    [LogLevel.INFO]: `\x1b[32m[INFO] ${exports.CONFIG.debugPrefix}\x1b[0m`,
+    [LogLevel.WARNING]: `\x1b[33m[WARNING] ${exports.CONFIG.debugPrefix}\x1b[0m`,
+    [LogLevel.ERROR]: `\x1b[31m[ERROR] ${exports.CONFIG.debugPrefix}\x1b[0m`,
     [LogLevel.NONE]: ``
 };
 // 当前日志文件名
-const currentLogFile = `${CONFIG.logFilePrefix}${new Date().toISOString().replace(/:/g, '-')}.log`;
+const currentLogFile = `${exports.CONFIG.logFilePrefix}${new Date().toISOString().replace(/:/g, '-')}.log`;
 // 日志缓冲区
 let logBuffer = [];
+let perfLogTimestamp = process.env.PERF_LOG_TS || '';
+function getPerfLogFileName() {
+    if (!perfLogTimestamp) {
+        const now = new Date();
+        const pad = (n) => n.toString().padStart(2, '0');
+        perfLogTimestamp = `${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}-${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
+    }
+    return `performance-summary-${perfLogTimestamp}.log`;
+}
 /**
  * 设置日志级别
  * @param level 新的日志级别
  */
 function setLogLevel(level) {
-    CONFIG.currentLogLevel = level;
+    exports.CONFIG.currentLogLevel = level;
     log(LogLevel.INFO, `日志级别已设置为 ${LogLevel[level]}`);
 }
 /**
@@ -97,7 +107,7 @@ function setLogLevel(level) {
  * @returns 当前日志级别
  */
 function getLogLevel() {
-    return CONFIG.currentLogLevel;
+    return exports.CONFIG.currentLogLevel;
 }
 /**
  * 通用的日志记录器
@@ -108,18 +118,18 @@ function getLogLevel() {
 function log(level, message, includeTimestamp = true) {
     // 如果日志级别低于当前设置，则不记录
     // 打印level和CONFIG.currentLogLevel
-    if (level < CONFIG.currentLogLevel) {
+    if (level < exports.CONFIG.currentLogLevel) {
         return;
     }
     const prefix = LOG_STYLES[level] || '';
-    const timestamp = includeTimestamp ? `${new Date().toISOString()} ` : '';
+    const timestamp = includeTimestamp ? `${new Date().toLocaleString('zh-CN', { hour12: false })} ` : '';
     const logMessage = `${timestamp}${prefix} ${message}`;
     // 控制台输出（根据级别）
     console.log(logMessage);
     // 添加到日志缓冲区
     logBuffer.push(logMessage);
     // 如果缓冲区过大，写入文件并清空
-    if (logBuffer.length >= CONFIG.maxLogBuffer) {
+    if (logBuffer.length >= exports.CONFIG.maxLogBuffer) {
         flushLogBuffer();
     }
 }
@@ -182,18 +192,18 @@ function flushLogBuffer() {
     }
     try {
         // 确保日志目录存在
-        if (!fs.existsSync(CONFIG.logDir)) {
-            fs.mkdirSync(CONFIG.logDir, { recursive: true });
+        if (!fs.existsSync(exports.CONFIG.logDir)) {
+            fs.mkdirSync(exports.CONFIG.logDir, { recursive: true });
         }
         // 写入日志文件前，去除所有颜色控制符
-        const logPath = path.join(CONFIG.logDir, currentLogFile);
+        const logPath = path.join(exports.CONFIG.logDir, currentLogFile);
         const plainLog = logBuffer.map(removeAnsiColors).join('\n') + '\n';
         fs.appendFileSync(logPath, plainLog);
         // 清空缓冲区
         logBuffer = [];
     }
     catch (error) {
-        errorLog(`${CONFIG.debugPrefix} 无法写入日志文件: ${error instanceof Error ? error.message : String(error)}`);
+        errorLog(`${exports.CONFIG.debugPrefix} 无法写入日志文件: ${error instanceof Error ? error.message : String(error)}`);
     }
 }
 /**
@@ -227,34 +237,34 @@ function getGameStateLog(game) {
 function saveGameLogToFile(game, reason) {
     try {
         // 确保日志目录存在
-        if (!fs.existsSync(CONFIG.logDir)) {
-            fs.mkdirSync(CONFIG.logDir, { recursive: true });
+        if (!fs.existsSync(exports.CONFIG.logDir)) {
+            fs.mkdirSync(exports.CONFIG.logDir, { recursive: true });
         }
         // 创建日志文件名（包含日期和原因）
         const timestamp = new Date().toISOString().replace(/:/g, '-');
         const errorLogFile = `game-${reason.replace(/\s+/g, '-').toLowerCase()}-${timestamp}.log`;
-        const logPath = path.join(CONFIG.logDir, errorLogFile);
+        const logPath = path.join(exports.CONFIG.logDir, errorLogFile);
         // 收集游戏状态信息
-        let gameLog = `${CONFIG.debugPrefix} 日志原因: ${reason}\n`;
-        gameLog += `${CONFIG.debugPrefix} 记录时间: ${new Date().toISOString()}\n`;
+        let gameLog = `${exports.CONFIG.debugPrefix} 日志原因: ${reason}\n`;
+        gameLog += `${exports.CONFIG.debugPrefix} 记录时间: ${new Date().toISOString()}\n`;
         gameLog += getGameStateLog(game);
         // 添加回合记录（从DisplayManager获取）
         gameLog += `\n=== 回合记录 ===\n`;
         const turnLogs = display_manager_1.displayManager.getTurnLogs();
         turnLogs.forEach((logEntry, index) => {
-            gameLog += `${CONFIG.debugPrefix} ${index + 1}. ${logEntry}\n`;
+            gameLog += `${exports.CONFIG.debugPrefix} ${index + 1}. ${logEntry}\n`;
         });
         // 添加当前缓冲区中的所有日志
         gameLog += `\n=== 详细日志 ===\n`;
         gameLog += logBuffer.join('\n');
         // 写入文件
         fs.writeFileSync(logPath, gameLog);
-        console.log(`${CONFIG.debugPrefix} 游戏日志已保存到: ${logPath}`);
+        console.log(`${exports.CONFIG.debugPrefix} 游戏日志已保存到: ${logPath}`);
         // 清空缓冲区
         logBuffer = [];
     }
     catch (error) {
-        errorLog(`${CONFIG.debugPrefix} 保存游戏日志失败: ${error instanceof Error ? error.message : String(error)}`);
+        errorLog(`${exports.CONFIG.debugPrefix} 保存游戏日志失败: ${error instanceof Error ? error.message : String(error)}`);
     }
 }
 // 立即刷新日志的方法
@@ -281,3 +291,21 @@ process.on('unhandledRejection', (reason) => {
     }
     flushLogBuffer();
 });
+/**
+ * 保存性能统计日志到单独文件
+ * @param content 性能统计内容
+ */
+let savePerformanceLogToFile = function (content) {
+    try {
+        const perfLogDir = exports.CONFIG.logDir;
+        const perfLogFile = path.join(perfLogDir, getPerfLogFileName());
+        if (!fs.existsSync(perfLogDir)) {
+            fs.mkdirSync(perfLogDir, { recursive: true });
+        }
+        fs.appendFileSync(perfLogFile, content + '\n');
+    }
+    catch (error) {
+        errorLog(`无法写入性能日志文件: ${error instanceof Error ? error.message : String(error)}`);
+    }
+};
+exports.savePerformanceLogToFile = savePerformanceLogToFile;

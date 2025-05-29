@@ -5,6 +5,7 @@ const logger_1 = require("./logger");
 const player_1 = require("./player");
 const tile_1 = require("./tile");
 const display_manager_1 = require("./display-manager");
+const index_1 = require("./index");
 class AIPlayer extends player_1.Player {
     /**
      * 计算AI思考延迟时间
@@ -13,6 +14,10 @@ class AIPlayer extends player_1.Player {
      * @returns 毫秒数
      */
     static calculateDelay(isQuickDecision = false) {
+        if (index_1.AUTO_PLAY_MODE) {
+            // 自动打牌模式下极限压缩AI延迟
+            return Math.floor(Math.random() * 5) + 1; // 1~5ms
+        }
         if (isQuickDecision) {
             return Math.floor(Math.random() * (600 - 300 + 1) + 300);
         }
@@ -78,18 +83,15 @@ class AIPlayer extends player_1.Player {
             (0, logger_1.errorLog)('游戏错误检查原因');
             process.exit(0);
         }
-        // 显示AI正在思考
         (0, logger_1.debugLog)(`AI玩家 ${this.name} 正在思考出牌...`);
-        // 安全检查：确保手牌不为空
         if (this.handTiles.length === 0) {
             (0, logger_1.errorLog)(`AI玩家 ${this.name} 不需要出牌，手牌数量：${this.handTiles.length}`);
             (0, logger_1.errorLog)('游戏错误检查原因');
             process.exit(0);
         }
-        // 模拟AI思考延迟
         await AIPlayer.pauseForThinking();
         try {
-            // 使用AI方法获取出牌决策
+            // 埋点：AI出牌决策
             const discardIndex = this.getAIMove();
             // 验证索引是否有效
             if (discardIndex < 0 || discardIndex >= this.handTiles.length) {
@@ -135,8 +137,6 @@ class AIPlayer extends player_1.Player {
             (0, logger_1.debugLog)(`AI玩家 ${this.name} 分析完成，选择打出: ${tileToDiscard.toString()}`);
             // 执行出牌
             const discardedTile = gameEventHandler.currentPlayerDiscard(discardIndex);
-            // displayManager.printSuccess(`AI玩家 ${this.name} 打出: ${discardedTile.toString()}`);
-            // displayManager.addToTurnLog(`${this.name} 打出了 ${discardedTile.toString()}`);
             return discardedTile;
         }
         catch (error) {

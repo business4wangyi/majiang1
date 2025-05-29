@@ -13,7 +13,7 @@ const rule_types_1 = require("./rule-types");
 const rule_engine_1 = require("./rule-engine");
 const ai_player_1 = require("./ai-player");
 const index_1 = require("./index");
-const config_1 = require("./config");
+const config_1 = require("./config/config");
 const score_calculator_1 = require("./score-calculator");
 /**
  * 游戏事件处理器类
@@ -22,9 +22,50 @@ const score_calculator_1 = require("./score-calculator");
  */
 class GameEventHandler {
     constructor(game, tileManager) {
+        this.currentRound = 0;
+        this.lastWinBySelfDrawn = false; // 记录本局胡牌是否自摸
+        this.lastLoserIndex = -1; // 记录点炮者索引（荣和时）
         this.game = game;
         this.tileManager = tileManager;
-        this.currentRound = 1;
+    }
+    /**
+     * 启动游戏
+     */
+    async safeStartGameAndEnd() {
+        try {
+            this.startGame();
+            // 实现主循环，确保游戏正常进行
+            (0, logger_1.debugLog)(`[DEBUG] 安全模式局内循环开始: currentRound=${this.currentRound}`);
+            // 模拟游戏主循环直到游戏结束
+            while (this.game.state === game_1.GameState.PLAYING) {
+                // 获取当前玩家
+                const currentPlayer = this.game.getCurrentPlayer();
+                // 检查特殊操作
+                let specialAction = await this.checkSpecialActions(currentPlayer);
+                // 如果没有特殊操作，正常出牌
+                if (!specialAction) {
+                    await this.handleCurrentPlayerDiscard();
+                }
+                // 检查游戏是否结束
+                if (this.checkGameEnd()) {
+                    break;
+                }
+                // 如果牌山已空，结束游戏
+                if (this.game.getRemainingTiles() <= 0) {
+                    this.game.setState(game_1.GameState.ENDED);
+                    break;
+                }
+                // 下一回合
+                this.nextTurn();
+            }
+            (0, logger_1.debugLog)(`[DEBUG] 安全模式局内循环结束: currentRound=${this.currentRound}`);
+        }
+        catch (e) {
+            (0, logger_1.debugLog)(`[DEBUG] round exception: ${e instanceof Error ? e.stack : e}`);
+        }
+        finally {
+            await this.handleGameEnd();
+        }
     }
     /**
      * 启动游戏
@@ -148,7 +189,6 @@ class GameEventHandler {
      * @returns 摸到的牌，或null表示没有摸到
      */
     drawTileForPlayer(player, options = {}) {
-        (0, logger_1.debugLog)('为指定玩家摸一张牌');
         // 设置默认选项
         const { notify = true, validate = false, incrementCount = false } = options;
         // 验证手牌数量
@@ -301,12 +341,10 @@ class GameEventHandler {
             return;
         }
         const player = this.game.getAllPlayers()[playerIndex];
-        // 如果是当前玩家，设置为正在行动状态
         if (playerIndex === this.game.currentPlayerIndex) {
             player.state = player_1.PlayerState.ACTING;
         }
         else {
-            // 否则设置为等待状态
             player.state = player_1.PlayerState.WAITING;
         }
         (0, logger_1.debugLog)(`更新玩家 ${player.name} 状态为 ${player_1.PlayerState[player.state]}`);
@@ -378,7 +416,11 @@ class GameEventHandler {
         game.state = game_1.GameState.ENDED;
         // 显示游戏总结
         this.displayGameSummary(game);
-        // 询问用户是否开始新局
+        // 自动模式下直接进入下一局
+        if (index_1.AUTO_PLAY_MODE) {
+            return true;
+        }
+        // 询问用户是否开始新局（仅人工模式）
         return await (0, input_1.askConfirmation)("牌山已空，是否开始新局？", true, 10000);
     }
     /**
@@ -869,11 +911,20 @@ class GameEventHandler {
         const huDetails = rule_engine_1.RuleEngine.getHuDetails(player, tile);
         if (huDetails.canHu) {
             // 如果是荣和，把胡的牌加到手牌
-            player.handTiles.push(tile);
+            if (tile) {
+                player.handTiles.push(tile);
+                this.lastWinBySelfDrawn = false;
+                // 记录点炮者索引（当前出牌玩家）
+                this.lastLoserIndex = this.game.currentPlayerIndex;
+            }
+            else {
+                this.lastWinBySelfDrawn = true;
+                this.lastLoserIndex = -1;
+            }
             const winTypeInfo = score_calculator_1.ScoreCalculator.getWinTypeInfo(huDetails.huType);
             display_manager_1.displayManager.printSuccess(`${player.name} ${winTypeInfo.name} ${huDetails.description}`);
             // 计算得分
-            const scoreResult = rule_engine_1.RuleEngine.calculateScore(player, huDetails.huType, { isSelfDrawn: false });
+            const scoreResult = rule_engine_1.RuleEngine.calculateScore(player, huDetails.huType, { isSelfDrawn: !tile });
             display_manager_1.displayManager.printSuccess(`得分: ${scoreResult.score}`);
             // 设置玩家状态为赢
             player.state = player_1.PlayerState.WON;
@@ -908,7 +959,6 @@ class GameEventHandler {
                 discardedTile = this.currentPlayerDiscard(discardIndex);
             }
             display_manager_1.displayManager.printSuccess(`${currentPlayer.name} 打出了 ${discardedTile.toString()}`);
-            // displayManager.addToTurnLog(`${currentPlayer.name} 打出了 ${discardedTile.toString()}`);
             // 检查其他玩家是否可以对此牌进行操作
             await this.checkOtherPlayersResponse(discardedTile);
         }
@@ -930,7 +980,6 @@ class GameEventHandler {
             if (tileIndex !== -1) {
                 const discardedTile = this.currentPlayerDiscard(tileIndex);
                 display_manager_1.displayManager.printSuccess(`${player.name} 打出了 ${discardedTile.toString()}`);
-                // displayManager.addToTurnLog(`${player.name} 打出了 ${discardedTile.toString()}`);
                 // 检查其他玩家是否可以对此牌进行操作
                 await this.checkOtherPlayersResponse(discardedTile);
             }
@@ -1148,7 +1197,7 @@ class GameEventHandler {
         }
         // 分数结算
         if (winningPlayer) {
-            if (isSelfDrawn) {
+            if (this.lastWinBySelfDrawn) {
                 // 自摸，赢家加分，其他人扣分
                 for (const player of players) {
                     if (player === winningPlayer) {
@@ -1160,12 +1209,9 @@ class GameEventHandler {
                 }
                 display_manager_1.displayManager.printSuccess(`【自摸】${winningPlayer.name} 自摸胡牌，其他玩家各扣 ${winnerScore} 分！`);
             }
-            else if (!isSelfDrawn && huType) {
+            else if (!this.lastWinBySelfDrawn && huType && this.lastLoserIndex !== -1) {
                 // 荣和，点炮者扣分，赢家加分，其他人不变
-                loserIndex = this.game.currentPlayerIndex === players.indexOf(winningPlayer)
-                    ? (this.game.currentPlayerIndex - 1 + players.length) % players.length
-                    : this.game.currentPlayerIndex;
-                const loser = players[loserIndex];
+                const loser = players[this.lastLoserIndex];
                 const scoreResult = rule_engine_1.RuleEngine.calculateScore(winningPlayer, huType, { isSelfDrawn: false });
                 winnerScore = scoreResult.score;
                 winningPlayer.score += winnerScore;
@@ -1177,16 +1223,18 @@ class GameEventHandler {
         this.displayGameSummary();
         if (index_1.AUTO_PLAY_MODE) {
             if (this.currentRound < config_1.AUTO_PLAY_ROUNDS) {
+                // 不是最后一局，正常输出本局统计
                 display_manager_1.displayManager.printWarning(`自动模式：第${this.currentRound}局结束，准备进入第${this.currentRound + 1}局`);
-                this.currentRound++;
                 return GameEndResult.RESTART_AUTO_GAME;
             }
             else {
+                // 最后一局，输出本局统计和总计
                 display_manager_1.displayManager.printWarning(`自动模式已完成${config_1.AUTO_PLAY_ROUNDS}局，游戏结束！`);
                 return GameEndResult.AUTO_PLAY_COMPLETED;
             }
         }
         else {
+            // 人工模式下也确保调用
             const startNewGame = await (0, input_1.askQuestion)("是否开始新一局游戏？(y/n)");
             if (startNewGame.toLowerCase() === 'y') {
                 this.game.reset();
@@ -1195,6 +1243,7 @@ class GameEventHandler {
                 return GameEndResult.RESTART_AUTO_GAME;
             }
             else {
+                // 人工模式退出时，也输出总计
                 display_manager_1.displayManager.printWarning("游戏结束，感谢参与！");
                 return GameEndResult.USER_EXIT;
             }
