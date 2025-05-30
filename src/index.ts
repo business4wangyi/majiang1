@@ -58,7 +58,7 @@ async function startGame() {
     displayManager.printColored(`1秒内无选择将启用调试模式`, Style.RED);
     
     // 直接使用askQuestion
-    const debugModeInput = await askQuestion("", 1000, "");
+    const debugModeInput = await askQuestion("", 1000, "d");
     
     // 手动清理倒计时显示
     CountdownManager.clearCountdownDisplay();

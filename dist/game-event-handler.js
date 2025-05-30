@@ -239,8 +239,9 @@ class GameEventHandler {
         });
         // 摸牌后，检查当前玩家是否可以自摸胡牌
         (0, logger_1.debugLog)(`玩家 ${currentPlayer.name} 摸到了 ${drawnTile.toString()}`);
-        // 检查当前玩家是否可以自摸胡牌
+        // 新增调试：每次摸牌后输出canHu判定
         const huResult = rule_engine_1.RuleEngine.getHuDetails(currentPlayer, null, { isDrawn: true, isLastTile: this.tileManager.getRemainingTiles() === 0 });
+        (0, logger_1.debugLog)(`[调试] ${currentPlayer.name} 摸牌后canHu: ${huResult.canHu}, huType: ${huResult.huType}, desc: ${huResult.description}`);
         if (huResult.canHu) {
             const winTypeInfo = score_calculator_1.ScoreCalculator.getWinTypeInfo(huResult.huType);
             display_manager_1.displayManager.printSuccess(`${currentPlayer.name} 自摸胡牌！游戏结束！`);
@@ -1154,6 +1155,7 @@ class GameEventHandler {
      * 处理游戏结束
      */
     async handleGameEnd() {
+        (0, logger_1.debugLog)('[调试] handleGameEnd入口');
         // 检查是否有玩家胡牌
         const players = this.game.getAllPlayers();
         let winningPlayer = null;
@@ -1163,88 +1165,102 @@ class GameEventHandler {
                 break;
             }
         }
+        (0, logger_1.debugLog)(`[调试] handleGameEnd: 胡牌玩家: ${winningPlayer ? winningPlayer.name : '无'}, 玩家分数: ${players.map(p => p.name + ':' + p.score).join(', ')}`);
         // 统计胜负局数和总局数，并结算分数
-        let isSelfDrawn = false;
         let winnerScore = 0;
-        let loserScore = 0;
-        let loserIndex = -1;
         let huType = null;
         if (winningPlayer) {
+            (0, logger_1.debugLog)(`[调试] 赢家: ${winningPlayer.name}, state: ${winningPlayer.state}`);
             // 判断是否自摸
-            const huDetails = rule_engine_1.RuleEngine.getHuDetails(winningPlayer, null, { isDrawn: true });
-            isSelfDrawn = huDetails.canHu;
+            let isSelfDrawn = this.lastWinBySelfDrawn;
+            // 自动判断自摸/荣和
+            if (isSelfDrawn === undefined || isSelfDrawn === null) {
+                // 兜底：如果lastLoserIndex为-1则自摸，否则荣和
+                isSelfDrawn = this.lastLoserIndex === -1;
+            }
+            // 获取胡牌类型
+            const huDetails = rule_engine_1.RuleEngine.getHuDetails(winningPlayer, null, { isDrawn: isSelfDrawn });
             huType = huDetails.huType;
+            (0, logger_1.debugLog)(`[调试] 赢家胡牌类型: ${huType}, canHu: ${huDetails.canHu}`);
             // 计算赢家得分
-            if (huType) {
-                const scoreResult = rule_engine_1.RuleEngine.calculateScore(winningPlayer, huType, { isSelfDrawn: true });
-                winnerScore = scoreResult.score;
+            if (huType !== null && huType !== undefined) {
+                let winScoreDetail;
+                if (isSelfDrawn) {
+                    (0, logger_1.debugLog)('[调试] 进入自摸结算分支');
+                    winScoreDetail = win_conditions_1.WinConditions.calculateScore(winningPlayer, { isDrawn: true });
+                    winnerScore = winScoreDetail.score;
+                    (0, logger_1.debugLog)(`[调试] WinConditions自摸分数明细: ${JSON.stringify(winScoreDetail)}`);
+                    for (const player of players) {
+                        (0, logger_1.debugLog)(`[调试] [自摸结算前] 玩家: ${player.name}, 分数: ${player.score}`);
+                        if (player === winningPlayer) {
+                            player.score += winnerScore * (players.length - 1);
+                        }
+                        else {
+                            player.score -= winnerScore;
+                        }
+                        (0, logger_1.debugLog)(`[调试] [自摸结算后] 玩家: ${player.name}, 分数: ${player.score}`);
+                    }
+                }
+                else {
+                    // 荣和，点炮者为lastLoserIndex
+                    let loserIndex = this.lastLoserIndex;
+                    if (loserIndex === -1) {
+                        // 兜底：找出最后一个出牌的玩家
+                        loserIndex = players.findIndex(p => p !== winningPlayer && p.state !== player_1.PlayerState.WON);
+                    }
+                    (0, logger_1.debugLog)('[调试] 进入荣和结算分支');
+                    winScoreDetail = win_conditions_1.WinConditions.calculateScore(winningPlayer, { isDrawn: false });
+                    winnerScore = winScoreDetail.score;
+                    (0, logger_1.debugLog)(`[调试] WinConditions荣和分数明细: ${JSON.stringify(winScoreDetail)}`);
+                    const loser = players[loserIndex];
+                    (0, logger_1.debugLog)(`[调试] [荣和结算前] 赢家: ${winningPlayer.name}, 分数: ${winningPlayer.score}, 点炮者: ${loser.name}, 分数: ${loser.score}`);
+                    winningPlayer.score += winnerScore;
+                    loser.score -= winnerScore;
+                    (0, logger_1.debugLog)(`[调试] [荣和结算后] 赢家: ${winningPlayer.name}, 分数: ${winningPlayer.score}, 点炮者: ${loser.name}, 分数: ${loser.score}`);
+                }
             }
         }
+        // 分数结算后，统计每个玩家的总局数、胜利局数、失败局数
         for (const player of players) {
             player.totalGames++;
             if (winningPlayer) {
                 if (player === winningPlayer) {
                     player.winCount++;
-                    // 分数结算在下方统一处理
                 }
                 else {
                     player.loseCount++;
                 }
             }
-            else {
-                // 流局不计胜负
-            }
-        }
-        // 分数结算
-        if (winningPlayer) {
-            if (this.lastWinBySelfDrawn) {
-                // 自摸，赢家加分，其他人扣分
-                for (const player of players) {
-                    if (player === winningPlayer) {
-                        player.score += winnerScore * (players.length - 1);
-                    }
-                    else {
-                        player.score -= winnerScore;
-                    }
-                }
-                display_manager_1.displayManager.printSuccess(`【自摸】${winningPlayer.name} 自摸胡牌，其他玩家各扣 ${winnerScore} 分！`);
-            }
-            else if (!this.lastWinBySelfDrawn && huType && this.lastLoserIndex !== -1) {
-                // 荣和，点炮者扣分，赢家加分，其他人不变
-                const loser = players[this.lastLoserIndex];
-                const scoreResult = rule_engine_1.RuleEngine.calculateScore(winningPlayer, huType, { isSelfDrawn: false });
-                winnerScore = scoreResult.score;
-                winningPlayer.score += winnerScore;
-                loser.score -= winnerScore;
-                display_manager_1.displayManager.printSuccess(`【荣和】${winningPlayer.name} 荣和，${loser.name} 点炮，${loser.name} 扣 ${winnerScore} 分！`);
-            }
         }
         // 显示游戏结算
         this.displayGameSummary();
+        (0, logger_1.debugLog)('[调试] displayGameSummary已调用');
+        (0, logger_1.debugLog)(`[调试] handleGameEnd: 结算后玩家分数: ${players.map(p => p.name + ':' + p.score).join(', ')}`);
         if (index_1.AUTO_PLAY_MODE) {
             if (this.currentRound < config_1.AUTO_PLAY_ROUNDS) {
-                // 不是最后一局，正常输出本局统计
                 display_manager_1.displayManager.printWarning(`自动模式：第${this.currentRound}局结束，准备进入第${this.currentRound + 1}局`);
+                (0, logger_1.debugLog)('[调试] handleGameEnd: 自动模式，准备进入下一局');
                 return GameEndResult.RESTART_AUTO_GAME;
             }
             else {
-                // 最后一局，输出本局统计和总计
                 display_manager_1.displayManager.printWarning(`自动模式已完成${config_1.AUTO_PLAY_ROUNDS}局，游戏结束！`);
+                (0, logger_1.debugLog)('[调试] handleGameEnd: 自动模式已完成所有局');
                 return GameEndResult.AUTO_PLAY_COMPLETED;
             }
         }
         else {
-            // 人工模式下也确保调用
             const startNewGame = await (0, input_1.askQuestion)("是否开始新一局游戏？(y/n)");
+            (0, logger_1.debugLog)(`[调试] handleGameEnd: 用户选择${startNewGame}`);
             if (startNewGame.toLowerCase() === 'y') {
                 this.game.reset();
                 input_1.InputState.isWaitingForUserInput = false;
                 this.startGame();
+                (0, logger_1.debugLog)('[调试] handleGameEnd: 用户选择新一局，已重置游戏');
                 return GameEndResult.RESTART_AUTO_GAME;
             }
             else {
-                // 人工模式退出时，也输出总计
                 display_manager_1.displayManager.printWarning("游戏结束，感谢参与！");
+                (0, logger_1.debugLog)('[调试] handleGameEnd: 用户选择退出');
                 return GameEndResult.USER_EXIT;
             }
         }

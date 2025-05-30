@@ -2,6 +2,7 @@ import { Tile } from '../tile';
 import { TileSet, HuType } from '../rule-types';
 import { Player } from '../player';
 import { WinConditionRegistry } from './win-condition-detector';
+import { debugLog } from '../logger';
 
 // 导入所有胡牌检测器
 import './index'; // 这会自动注册所有检测器
@@ -38,6 +39,14 @@ export class WinConditions {
     huType: HuType,
     description?: string
   } {
+    // 调试日志：打印胡牌判定前的关键数据
+    debugLog && debugLog('[canHu] 判定开始 ' + JSON.stringify({
+      handTiles: player.handTiles.map(t => `${t.type}${t.value}`),
+      revealedSets: (player.revealedSets || []).map(set => ({ type: set.type, tiles: set.tiles.map(t => `${t.type}${t.value}`) })),
+      targetTile: targetTile ? `${targetTile.type}${targetTile.value}` : null,
+      gameState,
+      extraOptions
+    }));
     // 方案二：不再自动分析调用栈，递归排除由 detectAll 统一传递
     let handTiles = [...player.handTiles];
     const revealedSets = player.revealedSets || [];
@@ -136,11 +145,17 @@ export class WinConditions {
     matchedDetectors.sort((a, b) => b.getScore() - a.getScore());
     const bestDetector = matchedDetectors[0];
     
-    return {
+    const result = {
       canHu: true,
       huType: bestDetector.getHuType(),
       description: bestDetector.getDescription()
     };
+    debugLog && debugLog('[canHu] 判定结果 ' + JSON.stringify({
+      canHu: result.canHu,
+      huType: result.huType,
+      description: result.description
+    }));
+    return result;
   }
   
   /**
@@ -213,8 +228,16 @@ export class WinConditions {
       additionalScores: Array<{name: string, score: number}>
     }
   } {
+    // 调试日志：打印分数计算前的关键数据
+    debugLog && debugLog('[calculateScore] 计算开始 ' + JSON.stringify({
+      handTiles: player.handTiles.map(t => `${t.type}${t.value}`),
+      revealedSets: (player.revealedSets || []).map(set => ({ type: set.type, tiles: set.tiles.map(t => `${t.type}${t.value}`) })),
+      gameState,
+      extraOptions
+    }));
     // 检测胡牌类型
     const huResult = this.canHu(player, null, gameState, extraOptions);
+    debugLog && debugLog('[calculateScore] canHu结果 ' + JSON.stringify(huResult));
     
     if (!huResult.canHu) {
       return {
@@ -238,10 +261,13 @@ export class WinConditions {
     }
     
     if (!detector) {
+      // 增加警告输出，便于调试
+      console.warn && console.warn('[WinConditions] 未找到对应的胡牌检测器，huType=', huResult.huType);
+      debugLog && debugLog('[calculateScore] 未找到检测器，返回0分 ' + JSON.stringify({ huType: huResult.huType }));
       return {
-        huType: huResult.huType,
+        huType: HuType.NOT_HU,
         score: 0,
-        description: huResult.description || '未知胡牌类型',
+        description: `未知胡牌类型: ${huResult.huType}`,
         scoreDetails: {
           baseScore: 0,
           additionalScores: []
@@ -279,6 +305,15 @@ export class WinConditions {
     // 计算总分
     const totalScore = baseScore + additionalScores.reduce((sum, item) => sum + item.score, 0);
     
+    debugLog && debugLog('[calculateScore] 计算结果 ' + JSON.stringify({
+      huType: huResult.huType,
+      score: totalScore,
+      description: huResult.description || detector.getDescription(),
+      scoreDetails: {
+        baseScore,
+        additionalScores
+      }
+    }));
     return {
       huType: huResult.huType,
       score: totalScore,
