@@ -33,6 +33,24 @@ async function runAutoGameLoop(game, rounds) {
             game.reset();
         }
     }
+    // 统计与输出
+    const players = game.getAllPlayers();
+    // 只统计AI玩家
+    const aiPlayers = players.filter(p => p.type === 1 || p.constructor.name === 'AIPlayer');
+    let totalWinRate = 0;
+    let totalAvgScore = 0;
+    display_manager_1.displayManager.printTitle('【AI统计结果】');
+    aiPlayers.forEach(ai => {
+        const winRate = ai.totalGames > 0 ? ai.winCount / ai.totalGames : 0;
+        const avgScore = ai.totalGames > 0 ? ai.score / ai.totalGames : 0;
+        totalWinRate += winRate;
+        totalAvgScore += avgScore;
+        display_manager_1.displayManager.print(`AI玩家 ${ai.name}：胜率 ${(winRate * 100).toFixed(2)}%，平均得分 ${avgScore.toFixed(2)}，总局数 ${ai.totalGames}，流局数 ${ai.drawCount}，胜局数 ${ai.winCount}，总得分 ${ai.score}`);
+    });
+    if (aiPlayers.length > 0) {
+        display_manager_1.displayManager.print('------------------------------');
+        display_manager_1.displayManager.print(`所有AI平均胜率：${((totalWinRate / aiPlayers.length) * 100).toFixed(2)}%，所有AI平均得分：${(totalAvgScore / aiPlayers.length).toFixed(2)}`);
+    }
 }
 /**
  * 人工交互模式主循环：定时器+输入检测

@@ -6,6 +6,7 @@ const player_1 = require("./player");
 const tile_1 = require("./tile");
 const display_manager_1 = require("./display-manager");
 const index_1 = require("./index");
+const win_conditions_main_1 = require("./win-conditions/win-conditions-main");
 class AIPlayer extends player_1.Player {
     /**
      * 计算AI思考延迟时间
@@ -77,6 +78,12 @@ class AIPlayer extends player_1.Player {
      * @returns 出牌是否成功
      */
     async handleDiscard(gameEventHandler) {
+        // 出牌前详细日志
+        const canHuResultBefore = win_conditions_main_1.WinConditions.canHu(this);
+        const handStrBefore = this.handTiles.map(t => t.toString()).join(' ');
+        const revealedStrBefore = (this.revealedSets || []).map(set => set.tiles.map(t => t.toString()).join(',')).join('|');
+        const totalCountBefore = this.handTiles.length + (this.revealedSets || []).reduce((sum, set) => sum + set.tiles.length, 0);
+        (0, logger_1.debugLog)(`[AI调试] ${this.name} 出牌前: 手牌: ${handStrBefore}, 明牌: ${revealedStrBefore}, 总数: ${totalCountBefore}, canHu: ${canHuResultBefore.canHu}, huType: ${canHuResultBefore.huType}, desc: ${canHuResultBefore.description}`);
         // 检查AI玩家是否需要出牌
         if (!this.needsToDiscard()) {
             (0, logger_1.errorLog)(`AI玩家 ${this.name} 不需要出牌，手牌数量：${this.handTiles.length}`);
@@ -89,6 +96,10 @@ class AIPlayer extends player_1.Player {
             (0, logger_1.errorLog)('游戏错误检查原因');
             process.exit(0);
         }
+        // 新增日志：出牌前输出手牌、明牌、总数、canHu判定
+        (0, logger_1.debugLog)(`[AI日志] 玩家: ${this.name}，操作: 出牌前，手牌: ${this.handTiles.map(t => t.toString()).join(' ')}，明牌: ${(this.revealedSets || []).map(set => set.tiles.map(t => t.toString()).join(',')).join('|')}，总数: ${this.handTiles.length + (this.revealedSets || []).reduce((sum, set) => sum + set.tiles.length, 0)}`);
+        const canHuResult = win_conditions_main_1.WinConditions.canHu(this);
+        (0, logger_1.debugLog)(`[AI日志] canHu判定: ${canHuResult.canHu}, 描述: ${canHuResult.description}`);
         await AIPlayer.pauseForThinking();
         try {
             // 埋点：AI出牌决策
@@ -137,6 +148,12 @@ class AIPlayer extends player_1.Player {
             (0, logger_1.debugLog)(`AI玩家 ${this.name} 分析完成，选择打出: ${tileToDiscard.toString()}`);
             // 执行出牌
             const discardedTile = gameEventHandler.currentPlayerDiscard(discardIndex);
+            // 出牌后详细日志
+            const canHuResultAfter = win_conditions_main_1.WinConditions.canHu(this);
+            const handStrAfter = this.handTiles.map(t => t.toString()).join(' ');
+            const revealedStrAfter = (this.revealedSets || []).map(set => set.tiles.map(t => t.toString()).join(',')).join('|');
+            const totalCountAfter = this.handTiles.length + (this.revealedSets || []).reduce((sum, set) => sum + set.tiles.length, 0);
+            (0, logger_1.debugLog)(`[AI调试] ${this.name} 出牌后: 手牌: ${handStrAfter}, 明牌: ${revealedStrAfter}, 总数: ${totalCountAfter}, canHu: ${canHuResultAfter.canHu}, huType: ${canHuResultAfter.huType}, desc: ${canHuResultAfter.description}, 打出: ${discardedTile.toString()}`);
             return discardedTile;
         }
         catch (error) {
@@ -182,7 +199,7 @@ class AIPlayer extends player_1.Player {
                     const lowestValueTile = tileValues[0];
                     // 验证索引有效性
                     if (lowestValueTile.index >= 0 && lowestValueTile.index < this.handTiles.length) {
-                        (0, logger_1.debugLog)(`手牌数量超过预期(${this.getExpectedHandSize()})，实际(${this.handTiles.length})，选择价值最低的牌，索引=${lowestValueTile.index}, 牌=${lowestValueTile.tile.toString()}, 价值=${lowestValueTile.value}`);
+                        (0, logger_1.errorLog)(`手牌数量超过预期(${this.getExpectedHandSize()})，实际(${this.handTiles.length})，选择价值最低的牌，索引=${lowestValueTile.index}, 牌=${lowestValueTile.tile.toString()}, 价值=${lowestValueTile.value}`);
                         if (this.handTiles.length > this.getExpectedHandSize() + 1) {
                             display_manager_1.displayManager.displayPlayerHand(this);
                             (0, logger_1.errorLog)(`退出游戏排查问题`);

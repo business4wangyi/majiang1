@@ -4,6 +4,7 @@ import { Tile, TileType } from './tile';
 import { displayManager } from './display-manager';
 import { GameEventHandler } from './game-event-handler';
 import { AUTO_PLAY_MODE } from './index';
+import { WinConditions } from './win-conditions/win-conditions-main';
 
 export class AIPlayer extends Player {
   private static idCounter = 1;
@@ -107,6 +108,12 @@ export class AIPlayer extends Player {
    * @returns 出牌是否成功
    */
   public async handleDiscard(gameEventHandler: GameEventHandler): Promise<Tile> {
+    // 出牌前详细日志
+    const canHuResultBefore = WinConditions.canHu(this);
+    const handStrBefore = this.handTiles.map(t=>t.toString()).join(' ');
+    const revealedStrBefore = (this.revealedSets||[]).map(set=>set.tiles.map(t=>t.toString()).join(',')).join('|');
+    const totalCountBefore = this.handTiles.length + (this.revealedSets||[]).reduce((sum,set)=>sum+set.tiles.length,0);
+    debugLog(`[AI调试] ${this.name} 出牌前: 手牌: ${handStrBefore}, 明牌: ${revealedStrBefore}, 总数: ${totalCountBefore}, canHu: ${canHuResultBefore.canHu}, huType: ${canHuResultBefore.huType}, desc: ${canHuResultBefore.description}`);
     // 检查AI玩家是否需要出牌
     if (!this.needsToDiscard()) {
       errorLog(`AI玩家 ${this.name} 不需要出牌，手牌数量：${this.handTiles.length}`);
@@ -119,6 +126,10 @@ export class AIPlayer extends Player {
       errorLog('游戏错误检查原因')
       process.exit(0)
     }
+    // 新增日志：出牌前输出手牌、明牌、总数、canHu判定
+    debugLog(`[AI日志] 玩家: ${this.name}，操作: 出牌前，手牌: ${this.handTiles.map(t=>t.toString()).join(' ')}，明牌: ${(this.revealedSets||[]).map(set=>set.tiles.map(t=>t.toString()).join(',')).join('|')}，总数: ${this.handTiles.length + (this.revealedSets||[]).reduce((sum,set)=>sum+set.tiles.length,0)}`);
+    const canHuResult = WinConditions.canHu(this);
+    debugLog(`[AI日志] canHu判定: ${canHuResult.canHu}, 描述: ${canHuResult.description}`);
     await AIPlayer.pauseForThinking();
     try {
       // 埋点：AI出牌决策
@@ -177,6 +188,12 @@ export class AIPlayer extends Player {
       // 执行出牌
       const discardedTile = gameEventHandler.currentPlayerDiscard(discardIndex);
       
+      // 出牌后详细日志
+      const canHuResultAfter = WinConditions.canHu(this);
+      const handStrAfter = this.handTiles.map(t=>t.toString()).join(' ');
+      const revealedStrAfter = (this.revealedSets||[]).map(set=>set.tiles.map(t=>t.toString()).join(',')).join('|');
+      const totalCountAfter = this.handTiles.length + (this.revealedSets||[]).reduce((sum,set)=>sum+set.tiles.length,0);
+      debugLog(`[AI调试] ${this.name} 出牌后: 手牌: ${handStrAfter}, 明牌: ${revealedStrAfter}, 总数: ${totalCountAfter}, canHu: ${canHuResultAfter.canHu}, huType: ${canHuResultAfter.huType}, desc: ${canHuResultAfter.description}, 打出: ${discardedTile.toString()}`);
       return discardedTile;
       
     } catch (error) {
@@ -231,7 +248,7 @@ export class AIPlayer extends Player {
           const lowestValueTile = tileValues[0];
           // 验证索引有效性
           if (lowestValueTile.index >= 0 && lowestValueTile.index < this.handTiles.length) {
-            debugLog(`手牌数量超过预期(${this.getExpectedHandSize()})，实际(${this.handTiles.length})，选择价值最低的牌，索引=${lowestValueTile.index}, 牌=${lowestValueTile.tile.toString()}, 价值=${lowestValueTile.value}`);
+            errorLog(`手牌数量超过预期(${this.getExpectedHandSize()})，实际(${this.handTiles.length})，选择价值最低的牌，索引=${lowestValueTile.index}, 牌=${lowestValueTile.tile.toString()}, 价值=${lowestValueTile.value}`);
             if (this.handTiles.length > this.getExpectedHandSize() + 1) {
               displayManager.displayPlayerHand(this)
               errorLog(`退出游戏排查问题`);

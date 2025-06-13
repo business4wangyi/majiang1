@@ -150,11 +150,8 @@ export class WinConditions {
       huType: bestDetector.getHuType(),
       description: bestDetector.getDescription()
     };
-    debugLog && debugLog('[canHu] 判定结果 ' + JSON.stringify({
-      canHu: result.canHu,
-      huType: result.huType,
-      description: result.description
-    }));
+    debugLog && debugLog(`[canHu-详细] 玩家: ${player.name}，手牌: ${handTiles.map(t=>t.toString()).join(' ')}，明牌: ${(revealedSets||[]).map(set=>set.tiles.map(t=>t.toString()).join(',')).join('|')}，总数: ${handTiles.length + revealedSets.reduce((sum,set)=>sum+set.tiles.length,0)}`);
+    debugLog && debugLog(`[canHu-详细] 判定结果: canHu=${result.canHu}, huType=${result.huType}, 描述=${result.description}`);
     return result;
   }
   
@@ -280,35 +277,37 @@ export class WinConditions {
     
     // 计算额外分数（例如自摸、杠上开花等）
     const additionalScores: Array<{name: string, score: number}> = [];
-    
     // 自摸加分
     if (gameState.isDrawn) {
       additionalScores.push({ name: '自摸', score: 2 });
     }
-    
     // 杠上开花加分
     if (gameState.isAfterKong) {
       additionalScores.push({ name: '杠上开花', score: 4 });
     }
-    
     // 抢杠和加分
     if (gameState.isRobbingKong) {
       additionalScores.push({ name: '抢杠和', score: 4 });
     }
-    
     // 海底捞月或妙手回春加分
     if (gameState.isLastTile) {
       const bonusName = gameState.isDrawn ? '妙手回春' : '海底捞月';
       additionalScores.push({ name: bonusName, score: 4 });
     }
-    
+    // 天胡/地胡加番
+    if (player.tianHuFlag) {
+      additionalScores.push({ name: '天胡', score: 8 });
+    }
+    if (player.diHuFlag) {
+      additionalScores.push({ name: '地胡', score: 4 });
+    }
     // 计算总分
     const totalScore = baseScore + additionalScores.reduce((sum, item) => sum + item.score, 0);
     
     debugLog && debugLog('[calculateScore] 计算结果 ' + JSON.stringify({
       huType: huResult.huType,
       score: totalScore,
-      description: huResult.description || detector.getDescription(),
+      description: (huResult.description || detector.getDescription()) + (player.tianHuFlag ? ' [天胡]' : '') + (player.diHuFlag ? ' [地胡]' : ''),
       scoreDetails: {
         baseScore,
         additionalScores
@@ -317,7 +316,7 @@ export class WinConditions {
     return {
       huType: huResult.huType,
       score: totalScore,
-      description: huResult.description || detector.getDescription(),
+      description: (huResult.description || detector.getDescription()) + (player.tianHuFlag ? ' [天胡]' : '') + (player.diHuFlag ? ' [地胡]' : ''),
       scoreDetails: {
         baseScore,
         additionalScores

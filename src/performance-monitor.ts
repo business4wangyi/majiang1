@@ -1,5 +1,7 @@
 import { savePerformanceLogToFile, getPerfLogFileName, CONFIG } from './logger';
 import { formatDuration, formatTimestamp } from './time-utils';
+import fs from 'fs';
+import path from 'path';
 
 type TimeRecord = { start: number, end?: number };
 
@@ -107,8 +109,6 @@ export class PerformanceMonitor {
     output += '=====================\n';
     // 如果是第1局，清空 performance-summary-*.log
     if (this.thisRoundNumber === 1) {
-      const fs = require('fs');
-      const path = require('path');
       const perfLogDir = CONFIG.logDir;
       const perfLogFile = path.join(perfLogDir, getPerfLogFileName());
       if (fs.existsSync(perfLogFile)) fs.unlinkSync(perfLogFile);

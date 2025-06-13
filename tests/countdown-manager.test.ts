@@ -3,6 +3,8 @@ import { expect } from 'chai';
 import * as sinon from 'sinon';
 import { CountdownManager } from '../src/countdown-manager';
 import { errorLog } from '../src/logger';
+import * as loggerModule from '../src/logger';
+import * as displayManagerModule from '../src/display-manager';
 
 // 保存原始的输出方法以便后续恢复
 const originalWrite = process.stdout.write;
@@ -33,14 +35,12 @@ describe('CountdownManager', () => {
     writeStub = sinon.stub(process.stdout, 'write');
     
     // 替换logger模块
-    const loggerModule = require('../src/logger');
     infoLogStub = sinon.stub(loggerModule, 'infoLog');
     debugLogStub = sinon.stub(loggerModule, 'debugLog');
     warnLogStub = sinon.stub(loggerModule, 'warnLog');
     errorLogStub = sinon.stub(loggerModule, 'errorLog');
     
     // 替换display-manager模块
-    const displayManagerModule = require('../src/display-manager');
     printWarningStub = sinon.stub(displayManagerModule.displayManager, 'printWarning');
     printSuccessStub = sinon.stub(displayManagerModule.displayManager, 'printSuccess');
     

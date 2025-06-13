@@ -190,7 +190,6 @@ export class GameEventHandler {
             validate: false,
             incrementCount: false
           });
-
           debugLog(`给玩家 ${player.name} 发牌: ${tile.toString()}, 当前手牌数量: ${player.handTiles.length}`);
         }
       }
@@ -205,8 +204,7 @@ export class GameEventHandler {
         displayManager.printError(`严重错误: 玩家 ${player.name} 手牌数量不正确 (${player.handTiles.length}/${expectedHandSize})，游戏无法继续`);
         return;
       }
-      // 排序玩家手牌
-      player.sortHand();
+
       // 只在发牌结束时打印详细手牌
       displayManager.displayPlayerHand(player);
     }
@@ -516,7 +514,6 @@ export class GameEventHandler {
    */
   private static displayGameSummary(game: Game): void {
     displayManager.printTitle("游戏总结");
-    
     // 显示玩家信息
     const players = game.getAllPlayers();
     for (const player of players) {
@@ -526,7 +523,6 @@ export class GameEventHandler {
       displayManager.print(`- 已亮出牌组: ${player.revealedSets.length}组: ${player.revealedSets.map(set => `${set.tiles.map(t => t.toString()).join(' ')} (${set.type})`).join(' ')}`);
       displayManager.print(`- 状态: ${PlayerState[player.state]}`);
     }
-    
     displayManager.print(`总摸牌次数: ${game.drawCount}`);
     displayManager.print(`剩余牌数: ${game.getRemainingTiles()}`);
     displayManager.printDivider();
@@ -931,6 +927,9 @@ export class GameEventHandler {
       const huResult = RuleEngine.getHuDetails(player, null, { isDrawn: true, isAfterKong: true });
       if (huResult.canHu) {
         displayManager.printSuccess(`${player.name} 补杠后胡牌！类型：${huResult.description}`);
+        // 修正：补杠后胡牌应立即结束游戏
+        player.state = PlayerState.WON;
+        this.game.setState(GameState.ENDED);
         return true;
       }
       
@@ -1114,6 +1113,25 @@ export class GameEventHandler {
     } else {
       displayManager.printError(`${player.name} 不能胡牌`);
     }
+    // 标记天胡、地胡
+    if (this.game.state === 1 /* DEALING */ || this.game.state === 2 /* PLAYING */ && this.currentRound === 0 && player.handTiles.length === 14) {
+      player.tianHuFlag = true;
+      displayManager.printTitle(`【天胡】${player.name} 发牌后直接胡牌！`);
+      player.diHuFlag = false;
+    } else if (
+      // 地胡：非庄家，第一轮内第一次摸牌自摸胡
+      this.currentRound === 0 &&
+      player.handTiles.length === 14 &&
+      player !== this.game.getAllPlayers()[0] && // 非庄家
+      this.lastWinBySelfDrawn === true // 自摸
+    ) {
+      player.tianHuFlag = false;
+      player.diHuFlag = true;
+      displayManager.printTitle(`【地胡】${player.name} 第一轮自摸胡牌！`);
+    } else {
+      player.tianHuFlag = false;
+      player.diHuFlag = false;
+    }
   }
 
   /**
@@ -1196,7 +1214,10 @@ export class GameEventHandler {
     const allPlayers = this.game.getAllPlayers();
     const otherPlayers = allPlayers.filter(p => p.id !== currentPlayer.id);
     
-    debugLog(`检查其他玩家对 ${discardedTile.toString()} 的响应`);
+    debugLog(`当前出牌玩家: ${currentPlayer.name}, id: ${currentPlayer.id}`);
+    debugLog(`所有玩家: ${allPlayers.map(p => p.name + '(' + p.id + ')').join(', ')}`);
+    debugLog(`otherPlayers: ${otherPlayers.map(p => p.name + '(' + p.id + ')').join(', ')}`);
+    debugLog(`被打出的牌: ${discardedTile.toString()}`);
     
     // 按照优先级检查响应：胡 > 杠 > 碰 > 吃
     // 先检查是否有人可以胡牌
@@ -1376,6 +1397,11 @@ export class GameEventHandler {
     // 统计胜负局数和总局数，并结算分数
     let winnerScore = 0;
     let huType = null;
+
+    // 分数结算后，统计每个玩家的总局数
+    for (const player of players) {
+      player.totalGames++;
+    }
     if (winningPlayer) {
       debugLog(`[调试] 赢家: ${winningPlayer.name}, state: ${winningPlayer.state}`);
       // 判断是否自摸
@@ -1424,16 +1450,18 @@ export class GameEventHandler {
           debugLog(`[调试] [荣和结算后] 赢家: ${winningPlayer.name}, 分数: ${winningPlayer.score}, 点炮者: ${loser.name}, 分数: ${loser.score}`);
         }
       }
-    }
-    // 分数结算后，统计每个玩家的总局数、胜利局数、失败局数
-    for (const player of players) {
-      player.totalGames++;
-      if (winningPlayer) {
+      // 分数结算后，统计每个玩家的总局数、胜利局数、失败局数
+      for (const player of players) {
         if (player === winningPlayer) {
           player.winCount++;
         } else {
           player.loseCount++;
         }
+      }
+    } else {
+      // 无人胡牌，流局
+      for (const player of players) {
+        player.drawCount++;
       }
     }
     // 显示游戏结算
@@ -1472,7 +1500,6 @@ export class GameEventHandler {
    */
   public displayGameSummary(): void {
     displayManager.printTitle("游戏总结");
-    
     // 显示玩家信息
     const players = this.game.getAllPlayers();
     for (const player of players) {
@@ -1486,8 +1513,8 @@ export class GameEventHandler {
       displayManager.print(`- 总局数: ${player.totalGames}`);
       displayManager.print(`- 胜利局数: ${player.winCount}`);
       displayManager.print(`- 失败局数: ${player.loseCount}`);
+      displayManager.print(`- 流局次数: ${player.drawCount}`);
     }
-    
     displayManager.print(`总摸牌次数: ${this.game.drawCount}`);
     displayManager.print(`剩余牌数: ${this.game.getRemainingTiles()}`);
     displayManager.printDivider();

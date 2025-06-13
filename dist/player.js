@@ -4,6 +4,8 @@ exports.Player = exports.PlayerType = exports.PlayerState = void 0;
 const tile_1 = require("./tile");
 const display_1 = require("./display");
 const logger_1 = require("./logger");
+const win_conditions_main_1 = require("./win-conditions/win-conditions-main");
+const process_1 = require("process");
 // 玩家状态
 var PlayerState;
 (function (PlayerState) {
@@ -42,6 +44,9 @@ class Player {
         this.winCount = 0; // 胜利局数
         this.loseCount = 0; // 失败局数
         this.totalGames = 0; // 总局数
+        this.drawCount = 0; // 流局次数
+        this.tianHuFlag = false;
+        this.diHuFlag = false;
     }
     // 添加一张牌到手牌
     drawTile(tile) {
@@ -55,10 +60,17 @@ class Player {
         this.handTiles.push(tile);
         // 验证操作后手牌数量
         if (this.handTiles.length !== beforeCount + 1) {
-            (0, logger_1.debugLog)(`警告: 摸牌后手牌数量异常，预期: ${beforeCount + 1}，实际: ${this.handTiles.length}`);
+            (0, logger_1.errorLog)(`警告: 摸牌后手牌数量异常，预期: ${beforeCount + 1}，实际: ${this.handTiles.length}`);
+            (0, process_1.exit)(0);
         }
         this.sortHand();
         this.sortRevealedSets();
+        // 新增日志：AI玩家摸牌后输出详细信息
+        if (this.type === PlayerType.AI) {
+            const canHuResult = win_conditions_main_1.WinConditions.canHu(this);
+            (0, logger_1.debugLog)(`[AI日志] 玩家: ${this.name}，操作: 摸牌后，手牌: ${this.handTiles.map(t => t.toString()).join(' ')}，明牌: ${(this.revealedSets || []).map(set => set.tiles.map(t => t.toString()).join(',')).join('|')}，总数: ${this.handTiles.length + (this.revealedSets || []).reduce((sum, set) => sum + set.tiles.length, 0)}`);
+            (0, logger_1.debugLog)(`[AI日志] canHu判定: ${canHuResult.canHu}, 描述: ${canHuResult.description}`);
+        }
     }
     // 整理手牌（排序）
     sortHand() {
@@ -159,9 +171,10 @@ class Player {
             this.handTiles.splice(index, 1);
         }
         // 添加到已亮出的牌组
+        const chiTiles = (0, tile_1.sortTiles)([...tiles, targetTile]);
         this.revealedSets.push({
             type: 'CHI',
-            tiles: [...tiles, targetTile]
+            tiles: chiTiles
         });
         this.sortHand();
         this.sortRevealedSets();
@@ -383,11 +396,11 @@ class Player {
         if (isMahjong) {
             // 和牌状态下比较总牌数
             const totalTileCount = this.getTotalTileCount();
-            return totalTileCount === expectedHandSize || totalTileCount === expectedHandSize + 1;
+            return totalTileCount === expectedHandSize + 1;
         }
         else {
             // 常规状态下只比较手牌数
-            return this.handTiles.length === expectedHandSize || this.handTiles.length === expectedHandSize + 1;
+            return this.handTiles.length === expectedHandSize;
         }
     }
     /**
