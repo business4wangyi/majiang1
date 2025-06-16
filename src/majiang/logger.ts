@@ -24,7 +24,7 @@ export const CONFIG = {
   currentLogLevel: LogLevel.DEBUG,
   
   // 日志文件相关配置
-  logDir: path.join(process.cwd(), 'logs'),
+  logDir: path.join(process.cwd(), 'logs', 'majiang'),
   logFilePrefix: 'game-log-',
   
   // 缓冲区大小
