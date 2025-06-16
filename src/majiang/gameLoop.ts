@@ -9,13 +9,10 @@ import {
 import {
   askQuestion, InputState
 } from './input';
-import { DEBUG_MODE } from './index';
+import { DEBUG_MODE, AUTO_PLAY_MODE } from './index';
 import { displayManager } from './display-manager';
-import { CountdownManager } from './countdown-manager';
 import { GameEventHandler } from './game-event-handler';
 import { TileManager } from './tile-manager';
-import { perfMonitor } from './performance-monitor';
-import { AUTO_PLAY_MODE } from './index';
 import { AUTO_PLAY_ROUNDS } from './config/config';
 
 // 游戏循环检查间隔（毫秒）

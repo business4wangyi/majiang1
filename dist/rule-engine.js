@@ -4,7 +4,7 @@ exports.RuleEngine = void 0;
 const player_1 = require("./player");
 const tile_1 = require("./tile");
 const rule_types_1 = require("./rule-types");
-const index_1 = require("./win-conditions/index");
+const win_conditions_main_1 = require("./win-conditions/win-conditions-main");
 const score_calculator_1 = require("./score-calculator");
 /**
  * 规则引擎类 - 提供基本的规则验证和判断
@@ -262,7 +262,7 @@ class RuleEngine {
      * @returns 是否可以胡牌
      */
     static canHu(player, tile = null, gameState = {}) {
-        const result = index_1.WinConditions.canHu(player, tile, gameState);
+        const result = win_conditions_main_1.WinConditions.canHu(player, tile, gameState);
         return result.canHu;
     }
     /**
@@ -273,7 +273,7 @@ class RuleEngine {
      * @returns 胡牌详细信息
      */
     static getHuDetails(player, tile = null, gameState = {}) {
-        return index_1.WinConditions.canHu(player, tile, gameState);
+        return win_conditions_main_1.WinConditions.canHu(player, tile, gameState);
     }
     /**
      * 获取玩家可用的操作

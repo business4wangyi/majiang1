@@ -5,7 +5,7 @@ import { Player, PlayerState, PlayerType } from './player';
 import { debugLog, errorLog, infoLog } from './logger';
 import { Tile, TileType } from './tile';
 import { TileManager } from './tile-manager';
-import { WinConditions } from './win-conditions';
+import { WinConditions } from './win-conditions/win-conditions-main';
 import { GangType, PlayerAction } from './rule-types';
 import { RuleEngine } from './rule-engine';
 import { AIPlayer } from './ai-player';

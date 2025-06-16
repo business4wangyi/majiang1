@@ -2,11 +2,11 @@
   "name": "majiang",
   "version": "1.0.0",
   "description": "广东麻将命令行游戏",
-  "main": "dist/index.js",
+  "main": "dist/majiang/index.js",
   "scripts": {
-    "start": "node dist/index.js",
+    "start": "node dist/majiang/index.js",
     "build": "tsc",
-    "dev": "ts-node src/index.ts",
+    "dev": "ts-node src/majiang/index.ts",
     "test": "mocha -r ts-node/register tests/**/*.test.ts",
     "test:watch": "mocha -r ts-node/register --watch tests/**/*.test.ts"
   },

@@ -1,7 +1,6 @@
 import { perfMonitor } from './performance-monitor';
 import { GameEventHandler } from './game-event-handler';
 import { AIPlayer } from './ai-player';
-import { savePerformanceLogToFile as origSavePerformanceLogToFile } from './logger';
 import { AUTO_PLAY_MODE } from './index';
 import { AUTO_PLAY_ROUNDS } from './config/config';
 import { debugLog } from './logger';

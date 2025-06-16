@@ -10,7 +10,6 @@ const index_1 = require("./index");
 const display_manager_1 = require("./display-manager");
 const game_event_handler_1 = require("./game-event-handler");
 const tile_manager_1 = require("./tile-manager");
-const index_2 = require("./index");
 const config_1 = require("./config/config");
 // 游戏循环检查间隔（毫秒）
 const GAME_LOOP_INTERVAL = 100;
@@ -80,7 +79,7 @@ async function runInteractiveGameLoop(game) {
                     switch (result) {
                         case 0: // GameEndResult.RESTART_AUTO_GAME
                             if (typeof gameEventHandler !== 'undefined') {
-                                if (index_2.AUTO_PLAY_MODE) {
+                                if (index_1.AUTO_PLAY_MODE) {
                                     const rounds = config_1.AUTO_PLAY_ROUNDS || 0;
                                     const round = gameEventHandler.currentRound;
                                     console.log(`[DEBUG] 自动模式: 当前局号: ${round}, 总局数: ${rounds}`);

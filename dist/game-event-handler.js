@@ -8,7 +8,7 @@ const player_1 = require("./player");
 const logger_1 = require("./logger");
 const tile_1 = require("./tile");
 const tile_manager_1 = require("./tile-manager");
-const win_conditions_1 = require("./win-conditions");
+const win_conditions_main_1 = require("./win-conditions/win-conditions-main");
 const rule_types_1 = require("./rule-types");
 const rule_engine_1 = require("./rule-engine");
 const ai_player_1 = require("./ai-player");
@@ -389,7 +389,7 @@ class GameEventHandler {
         if (result.canHu) {
             const huType = result.huType;
             const winTypeInfo = score_calculator_1.ScoreCalculator.getWinTypeInfo(huType);
-            const description = result.description || win_conditions_1.WinConditions.getHuTypeDescription(huType);
+            const description = result.description || win_conditions_main_1.WinConditions.getHuTypeDescription(huType);
             display_manager_1.displayManager.printSuccess(`${player.name} 胡牌类型: ${winTypeInfo.name}, 胡牌描述: ${description}`);
             // 计算得分
             const scoreResult = rule_engine_1.RuleEngine.calculateScore(player, huType, { isSelfDrawn: tile === null });
@@ -1216,7 +1216,7 @@ class GameEventHandler {
                 let winScoreDetail;
                 if (isSelfDrawn) {
                     (0, logger_1.debugLog)('[调试] 进入自摸结算分支');
-                    winScoreDetail = win_conditions_1.WinConditions.calculateScore(winningPlayer, { isDrawn: true });
+                    winScoreDetail = win_conditions_main_1.WinConditions.calculateScore(winningPlayer, { isDrawn: true });
                     winnerScore = winScoreDetail.score;
                     (0, logger_1.debugLog)(`[调试] WinConditions自摸分数明细: ${JSON.stringify(winScoreDetail)}`);
                     for (const player of players) {
@@ -1238,7 +1238,7 @@ class GameEventHandler {
                         loserIndex = players.findIndex(p => p !== winningPlayer && p.state !== player_1.PlayerState.WON);
                     }
                     (0, logger_1.debugLog)('[调试] 进入荣和结算分支');
-                    winScoreDetail = win_conditions_1.WinConditions.calculateScore(winningPlayer, { isDrawn: false });
+                    winScoreDetail = win_conditions_main_1.WinConditions.calculateScore(winningPlayer, { isDrawn: false });
                     winnerScore = winScoreDetail.score;
                     (0, logger_1.debugLog)(`[调试] WinConditions荣和分数明细: ${JSON.stringify(winScoreDetail)}`);
                     const loser = players[loserIndex];
