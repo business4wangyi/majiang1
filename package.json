@@ -8,7 +8,8 @@
     "build": "tsc",
     "dev": "ts-node src/majiang/index.ts",
     "test": "mocha -r ts-node/register tests/**/*.test.ts",
-    "test:watch": "mocha -r ts-node/register --watch tests/**/*.test.ts"
+    "test:watch": "mocha -r ts-node/register --watch tests/**/*.test.ts",
+    "tic-tac-toe": "ts-node src/tic-tac-toe/demo.ts"
   },
   "keywords": [
     "majiang",
