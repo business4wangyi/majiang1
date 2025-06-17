@@ -9,7 +9,9 @@
     "dev": "ts-node src/majiang/index.ts",
     "test": "mocha -r ts-node/register tests/**/*.test.ts",
     "test:watch": "mocha -r ts-node/register --watch tests/**/*.test.ts",
-    "tic-tac-toe": "ts-node src/tic-tac-toe/demo.ts"
+    "tic-tac-toe": "ts-node src/tic-tac-toe/demo.ts",
+    "ai:tic-tac-toe:test": "ts-node src/ai/test-tic-tac-toe-ai.ts",
+    "ai:compare-batch": "ts-node src/ai/compare-ai-batch.ts"
   },
   "keywords": [
     "majiang",
