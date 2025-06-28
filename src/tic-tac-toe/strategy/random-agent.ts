@@ -1,5 +1,5 @@
-import { Board, Player, Action } from '../tic-tac-toe/types';
-import { getLegalActions } from '../tic-tac-toe/game';
+import { Board, Player, Action } from '../types';
+import { getLegalActions } from '../game';
 
 export interface Agent {
   chooseAction(board: Board, player: Player): Action;

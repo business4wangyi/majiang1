@@ -11,7 +11,15 @@
     "test:watch": "mocha -r ts-node/register --watch tests/**/*.test.ts",
     "tic-tac-toe": "ts-node src/tic-tac-toe/demo.ts",
     "ai:tic-tac-toe:test": "ts-node src/ai/test-tic-tac-toe-ai.ts",
-    "ai:compare-batch": "ts-node src/ai/compare-ai-batch.ts"
+    "ai:compare-batch": "ts-node src/ai/compare-ai-batch.ts",
+    "ai:train-qlearning-agent": "ts-node src/ai/train-qlearning-agent.ts",
+    "ai:evaluate-agents-batch": "ts-node src/ai/evaluate-agents-batch.ts",
+    "ai:analyze-qtable": "ts-node src/ai/analyze-qtable.ts",
+    "ai:visualize-strategy": "ts-node src/ai/visualize-strategy.ts",
+    "othello:train-eval": "ts-node src/othello/othello-train-eval.ts",
+    "othello:analyze-qtable": "ts-node src/othello/analyze-qtable.ts",
+    "othello:play": "ts-node src/othello/othello-play.ts",
+    "othello:train-eval-batch": "ts-node src/othello/othello-train-eval-batch.ts"
   },
   "keywords": [
     "majiang",

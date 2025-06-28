@@ -170,7 +170,7 @@ export async function runInteractiveGameLoop(game: Game): Promise<void> {
       errorLog(`游戏循环发生错误: ${error instanceof Error ? error.message : String(error)}\n${error instanceof Error ? error.stack : ''}`, error instanceof Error ? error : undefined);
       displayManager.printError(`游戏循环发生错误: ${error instanceof Error ? error.message : String(error)}\n${error instanceof Error ? error.stack : ''}`);
       await saveGameLogToFile(game, `game loop error-${error}`);
-      if (error instanceof Error && error.message === 'TILE_DECK_EMPTY') {
+      if (error instanceof Error && error.message === '牌山已空') {
         await gameEventHandler.handleGameEnd();
         if (gameLoopInterval) {
           clearInterval(gameLoopInterval);

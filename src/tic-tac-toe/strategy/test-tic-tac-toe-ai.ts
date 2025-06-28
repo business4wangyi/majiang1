@@ -1,11 +1,12 @@
-import { createBoard, makeMove, checkWinner } from '../tic-tac-toe/game';
-import { Player } from '../tic-tac-toe/types';
-import { RandomAgent } from './random-agent';
-import { QLearningAgent } from './qlearning-agent';
-import { MinimaxAgent } from './minimax-agent';
+import { createBoard, makeMove, checkWinner } from '../game';
+import { Player } from '../types';
+import { RandomAgent } from '@tic-tac-toe-strategy/random-agent';
+import { QLearningAgent } from '@tic-tac-toe-strategy/qlearning-agent';
+import { MinimaxAgent } from '@tic-tac-toe-strategy/minimax-agent';
+import { DefensiveAgent } from '@tic-tac-toe-strategy/defensive-agent';
 import * as fs from 'fs';
 
-const TRAIN_EPISODES = 10000;
+const TRAIN_EPISODES = 100000;
 const TEST_EPISODES = 1000;
 const QTABLE_X_PATH = 'src/ai/models/qtable-x.json';
 const QTABLE_O_PATH = 'src/ai/models/qtable-o.json';
@@ -18,7 +19,8 @@ const agentX = new QLearningAgent('X', 0.1); // 训练时允许探索
 // const agentO = new QLearningAgent('O', 0.1); // 训练时允许探索
 // const agentO = new GreedyAgent();
 // const agentO = new DefensiveAgent();
-const agentO = new MinimaxAgent();
+// const agentO = new MinimaxAgent();
+const agentO = new RandomAgent();
 
 // 2. 自动检测并加载Q表
 if (fs.existsSync(QTABLE_X_PATH)) {

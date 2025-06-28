@@ -7,7 +7,11 @@
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
-    "types": ["node", "mocha", "chai"]
+    "types": ["node", "mocha", "chai"],
+    "baseUrl": "./src",
+    "paths": {
+      "@tic-tac-toe-strategy/*": ["tic-tac-toe/strategy/*"]
+    }
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules"]

@@ -236,14 +236,14 @@ export class GameEventHandler {
       errorLog(`玩家 ${player.name} 手牌数量不正确: ${player.handTiles.length}，预期: ${expectedHandSize}`);
       displayManager.displayPlayerHand(player)
       errorLog(`退出游戏排查问题`);
-      throw new Error('HAND_SIZE_INVALID');
+      throw new Error('手牌数量无效');
     }
 
     // 检查牌山是否还有牌
     if (this.tileManager.getRemainingTiles() === 0) {
       errorLog(`牌山已空，无法摸牌,gameLoop没有确保牌山有牌`);
       errorLog(`退出游戏排查问题`);
-      throw new Error('TILE_DECK_EMPTY');
+      throw new Error('牌山已空');
     }
 
     // 摸牌
@@ -318,7 +318,7 @@ export class GameEventHandler {
     if (currentPlayer.state !== PlayerState.ACTING) {
       displayManager.printWarning(`玩家 ${currentPlayer.name} 不处于ACTING状态，当前状态: ${PlayerState[currentPlayer.state]}`);
       errorLog('游戏错误，排查问题');
-      throw new Error('PLAYER_STATE_INVALID');
+      throw new Error('玩家状态无效');
     }
     
     // 使用player.discardTile方法，该方法已经增强了安全性和错误处理
@@ -1195,7 +1195,7 @@ export class GameEventHandler {
         await this.checkOtherPlayersResponse(discardedTile);
       } else {
         errorLog('程序错误排查问题')
-        throw new Error('HAND_SIZE_INVALID');
+        throw new Error('手牌数量无效');
       }
 
     });
@@ -1375,7 +1375,7 @@ export class GameEventHandler {
       }
     } else {
       errorLog('程序错误，排查问题')
-      throw new Error('PLAYER_STATE_INVALID');
+      throw new Error('玩家状态无效');
     }
   }
 

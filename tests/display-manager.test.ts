@@ -1,10 +1,10 @@
 import { expect } from 'chai';
 import * as sinon from 'sinon';
-import { DisplayManager, displayManager } from '../src/display-manager';
-import { Player, PlayerType } from '../src/player';
-import { Tile, TileType } from '../src/tile';
-import { GameState } from '../src/game';
-import { Style } from '../src/display';
+import { DisplayManager, displayManager } from '../src/majiang/display-manager';
+import { Player, PlayerType } from '../src/majiang/player';
+import { Tile, TileType } from '../src/majiang/tile';
+import { GameState } from '../src/majiang/game';
+import { Style } from '../src/majiang/display';
 
 describe('DisplayManager', () => {
   let consoleLogStub: sinon.SinonStub;

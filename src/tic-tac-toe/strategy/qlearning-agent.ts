@@ -1,6 +1,6 @@
-import { Board, Player, Action } from '../tic-tac-toe/types';
-import { getLegalActions, makeMove, checkWinner } from '../tic-tac-toe/game';
-import { Agent } from './random-agent';
+import { Board, Player, Action } from '../types';
+import { getLegalActions, makeMove, checkWinner } from '../game';
+import { Agent } from '@tic-tac-toe-strategy/random-agent';
 import * as fs from 'fs';
 
 type QTable = Record<string, number[]>;
@@ -78,7 +78,7 @@ export class QLearningAgent implements Agent {
           this.Q[key][actionIdx] += this.alpha * (reward - this.Q[key][actionIdx]);
           reward = this.Q[key][actionIdx] * this.gamma;
         }
-        break;
+        return winner; // 返回胜者
       }
       currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
     }
@@ -95,5 +95,9 @@ export class QLearningAgent implements Agent {
       const data = fs.readFileSync(filepath, 'utf-8');
       this.Q = JSON.parse(data);
     }
+  }
+
+  public setAlpha(alpha: number) {
+    this.alpha = alpha;
   }
 } 

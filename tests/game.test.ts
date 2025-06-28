@@ -1,11 +1,11 @@
 import { expect } from 'chai';
-import { Game, GameState } from '../src/game';
-import { Player, PlayerState, PlayerType } from '../src/player';
-import { Tile, TileType } from '../src/tile';
-import { TileManager } from '../src/tile-manager';
-import { GameEventHandler } from '../src/game-event-handler';
-import { HumanPlayer } from '../src/human-player';
-import { AIPlayer } from '../src/ai-player';
+import { Game, GameState } from '../src/majiang/game';
+import { Player, PlayerState, PlayerType } from '../src/majiang/player';
+import { Tile, TileType } from '../src/majiang/tile';
+import { TileManager } from '../src/majiang/tile-manager';
+import { GameEventHandler } from '../src/majiang/game-event-handler';
+import { HumanPlayer } from '../src/majiang/human-player';
+import { AIPlayer } from '../src/majiang/ai-player';
 import sinon from 'sinon';
 
 describe('Game', () => {

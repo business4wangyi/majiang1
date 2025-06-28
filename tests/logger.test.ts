@@ -13,7 +13,7 @@ import {
   aiThinkingLog,
   flushLogs,
   log
-} from '../src/logger';
+} from '../src/majiang/logger';
 
 describe('Logger', () => {
   // 保存原始的console.log函数

@@ -1,24 +1,29 @@
-import { createBoard, makeMove, checkWinner } from '../tic-tac-toe/game';
-import { Player } from '../tic-tac-toe/types';
-import { RandomAgent } from './random-agent';
-import { GreedyAgent } from './greedy-agent';
-import { DefensiveAgent } from './defensive-agent';
-import { MinimaxAgent } from './minimax-agent';
-import { QLearningAgent } from './qlearning-agent';
+import { createBoard, makeMove, checkWinner } from '../game';
+import { Player } from '../types';
+import { RandomAgent } from '@tic-tac-toe-strategy/random-agent';
+import { GreedyAgent } from '@tic-tac-toe-strategy/greedy-agent';
+import { DefensiveAgent } from '@tic-tac-toe-strategy/defensive-agent';
+import { MinimaxAgent } from '@tic-tac-toe-strategy/minimax-agent';
+import { QLearningAgent } from '@tic-tac-toe-strategy/qlearning-agent';
 
 const GAMES = 1000;
 
 // 选择对战双方
 // const agentX = new MinimaxAgent();         // 你可以换成 RandomAgent/GreedyAgent/DefensiveAgent/QLearningAgent
-const agentX = new QLearningAgent('X', 0.1);
+const agentX = new QLearningAgent('X', 0);
 const QTABLE_X_PATH = 'src/ai/models/qtable-x.json';
 agentX.loadQTable(QTABLE_X_PATH);
 
-// const agentO = new DefensiveAgent();       // 你可以换成 RandomAgent/GreedyAgent/DefensiveAgent/QLearningAgent
+const agentO = new DefensiveAgent();       // 你可以换成 RandomAgent/GreedyAgent/DefensiveAgent/QLearningAgent
 // const agentO = new GreedyAgent();
 // const agentO = new QLearningAgent('O', 0.1);
 // const agentO = new RandomAgent();
-const agentO = new MinimaxAgent();
+// const agentO = new MinimaxAgent();
+
+// const agentX = new MinimaxAgent();
+// const agentO = new QLearningAgent('X', 0);
+// const QTABLE_O_PATH = 'src/ai/models/qtable-o.json';
+// agentO.loadQTable(QTABLE_O_PATH);
 
 let xWin = 0, oWin = 0, draw = 0, totalSteps = 0;
 const startTime = Date.now();

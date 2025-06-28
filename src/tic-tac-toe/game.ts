@@ -25,7 +25,7 @@ export function getLegalActions(board: Board): Action[] {
 // 执行落子，返回新棋盘
 export function makeMove(board: Board, action: Action, player: Player): Board {
   if (board[action.row][action.col] !== null) {
-    throw new Error('Invalid move');
+    throw new Error('无效的落子位置');
   }
   // 深拷贝棋盘
   const newBoard = board.map(row => row.slice());

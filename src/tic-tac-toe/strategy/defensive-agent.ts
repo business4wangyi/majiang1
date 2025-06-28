@@ -1,6 +1,6 @@
-import { Board, Player, Action } from '../tic-tac-toe/types';
-import { getLegalActions, makeMove, checkWinner } from '../tic-tac-toe/game';
-import { Agent } from './random-agent';
+import { Board, Player, Action } from '../types';
+import { getLegalActions, makeMove, checkWinner } from '../game';
+import { Agent } from '@tic-tac-toe-strategy/random-agent';
 
 export class DefensiveAgent implements Agent {
   chooseAction(board: Board, player: Player): Action {

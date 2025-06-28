@@ -2,12 +2,12 @@
 import { expect } from 'chai';
 import * as sinon from 'sinon';
 import * as readline from 'readline';
-import { Tile, TileType } from '../src/tile';
-import { Game } from '../src/game';
-import { PlayerAction } from '../src/rule-types';
-import { Player, PlayerType } from '../src/player';
-import { RuleEngine } from '../src/rule-engine';
-import { GameState } from '../src/game';
+import { Tile, TileType } from '../src/majiang/tile';
+import { Game } from '../src/majiang/game';
+import { PlayerAction } from '../src/majiang/rule-types';
+import { Player, PlayerType } from '../src/majiang/player';
+import { RuleEngine } from '../src/majiang/rule-engine';
+import { GameState } from '../src/majiang/game';
 import { 
   askQuestion, 
   askQuestionWithOptions, 
