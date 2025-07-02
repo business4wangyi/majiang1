@@ -238,6 +238,102 @@
             font-size: 0.9em;
         }
 
+        .debug-item {
+            display: flex;
+            justify-content: space-between;
+            margin: 8px 0;
+            padding: 5px 0;
+            border-bottom: 1px solid #eee;
+            font-size: 0.9em;
+        }
+
+        .debug-item:last-child {
+            border-bottom: none;
+        }
+
+        .recognition-demo {
+            background: #f8f9fa;
+            border: 2px dashed #dee2e6;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            margin: 15px 0;
+            transition: all 0.3s ease;
+        }
+
+        .recognition-demo.active {
+            border-color: #28a745;
+            background: #d4edda;
+        }
+
+        .recognition-demo.processing {
+            border-color: #ffc107;
+            background: #fff3cd;
+            animation: processingPulse 1.5s infinite;
+        }
+
+        @keyframes processingPulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 10001;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 5% auto;
+            padding: 30px;
+            border-radius: 15px;
+            width: 80%;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .close:hover {
+            color: #000;
+        }
+
+        .export-section {
+            margin: 15px 0;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .export-section h4 {
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        .export-data {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 10px;
+            font-family: monospace;
+            font-size: 0.9em;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
         @media (max-width: 768px) {
             .main-content {
                 grid-template-columns: 1fr;
@@ -337,6 +433,37 @@
                 <div class="decision-display">
                     <h4>📊 局面分析</h4>
                     <p id="positionAnalysis">游戏阶段: 开局</p>
+                </div>
+
+                <div class="decision-display">
+                    <h4>🔧 调试面板</h4>
+                    <div id="debugInfo">
+                        <div class="debug-item">
+                            <strong>AI响应时间:</strong> <span id="aiResponseTime">0ms</span>
+                        </div>
+                        <div class="debug-item">
+                            <strong>决策历史:</strong> <span id="decisionCount">0</span>
+                        </div>
+                        <div class="debug-item">
+                            <strong>错误计数:</strong> <span id="errorCount">0</span>
+                        </div>
+                        <div class="debug-item">
+                            <strong>语音状态:</strong> <span id="voiceStatus">未启用</span>
+                        </div>
+                    </div>
+                    <button class="btn" onclick="exportGameData()" style="margin-top: 10px; font-size: 0.9em;">📤 导出数据</button>
+                </div>
+
+                <div class="decision-display">
+                    <h4>🎯 模拟识别</h4>
+                    <p>模拟屏幕/摄像头识别功能</p>
+                    <div style="margin: 10px 0;">
+                        <button class="btn" onclick="simulateScreenCapture()" style="font-size: 0.9em;">📸 模拟屏幕截图</button>
+                        <button class="btn" onclick="simulateCameraCapture()" style="font-size: 0.9em;">📹 模拟摄像头</button>
+                    </div>
+                    <div id="recognitionStatus" style="font-size: 0.9em; color: #666;">
+                        识别状态: 待机
+                    </div>
                 </div>
             </div>
         </div>
@@ -539,8 +666,15 @@
                     }, 1000);
                 }
 
+                // 更新统计信息
+                const responseTime = Date.now() - startTime;
+                gameStats.decisionCount++;
+                gameStats.totalResponseTime += responseTime;
+                document.getElementById('aiResponseTime').textContent = `${responseTime}ms`;
+
             } catch (error) {
                 console.error('AI分析失败:', error);
+                gameStats.errorCount++;
             }
 
             const responseTime = Date.now() - startTime;
@@ -863,6 +997,190 @@
 
             analysis.textContent = `游戏阶段: ${phase} (第${moveCount + 1}步)`;
             advice.textContent = tip;
+
+            // 更新调试信息
+            updateDebugInfo();
+        }
+
+        // 全局统计变量
+        let gameStats = {
+            decisionCount: 0,
+            errorCount: 0,
+            totalResponseTime: 0,
+            gameCount: 0
+        };
+
+        // 更新调试信息
+        function updateDebugInfo() {
+            document.getElementById('decisionCount').textContent = gameStats.decisionCount;
+            document.getElementById('errorCount').textContent = gameStats.errorCount;
+            document.getElementById('voiceStatus').textContent = isVoiceEnabled ? '已启用' : '未启用';
+        }
+
+        // 模拟屏幕截图识别
+        async function simulateScreenCapture() {
+            const statusElement = document.getElementById('recognitionStatus');
+            statusElement.textContent = '正在截取屏幕...';
+            statusElement.style.color = '#ffc107';
+
+            // 模拟截图延迟
+            await new Promise(resolve => setTimeout(resolve, 1000));
+
+            // 模拟识别过程
+            statusElement.textContent = '正在分析图像...';
+            await new Promise(resolve => setTimeout(resolve, 1500));
+
+            // 模拟识别结果
+            const confidence = 0.85 + Math.random() * 0.1;
+            statusElement.textContent = `屏幕识别完成 (置信度: ${(confidence * 100).toFixed(1)}%)`;
+            statusElement.style.color = '#28a745';
+
+            // 显示模拟的识别结果
+            showRecognitionResult('screen', confidence);
+
+            setTimeout(() => {
+                statusElement.textContent = '识别状态: 待机';
+                statusElement.style.color = '#666';
+            }, 3000);
+        }
+
+        // 模拟摄像头识别
+        async function simulateCameraCapture() {
+            const statusElement = document.getElementById('recognitionStatus');
+            statusElement.textContent = '正在启动摄像头...';
+            statusElement.style.color = '#ffc107';
+
+            // 模拟摄像头启动
+            await new Promise(resolve => setTimeout(resolve, 800));
+
+            statusElement.textContent = '正在捕获图像...';
+            await new Promise(resolve => setTimeout(resolve, 1200));
+
+            statusElement.textContent = '正在识别棋盘...';
+            await new Promise(resolve => setTimeout(resolve, 2000));
+
+            // 模拟识别结果
+            const confidence = 0.75 + Math.random() * 0.15;
+            statusElement.textContent = `摄像头识别完成 (置信度: ${(confidence * 100).toFixed(1)}%)`;
+            statusElement.style.color = '#28a745';
+
+            showRecognitionResult('camera', confidence);
+
+            setTimeout(() => {
+                statusElement.textContent = '识别状态: 待机';
+                statusElement.style.color = '#666';
+            }, 3000);
+        }
+
+        // 显示识别结果
+        function showRecognitionResult(source, confidence) {
+            const sourceText = source === 'screen' ? '屏幕截图' : '摄像头';
+            alert(`${sourceText}识别完成！\n\n检测到当前棋盘状态\n置信度: ${(confidence * 100).toFixed(1)}%\n\n这是一个演示功能，实际应用中会:\n- 使用计算机视觉算法分析图像\n- 识别棋盘网格和棋子位置\n- 返回结构化的游戏状态数据`);
+        }
+
+        // 导出游戏数据
+        function exportGameData() {
+            const gameData = {
+                timestamp: new Date().toISOString(),
+                gameBoard: gameBoard,
+                currentPlayer: currentPlayer,
+                moveHistory: moveHistory,
+                aiConfig: aiConfig,
+                gameStats: gameStats,
+                performance: {
+                    averageResponseTime: gameStats.decisionCount > 0 ?
+                        (gameStats.totalResponseTime / gameStats.decisionCount).toFixed(2) + 'ms' : '0ms'
+                }
+            };
+
+            showExportModal(gameData);
+        }
+
+        // 显示导出模态框
+        function showExportModal(data) {
+            // 创建模态框
+            const modal = document.createElement('div');
+            modal.className = 'modal';
+            modal.style.display = 'block';
+
+            modal.innerHTML = `
+                <div class="modal-content">
+                    <span class="close" onclick="this.parentElement.parentElement.remove()">&times;</span>
+                    <h2>📤 游戏数据导出</h2>
+
+                    <div class="export-section">
+                        <h4>🎮 游戏状态</h4>
+                        <div class="export-data">${JSON.stringify(data.gameBoard, null, 2)}</div>
+                    </div>
+
+                    <div class="export-section">
+                        <h4>📝 移动历史</h4>
+                        <div class="export-data">${JSON.stringify(data.moveHistory, null, 2)}</div>
+                    </div>
+
+                    <div class="export-section">
+                        <h4>⚙️ AI配置</h4>
+                        <div class="export-data">${JSON.stringify(data.aiConfig, null, 2)}</div>
+                    </div>
+
+                    <div class="export-section">
+                        <h4>📊 统计信息</h4>
+                        <div class="export-data">${JSON.stringify({
+                            ...data.gameStats,
+                            ...data.performance
+                        }, null, 2)}</div>
+                    </div>
+
+                    <div style="text-align: center; margin-top: 20px;">
+                        <button class="btn" onclick="downloadGameData(${JSON.stringify(data).replace(/"/g, '&quot;')})">
+                            💾 下载JSON文件
+                        </button>
+                        <button class="btn" onclick="copyToClipboard(${JSON.stringify(JSON.stringify(data, null, 2)).replace(/"/g, '&quot;')})">
+                            📋 复制到剪贴板
+                        </button>
+                    </div>
+                </div>
+            `;
+
+            document.body.appendChild(modal);
+
+            // 点击模态框外部关闭
+            modal.onclick = function(event) {
+                if (event.target === modal) {
+                    modal.remove();
+                }
+            };
+        }
+
+        // 下载游戏数据
+        function downloadGameData(data) {
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `tic-tac-toe-game-${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        // 复制到剪贴板
+        async function copyToClipboard(text) {
+            try {
+                await navigator.clipboard.writeText(text);
+                alert('数据已复制到剪贴板！');
+            } catch (err) {
+                console.error('复制失败:', err);
+                // 降级方案
+                const textArea = document.createElement('textarea');
+                textArea.value = text;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+                alert('数据已复制到剪贴板！');
+            }
         }
 
         // 页面加载完成后初始化

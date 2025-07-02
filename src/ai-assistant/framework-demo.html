@@ -1,0 +1,1365 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI助手框架完整演示</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .framework-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.15);
+            overflow: hidden;
+        }
+
+        .framework-header {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+
+        .framework-header h1 {
+            font-size: 3em;
+            margin-bottom: 15px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .framework-header p {
+            font-size: 1.3em;
+            opacity: 0.95;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .architecture-diagram {
+            background: #f8f9fa;
+            padding: 40px;
+            text-align: center;
+        }
+
+        .architecture-diagram h2 {
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 2em;
+        }
+
+        .module-flow {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin: 30px 0;
+        }
+
+        .module {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            text-align: center;
+            min-width: 200px;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .module:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.15);
+        }
+
+        .module.active {
+            border: 3px solid #28a745;
+            background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+        }
+
+        .module.processing {
+            border: 3px solid #ffc107;
+            background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+            animation: processingPulse 1.5s infinite;
+        }
+
+        .module-icon {
+            font-size: 3em;
+            margin-bottom: 15px;
+            display: block;
+        }
+
+        .module h3 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 1.3em;
+        }
+
+        .module p {
+            color: #666;
+            font-size: 0.9em;
+            line-height: 1.4;
+        }
+
+        .arrow {
+            font-size: 2em;
+            color: #667eea;
+            margin: 0 10px;
+        }
+
+        .demo-controls {
+            background: #343a40;
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .demo-controls h2 {
+            margin-bottom: 25px;
+            font-size: 2em;
+        }
+
+        .control-group {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin: 20px 0;
+        }
+
+        .demo-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 30px;
+            cursor: pointer;
+            font-size: 1.1em;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            min-width: 180px;
+        }
+
+        .demo-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
+
+        .demo-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .demo-btn.success {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        }
+
+        .demo-btn.warning {
+            background: linear-gradient(135deg, #ffc107 0%, #fd7e14 100%);
+        }
+
+        .demo-btn.danger {
+            background: linear-gradient(135deg, #dc3545 0%, #e83e8c 100%);
+        }
+
+        .advanced-settings {
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 25px;
+            margin-top: 25px;
+            border: 1px solid rgba(255,255,255,0.2);
+            animation: slideDown 0.3s ease;
+        }
+
+        .advanced-settings h3 {
+            color: white;
+            margin-bottom: 20px;
+            text-align: center;
+            font-size: 1.3em;
+        }
+
+        .settings-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .setting-item {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .setting-item label {
+            color: white;
+            font-weight: 500;
+            font-size: 0.9em;
+        }
+
+        .setting-item select,
+        .setting-item input[type="checkbox"] {
+            padding: 8px;
+            border: 1px solid rgba(255,255,255,0.3);
+            border-radius: 8px;
+            background: rgba(255,255,255,0.1);
+            color: white;
+            font-size: 0.9em;
+        }
+
+        .setting-item select:focus {
+            outline: none;
+            border-color: rgba(255,255,255,0.6);
+            background: rgba(255,255,255,0.2);
+        }
+
+        .setting-item input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            margin-right: 8px;
+        }
+
+        .setting-item label:has(input[type="checkbox"]) {
+            flex-direction: row;
+            align-items: center;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* 主题样式 */
+        .framework-container.theme-dark {
+            background: #2d3748;
+            color: #e2e8f0;
+        }
+
+        .framework-container.theme-dark .architecture-diagram,
+        .framework-container.theme-dark .performance-dashboard,
+        .framework-container.theme-dark .status-panel {
+            background: #4a5568;
+        }
+
+        .framework-container.theme-dark .module,
+        .framework-container.theme-dark .status-card,
+        .framework-container.theme-dark .metric-card {
+            background: #2d3748;
+            color: #e2e8f0;
+            border: 1px solid #4a5568;
+        }
+
+        .framework-container.theme-light {
+            background: #f7fafc;
+        }
+
+        .framework-container.theme-light .demo-controls {
+            background: #e2e8f0;
+            color: #2d3748;
+        }
+
+        .framework-container.theme-colorful .framework-header {
+            background: linear-gradient(135deg, #ff6b6b 0%, #4ecdc4 100%);
+        }
+
+        .framework-container.theme-colorful .demo-controls {
+            background: linear-gradient(135deg, #a8e6cf 0%, #dcedc1 100%);
+            color: #2d3748;
+        }
+
+        .framework-container.theme-colorful .feature-showcase {
+            background: linear-gradient(135deg, #ffd93d 0%, #ff6b6b 100%);
+        }
+
+        .status-panel {
+            background: #f8f9fa;
+            padding: 30px;
+            border-top: 1px solid #dee2e6;
+        }
+
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+        }
+
+        .status-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+        }
+
+        .status-card h3 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 1.2em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #dc3545;
+            display: inline-block;
+        }
+
+        .status-indicator.active {
+            background: #28a745;
+            animation: blink 1s infinite;
+        }
+
+        .status-indicator.processing {
+            background: #ffc107;
+            animation: processingPulse 1s infinite;
+        }
+
+        .log-output {
+            background: #2d3748;
+            color: #e2e8f0;
+            border-radius: 8px;
+            padding: 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            max-height: 200px;
+            overflow-y: auto;
+            margin-top: 10px;
+        }
+
+        .log-entry {
+            margin: 5px 0;
+            padding: 2px 0;
+        }
+
+        .log-entry.info { color: #63b3ed; }
+        .log-entry.success { color: #68d391; }
+        .log-entry.warning { color: #fbb040; }
+        .log-entry.error { color: #fc8181; }
+
+        @keyframes processingPulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0.3; }
+        }
+
+        .performance-dashboard {
+            background: #f8f9fa;
+            padding: 40px;
+            border-top: 1px solid #dee2e6;
+        }
+
+        .performance-dashboard h2 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2em;
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 25px;
+            margin-top: 30px;
+        }
+
+        .metric-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            text-align: center;
+            transition: all 0.3s ease;
+            border-left: 4px solid #667eea;
+        }
+
+        .metric-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.15);
+        }
+
+        .metric-card h3 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 1.1em;
+        }
+
+        .metric-value {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 15px;
+        }
+
+        .metric-chart {
+            height: 60px;
+            background: linear-gradient(90deg, #e3f2fd 0%, #bbdefb 50%, #90caf9 100%);
+            border-radius: 8px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .metric-chart::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: repeating-linear-gradient(
+                90deg,
+                transparent,
+                transparent 10px,
+                rgba(255,255,255,0.3) 10px,
+                rgba(255,255,255,0.3) 20px
+            );
+            animation: chartFlow 3s linear infinite;
+        }
+
+        @keyframes chartFlow {
+            0% { transform: translateX(-20px); }
+            100% { transform: translateX(20px); }
+        }
+
+        .feature-showcase {
+            padding: 40px;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            text-align: center;
+        }
+
+        .feature-showcase h2 {
+            font-size: 2.5em;
+            margin-bottom: 20px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 25px;
+            margin-top: 30px;
+        }
+
+        .feature-card {
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 25px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+            background: rgba(255,255,255,0.2);
+        }
+
+        .feature-icon {
+            font-size: 3em;
+            margin-bottom: 15px;
+            display: block;
+        }
+
+        .feature-card h3 {
+            margin-bottom: 10px;
+            font-size: 1.3em;
+        }
+
+        .feature-card p {
+            opacity: 0.9;
+            line-height: 1.5;
+        }
+
+        @media (max-width: 768px) {
+            .module-flow {
+                flex-direction: column;
+            }
+            
+            .arrow {
+                transform: rotate(90deg);
+            }
+            
+            .control-group {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .framework-header h1 {
+                font-size: 2em;
+            }
+            
+            .feature-showcase h2 {
+                font-size: 2em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="framework-container">
+        <div class="framework-header">
+            <h1>🤖 AI助手框架完整演示</h1>
+            <p>体验从输入识别到输出执行的完整AI辅助游戏流程 - 展示真实的企业级AI助手架构</p>
+        </div>
+
+        <div class="architecture-diagram">
+            <h2>🏗️ 系统架构流程</h2>
+            <div class="module-flow">
+                <div class="module" id="inputModule">
+                    <span class="module-icon">📸</span>
+                    <h3>输入识别模块</h3>
+                    <p>屏幕截图分析<br>摄像头识别<br>手动输入</p>
+                </div>
+                
+                <span class="arrow">→</span>
+                
+                <div class="module" id="aiModule">
+                    <span class="module-icon">🧠</span>
+                    <h3>AI计算模块</h3>
+                    <p>策略分析<br>决策生成<br>置信度评估</p>
+                </div>
+                
+                <span class="arrow">→</span>
+                
+                <div class="module" id="outputModule">
+                    <span class="module-icon">🎯</span>
+                    <h3>输出执行模块</h3>
+                    <p>自动执行<br>建议显示<br>语音提示</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="demo-controls">
+            <h2>🎮 演示控制台</h2>
+            <div class="control-group">
+                <button class="demo-btn" onclick="startFullDemo()">🚀 完整流程演示</button>
+                <button class="demo-btn warning" onclick="startInputDemo()">📸 输入识别演示</button>
+                <button class="demo-btn success" onclick="startAIDemo()">🧠 AI计算演示</button>
+                <button class="demo-btn danger" onclick="startOutputDemo()">🎯 输出执行演示</button>
+            </div>
+            <div class="control-group">
+                <button class="demo-btn" onclick="resetDemo()">🔄 重置演示</button>
+                <button class="demo-btn" onclick="openGameDemo()">🎮 打开游戏演示</button>
+                <button class="demo-btn" onclick="showDocumentation()">📚 查看文档</button>
+                <button class="demo-btn" onclick="toggleAdvancedSettings()">⚙️ 高级设置</button>
+            </div>
+
+            <div id="advancedSettings" class="advanced-settings" style="display: none;">
+                <h3>⚙️ 高级配置</h3>
+                <div class="settings-grid">
+                    <div class="setting-item">
+                        <label for="demoSpeed">演示速度:</label>
+                        <select id="demoSpeed" onchange="updateDemoSettings()">
+                            <option value="0.5">慢速 (0.5x)</option>
+                            <option value="1" selected>正常 (1x)</option>
+                            <option value="1.5">快速 (1.5x)</option>
+                            <option value="2">极速 (2x)</option>
+                        </select>
+                    </div>
+
+                    <div class="setting-item">
+                        <label for="logLevel">日志级别:</label>
+                        <select id="logLevel" onchange="updateDemoSettings()">
+                            <option value="error">错误</option>
+                            <option value="warning">警告</option>
+                            <option value="info" selected>信息</option>
+                            <option value="debug">调试</option>
+                        </select>
+                    </div>
+
+                    <div class="setting-item">
+                        <label>
+                            <input type="checkbox" id="enableTips" checked onchange="updateDemoSettings()">
+                            启用智能提示
+                        </label>
+                    </div>
+
+                    <div class="setting-item">
+                        <label>
+                            <input type="checkbox" id="enableSound" onchange="updateDemoSettings()">
+                            启用音效
+                        </label>
+                    </div>
+
+                    <div class="setting-item">
+                        <label>
+                            <input type="checkbox" id="autoReset" onchange="updateDemoSettings()">
+                            演示后自动重置
+                        </label>
+                    </div>
+
+                    <div class="setting-item">
+                        <label for="theme">界面主题:</label>
+                        <select id="theme" onchange="updateDemoSettings()">
+                            <option value="default" selected>默认</option>
+                            <option value="dark">深色</option>
+                            <option value="light">浅色</option>
+                            <option value="colorful">彩色</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="status-panel">
+            <div class="status-grid">
+                <div class="status-card">
+                    <h3>
+                        <span class="status-indicator" id="systemStatus"></span>
+                        系统状态
+                    </h3>
+                    <p id="systemStatusText">系统就绪，等待演示开始</p>
+                    <div class="log-output" id="systemLog">
+                        <div class="log-entry info">[系统] AI助手框架已初始化</div>
+                        <div class="log-entry success">[系统] 所有模块加载完成</div>
+                    </div>
+                </div>
+
+                <div class="status-card">
+                    <h3>
+                        <span class="status-indicator" id="inputStatus"></span>
+                        输入模块状态
+                    </h3>
+                    <p id="inputStatusText">输入模块待机中</p>
+                    <div class="log-output" id="inputLog">
+                        <div class="log-entry info">[输入] 视觉识别模块已就绪</div>
+                        <div class="log-entry info">[输入] 手动输入接口已启用</div>
+                    </div>
+                </div>
+
+                <div class="status-card">
+                    <h3>
+                        <span class="status-indicator" id="aiStatus"></span>
+                        AI模块状态
+                    </h3>
+                    <p id="aiStatusText">AI引擎待机中</p>
+                    <div class="log-output" id="aiLog">
+                        <div class="log-entry info">[AI] 策略引擎已加载</div>
+                        <div class="log-entry info">[AI] 决策模型已初始化</div>
+                    </div>
+                </div>
+
+                <div class="status-card">
+                    <h3>
+                        <span class="status-indicator" id="outputStatus"></span>
+                        输出模块状态
+                    </h3>
+                    <p id="outputStatusText">输出模块待机中</p>
+                    <div class="log-output" id="outputLog">
+                        <div class="log-entry info">[输出] 显示控制器已就绪</div>
+                        <div class="log-entry info">[输出] 语音合成已启用</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="performance-dashboard">
+            <h2>📊 性能监控仪表板</h2>
+            <div class="dashboard-grid">
+                <div class="metric-card">
+                    <h3>⚡ 响应时间</h3>
+                    <div class="metric-value" id="responseTimeMetric">0ms</div>
+                    <div class="metric-chart" id="responseTimeChart"></div>
+                </div>
+
+                <div class="metric-card">
+                    <h3>🎯 成功率</h3>
+                    <div class="metric-value" id="successRateMetric">100%</div>
+                    <div class="metric-chart" id="successRateChart"></div>
+                </div>
+
+                <div class="metric-card">
+                    <h3>🔄 处理量</h3>
+                    <div class="metric-value" id="throughputMetric">0/min</div>
+                    <div class="metric-chart" id="throughputChart"></div>
+                </div>
+
+                <div class="metric-card">
+                    <h3>💾 内存使用</h3>
+                    <div class="metric-value" id="memoryMetric">12MB</div>
+                    <div class="metric-chart" id="memoryChart"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="feature-showcase">
+            <h2>✨ 框架特性展示</h2>
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <span class="feature-icon">🔍</span>
+                    <h3>智能识别</h3>
+                    <p>支持屏幕截图和摄像头识别，使用计算机视觉技术自动检测游戏状态</p>
+                </div>
+                
+                <div class="feature-card">
+                    <span class="feature-icon">🧠</span>
+                    <h3>多策略AI</h3>
+                    <p>集成Minimax、Q-Learning、防守等多种AI策略，提供最优决策建议</p>
+                </div>
+                
+                <div class="feature-card">
+                    <span class="feature-icon">🎯</span>
+                    <h3>智能输出</h3>
+                    <p>支持自动执行、可视化建议和语音提示等多种输出方式</p>
+                </div>
+                
+                <div class="feature-card">
+                    <span class="feature-icon">📊</span>
+                    <h3>实时监控</h3>
+                    <p>提供详细的性能监控、错误追踪和系统状态实时显示</p>
+                </div>
+                
+                <div class="feature-card">
+                    <span class="feature-icon">🔧</span>
+                    <h3>高度可配置</h3>
+                    <p>支持多种AI策略、难度级别和输出模式的灵活配置</p>
+                </div>
+                
+                <div class="feature-card">
+                    <span class="feature-icon">📱</span>
+                    <h3>跨平台支持</h3>
+                    <p>支持Web、桌面和移动端，提供一致的用户体验</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 演示状态管理
+        let demoState = {
+            isRunning: false,
+            currentStep: 0,
+            totalSteps: 0
+        };
+
+        // 性能监控数据
+        let performanceData = {
+            responseTime: [],
+            successRate: [],
+            throughput: [],
+            memory: [],
+            startTime: Date.now()
+        };
+
+        // 演示配置
+        let demoConfig = {
+            speed: 1,
+            logLevel: 'info',
+            enableTips: true,
+            enableSound: false,
+            autoReset: false,
+            theme: 'default'
+        };
+
+        // 实时性能监控
+        function updatePerformanceMetrics() {
+            const currentTime = Date.now();
+            const elapsed = (currentTime - performanceData.startTime) / 1000;
+
+            // 模拟性能数据
+            const responseTime = 150 + Math.random() * 100;
+            const successRate = 95 + Math.random() * 5;
+            const throughput = Math.floor(elapsed / 10) + Math.random() * 2;
+            const memory = 12 + Math.sin(elapsed / 10) * 2;
+
+            // 更新显示
+            document.getElementById('responseTimeMetric').textContent = `${responseTime.toFixed(0)}ms`;
+            document.getElementById('successRateMetric').textContent = `${successRate.toFixed(1)}%`;
+            document.getElementById('throughputMetric').textContent = `${throughput.toFixed(1)}/min`;
+            document.getElementById('memoryMetric').textContent = `${memory.toFixed(1)}MB`;
+
+            // 存储历史数据
+            performanceData.responseTime.push(responseTime);
+            performanceData.successRate.push(successRate);
+            performanceData.throughput.push(throughput);
+            performanceData.memory.push(memory);
+
+            // 限制历史数据长度
+            const maxHistory = 50;
+            Object.keys(performanceData).forEach(key => {
+                if (Array.isArray(performanceData[key]) && performanceData[key].length > maxHistory) {
+                    performanceData[key] = performanceData[key].slice(-maxHistory);
+                }
+            });
+        }
+
+        // 智能提示系统
+        function showSmartTip(message, type = 'info', duration = 3000) {
+            const tipContainer = document.getElementById('smartTips') || createTipContainer();
+
+            const tip = document.createElement('div');
+            tip.className = `smart-tip ${type}`;
+            tip.innerHTML = `
+                <div class="tip-icon">${getTipIcon(type)}</div>
+                <div class="tip-content">${message}</div>
+                <div class="tip-close" onclick="this.parentElement.remove()">×</div>
+            `;
+
+            tipContainer.appendChild(tip);
+
+            // 自动移除
+            setTimeout(() => {
+                if (tip.parentElement) {
+                    tip.remove();
+                }
+            }, duration);
+        }
+
+        function createTipContainer() {
+            const container = document.createElement('div');
+            container.id = 'smartTips';
+            container.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                z-index: 10000;
+                max-width: 350px;
+            `;
+            document.body.appendChild(container);
+            return container;
+        }
+
+        function getTipIcon(type) {
+            const icons = {
+                info: 'ℹ️',
+                success: '✅',
+                warning: '⚠️',
+                error: '❌',
+                tip: '💡'
+            };
+            return icons[type] || icons.info;
+        }
+
+        // 添加智能提示样式
+        function addSmartTipStyles() {
+            const style = document.createElement('style');
+            style.textContent = `
+                .smart-tip {
+                    background: white;
+                    border-radius: 12px;
+                    box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+                    margin-bottom: 10px;
+                    padding: 15px;
+                    display: flex;
+                    align-items: center;
+                    gap: 12px;
+                    animation: slideInRight 0.3s ease;
+                    border-left: 4px solid #667eea;
+                }
+
+                .smart-tip.success { border-left-color: #28a745; }
+                .smart-tip.warning { border-left-color: #ffc107; }
+                .smart-tip.error { border-left-color: #dc3545; }
+                .smart-tip.tip { border-left-color: #17a2b8; }
+
+                .tip-icon {
+                    font-size: 1.2em;
+                    flex-shrink: 0;
+                }
+
+                .tip-content {
+                    flex: 1;
+                    font-size: 0.9em;
+                    color: #333;
+                }
+
+                .tip-close {
+                    cursor: pointer;
+                    font-size: 1.2em;
+                    color: #999;
+                    flex-shrink: 0;
+                    width: 20px;
+                    height: 20px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    border-radius: 50%;
+                    transition: all 0.2s ease;
+                }
+
+                .tip-close:hover {
+                    background: #f0f0f0;
+                    color: #333;
+                }
+
+                @keyframes slideInRight {
+                    from {
+                        transform: translateX(100%);
+                        opacity: 0;
+                    }
+                    to {
+                        transform: translateX(0);
+                        opacity: 1;
+                    }
+                }
+            `;
+            document.head.appendChild(style);
+        }
+
+        // 日志管理
+        function addLog(module, message, type = 'info') {
+            const logContainer = document.getElementById(`${module}Log`);
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = document.createElement('div');
+            logEntry.className = `log-entry ${type}`;
+            logEntry.textContent = `[${timestamp}] ${message}`;
+            
+            logContainer.appendChild(logEntry);
+            logContainer.scrollTop = logContainer.scrollHeight;
+            
+            // 限制日志条数
+            const entries = logContainer.querySelectorAll('.log-entry');
+            if (entries.length > 10) {
+                entries[0].remove();
+            }
+        }
+
+        // 更新模块状态
+        function updateModuleStatus(moduleId, status, text) {
+            const indicator = document.getElementById(`${moduleId}Status`);
+            const statusText = document.getElementById(`${moduleId}StatusText`);
+            const module = document.getElementById(`${moduleId}Module`);
+            
+            // 清除所有状态类
+            indicator.className = 'status-indicator';
+            if (module) {
+                module.className = 'module';
+            }
+            
+            // 设置新状态
+            if (status === 'active') {
+                indicator.classList.add('active');
+                if (module) module.classList.add('active');
+            } else if (status === 'processing') {
+                indicator.classList.add('processing');
+                if (module) module.classList.add('processing');
+            }
+            
+            if (statusText) {
+                statusText.textContent = text;
+            }
+        }
+
+        // 完整流程演示
+        async function startFullDemo() {
+            if (demoState.isRunning) {
+                showSmartTip('演示正在进行中，请等待完成', 'warning');
+                return;
+            }
+
+            demoState.isRunning = true;
+            demoState.currentStep = 0;
+            demoState.totalSteps = 3;
+
+            showSmartTip('开始完整流程演示，展示AI助手框架的端到端处理能力', 'info', 4000);
+            addLog('system', '开始完整流程演示', 'info');
+            updateModuleStatus('system', 'processing', '正在执行完整演示流程');
+
+            // 禁用按钮
+            disableAllButtons();
+
+            try {
+                // 步骤1: 输入识别
+                showSmartTip('第1步：启动输入识别模块，模拟屏幕截图和图像分析', 'tip');
+                await simulateInputRecognition();
+                await sleep(1000);
+
+                // 步骤2: AI计算
+                showSmartTip('第2步：AI计算引擎分析游戏状态，生成最优策略', 'tip');
+                await simulateAIComputation();
+                await sleep(1000);
+
+                // 步骤3: 输出执行
+                showSmartTip('第3步：输出模块执行AI建议，提供多种反馈方式', 'tip');
+                await simulateOutputExecution();
+
+                addLog('system', '完整流程演示完成', 'success');
+                updateModuleStatus('system', 'active', '演示完成，系统就绪');
+                showSmartTip('完整流程演示成功完成！AI助手框架运行正常', 'success', 5000);
+
+            } catch (error) {
+                addLog('system', `演示过程中发生错误: ${error.message}`, 'error');
+                updateModuleStatus('system', '', '演示失败');
+                showSmartTip(`演示失败：${error.message}`, 'error');
+            } finally {
+                demoState.isRunning = false;
+                enableAllButtons();
+            }
+        }
+
+        // 输入识别演示
+        async function startInputDemo() {
+            if (demoState.isRunning) {
+                showSmartTip('请等待当前演示完成', 'warning');
+                return;
+            }
+
+            showSmartTip('启动输入识别演示，展示视觉识别和图像处理能力', 'info');
+            addLog('system', '开始输入识别演示', 'info');
+            await simulateInputRecognition();
+            showSmartTip('输入识别演示完成！成功识别游戏状态', 'success');
+        }
+
+        // AI计算演示
+        async function startAIDemo() {
+            if (demoState.isRunning) {
+                showSmartTip('请等待当前演示完成', 'warning');
+                return;
+            }
+
+            showSmartTip('启动AI计算演示，展示智能决策和策略分析', 'info');
+            addLog('system', '开始AI计算演示', 'info');
+            await simulateAIComputation();
+            showSmartTip('AI计算演示完成！生成最优策略建议', 'success');
+        }
+
+        // 输出执行演示
+        async function startOutputDemo() {
+            if (demoState.isRunning) {
+                showSmartTip('请等待当前演示完成', 'warning');
+                return;
+            }
+
+            showSmartTip('启动输出执行演示，展示多种反馈和执行方式', 'info');
+            addLog('system', '开始输出执行演示', 'info');
+            await simulateOutputExecution();
+            showSmartTip('输出执行演示完成！成功提供AI建议', 'success');
+        }
+
+        // 模拟输入识别过程
+        async function simulateInputRecognition() {
+            updateModuleStatus('input', 'processing', '正在进行输入识别...');
+            addLog('input', '启动屏幕截图模块', 'info');
+
+            await sleep(800);
+            addLog('input', '正在捕获屏幕区域...', 'info');
+
+            await sleep(1200);
+            addLog('input', '图像预处理完成', 'info');
+
+            await sleep(1000);
+            addLog('input', '正在进行棋盘检测...', 'info');
+
+            await sleep(1500);
+            addLog('input', '棋子识别中...', 'info');
+
+            await sleep(1200);
+            addLog('input', '游戏状态解析完成', 'success');
+            addLog('input', '识别置信度: 92.3%', 'success');
+
+            updateModuleStatus('input', 'active', '输入识别完成 (置信度: 92.3%)');
+        }
+
+        // 模拟AI计算过程
+        async function simulateAIComputation() {
+            updateModuleStatus('ai', 'processing', '正在进行AI计算...');
+            addLog('ai', '加载游戏状态数据', 'info');
+
+            await sleep(600);
+            addLog('ai', '初始化Minimax策略引擎', 'info');
+
+            await sleep(800);
+            addLog('ai', '开始博弈树搜索...', 'info');
+
+            await sleep(1500);
+            addLog('ai', '评估候选移动 (9个位置)', 'info');
+
+            await sleep(1200);
+            addLog('ai', '计算获胜概率...', 'info');
+
+            await sleep(1000);
+            addLog('ai', '生成决策推理...', 'info');
+
+            await sleep(800);
+            addLog('ai', 'AI决策完成: 位置(2,2), 置信度95%', 'success');
+            addLog('ai', '推理: 占据中心位置，控制全局', 'success');
+
+            updateModuleStatus('ai', 'active', 'AI计算完成 (推荐: 中心位置)');
+        }
+
+        // 模拟输出执行过程
+        async function simulateOutputExecution() {
+            updateModuleStatus('output', 'processing', '正在执行输出操作...');
+            addLog('output', '准备输出AI建议', 'info');
+
+            await sleep(500);
+            addLog('output', '生成可视化建议界面', 'info');
+
+            await sleep(800);
+            addLog('output', '高亮推荐位置', 'info');
+
+            await sleep(600);
+            addLog('output', '准备语音播报...', 'info');
+
+            await sleep(1000);
+            addLog('output', '语音播报: "建议在中心位置落子"', 'info');
+
+            await sleep(1200);
+            addLog('output', '检查自动执行设置...', 'info');
+
+            await sleep(800);
+            addLog('output', '输出执行完成', 'success');
+
+            updateModuleStatus('output', 'active', '输出执行完成');
+        }
+
+        // 重置演示
+        function resetDemo() {
+            demoState.isRunning = false;
+            demoState.currentStep = 0;
+
+            // 重置所有模块状态
+            updateModuleStatus('input', '', '输入模块待机中');
+            updateModuleStatus('ai', '', 'AI引擎待机中');
+            updateModuleStatus('output', '', '输出模块待机中');
+            updateModuleStatus('system', 'active', '系统就绪，等待演示开始');
+
+            // 清空日志（保留初始日志）
+            ['input', 'ai', 'output'].forEach(module => {
+                const logContainer = document.getElementById(`${module}Log`);
+                logContainer.innerHTML = `
+                    <div class="log-entry info">[${module}] 模块已重置</div>
+                    <div class="log-entry info">[${module}] 等待演示开始</div>
+                `;
+            });
+
+            addLog('system', '演示已重置，系统就绪', 'success');
+        }
+
+        // 打开游戏演示
+        function openGameDemo() {
+            window.open('demo-app.html', '_blank');
+            addLog('system', '已打开游戏演示页面', 'info');
+        }
+
+        // 显示文档
+        function showDocumentation() {
+            const docContent = `
+# AI助手框架技术文档
+
+## 系统架构
+
+### 1. 输入识别模块
+- **屏幕截图识别**: 使用计算机视觉技术分析屏幕内容
+- **摄像头识别**: 实时识别物理棋盘状态
+- **手动输入**: 提供用户友好的手动输入接口
+
+### 2. AI计算模块
+- **多策略支持**: Minimax、Q-Learning、防守、贪心等
+- **决策引擎**: 统一的AI决策接口
+- **置信度评估**: 基于策略类型的可信度计算
+
+### 3. 输出执行模块
+- **自动执行**: 鼠标/键盘操作自动化
+- **建议显示**: 可视化AI建议界面
+- **语音提示**: 文本转语音功能
+
+## 技术特性
+
+- 🔧 **高度可配置**: 支持多种AI策略和输出模式
+- 📊 **实时监控**: 详细的性能监控和错误追踪
+- 🌐 **跨平台**: Web、桌面、移动端支持
+- 🎯 **用户友好**: 直观的界面和交互体验
+
+## 使用场景
+
+1. **在线游戏辅助**: 自动识别网页游戏状态
+2. **物理棋盘分析**: 通过摄像头识别实体棋盘
+3. **策略学习**: 提供AI策略的教学和分析
+4. **游戏开发**: 作为游戏AI的开发和测试平台
+            `;
+
+            alert(docContent);
+            addLog('system', '已显示技术文档', 'info');
+        }
+
+        // 工具函数
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
+        function disableAllButtons() {
+            document.querySelectorAll('.demo-btn').forEach(btn => {
+                btn.disabled = true;
+            });
+        }
+
+        function enableAllButtons() {
+            document.querySelectorAll('.demo-btn').forEach(btn => {
+                btn.disabled = false;
+            });
+        }
+
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            // 添加智能提示样式
+            addSmartTipStyles();
+
+            // 初始化系统
+            addLog('system', 'AI助手框架演示系统已启动', 'success');
+            updateModuleStatus('system', 'active', '系统运行正常');
+
+            // 显示欢迎提示
+            setTimeout(() => {
+                showSmartTip('欢迎使用AI助手框架演示！点击"完整流程演示"开始体验', 'tip', 6000);
+            }, 1000);
+
+            // 启动性能监控
+            setInterval(updatePerformanceMetrics, 2000);
+
+            // 添加键盘快捷键
+            document.addEventListener('keydown', function(e) {
+                if (e.ctrlKey || e.metaKey) {
+                    switch(e.key) {
+                        case '1':
+                            e.preventDefault();
+                            startFullDemo();
+                            break;
+                        case '2':
+                            e.preventDefault();
+                            startInputDemo();
+                            break;
+                        case '3':
+                            e.preventDefault();
+                            startAIDemo();
+                            break;
+                        case '4':
+                            e.preventDefault();
+                            startOutputDemo();
+                            break;
+                        case 'r':
+                            e.preventDefault();
+                            resetDemo();
+                            break;
+                        case 'h':
+                            e.preventDefault();
+                            showHelpDialog();
+                            break;
+                    }
+                }
+            });
+
+            addLog('system', '键盘快捷键已启用 (Ctrl+1-4, Ctrl+R, Ctrl+H)', 'info');
+            addLog('system', '性能监控已启动', 'info');
+        });
+
+        // 显示帮助对话框
+        function showHelpDialog() {
+            showSmartTip(`
+                <strong>快捷键帮助：</strong><br>
+                Ctrl+1: 完整流程演示<br>
+                Ctrl+2: 输入识别演示<br>
+                Ctrl+3: AI计算演示<br>
+                Ctrl+4: 输出执行演示<br>
+                Ctrl+R: 重置演示<br>
+                Ctrl+H: 显示帮助
+            `, 'tip', 8000);
+        }
+
+        // 切换高级设置
+        function toggleAdvancedSettings() {
+            const settings = document.getElementById('advancedSettings');
+            if (settings.style.display === 'none') {
+                settings.style.display = 'block';
+                showSmartTip('高级设置已打开，您可以自定义演示参数', 'info');
+            } else {
+                settings.style.display = 'none';
+                showSmartTip('高级设置已关闭', 'info');
+            }
+        }
+
+        // 更新演示设置
+        function updateDemoSettings() {
+            demoConfig.speed = parseFloat(document.getElementById('demoSpeed').value);
+            demoConfig.logLevel = document.getElementById('logLevel').value;
+            demoConfig.enableTips = document.getElementById('enableTips').checked;
+            demoConfig.enableSound = document.getElementById('enableSound').checked;
+            demoConfig.autoReset = document.getElementById('autoReset').checked;
+            demoConfig.theme = document.getElementById('theme').value;
+
+            // 应用主题
+            applyTheme(demoConfig.theme);
+
+            // 显示配置更新提示
+            if (demoConfig.enableTips) {
+                showSmartTip(`设置已更新：速度${demoConfig.speed}x，主题${demoConfig.theme}`, 'success');
+            }
+
+            addLog('system', `配置已更新: 速度=${demoConfig.speed}x, 主题=${demoConfig.theme}`, 'info');
+        }
+
+        // 应用主题
+        function applyTheme(theme) {
+            const container = document.querySelector('.framework-container');
+
+            // 移除所有主题类
+            container.classList.remove('theme-dark', 'theme-light', 'theme-colorful');
+
+            // 应用新主题
+            if (theme !== 'default') {
+                container.classList.add(`theme-${theme}`);
+            }
+        }
+
+        // 播放音效
+        function playSound(type) {
+            if (!demoConfig.enableSound) return;
+
+            // 使用Web Audio API创建简单音效
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+
+            // 不同类型的音效
+            const frequencies = {
+                success: 800,
+                error: 300,
+                info: 600,
+                warning: 500
+            };
+
+            oscillator.frequency.setValueAtTime(frequencies[type] || 600, audioContext.currentTime);
+            oscillator.type = 'sine';
+
+            gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + 0.3);
+        }
+
+        // 重写sleep函数以支持速度调节
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms / demoConfig.speed));
+        }
+    </script>
+</body>
+</html>
