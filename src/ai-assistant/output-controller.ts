@@ -173,9 +173,11 @@ export class AutoExecutionController {
  */
 export class SuggestionDisplayController {
   private config: OutputConfig;
-  
+  private voiceController: VoiceController;
+
   constructor(config: OutputConfig) {
     this.config = config;
+    this.voiceController = new VoiceController();
   }
 
   /**
@@ -185,13 +187,26 @@ export class SuggestionDisplayController {
     if (this.config.mode === 'visual' || this.config.mode === 'suggest') {
       this.showVisualSuggestion(decision);
     }
-    
+
     if (this.config.voiceEnabled) {
       this.speakSuggestion(decision);
     }
-    
+
     if (this.config.showAlternatives && decision.alternatives.length > 0) {
       this.showAlternatives(decision.alternatives);
+    }
+  }
+
+  /**
+   * 语音播报建议
+   */
+  private async speakSuggestion(decision: AIDecision): Promise<void> {
+    const text = `AI建议在第${decision.action.row + 1}行第${decision.action.col + 1}列落子，置信度${(decision.confidence * 100).toFixed(0)}%。${decision.reasoning}`;
+
+    try {
+      await this.voiceController.speak(text);
+    } catch (error) {
+      console.warn('语音播报失败:', error);
     }
   }
 
@@ -384,37 +399,56 @@ export class SuggestionDisplayController {
  */
 export class VoiceController {
   private recognition: SpeechRecognition | null = null;
+  private synthesis: SpeechSynthesis | null = null;
   private isListening: boolean = false;
-  
+  private isSupported: boolean = false;
+
   constructor() {
-    this.initializeSpeechRecognition();
+    this.initializeSpeech();
   }
 
   /**
-   * 初始化语音识别
+   * 初始化语音功能
    */
-  private initializeSpeechRecognition(): void {
+  private initializeSpeech(): void {
+    // 检查浏览器环境
+    if (typeof window === 'undefined') {
+      console.warn('语音功能仅在浏览器环境中可用');
+      return;
+    }
+
+    // 初始化语音合成
+    if ('speechSynthesis' in window) {
+      this.synthesis = window.speechSynthesis;
+      this.isSupported = true;
+    } else {
+      console.warn('当前浏览器不支持语音合成');
+    }
+
+    // 初始化语音识别
     if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
       const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
       this.recognition = new SpeechRecognition();
-      
+
       this.recognition.lang = 'zh-CN';
       this.recognition.continuous = false;
       this.recognition.interimResults = false;
-      
+
       this.recognition.onresult = (event) => {
         const transcript = event.results[0][0].transcript;
         this.processVoiceCommand(transcript);
       };
-      
+
       this.recognition.onerror = (event) => {
         console.error('语音识别错误:', event.error);
         this.isListening = false;
       };
-      
+
       this.recognition.onend = () => {
         this.isListening = false;
       };
+    } else {
+      console.warn('当前浏览器不支持语音识别');
     }
   }
 
@@ -436,6 +470,53 @@ export class VoiceController {
       this.recognition.stop();
       this.isListening = false;
     }
+  }
+
+  /**
+   * 语音播报文本
+   */
+  speak(text: string, options?: { rate?: number; pitch?: number; volume?: number }): Promise<void> {
+    return new Promise((resolve, reject) => {
+      if (!this.synthesis || !this.isSupported) {
+        console.warn('语音合成不可用，使用文本提示');
+        console.log(`🔊 ${text}`);
+        resolve();
+        return;
+      }
+
+      // 停止当前播报
+      this.synthesis.cancel();
+
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = 'zh-CN';
+      utterance.rate = options?.rate || 1.0;
+      utterance.pitch = options?.pitch || 1.0;
+      utterance.volume = options?.volume || 1.0;
+
+      utterance.onend = () => resolve();
+      utterance.onerror = (event) => {
+        console.error('语音合成错误:', event.error);
+        reject(new Error(`语音合成失败: ${event.error}`));
+      };
+
+      this.synthesis.speak(utterance);
+    });
+  }
+
+  /**
+   * 停止语音播报
+   */
+  stopSpeaking(): void {
+    if (this.synthesis) {
+      this.synthesis.cancel();
+    }
+  }
+
+  /**
+   * 检查语音功能是否可用
+   */
+  isVoiceSupported(): boolean {
+    return this.isSupported;
   }
 
   /**

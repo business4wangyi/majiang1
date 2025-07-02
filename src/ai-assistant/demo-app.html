@@ -1,0 +1,884 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI辅助井字棋框架演示</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            padding: 30px;
+        }
+
+        .game-area {
+            text-align: center;
+        }
+
+        .board {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 5px;
+            width: 300px;
+            height: 300px;
+            margin: 20px auto;
+            background: #333;
+            border-radius: 10px;
+            padding: 5px;
+        }
+
+        .cell {
+            background: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 3em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .cell:hover {
+            background: #f0f0f0;
+            transform: scale(1.05);
+        }
+
+        .cell.x {
+            color: #e74c3c;
+        }
+
+        .cell.o {
+            color: #3498db;
+        }
+
+        .cell.suggested {
+            background: #2ecc71;
+            color: white;
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        .controls {
+            margin: 20px 0;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1em;
+            margin: 5px;
+            transition: all 0.3s ease;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .ai-panel {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+        }
+
+        .ai-panel h3 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 1.5em;
+        }
+
+        .decision-display {
+            background: white;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px 0;
+            border-left: 4px solid #3498db;
+        }
+
+        .confidence-bar {
+            width: 100%;
+            height: 20px;
+            background: #ecf0f1;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+
+        .confidence-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #e74c3c 0%, #f39c12 50%, #2ecc71 100%);
+            transition: width 0.5s ease;
+        }
+
+        .config-panel {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+        .config-group {
+            margin: 15px 0;
+        }
+
+        .config-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .config-group select,
+        .config-group input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 1em;
+        }
+
+        .status-bar {
+            background: #34495e;
+            color: white;
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #e74c3c;
+        }
+
+        .status-indicator.active {
+            background: #2ecc71;
+            animation: blink 1s infinite;
+        }
+
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0.3; }
+        }
+
+        .alternatives {
+            margin-top: 15px;
+        }
+
+        .alternative-item {
+            background: white;
+            border-radius: 5px;
+            padding: 10px;
+            margin: 5px 0;
+            border-left: 3px solid #95a5a6;
+            font-size: 0.9em;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+            
+            .board {
+                width: 250px;
+                height: 250px;
+            }
+            
+            .cell {
+                font-size: 2em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🤖 AI辅助井字棋框架演示</h1>
+            <p>体验完整的AI辅助游戏系统 - 输入识别、AI计算、输出执行</p>
+        </div>
+
+        <div class="main-content">
+            <div class="game-area">
+                <h3>🎮 游戏区域</h3>
+                <div class="board" id="gameBoard">
+                    <!-- 棋盘格子将通过JavaScript生成 -->
+                </div>
+                
+                <div class="controls">
+                    <button class="btn" onclick="resetGame()">🔄 重新开始</button>
+                    <button class="btn" onclick="getAIHelp()">🤖 AI建议</button>
+                    <button class="btn" onclick="toggleVoice()" id="voiceBtn">🔊 语音提示</button>
+                    <button class="btn" onclick="undoMove()">↩️ 撤销</button>
+                    <button class="btn" onclick="runDemoTests()" style="background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);">🧪 运行测试</button>
+                </div>
+
+                <div class="config-panel">
+                    <h4>⚙️ 配置选项</h4>
+                    <div class="config-group">
+                        <label for="aiStrategy">AI策略:</label>
+                        <select id="aiStrategy" onchange="updateAIConfig()">
+                            <option value="minimax">Minimax (最优)</option>
+                            <option value="qlearning">Q-Learning (学习)</option>
+                            <option value="defensive">防守策略</option>
+                            <option value="greedy">贪心策略</option>
+                            <option value="hybrid">混合策略</option>
+                        </select>
+                    </div>
+                    <div class="config-group">
+                        <label for="difficulty">难度级别:</label>
+                        <select id="difficulty" onchange="updateAIConfig()">
+                            <option value="easy">简单</option>
+                            <option value="medium">中等</option>
+                            <option value="hard">困难</option>
+                            <option value="expert">专家</option>
+                        </select>
+                    </div>
+                    <div class="config-group">
+                        <label>
+                            <input type="checkbox" id="showExplanations" onchange="updateAIConfig()" checked>
+                            显示决策解释
+                        </label>
+                    </div>
+                    <div class="config-group">
+                        <label>
+                            <input type="checkbox" id="autoExecute" onchange="updateAIConfig()">
+                            自动执行建议
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="ai-panel">
+                <h3>🧠 AI分析面板</h3>
+                
+                <div class="decision-display" id="decisionDisplay">
+                    <h4>💡 AI决策</h4>
+                    <p id="decisionText">点击"AI建议"获取智能分析</p>
+                    <div class="confidence-bar">
+                        <div class="confidence-fill" id="confidenceFill" style="width: 0%"></div>
+                    </div>
+                    <small id="confidenceText">置信度: 0%</small>
+                </div>
+
+                <div class="alternatives" id="alternatives" style="display: none;">
+                    <h4>📋 备选方案</h4>
+                    <div id="alternativesList"></div>
+                </div>
+
+                <div class="decision-display">
+                    <h4>📚 策略学习</h4>
+                    <p id="strategyAdvice">暂无建议</p>
+                </div>
+
+                <div class="decision-display">
+                    <h4>📊 局面分析</h4>
+                    <p id="positionAnalysis">游戏阶段: 开局</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="status-bar">
+            <div class="status-item">
+                <div class="status-indicator active" id="systemStatus"></div>
+                <span>系统状态: 就绪</span>
+            </div>
+            <div class="status-item">
+                <span id="currentPlayer">当前玩家: X</span>
+            </div>
+            <div class="status-item">
+                <span id="moveCount">步数: 0</span>
+            </div>
+            <div class="status-item">
+                <span id="performanceInfo">响应时间: 0ms</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 游戏状态
+        let gameBoard = [
+            [null, null, null],
+            [null, null, null],
+            [null, null, null]
+        ];
+        let currentPlayer = 'X';
+        let moveHistory = [];
+        let isVoiceEnabled = false;
+        let aiConfig = {
+            strategy: 'minimax',
+            difficulty: 'medium',
+            showExplanations: true,
+            autoExecute: false
+        };
+
+        // 初始化游戏
+        function initGame() {
+            createBoard();
+            updateDisplay();
+        }
+
+        // 创建棋盘
+        function createBoard() {
+            const boardElement = document.getElementById('gameBoard');
+            boardElement.innerHTML = '';
+            
+            for (let row = 0; row < 3; row++) {
+                for (let col = 0; col < 3; col++) {
+                    const cell = document.createElement('button');
+                    cell.className = 'cell';
+                    cell.dataset.row = row;
+                    cell.dataset.col = col;
+                    cell.onclick = () => makeMove(row, col);
+                    boardElement.appendChild(cell);
+                }
+            }
+        }
+
+        // 更新显示
+        function updateDisplay() {
+            const cells = document.querySelectorAll('.cell');
+            cells.forEach((cell, index) => {
+                const row = Math.floor(index / 3);
+                const col = index % 3;
+                const value = gameBoard[row][col];
+                
+                cell.textContent = value || '';
+                cell.className = 'cell';
+                if (value) {
+                    cell.className += ` ${value.toLowerCase()}`;
+                }
+            });
+
+            document.getElementById('currentPlayer').textContent = `当前玩家: ${currentPlayer}`;
+            document.getElementById('moveCount').textContent = `步数: ${moveHistory.length}`;
+        }
+
+        // 下棋
+        function makeMove(row, col) {
+            if (gameBoard[row][col] !== null) {
+                return;
+            }
+
+            gameBoard[row][col] = currentPlayer;
+            moveHistory.push({ row, col, player: currentPlayer });
+            
+            // 检查游戏结束
+            const winner = checkWinner();
+            if (winner) {
+                setTimeout(() => {
+                    alert(`游戏结束！${winner === 'draw' ? '平局' : winner + ' 获胜！'}`);
+                }, 100);
+            } else {
+                currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+            }
+
+            updateDisplay();
+            updatePositionAnalysis();
+        }
+
+        // 检查获胜者
+        function checkWinner() {
+            // 检查行
+            for (let row = 0; row < 3; row++) {
+                if (gameBoard[row][0] && 
+                    gameBoard[row][0] === gameBoard[row][1] && 
+                    gameBoard[row][1] === gameBoard[row][2]) {
+                    return gameBoard[row][0];
+                }
+            }
+
+            // 检查列
+            for (let col = 0; col < 3; col++) {
+                if (gameBoard[0][col] && 
+                    gameBoard[0][col] === gameBoard[1][col] && 
+                    gameBoard[1][col] === gameBoard[2][col]) {
+                    return gameBoard[0][col];
+                }
+            }
+
+            // 检查对角线
+            if (gameBoard[0][0] && 
+                gameBoard[0][0] === gameBoard[1][1] && 
+                gameBoard[1][1] === gameBoard[2][2]) {
+                return gameBoard[0][0];
+            }
+
+            if (gameBoard[0][2] && 
+                gameBoard[0][2] === gameBoard[1][1] && 
+                gameBoard[1][1] === gameBoard[2][0]) {
+                return gameBoard[0][2];
+            }
+
+            // 检查平局
+            let isFull = true;
+            for (let row = 0; row < 3; row++) {
+                for (let col = 0; col < 3; col++) {
+                    if (gameBoard[row][col] === null) {
+                        isFull = false;
+                        break;
+                    }
+                }
+            }
+
+            return isFull ? 'draw' : null;
+        }
+
+        // 重置游戏
+        function resetGame() {
+            gameBoard = [
+                [null, null, null],
+                [null, null, null],
+                [null, null, null]
+            ];
+            currentPlayer = 'X';
+            moveHistory = [];
+            clearSuggestions();
+            updateDisplay();
+            updatePositionAnalysis();
+        }
+
+        // 撤销移动
+        function undoMove() {
+            if (moveHistory.length === 0) return;
+
+            const lastMove = moveHistory.pop();
+            gameBoard[lastMove.row][lastMove.col] = null;
+            currentPlayer = lastMove.player;
+            clearSuggestions();
+            updateDisplay();
+            updatePositionAnalysis();
+        }
+
+        // 获取AI建议
+        async function getAIHelp() {
+            const startTime = Date.now();
+
+            try {
+                // 模拟AI计算
+                const decision = await simulateAIDecision();
+
+                // 显示决策
+                displayDecision(decision);
+
+                // 高亮建议位置
+                highlightSuggestion(decision.action);
+
+                // 语音提示
+                if (isVoiceEnabled) {
+                    speakDecision(decision);
+                }
+
+                // 自动执行
+                if (aiConfig.autoExecute && !checkWinner()) {
+                    setTimeout(() => {
+                        makeMove(decision.action.row, decision.action.col);
+                    }, 1000);
+                }
+
+            } catch (error) {
+                console.error('AI分析失败:', error);
+            }
+
+            const responseTime = Date.now() - startTime;
+            document.getElementById('performanceInfo').textContent = `响应时间: ${responseTime}ms`;
+        }
+
+        // 模拟AI决策
+        async function simulateAIDecision() {
+            // 模拟计算延迟
+            await new Promise(resolve => setTimeout(resolve, 300 + Math.random() * 700));
+
+            const legalMoves = getLegalMoves();
+            if (legalMoves.length === 0) {
+                throw new Error('没有可用的移动');
+            }
+
+            // 检查获胜机会
+            for (const move of legalMoves) {
+                const testBoard = JSON.parse(JSON.stringify(gameBoard));
+                testBoard[move.row][move.col] = currentPlayer;
+                if (checkWinnerForBoard(testBoard) === currentPlayer) {
+                    return {
+                        action: move,
+                        confidence: 0.95,
+                        reasoning: '发现获胜机会，立即获胜！',
+                        strategy: aiConfig.strategy,
+                        alternatives: generateAlternatives(legalMoves, move)
+                    };
+                }
+            }
+
+            // 检查阻止对手获胜
+            const opponent = currentPlayer === 'X' ? 'O' : 'X';
+            for (const move of legalMoves) {
+                const testBoard = JSON.parse(JSON.stringify(gameBoard));
+                testBoard[move.row][move.col] = opponent;
+                if (checkWinnerForBoard(testBoard) === opponent) {
+                    return {
+                        action: move,
+                        confidence: 0.85,
+                        reasoning: '阻止对手获胜的关键防守',
+                        strategy: aiConfig.strategy,
+                        alternatives: generateAlternatives(legalMoves, move)
+                    };
+                }
+            }
+
+            // 基于策略选择
+            let bestMove, confidence, reasoning;
+
+            switch (aiConfig.strategy) {
+                case 'minimax':
+                    bestMove = getBestMoveByPosition(legalMoves);
+                    confidence = 0.90;
+                    reasoning = '基于博弈树分析的最优选择';
+                    break;
+                case 'defensive':
+                    bestMove = getDefensiveMove(legalMoves);
+                    confidence = 0.75;
+                    reasoning = '采用防守策略，选择安全位置';
+                    break;
+                case 'greedy':
+                    bestMove = getGreedyMove(legalMoves);
+                    confidence = 0.70;
+                    reasoning = '贪心策略，优先占据有利位置';
+                    break;
+                default:
+                    bestMove = legalMoves[Math.floor(Math.random() * legalMoves.length)];
+                    confidence = 0.60;
+                    reasoning = '随机选择可用位置';
+            }
+
+            return {
+                action: bestMove,
+                confidence,
+                reasoning,
+                strategy: aiConfig.strategy,
+                alternatives: generateAlternatives(legalMoves, bestMove)
+            };
+        }
+
+        // 获取合法移动
+        function getLegalMoves() {
+            const moves = [];
+            for (let row = 0; row < 3; row++) {
+                for (let col = 0; col < 3; col++) {
+                    if (gameBoard[row][col] === null) {
+                        moves.push({ row, col });
+                    }
+                }
+            }
+            return moves;
+        }
+
+        // 检查棋盘获胜者
+        function checkWinnerForBoard(board) {
+            // 检查行
+            for (let row = 0; row < 3; row++) {
+                if (board[row][0] &&
+                    board[row][0] === board[row][1] &&
+                    board[row][1] === board[row][2]) {
+                    return board[row][0];
+                }
+            }
+
+            // 检查列
+            for (let col = 0; col < 3; col++) {
+                if (board[0][col] &&
+                    board[0][col] === board[1][col] &&
+                    board[1][col] === board[2][col]) {
+                    return board[0][col];
+                }
+            }
+
+            // 检查对角线
+            if (board[0][0] &&
+                board[0][0] === board[1][1] &&
+                board[1][1] === board[2][2]) {
+                return board[0][0];
+            }
+
+            if (board[0][2] &&
+                board[0][2] === board[1][1] &&
+                board[1][1] === board[2][0]) {
+                return board[0][2];
+            }
+
+            return null;
+        }
+
+        // 基于位置价值的最佳移动
+        function getBestMoveByPosition(moves) {
+            const positionValues = [
+                [3, 2, 3],
+                [2, 4, 2],
+                [3, 2, 3]
+            ];
+
+            let bestMove = moves[0];
+            let bestValue = 0;
+
+            for (const move of moves) {
+                const value = positionValues[move.row][move.col];
+                if (value > bestValue) {
+                    bestValue = value;
+                    bestMove = move;
+                }
+            }
+
+            return bestMove;
+        }
+
+        // 防守移动
+        function getDefensiveMove(moves) {
+            // 优先选择边缘位置
+            const edges = moves.filter(m =>
+                (m.row === 1 && (m.col === 0 || m.col === 2)) ||
+                (m.col === 1 && (m.row === 0 || m.row === 2))
+            );
+
+            if (edges.length > 0) {
+                return edges[0];
+            }
+
+            return getBestMoveByPosition(moves);
+        }
+
+        // 贪心移动
+        function getGreedyMove(moves) {
+            // 优先中心，然后角落
+            const center = moves.find(m => m.row === 1 && m.col === 1);
+            if (center) return center;
+
+            const corners = moves.filter(m =>
+                (m.row === 0 || m.row === 2) && (m.col === 0 || m.col === 2)
+            );
+
+            if (corners.length > 0) {
+                return corners[0];
+            }
+
+            return moves[0];
+        }
+
+        // 生成备选方案
+        function generateAlternatives(allMoves, bestMove) {
+            return allMoves
+                .filter(m => m.row !== bestMove.row || m.col !== bestMove.col)
+                .slice(0, 3)
+                .map((move, index) => ({
+                    action: move,
+                    score: 0.8 - index * 0.1,
+                    reason: getPositionDescription(move)
+                }));
+        }
+
+        // 获取位置描述
+        function getPositionDescription(move) {
+            if (move.row === 1 && move.col === 1) return '中心位置';
+            if ((move.row === 0 || move.row === 2) && (move.col === 0 || move.col === 2)) return '角落位置';
+            return '边缘位置';
+        }
+
+        // 显示决策
+        function displayDecision(decision) {
+            const decisionText = document.getElementById('decisionText');
+            const confidenceFill = document.getElementById('confidenceFill');
+            const confidenceText = document.getElementById('confidenceText');
+
+            decisionText.textContent = `建议在第${decision.action.row + 1}行第${decision.action.col + 1}列落子。${decision.reasoning}`;
+
+            const confidencePercent = Math.round(decision.confidence * 100);
+            confidenceFill.style.width = `${confidencePercent}%`;
+            confidenceText.textContent = `置信度: ${confidencePercent}%`;
+
+            // 显示备选方案
+            if (decision.alternatives && decision.alternatives.length > 0) {
+                const alternativesDiv = document.getElementById('alternatives');
+                const alternativesList = document.getElementById('alternativesList');
+
+                alternativesList.innerHTML = '';
+                decision.alternatives.forEach((alt, index) => {
+                    const altDiv = document.createElement('div');
+                    altDiv.className = 'alternative-item';
+                    altDiv.innerHTML = `
+                        <strong>方案${index + 1}:</strong> 第${alt.action.row + 1}行第${alt.action.col + 1}列
+                        (评分: ${(alt.score * 100).toFixed(0)}%) - ${alt.reason}
+                    `;
+                    alternativesList.appendChild(altDiv);
+                });
+
+                alternativesDiv.style.display = 'block';
+            }
+        }
+
+        // 高亮建议位置
+        function highlightSuggestion(action) {
+            clearSuggestions();
+
+            const cells = document.querySelectorAll('.cell');
+            const index = action.row * 3 + action.col;
+            const cell = cells[index];
+
+            if (cell && !cell.textContent) {
+                cell.classList.add('suggested');
+                cell.textContent = '★';
+
+                // 3秒后清除高亮
+                setTimeout(clearSuggestions, 3000);
+            }
+        }
+
+        // 清除建议高亮
+        function clearSuggestions() {
+            const cells = document.querySelectorAll('.cell');
+            cells.forEach(cell => {
+                cell.classList.remove('suggested');
+                if (cell.textContent === '★') {
+                    cell.textContent = '';
+                }
+            });
+
+            document.getElementById('alternatives').style.display = 'none';
+        }
+
+        // 语音播报决策
+        function speakDecision(decision) {
+            if (!isVoiceEnabled) return;
+
+            const text = `AI建议在第${decision.action.row + 1}行第${decision.action.col + 1}列落子，置信度${Math.round(decision.confidence * 100)}%。${decision.reasoning}`;
+
+            if ('speechSynthesis' in window) {
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = 'zh-CN';
+                utterance.rate = 0.9;
+                speechSynthesis.speak(utterance);
+            } else {
+                console.log('🔊', text);
+            }
+        }
+
+        // 切换语音功能
+        function toggleVoice() {
+            isVoiceEnabled = !isVoiceEnabled;
+            const btn = document.getElementById('voiceBtn');
+            btn.textContent = isVoiceEnabled ? '🔊 语音开启' : '🔇 语音关闭';
+            btn.style.background = isVoiceEnabled ?
+                'linear-gradient(135deg, #2ecc71 0%, #27ae60 100%)' :
+                'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+        }
+
+        // 更新AI配置
+        function updateAIConfig() {
+            aiConfig.strategy = document.getElementById('aiStrategy').value;
+            aiConfig.difficulty = document.getElementById('difficulty').value;
+            aiConfig.showExplanations = document.getElementById('showExplanations').checked;
+            aiConfig.autoExecute = document.getElementById('autoExecute').checked;
+
+            console.log('AI配置已更新:', aiConfig);
+        }
+
+        // 更新局面分析
+        function updatePositionAnalysis() {
+            const moveCount = moveHistory.length;
+            const analysis = document.getElementById('positionAnalysis');
+            const advice = document.getElementById('strategyAdvice');
+
+            let phase, tip;
+
+            if (moveCount <= 2) {
+                phase = '开局';
+                tip = '开局建议：优先占据中心位置，其次选择角落';
+            } else if (moveCount <= 6) {
+                phase = '中局';
+                tip = '中局策略：寻找获胜机会，同时防止对手连线';
+            } else {
+                phase = '残局';
+                tip = '残局要点：仔细计算，每一步都可能决定胜负';
+            }
+
+            analysis.textContent = `游戏阶段: ${phase} (第${moveCount + 1}步)`;
+            advice.textContent = tip;
+        }
+
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', initGame);
+    </script>
+
+    <!-- 测试脚本 -->
+    <script src="test-demo.js"></script>
+
+    <!-- 开发者控制台提示 -->
+    <script>
+        console.log('🎮 AI助手框架演示已加载');
+        console.log('💡 使用 runDemoTests() 运行完整测试套件');
+        console.log('📊 使用 testResults 查看测试结果');
+        console.log('🔧 打开开发者工具查看详细日志');
+    </script>
+    </script>
+</body>
+</html>
