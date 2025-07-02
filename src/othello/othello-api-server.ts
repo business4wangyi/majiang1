@@ -3,7 +3,7 @@ import cors from 'cors';
 import bodyParser from 'body-parser';
 import { createOthelloBoard, getLegalActions, makeMove } from './othello-game';
 import { OthelloPlayer, OthelloBoard, OthelloAction } from './othello-types';
-import { HeuristicOthelloAgent, MinimaxOthelloAgent } from './strategy/othello-play';
+import { HeuristicOthelloAgent, MinimaxOthelloAgent } from './strategy';
 
 const app = express();
 app.use(cors());

@@ -1,5 +1,5 @@
-import { OthelloBoard, OthelloPlayer, OthelloAction } from './othello-types';
-import { getLegalActions } from './othello-game';
+import { OthelloBoard, OthelloPlayer, OthelloAction } from '../othello-types';
+import { getLegalActions } from '../othello-game';
 
 export interface OthelloAgent {
   chooseAction(board: OthelloBoard, player: OthelloPlayer): OthelloAction | null;
