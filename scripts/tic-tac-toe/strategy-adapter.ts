@@ -1,10 +1,10 @@
-import { Board as MVPBoard, Cell as MVPCell, Position, AIDecision } from './run-mvp';
-import { Board as StrategyBoard, Player, Action, Cell as StrategyCell } from '../src/tic-tac-toe/types';
-import { Agent } from '../src/tic-tac-toe/strategy/random-agent';
-import { MinimaxAgent } from '../src/tic-tac-toe/strategy/minimax-agent';
-import { RandomAgent } from '../src/tic-tac-toe/strategy/random-agent';
-import { DefensiveAgent } from '../src/tic-tac-toe/strategy/defensive-agent';
-import { GreedyAgent } from '../src/tic-tac-toe/strategy/greedy-agent';
+import { Board as MVPBoard, Cell as MVPCell, Position, AIDecision } from './mvp';
+import { Board as StrategyBoard, Player, Action, Cell as StrategyCell } from '../../src/tic-tac-toe/types';
+import { Agent } from '../../src/tic-tac-toe/strategy/random-agent';
+import { MinimaxAgent } from '../../src/tic-tac-toe/strategy/minimax-agent';
+import { RandomAgent } from '../../src/tic-tac-toe/strategy/random-agent';
+import { DefensiveAgent } from '../../src/tic-tac-toe/strategy/defensive-agent';
+import { GreedyAgent } from '../../src/tic-tac-toe/strategy/greedy-agent';
 
 // 策略适配器类 - 连接MVP和现有策略系统
 export class StrategyAdapter {

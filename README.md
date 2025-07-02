@@ -108,5 +108,5 @@ npm start -- --debug --step
 - `src/majiang/` - 麻将游戏核心实现
 - `src/tic-tac-toe/` - 井字棋游戏和AI策略
 - `src/ai-assistant/` - AI辅助游戏框架
-- `scripts/` - 工具脚本和MVP实现
+- `scripts/tic-tac-toe/` - 井字棋MVP工具和适配器
 - `docs/` - 用户文档和架构说明
