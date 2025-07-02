@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI辅助井字棋 - 移动端演示</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            color: #333;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            padding: 30px;
+            max-width: 400px;
+            width: 100%;
+            text-align: center;
+        }
+
+        h1 {
+            color: #4a5568;
+            margin-bottom: 10px;
+            font-size: 24px;
+        }
+
+        .subtitle {
+            color: #718096;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        #gameCanvas {
+            border: 2px solid #e2e8f0;
+            border-radius: 15px;
+            margin: 20px 0;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            touch-action: none;
+            cursor: pointer;
+        }
+
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 25px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        select {
+            background: white;
+            border: 2px solid #e2e8f0;
+            padding: 10px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+            cursor: pointer;
+            outline: none;
+        }
+
+        select:focus {
+            border-color: #667eea;
+        }
+
+        .status {
+            margin: 15px 0;
+            padding: 15px;
+            background: #f7fafc;
+            border-radius: 10px;
+            font-weight: 600;
+            color: #4a5568;
+        }
+
+        .hint {
+            background: #e6fffa;
+            border: 1px solid #81e6d9;
+            color: #234e52;
+            padding: 10px;
+            border-radius: 8px;
+            margin: 10px 0;
+            font-size: 12px;
+            display: none;
+        }
+
+        .hint.show {
+            display: block;
+        }
+
+        .features {
+            margin-top: 30px;
+            text-align: left;
+        }
+
+        .features h3 {
+            color: #4a5568;
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+
+        .feature-list {
+            list-style: none;
+        }
+
+        .feature-list li {
+            padding: 8px 0;
+            color: #718096;
+            font-size: 14px;
+        }
+
+        .feature-list li:before {
+            content: "✓";
+            color: #48bb78;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+
+        .loading {
+            display: none;
+            color: #667eea;
+            font-style: italic;
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 20px;
+                margin: 10px;
+            }
+            
+            h1 {
+                font-size: 20px;
+            }
+            
+            .controls {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            button, select {
+                width: 100%;
+                max-width: 200px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🤖 AI辅助井字棋</h1>
+        <p class="subtitle">基于先进AI算法的智能游戏助手</p>
+        
+        <div class="status" id="gameStatus">点击开始游戏</div>
+        
+        <canvas id="gameCanvas" width="300" height="300"></canvas>
+        
+        <div class="hint" id="hintBox">
+            💡 AI建议：优先占据中心位置
+        </div>
+        
+        <div class="controls">
+            <button onclick="resetGame()">🔄 重新开始</button>
+            <button onclick="toggleHints()">💡 切换提示</button>
+            <select id="difficultySelect" onchange="changeDifficulty()">
+                <option value="easy">😊 简单</option>
+                <option value="medium" selected>🤔 中等</option>
+                <option value="hard">😤 困难</option>
+            </select>
+        </div>
+        
+        <div class="loading" id="loadingText">AI思考中...</div>
+        
+        <div class="features">
+            <h3>🚀 功能特色</h3>
+            <ul class="feature-list">
+                <li>智能AI对手，多种难度级别</li>
+                <li>实时策略提示和建议</li>
+                <li>触摸友好的移动端界面</li>
+                <li>离线运行，无需网络</li>
+                <li>基于机器学习的决策引擎</li>
+                <li>策略规律提取和学习指导</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        // 简化的游戏逻辑演示
+        class TicTacToeDemo {
+            constructor() {
+                this.canvas = document.getElementById('gameCanvas');
+                this.ctx = this.canvas.getContext('2d');
+                this.board = Array(3).fill().map(() => Array(3).fill(null));
+                this.currentPlayer = 'X';
+                this.gameOver = false;
+                this.isPlayerTurn = true;
+                this.showHints = true;
+                this.difficulty = 'medium';
+                
+                this.setupCanvas();
+                this.bindEvents();
+                this.render();
+            }
+            
+            setupCanvas() {
+                const dpr = window.devicePixelRatio || 1;
+                const rect = this.canvas.getBoundingClientRect();
+                
+                this.canvas.width = rect.width * dpr;
+                this.canvas.height = rect.height * dpr;
+                this.ctx.scale(dpr, dpr);
+                
+                this.canvas.style.width = rect.width + 'px';
+                this.canvas.style.height = rect.height + 'px';
+            }
+            
+            bindEvents() {
+                this.canvas.addEventListener('click', (e) => this.handleClick(e));
+                this.canvas.addEventListener('touchend', (e) => {
+                    e.preventDefault();
+                    const touch = e.changedTouches[0];
+                    const rect = this.canvas.getBoundingClientRect();
+                    const clickEvent = {
+                        clientX: touch.clientX,
+                        clientY: touch.clientY
+                    };
+                    this.handleClick(clickEvent);
+                });
+            }
+            
+            handleClick(e) {
+                if (!this.isPlayerTurn || this.gameOver) return;
+                
+                const rect = this.canvas.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                
+                const col = Math.floor(x / (rect.width / 3));
+                const row = Math.floor(y / (rect.height / 3));
+                
+                if (this.board[row][col] === null) {
+                    this.makeMove(row, col, 'X');
+                    
+                    if (!this.gameOver) {
+                        this.isPlayerTurn = false;
+                        this.showLoading(true);
+                        setTimeout(() => this.makeAIMove(), 800);
+                    }
+                }
+            }
+            
+            makeMove(row, col, player) {
+                this.board[row][col] = player;
+                this.checkGameEnd();
+                this.render();
+                this.updateStatus();
+                
+                // 触觉反馈
+                if ('vibrate' in navigator) {
+                    navigator.vibrate(50);
+                }
+            }
+            
+            makeAIMove() {
+                const move = this.getAIMove();
+                if (move) {
+                    this.makeMove(move.row, move.col, 'O');
+                }
+                this.isPlayerTurn = true;
+                this.showLoading(false);
+                this.updateHint();
+            }
+            
+            getAIMove() {
+                // 简化的AI逻辑
+                const moves = this.getLegalMoves();
+                if (moves.length === 0) return null;
+                
+                // 检查获胜机会
+                for (const move of moves) {
+                    if (this.wouldWin(move.row, move.col, 'O')) {
+                        return move;
+                    }
+                }
+                
+                // 阻止玩家获胜
+                for (const move of moves) {
+                    if (this.wouldWin(move.row, move.col, 'X')) {
+                        return move;
+                    }
+                }
+                
+                // 根据难度选择策略
+                if (this.difficulty === 'easy') {
+                    return moves[Math.floor(Math.random() * moves.length)];
+                } else if (this.difficulty === 'medium') {
+                    // 优先中心，然后角落
+                    if (this.board[1][1] === null) return { row: 1, col: 1 };
+                    const corners = moves.filter(m => 
+                        (m.row === 0 || m.row === 2) && (m.col === 0 || m.col === 2)
+                    );
+                    return corners.length > 0 ? corners[0] : moves[0];
+                } else {
+                    // 困难模式：更智能的选择
+                    return this.getBestMove(moves);
+                }
+            }
+            
+            getBestMove(moves) {
+                // 简化的评估函数
+                let bestMove = moves[0];
+                let bestScore = -Infinity;
+                
+                for (const move of moves) {
+                    let score = 0;
+                    
+                    // 中心位置加分
+                    if (move.row === 1 && move.col === 1) score += 4;
+                    // 角落位置加分
+                    else if ((move.row === 0 || move.row === 2) && 
+                             (move.col === 0 || move.col === 2)) score += 3;
+                    // 边缘位置减分
+                    else score += 1;
+                    
+                    if (score > bestScore) {
+                        bestScore = score;
+                        bestMove = move;
+                    }
+                }
+                
+                return bestMove;
+            }
+            
+            wouldWin(row, col, player) {
+                const testBoard = this.board.map(r => [...r]);
+                testBoard[row][col] = player;
+                return this.checkWinner(testBoard) === player;
+            }
+            
+            getLegalMoves() {
+                const moves = [];
+                for (let row = 0; row < 3; row++) {
+                    for (let col = 0; col < 3; col++) {
+                        if (this.board[row][col] === null) {
+                            moves.push({ row, col });
+                        }
+                    }
+                }
+                return moves;
+            }
+            
+            checkGameEnd() {
+                const winner = this.checkWinner(this.board);
+                if (winner) {
+                    this.gameOver = true;
+                    return;
+                }
+                
+                if (this.getLegalMoves().length === 0) {
+                    this.gameOver = true;
+                }
+            }
+            
+            checkWinner(board) {
+                // 检查行、列、对角线
+                for (let i = 0; i < 3; i++) {
+                    if (board[i][0] && board[i][0] === board[i][1] && board[i][1] === board[i][2]) {
+                        return board[i][0];
+                    }
+                    if (board[0][i] && board[0][i] === board[1][i] && board[1][i] === board[2][i]) {
+                        return board[0][i];
+                    }
+                }
+                
+                if (board[0][0] && board[0][0] === board[1][1] && board[1][1] === board[2][2]) {
+                    return board[0][0];
+                }
+                if (board[0][2] && board[0][2] === board[1][1] && board[1][1] === board[2][0]) {
+                    return board[0][2];
+                }
+                
+                return null;
+            }
+            
+            render() {
+                const rect = this.canvas.getBoundingClientRect();
+                this.ctx.clearRect(0, 0, rect.width, rect.height);
+                
+                // 绘制网格
+                this.ctx.strokeStyle = '#e2e8f0';
+                this.ctx.lineWidth = 2;
+                
+                for (let i = 1; i < 3; i++) {
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(i * rect.width / 3, 0);
+                    this.ctx.lineTo(i * rect.width / 3, rect.height);
+                    this.ctx.stroke();
+                    
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(0, i * rect.height / 3);
+                    this.ctx.lineTo(rect.width, i * rect.height / 3);
+                    this.ctx.stroke();
+                }
+                
+                // 绘制棋子
+                for (let row = 0; row < 3; row++) {
+                    for (let col = 0; col < 3; col++) {
+                        const piece = this.board[row][col];
+                        if (piece) {
+                            const x = col * rect.width / 3 + rect.width / 6;
+                            const y = row * rect.height / 3 + rect.height / 6;
+                            
+                            if (piece === 'X') {
+                                this.drawX(x, y);
+                            } else {
+                                this.drawO(x, y);
+                            }
+                        }
+                    }
+                }
+                
+                // 绘制提示
+                if (this.showHints && this.isPlayerTurn && !this.gameOver) {
+                    this.drawHint();
+                }
+            }
+            
+            drawX(x, y) {
+                const size = 30;
+                this.ctx.strokeStyle = '#e53e3e';
+                this.ctx.lineWidth = 4;
+                this.ctx.lineCap = 'round';
+                
+                this.ctx.beginPath();
+                this.ctx.moveTo(x - size, y - size);
+                this.ctx.lineTo(x + size, y + size);
+                this.ctx.moveTo(x + size, y - size);
+                this.ctx.lineTo(x - size, y + size);
+                this.ctx.stroke();
+            }
+            
+            drawO(x, y) {
+                this.ctx.strokeStyle = '#3182ce';
+                this.ctx.lineWidth = 4;
+                this.ctx.beginPath();
+                this.ctx.arc(x, y, 30, 0, 2 * Math.PI);
+                this.ctx.stroke();
+            }
+            
+            drawHint() {
+                // 简单的提示：高亮最佳位置
+                const move = this.getPlayerHint();
+                if (move) {
+                    const rect = this.canvas.getBoundingClientRect();
+                    const x = move.col * rect.width / 3 + rect.width / 6;
+                    const y = move.row * rect.height / 3 + rect.height / 6;
+                    
+                    this.ctx.strokeStyle = '#f6ad55';
+                    this.ctx.lineWidth = 3;
+                    this.ctx.setLineDash([5, 5]);
+                    this.ctx.beginPath();
+                    this.ctx.arc(x, y, 40, 0, 2 * Math.PI);
+                    this.ctx.stroke();
+                    this.ctx.setLineDash([]);
+                }
+            }
+            
+            getPlayerHint() {
+                const moves = this.getLegalMoves();
+                if (moves.length === 0) return null;
+                
+                // 检查获胜机会
+                for (const move of moves) {
+                    if (this.wouldWin(move.row, move.col, 'X')) {
+                        return move;
+                    }
+                }
+                
+                // 检查防守需求
+                for (const move of moves) {
+                    if (this.wouldWin(move.row, move.col, 'O')) {
+                        return move;
+                    }
+                }
+                
+                // 推荐中心或角落
+                if (this.board[1][1] === null) return { row: 1, col: 1 };
+                
+                const corners = moves.filter(m => 
+                    (m.row === 0 || m.row === 2) && (m.col === 0 || m.col === 2)
+                );
+                return corners.length > 0 ? corners[0] : moves[0];
+            }
+            
+            updateStatus() {
+                const status = document.getElementById('gameStatus');
+                
+                if (this.gameOver) {
+                    const winner = this.checkWinner(this.board);
+                    if (winner === 'X') {
+                        status.textContent = '🎉 恭喜你获胜！';
+                        status.style.background = '#c6f6d5';
+                        status.style.color = '#22543d';
+                    } else if (winner === 'O') {
+                        status.textContent = '😔 AI获胜，再试一次！';
+                        status.style.background = '#fed7d7';
+                        status.style.color = '#742a2a';
+                    } else {
+                        status.textContent = '🤝 平局！';
+                        status.style.background = '#e2e8f0';
+                        status.style.color = '#4a5568';
+                    }
+                } else if (this.isPlayerTurn) {
+                    status.textContent = '🎯 轮到你了';
+                    status.style.background = '#bee3f8';
+                    status.style.color = '#2a4365';
+                } else {
+                    status.textContent = '🤖 AI思考中...';
+                    status.style.background = '#f7fafc';
+                    status.style.color = '#4a5568';
+                }
+            }
+            
+            updateHint() {
+                if (!this.showHints || this.gameOver) return;
+                
+                const hintBox = document.getElementById('hintBox');
+                const move = this.getPlayerHint();
+                
+                if (move) {
+                    let hintText = '';
+                    
+                    if (this.wouldWin(move.row, move.col, 'X')) {
+                        hintText = `🎯 获胜机会：点击第${move.row + 1}行第${move.col + 1}列！`;
+                    } else if (this.wouldWin(move.row, move.col, 'O')) {
+                        hintText = `🛡️ 防守要紧：阻止AI在第${move.row + 1}行第${move.col + 1}列！`;
+                    } else if (move.row === 1 && move.col === 1) {
+                        hintText = '💡 建议：占据中心位置，控制全局！';
+                    } else {
+                        hintText = `💡 建议：考虑第${move.row + 1}行第${move.col + 1}列`;
+                    }
+                    
+                    hintBox.textContent = hintText;
+                    hintBox.classList.add('show');
+                } else {
+                    hintBox.classList.remove('show');
+                }
+            }
+            
+            showLoading(show) {
+                const loading = document.getElementById('loadingText');
+                loading.style.display = show ? 'block' : 'none';
+            }
+            
+            reset() {
+                this.board = Array(3).fill().map(() => Array(3).fill(null));
+                this.currentPlayer = 'X';
+                this.gameOver = false;
+                this.isPlayerTurn = true;
+                this.render();
+                this.updateStatus();
+                this.updateHint();
+            }
+            
+            toggleHints() {
+                this.showHints = !this.showHints;
+                const hintBox = document.getElementById('hintBox');
+                if (this.showHints) {
+                    this.updateHint();
+                } else {
+                    hintBox.classList.remove('show');
+                }
+                this.render();
+            }
+            
+            setDifficulty(difficulty) {
+                this.difficulty = difficulty;
+            }
+        }
+        
+        // 全局函数
+        let game;
+        
+        function initGame() {
+            game = new TicTacToeDemo();
+        }
+        
+        function resetGame() {
+            game.reset();
+        }
+        
+        function toggleHints() {
+            game.toggleHints();
+        }
+        
+        function changeDifficulty() {
+            const select = document.getElementById('difficultySelect');
+            game.setDifficulty(select.value);
+        }
+        
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', initGame);
+    </script>
+</body>
+</html>
