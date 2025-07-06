@@ -21,9 +21,7 @@
     "othello:test-api": "npx ts-node src/othello/test-api.ts",
     "othello:test-strategies": "npx ts-node src/othello/test-strategies.ts",
     "othello:test-game-flow": "npx ts-node src/othello/test-game-flow.ts",
-    "othello:train-eval": "ts-node src/othello/strategy/othello-train-eval.ts",
-    "othello:analyze-qtable": "ts-node src/othello/strategy/analyze-qtable.ts",
-    "othello:play": "ts-node src/othello/strategy/othello-play.ts",
+
     "ai-assistant:mvp": "ts-node scripts/tic-tac-toe/mvp.ts"
   },
   "keywords": [

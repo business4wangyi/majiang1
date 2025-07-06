@@ -1,7 +1,7 @@
 // {{ AURA-X: Add - 策略工具函数，提取重复的翻转计算逻辑. Approval: 寸止(ID:1735819200). }}
 
 import { OthelloBoard, OthelloPlayer, OthelloAction } from '../othello-types';
-import { getLegalActions, makeMove, countPieces } from '../othello-game';
+import { getLegalActions, countPieces } from '../othello-game';
 
 /**
  * 计算指定动作能翻转的棋子数量
