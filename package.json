@@ -21,7 +21,6 @@
     "othello:test-api": "npx ts-node src/othello/test-api.ts",
     "othello:test-strategies": "npx ts-node src/othello/test-strategies.ts",
     "othello:test-game-flow": "npx ts-node src/othello/test-game-flow.ts",
-
     "ai-assistant:mvp": "ts-node scripts/tic-tac-toe/mvp.ts"
   },
   "keywords": [
@@ -32,6 +31,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@tensorflow/tfjs": "^4.22.0",
     "body-parser": "^2.2.0",
     "cors": "^2.8.5",
     "express": "^5.1.0",
