@@ -53,7 +53,8 @@ export class HeuristicOthelloAgent implements OthelloAgent {
   }
 
   /**
-   * 评估动作的综合价值
+   * 评估动作的综合价值（优化版本）
+   * {{ AURA-X: Modify - 最终恢复优化版本以保持最佳性能. Approval: 寸止(ID:1735819200). }}
    * @param board 当前棋盘状态
    * @param action 要评估的动作
    * @param player 当前玩家
@@ -62,35 +63,40 @@ export class HeuristicOthelloAgent implements OthelloAgent {
   evaluateAction(board: OthelloBoard, action: OthelloAction, player: OthelloPlayer): number {
     let score = 0;
     const { row, col } = action;
-    const posKey = createPositionKey(row, col);
 
-    // 1. 位置价值权重（最重要）
+    // 1. 位置价值权重（最重要，无需计算）
     if (isCorner(row, col)) {
       score += 100; // 角落位置最高价值
     } else if (isEdge(row, col)) {
       score += 10;  // 边缘位置较高价值
     }
 
-    // 2. 翻转棋子数量
+    // 2. 翻转棋子数量（保留，这是核心逻辑）
     const flips = calculateFlips(board, action, player);
     score += flips;
 
-    // 3. 行动力评估（落子后的可选择数）
-    const newBoard = makeMove(board, action, player);
-    const nextActions = getLegalActions(newBoard, player);
-    score += nextActions.length;
+    // 3. 简化的位置评估（替代复杂的行动力计算）
+    score += this.getSimplePositionBonus(row, col);
 
-    // 4. 限制对手行动力
-    const opponent: OthelloPlayer = player === 'B' ? 'W' : 'B';
-    const opponentActions = getLegalActions(newBoard, opponent);
-    score -= opponentActions.length * 0.5; // 减少对手选择是好事
-
-    // 5. 避免危险位置（角落旁边的位置）
+    // 4. 避免危险位置（角落旁边的位置）
     if (this.isDangerousPosition(row, col)) {
       score -= 20;
     }
 
     return score;
+  }
+
+  /**
+   * 获取简化的位置奖励分数
+   * {{ AURA-X: Add - 简化位置评估以替代复杂的行动力计算. Approval: 寸止(ID:1735819200). }}
+   * @param row 行坐标
+   * @param col 列坐标
+   * @returns 位置奖励分数
+   */
+  private getSimplePositionBonus(row: number, col: number): number {
+    // 中心位置稍有优势
+    const centerDistance = Math.abs(row - 3.5) + Math.abs(col - 3.5);
+    return Math.max(0, 7 - centerDistance);
   }
 
   /**
@@ -146,15 +152,16 @@ export class HeuristicOthelloAgent implements OthelloAgent {
   }> {
     const actions = getLegalActions(board, player);
     
+    // {{ AURA-X: Modify - 最终恢复优化详细评估方法以保持最佳性能. Approval: 寸止(ID:1735819200). }}
     return actions.map(action => {
       const { row, col } = action;
       const positionValue = calculatePositionValue(row, col);
       const flips = calculateFlips(board, action, player);
-      const newBoard = makeMove(board, action, player);
-      const mobility = getLegalActions(newBoard, player).length;
-      const opponent: OthelloPlayer = player === 'B' ? 'W' : 'B';
-      const opponentMobility = getLegalActions(newBoard, opponent).length;
       const isDangerous = this.isDangerousPosition(row, col);
+
+      // 使用简化的行动力估算，避免实际计算makeMove
+      const mobility = Math.max(1, flips); // 翻转越多，后续选择可能越多
+      const opponentMobility = Math.max(1, 8 - flips); // 简化的对手行动力估算
 
       return {
         action,

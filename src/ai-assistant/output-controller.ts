@@ -5,6 +5,14 @@
 import { Action, Player } from '../tic-tac-toe/types';
 import { AIDecision } from './tic-tac-toe/ai-engine';
 
+// 声明全局类型
+declare global {
+  interface Window {
+    SpeechRecognition: any;
+    webkitSpeechRecognition: any;
+  }
+}
+
 // 输出配置
 export interface OutputConfig {
   mode: 'auto' | 'suggest' | 'voice' | 'visual';
@@ -287,21 +295,8 @@ export class SuggestionDisplayController {
     return names[strategy] || strategy;
   }
 
-  /**
-   * 语音播报建议
-   */
-  private speakSuggestion(decision: AIDecision): void {
-    if ('speechSynthesis' in window) {
-      const text = `建议在第${decision.action.row + 1}行第${decision.action.col + 1}列落子，${decision.reasoning}`;
-      
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.lang = this.config.language || 'zh-CN';
-      utterance.rate = 0.9;
-      utterance.pitch = 1.0;
-      
-      speechSynthesis.speak(utterance);
-    }
-  }
+
+
 
   /**
    * 显示备选方案
@@ -398,7 +393,7 @@ export class SuggestionDisplayController {
  * 提供语音交互功能
  */
 export class VoiceController {
-  private recognition: SpeechRecognition | null = null;
+  private recognition: any = null;
   private synthesis: SpeechSynthesis | null = null;
   private isListening: boolean = false;
   private isSupported: boolean = false;
@@ -434,12 +429,12 @@ export class VoiceController {
       this.recognition.continuous = false;
       this.recognition.interimResults = false;
 
-      this.recognition.onresult = (event) => {
+      this.recognition.onresult = (event: any) => {
         const transcript = event.results[0][0].transcript;
         this.processVoiceCommand(transcript);
       };
 
-      this.recognition.onerror = (event) => {
+      this.recognition.onerror = (event: any) => {
         console.error('语音识别错误:', event.error);
         this.isListening = false;
       };

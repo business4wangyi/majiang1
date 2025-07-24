@@ -1,6 +1,6 @@
-import { Tile, TileType } from '../../src/tile';
-import { TileSet } from '../../src/rule-types';
-import { AllFivesDetector } from '../../src/win-conditions/win-conditions_all-fives';
+import { Tile, TileType } from '../../src/majiang/tile';
+import { TileSet } from '../../src/majiang/rule-types';
+import { AllFivesDetector } from '../../src/majiang/win-conditions/win-conditions_all-fives';
 import { expect } from 'chai';
 
 // 创建测试用牌

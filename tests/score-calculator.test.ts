@@ -1,8 +1,8 @@
 import { expect } from 'chai';
-import { ScoreCalculator } from '../src/score-calculator';
-import { Player, PlayerType } from '../src/player';
-import { Tile, TileType } from '../src/tile';
-import { HuType, GangType, TileSet } from '../src/rule-types';
+import { ScoreCalculator } from '../src/majiang/score-calculator';
+import { Player, PlayerType } from '../src/majiang/player';
+import { Tile, TileType } from '../src/majiang/tile';
+import { HuType, GangType, TileSet } from '../src/majiang/rule-types';
 
 describe('ScoreCalculator', () => {
   describe('calculateBaseScore', () => {

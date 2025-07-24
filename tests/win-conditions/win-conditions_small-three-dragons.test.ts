@@ -1,7 +1,7 @@
 import { expect } from 'chai';
-import { SmallThreeDragonsDetector } from '../../src/win-conditions/win-conditions_small-three-dragons';
-import { Tile, TileType, JianValue } from '../../src/tile';
-import { TileSet } from '../../src/rule-types';
+import { SmallThreeDragonsDetector } from '../../src/majiang/win-conditions/win-conditions_small-three-dragons';
+import { Tile, TileType, JianValue } from '../../src/majiang/tile';
+import { TileSet } from '../../src/majiang/rule-types';
 
 // 辅助函数
 function createPung(type: TileType, value: number, startId = 1): TileSet {

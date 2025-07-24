@@ -1,7 +1,7 @@
 import { expect } from 'chai';
-import { TwoConcealedPungsDetector } from '../../src/win-conditions/win-conditions_two-concealed-pungs';
-import { Tile, TileType } from '../../src/tile';
-import { TileSet } from '../../src/rule-types';
+import { TwoConcealedPungsDetector } from '../../src/majiang/win-conditions/win-conditions_two-concealed-pungs';
+import { Tile, TileType } from '../../src/majiang/tile';
+import { TileSet } from '../../src/majiang/rule-types';
 
 // 辅助函数
 function createPung(type: TileType, value: number, startId = 1): TileSet {

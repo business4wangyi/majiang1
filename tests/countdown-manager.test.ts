@@ -1,10 +1,10 @@
 // countdown-manager测试文件 (Mocha)
 import { expect } from 'chai';
 import * as sinon from 'sinon';
-import { CountdownManager } from '../src/countdown-manager';
-import { errorLog } from '../src/logger';
-import * as loggerModule from '../src/logger';
-import * as displayManagerModule from '../src/display-manager';
+import { CountdownManager } from '../src/majiang/countdown-manager';
+import { errorLog } from '../src/majiang/logger';
+import * as loggerModule from '../src/majiang/logger';
+import * as displayManagerModule from '../src/majiang/display-manager';
 
 // 保存原始的输出方法以便后续恢复
 const originalWrite = process.stdout.write;

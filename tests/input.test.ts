@@ -2,12 +2,12 @@
 import { expect } from 'chai';
 import * as sinon from 'sinon';
 import * as readline from 'readline';
-import { Tile, TileType } from '../src/majiang/tile';
-import { Game } from '../src/majiang/game';
-import { PlayerAction } from '../src/majiang/rule-types';
-import { Player, PlayerType } from '../src/majiang/player';
-import { RuleEngine } from '../src/majiang/rule-engine';
-import { GameState } from '../src/majiang/game';
+import { Tile, TileType } from '../src/majiang/majiang/tile';
+import { Game } from '../src/majiang/majiang/game';
+import { PlayerAction } from '../src/majiang/majiang/rule-types';
+import { Player, PlayerType } from '../src/majiang/majiang/player';
+import { RuleEngine } from '../src/majiang/majiang/rule-engine';
+import { GameState } from '../src/majiang/majiang/game';
 import { 
   askQuestion, 
   askQuestionWithOptions, 
@@ -20,10 +20,10 @@ import {
   getSelectionFromList,
   InputState,
   InputOptions
-} from '../src/input';
+} from '../src/majiang/input';
 
 // 导入CountdownManager以便在测试中引用
-import { CountdownManager } from '../src/countdown-manager';
+import { CountdownManager } from '../src/majiang/countdown-manager';
 
 import proxyquire from 'proxyquire';
 

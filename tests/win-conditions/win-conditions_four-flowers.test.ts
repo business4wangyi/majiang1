@@ -1,8 +1,8 @@
-import { Tile, TileType } from '../../src/tile';
-import { TileSet, TileSetType } from '../../src/rule-types';
-import { FourFlowersDetector } from '../../src/win-conditions/win-conditions_four-flowers';
+import { Tile, TileType } from '../../src/majiang/tile';
+import { TileSet, TileSetType } from '../../src/majiang/rule-types';
+import { FourFlowersDetector } from '../../src/majiang/win-conditions/win-conditions_four-flowers';
 import { expect } from 'chai';
-import { Player, PlayerType } from '../../src/player';
+import { Player, PlayerType } from '../../src/majiang/player';
 
 // 创建测试用牌
 function createTiles(type: TileType, values: number[], startId = 1): Tile[] {

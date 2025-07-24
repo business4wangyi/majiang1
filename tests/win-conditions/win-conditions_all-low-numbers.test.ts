@@ -1,6 +1,6 @@
-import { Tile, TileType } from '../../src/tile';
-import { TileSet } from '../../src/rule-types';
-import { AllLowNumbersDetector } from '../../src/win-conditions/win-conditions_all-low-numbers';
+import { Tile, TileType } from '../../src/majiang/tile';
+import { TileSet } from '../../src/majiang/rule-types';
+import { AllLowNumbersDetector } from '../../src/majiang/win-conditions/win-conditions_all-low-numbers';
 import { expect } from 'chai';
 
 // 创建测试用牌

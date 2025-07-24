@@ -1,8 +1,8 @@
 import { expect } from 'chai';
-import { Tile, TileType } from '../../src/tile';
-import { TileSet, TileSetType } from '../../src/rule-types';
+import { Tile, TileType } from '../../src/majiang/tile';
+import { TileSet, TileSetType } from '../../src/majiang/rule-types';
 import { createTestPlayer } from '../test-utils';
-import { OneVoidedSuitDetector } from '../../src/win-conditions/win-conditions_one-voided-suit';
+import { OneVoidedSuitDetector } from '../../src/majiang/win-conditions/win-conditions_one-voided-suit';
 
 describe('缺一门检测器测试', () => {
   const detector = new OneVoidedSuitDetector();

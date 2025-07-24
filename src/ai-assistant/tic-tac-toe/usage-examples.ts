@@ -6,6 +6,7 @@
 import { AIGameAssistant, AIAssistantConfig } from './main-controller';
 import { MobileAIAssistant, MobileConfig } from './mobile-app';
 import { StrategyLevel } from '../strategy-simplifier';
+import { Board, Player } from '../../tic-tac-toe/types';
 
 /**
  * 示例1：桌面端屏幕识别AI辅助
@@ -143,7 +144,7 @@ export async function manualInputExample(): Promise<void> {
   const assistant = new AIGameAssistant(config);
   
   // 示例局面：X已经在中心，O在左上角
-  const testBoard = [
+  const testBoard: Board = [
     ['O', null, null],
     [null, 'X', null],
     [null, null, null]
@@ -333,7 +334,7 @@ export async function performanceTestExample(): Promise<void> {
   const assistant = new AIGameAssistant(config);
   
   // 测试不同的局面
-  const testCases = [
+  const testCases: Array<{name: string; board: Board; player: Player}> = [
     {
       name: '开局',
       board: [

@@ -1,6 +1,6 @@
-import { Tile, TileType } from '../../src/tile';
-import { TileSet } from '../../src/rule-types';
-import { FourConcealedPungsDetector } from '../../src/win-conditions/win-conditions_four-concealed-pungs';
+import { Tile, TileType } from '../../src/majiang/tile';
+import { TileSet } from '../../src/majiang/rule-types';
+import { FourConcealedPungsDetector } from '../../src/majiang/win-conditions/win-conditions_four-concealed-pungs';
 import { expect } from 'chai';
 
 // 创建测试用牌

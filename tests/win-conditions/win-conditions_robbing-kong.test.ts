@@ -1,6 +1,6 @@
-import { Tile, TileType } from '../../src/tile';
-import { TileSet, HuType } from '../../src/rule-types';
-import { RobbingKongDetector } from '../../src/win-conditions/win-conditions_robbing-kong';
+import { Tile, TileType } from '../../src/majiang/tile';
+import { TileSet, HuType } from '../../src/majiang/rule-types';
+import { RobbingKongDetector } from '../../src/majiang/win-conditions/win-conditions_robbing-kong';
 import { expect } from 'chai';
 
 // 创建测试用牌

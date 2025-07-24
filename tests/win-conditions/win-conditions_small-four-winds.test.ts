@@ -1,7 +1,7 @@
 import { expect } from 'chai';
-import { SmallFourWindsDetector } from '../../src/win-conditions/win-conditions_small-four-winds';
-import { Tile, TileType, FengValue } from '../../src/tile';
-import { TileSet } from '../../src/rule-types';
+import { SmallFourWindsDetector } from '../../src/majiang/win-conditions/win-conditions_small-four-winds';
+import { Tile, TileType, FengValue } from '../../src/majiang/tile';
+import { TileSet } from '../../src/majiang/rule-types';
 
 // 辅助函数
 function createPung(type: TileType, value: number, startId = 1): TileSet {

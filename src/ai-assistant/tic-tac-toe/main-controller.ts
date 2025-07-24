@@ -46,11 +46,11 @@ export class AIGameAssistant {
   
   // 核心模块
   private recognizer: ScreenGameRecognizer | CameraGameRecognizer | null = null;
-  private aiEngine: AIDecisionEngine;
-  private autoController: AutoExecutionController;
-  private displayController: SuggestionDisplayController;
-  private voiceController: VoiceController;
-  private strategySimplifier: StrategySimplifier;
+  private aiEngine!: AIDecisionEngine;
+  private autoController!: AutoExecutionController;
+  private displayController!: SuggestionDisplayController;
+  private voiceController!: VoiceController;
+  private strategySimplifier!: StrategySimplifier;
   
   // 运行状态
   private isActive: boolean = false;

@@ -17,6 +17,12 @@ export { HeuristicOthelloAgent } from './heuristic-agent';
 export { MinimaxOthelloAgent } from './minimax-agent';
 export { QLearningOthelloAgent } from './qlearning-agent';
 
+// DQN深度强化学习策略导出
+export { DQNOthelloAgent, DEFAULT_DQN_AGENT_CONFIG, TRAINING_DQN_AGENT_CONFIG } from './dqn-agent';
+export { DQNNetwork, DEFAULT_DQN_CONFIG } from './dqn-network';
+export { ExperienceReplay, DEFAULT_EXPERIENCE_REPLAY_CONFIG } from './experience-replay';
+export { DQNTrainer, DEFAULT_TRAINING_CONFIG } from './dqn-trainer';
+
 // 注意：优化功能已合并到主Q学习策略类中
 
 // 策略工具函数
@@ -43,7 +49,8 @@ export enum StrategyType {
   GREEDY = 'greedy',
   HEURISTIC = 'heuristic',
   MINIMAX = 'minimax',
-  QLEARNING = 'qlearning'
+  QLEARNING = 'qlearning',
+  DQN = 'dqn'
 }
 
 /**
@@ -95,6 +102,13 @@ export const STRATEGY_INFO: Record<StrategyType, StrategyInfo> = {
     description: '优化的强化学习策略，支持特征提取和完整棋盘两种模式',
     difficulty: 'Expert',
     features: ['强化学习', '算法优化', '特征提取', '可训练']
+  },
+  [StrategyType.DQN]: {
+    type: StrategyType.DQN,
+    name: 'DQN深度强化学习',
+    description: '深度Q网络，使用卷积神经网络进行决策，最先进的AI策略',
+    difficulty: 'Expert',
+    features: ['深度学习', '卷积神经网络', '经验回放', '目标网络', '超强AI']
   }
 };
 
@@ -133,6 +147,10 @@ export function createStrategy(
         options.useFeatureExtraction || false
       );
 
+    case StrategyType.DQN:
+      const { DQNOthelloAgent: DQNAgent, DEFAULT_DQN_AGENT_CONFIG } = require('./dqn-agent');
+      return new DQNAgent(options.config || DEFAULT_DQN_AGENT_CONFIG, options.pretrainedModel);
+
     default:
       throw new Error(`未知的策略类型: ${type}`);
   }
@@ -159,7 +177,7 @@ export const STRATEGIES_BY_DIFFICULTY = {
   Easy: [StrategyType.RANDOM, StrategyType.GREEDY],
   Medium: [StrategyType.HEURISTIC],
   Hard: [],
-  Expert: [StrategyType.MINIMAX, StrategyType.QLEARNING]
+  Expert: [StrategyType.MINIMAX, StrategyType.QLEARNING, StrategyType.DQN]
 };
 
 /**
@@ -169,6 +187,8 @@ export const RECOMMENDED_COMBINATIONS = [
   { black: StrategyType.HEURISTIC, white: StrategyType.GREEDY },
   { black: StrategyType.MINIMAX, white: StrategyType.HEURISTIC },
   { black: StrategyType.QLEARNING, white: StrategyType.MINIMAX },
+  { black: StrategyType.DQN, white: StrategyType.QLEARNING },
+  { black: StrategyType.DQN, white: StrategyType.HEURISTIC },
   { black: StrategyType.RANDOM, white: StrategyType.RANDOM }
 ];
 

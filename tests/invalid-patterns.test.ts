@@ -1,8 +1,8 @@
 import { expect } from 'chai';
-import { WinConditions } from '../src/win-conditions';
-import { TileType, Tile, FengValue, JianValue } from '../src/tile';
-import { Player, PlayerType } from '../src/player';
-import { TileSet, HuType } from '../src/rule-types';
+import { WinConditions } from '../src/majiang/win-conditions';
+import { TileType, Tile, FengValue, JianValue } from '../src/majiang/tile';
+import { Player, PlayerType } from '../src/majiang/player';
+import { TileSet, HuType } from '../src/majiang/rule-types';
 
 /**
  * 辅助函数：创建指定花色和点数的牌组

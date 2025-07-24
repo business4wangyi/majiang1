@@ -1,9 +1,9 @@
 import { expect } from 'chai';
 import * as sinon from 'sinon';
-import { RuleEngine } from '../src/rule-engine';
-import { Player, PlayerType } from '../src/player';
-import { Tile, TileType } from '../src/tile';
-import { HuType, GangType, PlayerAction } from '../src/rule-types';
+import { RuleEngine } from '../src/majiang/rule-engine';
+import { Player, PlayerType } from '../src/majiang/player';
+import { Tile, TileType } from '../src/majiang/tile';
+import { HuType, GangType, PlayerAction } from '../src/majiang/rule-types';
 
 describe('RuleEngine', () => {
   let consoleLogStub: sinon.SinonStub;

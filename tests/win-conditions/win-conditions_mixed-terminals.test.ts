@@ -1,8 +1,8 @@
-import { Tile, TileType } from '../../src/tile';
-import { TileSet, HuType } from '../../src/rule-types';
-import { MixedTerminalsDetector } from '../../src/win-conditions/win-conditions_mixed-terminals';
+import { Tile, TileType } from '../../src/majiang/tile';
+import { TileSet, HuType } from '../../src/majiang/rule-types';
+import { MixedTerminalsDetector } from '../../src/majiang/win-conditions/win-conditions_mixed-terminals';
 import { expect } from 'chai';
-import { Player } from '../../src/player';
+import { Player } from '../../src/majiang/player';
 
 // 创建测试用牌
 function createTiles(type: TileType, values: number[], startId = 1): Tile[] {
