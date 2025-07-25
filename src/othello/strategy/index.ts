@@ -23,6 +23,11 @@ export { DQNNetwork, DEFAULT_DQN_CONFIG } from './dqn-network';
 export { ExperienceReplay, DEFAULT_EXPERIENCE_REPLAY_CONFIG } from './experience-replay';
 export { DQNTrainer, DEFAULT_TRAINING_CONFIG } from './dqn-trainer';
 
+// A3C深度强化学习策略导出
+export { A3COthelloAgent, DEFAULT_A3C_AGENT_CONFIG } from './a3c-agent';
+export { A3CNetwork, DEFAULT_A3C_CONFIG } from './a3c-network';
+export { A3CTrainer, DEFAULT_A3C_TRAINING_CONFIG } from './a3c-trainer';
+
 // 注意：优化功能已合并到主Q学习策略类中
 
 // 策略工具函数
@@ -50,7 +55,8 @@ export enum StrategyType {
   HEURISTIC = 'heuristic',
   MINIMAX = 'minimax',
   QLEARNING = 'qlearning',
-  DQN = 'dqn'
+  DQN = 'dqn',
+  A3C = 'a3c'
 }
 
 /**
@@ -109,6 +115,13 @@ export const STRATEGY_INFO: Record<StrategyType, StrategyInfo> = {
     description: '深度Q网络，使用卷积神经网络进行决策，最先进的AI策略',
     difficulty: 'Expert',
     features: ['深度学习', '卷积神经网络', '经验回放', '目标网络', '超强AI']
+  },
+  [StrategyType.A3C]: {
+    type: StrategyType.A3C,
+    name: 'A3C异步优势演员评论家',
+    description: 'Actor-Critic架构，异步训练，策略梯度优化，最前沿的AI策略',
+    difficulty: 'Expert',
+    features: ['Actor-Critic', '异步训练', '策略梯度', '优势函数', '顶级AI']
   }
 };
 
@@ -151,6 +164,10 @@ export function createStrategy(
       const { DQNOthelloAgent: DQNAgent, DEFAULT_DQN_AGENT_CONFIG } = require('./dqn-agent');
       return new DQNAgent(options.config || DEFAULT_DQN_AGENT_CONFIG, options.pretrainedModel);
 
+    case StrategyType.A3C:
+      const { A3COthelloAgent: A3CAgent, DEFAULT_A3C_AGENT_CONFIG } = require('./a3c-agent');
+      return new A3CAgent(options.config || DEFAULT_A3C_AGENT_CONFIG);
+
     default:
       throw new Error(`未知的策略类型: ${type}`);
   }
@@ -177,7 +194,7 @@ export const STRATEGIES_BY_DIFFICULTY = {
   Easy: [StrategyType.RANDOM, StrategyType.GREEDY],
   Medium: [StrategyType.HEURISTIC],
   Hard: [],
-  Expert: [StrategyType.MINIMAX, StrategyType.QLEARNING, StrategyType.DQN]
+  Expert: [StrategyType.MINIMAX, StrategyType.QLEARNING, StrategyType.DQN, StrategyType.A3C]
 };
 
 /**
@@ -188,7 +205,8 @@ export const RECOMMENDED_COMBINATIONS = [
   { black: StrategyType.MINIMAX, white: StrategyType.HEURISTIC },
   { black: StrategyType.QLEARNING, white: StrategyType.MINIMAX },
   { black: StrategyType.DQN, white: StrategyType.QLEARNING },
-  { black: StrategyType.DQN, white: StrategyType.HEURISTIC },
+  { black: StrategyType.A3C, white: StrategyType.DQN },
+  { black: StrategyType.A3C, white: StrategyType.HEURISTIC },
   { black: StrategyType.RANDOM, white: StrategyType.RANDOM }
 ];
 
