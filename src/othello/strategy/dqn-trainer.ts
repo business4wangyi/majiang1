@@ -753,3 +753,33 @@ export class DQNTrainer {
     this.experienceReplay.clear();
   }
 }
+
+/**
+ * 导出的DQN训练运行函数
+ */
+export async function runTraining(): Promise<void> {
+  console.log('🚀 启动DQN训练...');
+
+  const config: DQNTrainingConfig = {
+    ...DEFAULT_TRAINING_CONFIG,
+    totalEpisodes: 500,  // 减少训练轮数用于演示
+    evaluationFrequency: 50,
+    saveFrequency: 100
+  };
+
+  const trainer = new DQNTrainer(config);
+
+  try {
+    await trainer.train();
+    console.log('✅ DQN训练完成！');
+  } catch (error) {
+    console.error('❌ DQN训练失败:', error);
+  } finally {
+    trainer.dispose();
+  }
+}
+
+// 如果直接运行此文件
+if (require.main === module) {
+  runTraining().catch(console.error);
+}

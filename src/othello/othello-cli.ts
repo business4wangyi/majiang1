@@ -7,8 +7,15 @@ import {
   QLearningOthelloAgent,
   GreedyOthelloAgent,
   RandomOthelloAgent,
-  OthelloAgent
+  OthelloAgent,
+  AlphaZeroOthelloAgent,
+  OptimizationManager
 } from './strategy';
+import {
+  AlphaZeroConfigGuide,
+  PerformanceLevel,
+  ApplicationScenario
+} from './alphazero-config-guide';
 
 // {{ AURA-X: Add - 创建Othello CLI界面，基于井字棋AI助手模式. Approval: 寸止(ID:1735819200). }}
 
@@ -233,6 +240,12 @@ class OthelloCLI {
     console.log('   help        - 显示此帮助');
     console.log('   quit        - 退出程序');
     console.log('');
+    console.log('🧠 AlphaZero工具：');
+    console.log('   alphazero-config  - AlphaZero配置指南');
+    console.log('   hyperopt-quick    - 快速超参数优化');
+    console.log('   hyperopt-standard - 标准超参数优化');
+    console.log('   config-recommend  - 配置推荐系统');
+    console.log('');
   }
 
   private async question(prompt: string): Promise<string> {
@@ -270,6 +283,14 @@ class OthelloCLI {
           await this.analyzeCurrentBoard();
         } else if (cmd === 'board') {
           this.showCurrentBoard();
+        } else if (cmd === 'alphazero-config') {
+          await this.showAlphaZeroConfigGuide();
+        } else if (cmd === 'hyperopt-quick') {
+          await this.runQuickHyperoptimization();
+        } else if (cmd === 'hyperopt-standard') {
+          await this.runStandardHyperoptimization();
+        } else if (cmd === 'config-recommend') {
+          await this.showConfigRecommendation();
         } else if (this.isInteractiveMode && this.isValidMoveInput(input)) {
           await this.handleMoveInput(input);
         } else {
@@ -850,6 +871,201 @@ class OthelloCLI {
     } catch (error) {
       console.log(`❌ ${(error as Error).message}`);
       console.log('💡 有效格式：a1-h8, 1,1-8,8, 或 1-64');
+    }
+  }
+
+  // {{ AURA-X: Add - AlphaZero智能调参CLI命令. Approval: 寸止(ID:添加CLI命令). }}
+
+  /**
+   * 显示AlphaZero配置指南
+   */
+  private async showAlphaZeroConfigGuide(): Promise<void> {
+    console.log('\n🧠 AlphaZero配置优化指南');
+    console.log('='.repeat(50));
+
+    try {
+      const guide = new AlphaZeroConfigGuide();
+      guide.printConfigGuide();
+    } catch (error) {
+      console.error('❌ 配置指南加载失败:', (error as Error).message);
+    }
+  }
+
+  /**
+   * 运行快速超参数优化
+   */
+  private async runQuickHyperoptimization(): Promise<void> {
+    console.log('\n⚡ 快速超参数优化');
+    console.log('='.repeat(50));
+    console.log('⚠️  这将运行真实的AlphaZero训练，预计需要5-10分钟');
+
+    const confirm = await this.question('确认开始？(y/N): ');
+    if (confirm.toLowerCase() !== 'y') {
+      console.log('❌ 已取消优化');
+      return;
+    }
+
+    try {
+      console.log('🚀 启动快速优化...');
+      const manager = new OptimizationManager();
+      const bestConfig = await manager.runOptimization('quick');
+
+      console.log('\n🏆 优化完成！');
+      console.log(`最佳分数: ${bestConfig.score.toFixed(4)}`);
+      console.log('\n最佳参数:');
+      for (const [key, value] of Object.entries(bestConfig.parameters)) {
+        console.log(`  ${key}: ${value}`);
+      }
+    } catch (error) {
+      console.error('❌ 优化失败:', (error as Error).message);
+    }
+  }
+
+  /**
+   * 运行标准超参数优化
+   */
+  private async runStandardHyperoptimization(): Promise<void> {
+    console.log('\n🎯 标准超参数优化');
+    console.log('='.repeat(50));
+    console.log('⚠️  这将运行完整的AlphaZero训练，预计需要1-2小时');
+
+    const confirm = await this.question('确认开始？(y/N): ');
+    if (confirm.toLowerCase() !== 'y') {
+      console.log('❌ 已取消优化');
+      return;
+    }
+
+    try {
+      console.log('🚀 启动标准优化...');
+      const manager = new OptimizationManager();
+      await manager.loadOptimizationHistory();
+
+      const bestConfig = await manager.runOptimization('standard');
+
+      console.log('\n🏆 优化完成！');
+      console.log(`最佳分数: ${bestConfig.score.toFixed(4)}`);
+
+      // 分析优化历史
+      const analysis = manager.analyzeOptimizationHistory();
+      console.log('\n📊 优化历史分析:');
+      console.log(`总优化次数: ${analysis.totalOptimizations}`);
+      console.log(`平均用时: ${(analysis.averageDuration / 60000).toFixed(1)}分钟`);
+      console.log(`历史最佳分数: ${analysis.bestOverallScore.toFixed(4)}`);
+
+      // 导出最佳配置
+      const exportedConfig = manager.exportBestConfiguration();
+      console.log('\n💾 最佳配置已导出');
+      console.log(`配置分数: ${exportedConfig.metadata.score.toFixed(4)}`);
+
+    } catch (error) {
+      console.error('❌ 优化失败:', (error as Error).message);
+    }
+  }
+
+  /**
+   * 显示配置推荐
+   */
+  private async showConfigRecommendation(): Promise<void> {
+    console.log('\n💡 AlphaZero配置推荐系统');
+    console.log('='.repeat(50));
+
+    try {
+      const guide = new AlphaZeroConfigGuide();
+
+      console.log('\n请选择您的应用场景:');
+      console.log('1. 实时游戏 (需要快速响应)');
+      console.log('2. 交互演示 (平衡性能和响应)');
+      console.log('3. 生产API (服务器部署)');
+      console.log('4. 批量分析 (离线处理)');
+      console.log('5. 研究实验 (追求最高质量)');
+      console.log('6. 自定义约束 (指定具体要求)');
+
+      const choice = await this.question('请选择 (1-6): ');
+
+      let configs: any[] = [];
+
+      switch (choice) {
+        case '1':
+          configs = guide.getConfigByScenario(ApplicationScenario.REAL_TIME_GAME);
+          break;
+        case '2':
+          configs = guide.getConfigByScenario(ApplicationScenario.INTERACTIVE_DEMO);
+          break;
+        case '3':
+          configs = guide.getConfigByScenario(ApplicationScenario.PRODUCTION_API);
+          break;
+        case '4':
+          configs = guide.getConfigByScenario(ApplicationScenario.BATCH_ANALYSIS);
+          break;
+        case '5':
+          configs = guide.getConfigByScenario(ApplicationScenario.RESEARCH_STUDY);
+          break;
+        case '6':
+          await this.showCustomConstraintRecommendation(guide);
+          return;
+        default:
+          console.log('❌ 无效选择');
+          return;
+      }
+
+      console.log('\n🎯 推荐配置:');
+      for (const config of configs) {
+        console.log(`\n📋 ${config.name}:`);
+        console.log(`   搜索速度: ${config.metrics.searchSpeed.toFixed(2)} 次/秒`);
+        console.log(`   响应时间: ${(1/config.metrics.searchSpeed*1000).toFixed(0)}ms`);
+        console.log(`   AI质量: ${config.metrics.winRateVsGreedy}% vs贪心`);
+        console.log(`   训练时间: ${config.metrics.trainingTime}小时`);
+        console.log(`   内存需求: ${config.metrics.memoryUsage}MB`);
+        console.log(`   实时可行: ${config.metrics.realTimeViable ? '✅' : '❌'}`);
+        console.log(`   适用场景: ${config.recommendations[0]}`);
+      }
+
+    } catch (error) {
+      console.error('❌ 配置推荐失败:', (error as Error).message);
+    }
+  }
+
+  /**
+   * 显示自定义约束推荐
+   */
+  private async showCustomConstraintRecommendation(guide: AlphaZeroConfigGuide): Promise<void> {
+    console.log('\n🔧 自定义约束配置');
+    console.log('='.repeat(40));
+
+    const maxSearchTime = await this.question('最大搜索时间(秒，回车跳过): ');
+    const maxTrainingTime = await this.question('最大训练时间(小时，回车跳过): ');
+    const maxMemory = await this.question('最大内存(MB，回车跳过): ');
+    const realTimeRequired = await this.question('是否需要实时性？(y/N): ');
+
+    const constraints: any = {};
+
+    if (maxSearchTime) {
+      constraints.maxSearchTime = parseFloat(maxSearchTime);
+    }
+    if (maxTrainingTime) {
+      constraints.maxTrainingTime = parseFloat(maxTrainingTime);
+    }
+    if (maxMemory) {
+      constraints.maxMemory = parseInt(maxMemory);
+    }
+    if (realTimeRequired.toLowerCase() === 'y') {
+      constraints.realTimeRequired = true;
+    }
+
+    const configs = guide.getConfigByConstraints(constraints);
+
+    if (configs.length === 0) {
+      console.log('❌ 没有找到满足约束条件的配置');
+      console.log('💡 建议放宽约束条件或选择更低性能等级');
+    } else {
+      console.log('\n🎯 满足约束的配置:');
+      for (const config of configs) {
+        console.log(`\n📋 ${config.name}:`);
+        console.log(`   搜索速度: ${config.metrics.searchSpeed.toFixed(2)} 次/秒`);
+        console.log(`   AI质量: ${config.metrics.winRateVsGreedy}% vs贪心`);
+        console.log(`   训练时间: ${config.metrics.trainingTime}小时`);
+        console.log(`   内存需求: ${config.metrics.memoryUsage}MB`);
+      }
     }
   }
 }

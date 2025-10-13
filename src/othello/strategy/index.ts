@@ -28,6 +28,53 @@ export { A3COthelloAgent, DEFAULT_A3C_AGENT_CONFIG } from './a3c-agent';
 export { A3CNetwork, DEFAULT_A3C_CONFIG } from './a3c-network';
 export { A3CTrainer, DEFAULT_A3C_TRAINING_CONFIG } from './a3c-trainer';
 
+// AlphaZero深度强化学习策略导出
+export { AlphaZeroOthelloAgent, DEFAULT_ALPHAZERO_AGENT_CONFIG } from './alphazero-agent';
+export { AlphaZeroNetwork, DEFAULT_ALPHAZERO_CONFIG } from './alphazero-network';
+export { AlphaZeroAdvancedNetwork, DEFAULT_ADVANCED_CONFIG } from './alphazero-network-advanced';
+export { AlphaZeroMCTS, DEFAULT_MCTS_CONFIG } from './alphazero-mcts';
+export { AlphaZeroTrainer, DEFAULT_ALPHAZERO_TRAINING_CONFIG } from './alphazero-trainer';
+
+// AlphaZero高级功能导出
+export {
+  DEMO_ALPHAZERO_CONFIG,
+  STANDARD_ALPHAZERO_CONFIG,
+  HIGH_PERFORMANCE_ALPHAZERO_CONFIG,
+  PRODUCTION_ALPHAZERO_CONFIG,
+  INFERENCE_ALPHAZERO_CONFIG,
+  AlphaZeroConfigSelector,
+  AlphaZeroConfigValidator
+} from './alphazero-configs';
+export {
+  EFFICIENT_ALPHAZERO_CONFIG,
+  ATTENTION_ALPHAZERO_CONFIG,
+  ULTIMATE_ALPHAZERO_CONFIG,
+  FAST_INFERENCE_ALPHAZERO_CONFIG,
+  EXTENDED_TRAINING_ALPHAZERO_CONFIG,
+  MEMORY_OPTIMIZED_ALPHAZERO_CONFIG,
+  ULTRA_MEMORY_OPTIMIZED_ALPHAZERO_CONFIG,
+  HYPER_MEMORY_OPTIMIZED_ALPHAZERO_CONFIG,
+  AdvancedConfigSelector,
+  AdvancedConfigValidator,
+  ConfigPerformanceEstimator
+} from './alphazero-configs-advanced';
+export { AlphaZeroBenchmark } from './alphazero-benchmark';
+export { AlphaZeroTrainingManager } from './alphazero-training-manager';
+
+// AlphaZero智能调参系统导出
+export {
+  AlphaZeroParameterSpace,
+  ParameterType,
+  ParameterDefinition,
+  OptimizationConfig,
+  ParameterSample,
+  GaussianProcess,
+  AcquisitionFunction,
+  AlphaZeroPerformanceEvaluator,
+  BayesianOptimizer,
+  OptimizationManager
+} from './alphazero-hyperopt';
+
 // 注意：优化功能已合并到主Q学习策略类中
 
 // 策略工具函数
@@ -56,7 +103,8 @@ export enum StrategyType {
   MINIMAX = 'minimax',
   QLEARNING = 'qlearning',
   DQN = 'dqn',
-  A3C = 'a3c'
+  A3C = 'a3c',
+  ALPHAZERO = 'alphazero'
 }
 
 /**
@@ -122,6 +170,13 @@ export const STRATEGY_INFO: Record<StrategyType, StrategyInfo> = {
     description: 'Actor-Critic架构，异步训练，策略梯度优化，最前沿的AI策略',
     difficulty: 'Expert',
     features: ['Actor-Critic', '异步训练', '策略梯度', '优势函数', '顶级AI']
+  },
+  [StrategyType.ALPHAZERO]: {
+    type: StrategyType.ALPHAZERO,
+    name: 'AlphaZero终极AI',
+    description: '结合神经网络和蒙特卡洛树搜索，自我对弈学习，代表AI的最高水平',
+    difficulty: 'Expert',
+    features: ['神经网络', 'MCTS', '自我对弈', '残差网络', '终极AI']
   }
 };
 
@@ -168,6 +223,10 @@ export function createStrategy(
       const { A3COthelloAgent: A3CAgent, DEFAULT_A3C_AGENT_CONFIG } = require('./a3c-agent');
       return new A3CAgent(options.config || DEFAULT_A3C_AGENT_CONFIG);
 
+    case StrategyType.ALPHAZERO:
+      const { AlphaZeroOthelloAgent: AlphaZeroAgent, DEFAULT_ALPHAZERO_AGENT_CONFIG } = require('./alphazero-agent');
+      return new AlphaZeroAgent(options.config || DEFAULT_ALPHAZERO_AGENT_CONFIG);
+
     default:
       throw new Error(`未知的策略类型: ${type}`);
   }
@@ -194,7 +253,7 @@ export const STRATEGIES_BY_DIFFICULTY = {
   Easy: [StrategyType.RANDOM, StrategyType.GREEDY],
   Medium: [StrategyType.HEURISTIC],
   Hard: [],
-  Expert: [StrategyType.MINIMAX, StrategyType.QLEARNING, StrategyType.DQN, StrategyType.A3C]
+  Expert: [StrategyType.MINIMAX, StrategyType.QLEARNING, StrategyType.DQN, StrategyType.A3C, StrategyType.ALPHAZERO]
 };
 
 /**
@@ -206,9 +265,57 @@ export const RECOMMENDED_COMBINATIONS = [
   { black: StrategyType.QLEARNING, white: StrategyType.MINIMAX },
   { black: StrategyType.DQN, white: StrategyType.QLEARNING },
   { black: StrategyType.A3C, white: StrategyType.DQN },
-  { black: StrategyType.A3C, white: StrategyType.HEURISTIC },
+  { black: StrategyType.ALPHAZERO, white: StrategyType.A3C },
+  { black: StrategyType.ALPHAZERO, white: StrategyType.HEURISTIC },
   { black: StrategyType.RANDOM, white: StrategyType.RANDOM }
 ];
 
 // 默认导出策略工厂函数
 export default createStrategy;
+
+/**
+ * 导出的策略对比运行函数
+ */
+export async function runStrategyComparison(): Promise<void> {
+  console.log('⚔️ 启动策略对比测试...');
+
+  const strategies = [
+    { name: '随机策略', agent: new RandomOthelloAgent() },
+    { name: '贪心策略', agent: new GreedyOthelloAgent() },
+    { name: '启发式策略', agent: new HeuristicOthelloAgent() },
+    { name: 'Minimax策略', agent: new MinimaxOthelloAgent(3) }
+  ];
+
+  console.log('\n🎯 策略对比结果:');
+  console.log('─'.repeat(60));
+
+  for (let i = 0; i < strategies.length; i++) {
+    for (let j = i + 1; j < strategies.length; j++) {
+      const player1 = strategies[i];
+      const player2 = strategies[j];
+
+      console.log(`\n🥊 ${player1.name} vs ${player2.name}`);
+
+      // 简单的对战测试（这里可以扩展为完整的游戏逻辑）
+      const games = 5;
+      let wins = 0;
+
+      for (let game = 0; game < games; game++) {
+        // 模拟对战结果（实际应该运行完整游戏）
+        const result = Math.random() > 0.5 ? 1 : 0;
+        wins += result;
+      }
+
+      const winRate = (wins / games) * 100;
+      console.log(`   结果: ${player1.name} ${winRate.toFixed(1)}% 胜率`);
+    }
+  }
+
+  console.log('\n✅ 策略对比测试完成！');
+  console.log('💡 提示: 这是简化的演示版本，完整版本需要运行实际游戏');
+}
+
+// 如果直接运行此文件
+if (require.main === module) {
+  runStrategyComparison().catch(console.error);
+}

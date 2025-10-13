@@ -275,7 +275,8 @@ export abstract class BaseWinConditionDetector implements WinConditionDetector {
     }
     
     // 对每种花色，尝试形成顺子
-    for (const [type, value] of [TileType.WAN, TileType.TIAO, TileType.TONG].entries()) {
+    // 修复BUG：此前使用 entries() 导致 type 取到的是索引而非花色字符串
+    for (const type of [TileType.WAN, TileType.TIAO, TileType.TONG]) {
       for (let i = 1; i <= 7; i++) {
         const t1 = tileMap.get(`${type}-${i}`);
         const t2 = tileMap.get(`${type}-${i + 1}`);

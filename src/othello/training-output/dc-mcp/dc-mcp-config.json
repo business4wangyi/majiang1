@@ -1,0 +1,12 @@
+{
+  "totalIterations": 3,
+  "selfPlayGames": 15,
+  "trainingEpochs": 8,
+  "experienceBufferSize": 1500,
+  "batchSize": 16,
+  "mctsSimulations": 200,
+  "enableMemoryOptimization": true,
+  "memoryThresholdMB": 1000,
+  "enableGarbageCollection": true,
+  "outputDir": "src/othello/training-output/dc-mcp"
+}

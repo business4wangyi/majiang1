@@ -1,0 +1,33 @@
+{
+  "status": "running",
+  "currentIteration": 4,
+  "totalIterations": 5,
+  "startTime": 1756273407786,
+  "lastUpdateTime": 1756273425793,
+  "metrics": {
+    "selfPlayWinRate": 0.3918373899163591,
+    "averageGameLength": 40.157288614926905,
+    "experienceBufferSize": 990.4618401757482,
+    "trainingLoss": {
+      "policyLoss": 1.3889253160412565,
+      "valueLoss": 0.7056678939312881,
+      "totalLoss": 2.094593209972545
+    },
+    "evaluationResults": {
+      "vsRandom": 63.35780421609222,
+      "vsGreedy": 44.25461910407548,
+      "vsHeuristic": 36.098341703443744
+    }
+  },
+  "performance": {
+    "iterationTime": 5389,
+    "memoryUsage": {
+      "rss": 173080576,
+      "heapUsed": 114792000,
+      "heapTotal": 121094144,
+      "external": 3555797
+    },
+    "estimatedTimeRemaining": 4501.75
+  },
+  "errors": []
+}

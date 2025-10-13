@@ -8,15 +8,17 @@ import { BaseWinConditionDetector, WinConditionRegistry } from './win-condition-
  * 五门齐：和牌时包含万、条、筒、风、箭五种牌型
  */
 export class AllTypesDetector extends BaseWinConditionDetector {
-  public isBaseWin = true;
+  // 五门齐应作为加番型存在，而非基础胡牌
+  public isBaseWin = false;
   protected name = '五门齐';
   protected description = '和牌时包含万、条、筒、风、箭五种牌型';
   protected scoreValue = 2;
-  protected huType = HuType.PING_HU;
+  // 修正五门齐对应的胡牌类型
+  protected huType = HuType.ALL_TYPES;
 
   detect(
     handTiles: Tile[], 
-    revealedSets: TileSet[], 
+    revealedSets: TileSet[] = [], 
     player?: Player | null,
     gameState?: {
       isLastTile?: boolean,
@@ -28,57 +30,20 @@ export class AllTypesDetector extends BaseWinConditionDetector {
       flowers?: Tile[]
     }
   ): boolean {
-    
-    // 1. 检查总牌数
-    const allTiles = this.getAllTiles(handTiles, revealedSets);
-    if (allTiles.length !== 14) {
-      return false;
+    // 五门齐作为加番条件：仅校验是否同时包含 万/条/筒/风/箭 五类牌
+    // 与具体成牌方式（平胡、七对、十三幺等）无关，不强制14张或“4面子+1将”的组合判断
+
+    // 校验明牌基本合法性（避免明显错误输入）
+    for (const set of revealedSets || []) {
+      if (!this.isValidSet(set)) return false;
     }
-    
-    // 2. 检查是否有重复牌
-    const tileCount = new Map<string, number>();
-    for (const tile of allTiles) {
-      const key = `${tile.type}-${tile.value}`;
-      tileCount.set(key, (tileCount.get(key) || 0) + 1);
-      if (tileCount.get(key)! > 4) {
-        return false;
-      }
-    }
-    
-    // 3. 检查明牌是否合法
-    for (const set of revealedSets) {
-      if (!this.isValidSet(set)) {
-        return false;
-      }
-    }
-    
-    // 4. 检查是否有对子
-    const pairs = this.findPairs(handTiles);
-    if (pairs.length === 0) {
-      return false;
-    }
-    
-    // 5. 检查是否可以形成有效的和牌组合
-    let hasValidCombination = false;
-    for (const pair of pairs) {
-      const remainingTiles = handTiles.filter(tile => 
-        !pair.some(pairTile => pairTile.id === tile.id)
-      );
-      if (this.canFormSets(remainingTiles, revealedSets)) {
-        hasValidCombination = true;
-        break;
-      }
-    }
-    if (!hasValidCombination) {
-      return false;
-    }
-    
-    // 6. 检查是否包含所有五种牌型
+
+    const allTiles = this.getAllTiles(handTiles || [], revealedSets || []);
+    if (allTiles.length === 0) return false;
+
     const typeSet = new Set<TileType>();
-    for (const tile of allTiles) {
-      typeSet.add(tile.type);
-    }
-    
+    for (const tile of allTiles) typeSet.add(tile.type);
+
     const hasAllTypes = [
       TileType.WAN,
       TileType.TIAO,
@@ -86,12 +51,8 @@ export class AllTypesDetector extends BaseWinConditionDetector {
       TileType.FENG,
       TileType.JIAN
     ].every(type => typeSet.has(type));
-    
-    if (!hasAllTypes) {
-      return false;
-    }
-    
-    return true;
+
+    return hasAllTypes;
   }
 }
 

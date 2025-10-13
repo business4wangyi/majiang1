@@ -35,6 +35,14 @@ export interface A3CTrainingConfig {
   maxGameSteps: number;
   /** 训练批次大小 */
   batchSize: number;
+  /** 详细输出模式 */
+  verbose: boolean;
+  /** 进度输出频率 */
+  progressFrequency: number;
+  /** 输出格式 */
+  outputFormat: 'console' | 'structured' | 'minimal';
+  /** 启用MCP集成 */
+  enableMCP: boolean;
 }
 
 /**
@@ -47,7 +55,28 @@ export const DEFAULT_A3C_TRAINING_CONFIG: A3CTrainingConfig = {
   saveFrequency: 1000,
   modelSavePath: 'src/othello/models/a3c-model',
   maxGameSteps: 100,
-  batchSize: 32
+  batchSize: 32,
+  verbose: false,
+  progressFrequency: 500,
+  outputFormat: 'minimal',
+  enableMCP: false
+};
+
+/**
+ * 优化的A3C训练配置 - 减少输出
+ */
+export const OPTIMIZED_A3C_TRAINING_CONFIG: A3CTrainingConfig = {
+  totalEpisodes: 1000,
+  evaluationFrequency: 200,
+  evaluationGames: 10,
+  saveFrequency: 200,
+  modelSavePath: 'src/othello/models/a3c-optimized',
+  maxGameSteps: 100,
+  batchSize: 32,
+  verbose: false,
+  progressFrequency: 100,
+  outputFormat: 'structured',
+  enableMCP: true
 };
 
 /**
@@ -77,6 +106,7 @@ export class A3CTrainer {
     criticLoss: number;
     entropy: number;
   }[] = [];
+  private startTime: number = 0;
 
   constructor(
     agentConfig: A3CAgentConfig = DEFAULT_A3C_AGENT_CONFIG,
@@ -92,20 +122,24 @@ export class A3CTrainer {
       new HeuristicOthelloAgent()
     ];
 
-    console.log('🎯 A3C训练器初始化完成');
-    console.log(`   总轮数: ${this.config.totalEpisodes}`);
-    console.log(`   对手数量: ${this.opponents.length}`);
-    console.log(`   评估频率: 每${this.config.evaluationFrequency}轮`);
+    this.log('info', '🎯 A3C训练器初始化完成');
+    this.log('info', `   总轮数: ${this.config.totalEpisodes}`);
+    this.log('info', `   对手数量: ${this.opponents.length}`);
+    this.log('info', `   评估频率: 每${this.config.evaluationFrequency}轮`);
+    this.log('info', `   输出格式: ${this.config.outputFormat}`);
+    this.log('info', `   MCP集成: ${this.config.enableMCP ? '启用' : '禁用'}`);
   }
 
   /**
    * 开始训练
    */
   async startTraining(): Promise<void> {
-    console.log('\n🚀 开始A3C训练...');
-    console.log('================================================================================');
+    this.log('info', '\n🚀 开始A3C训练...');
+    if (this.config.outputFormat === 'console') {
+      this.log('info', '================================================================================');
+    }
 
-    const startTime = Date.now();
+    this.startTime = Date.now();
 
     for (let episode = 1; episode <= this.config.totalEpisodes; episode++) {
       // 随机选择对手
@@ -126,18 +160,9 @@ export class A3CTrainer {
         entropy: gameResult.lossInfo.entropy
       });
 
-      // 输出进度
-      if (episode % 100 === 0) {
-        const recentStats = this.trainingStats.slice(-100);
-        const avgReward = recentStats.reduce((sum, stat) => sum + stat.totalReward, 0) / 100;
-        const winRate = recentStats.reduce((sum, stat) => sum + stat.winRate, 0) / 100 * 100;
-        const avgActorLoss = recentStats.reduce((sum, stat) => sum + stat.actorLoss, 0) / 100;
-        const avgCriticLoss = recentStats.reduce((sum, stat) => sum + stat.criticLoss, 0) / 100;
-
-        const elapsed = (Date.now() - startTime) / 1000;
-        const remaining = (elapsed / episode) * (this.config.totalEpisodes - episode);
-
-        console.log(`📊 [${episode}轮] 近100轮胜率:${winRate.toFixed(1)}% | 平均奖励:${avgReward.toFixed(1)} | Actor损失:${avgActorLoss.toFixed(4)} | Critic损失:${avgCriticLoss.toFixed(4)} | 剩余时间:${Math.floor(remaining/60)}m${Math.floor(remaining%60)}s`);
+      // 输出进度（优化频率）
+      if (episode % this.config.progressFrequency === 0) {
+        this.outputProgress(episode);
       }
 
       // 评估
@@ -151,8 +176,11 @@ export class A3CTrainer {
       }
     }
 
-    const totalTime = (Date.now() - startTime) / 1000;
-    console.log(`\n✅ A3C训练完成! 总用时: ${(totalTime / 60).toFixed(2)}分钟`);
+    const totalTime = (Date.now() - this.startTime) / 1000;
+    this.log('info', `\n✅ A3C训练完成! 总用时: ${(totalTime / 60).toFixed(2)}分钟`);
+
+    // 输出最终统计
+    this.outputFinalStats();
   }
 
   /**
@@ -260,10 +288,102 @@ export class A3CTrainer {
   }
 
   /**
+   * 日志输出方法
+   */
+  private log(level: 'info' | 'debug' | 'warn' | 'error', message: string): void {
+    if (this.config.outputFormat === 'minimal' && level === 'debug') {
+      return; // 最小模式下不输出调试信息
+    }
+
+    if (this.config.outputFormat === 'structured') {
+      const timestamp = new Date().toISOString();
+      const structured = {
+        timestamp,
+        level,
+        message: message.replace(/[🚀🎯📊✅❌⚠️🧠🎮🔍]/g, '').trim(),
+        emoji: this.extractEmoji(message)
+      };
+      console.log(JSON.stringify(structured));
+    } else {
+      console.log(message);
+    }
+  }
+
+  /**
+   * 提取emoji
+   */
+  private extractEmoji(message: string): string {
+    const emojiMatch = message.match(/[🚀🎯📊✅❌⚠️🧠🎮🔍]/);
+    return emojiMatch ? emojiMatch[0] : '';
+  }
+
+  /**
+   * 输出训练进度
+   */
+  private outputProgress(episode: number): void {
+    const recentCount = Math.min(this.config.progressFrequency, this.trainingStats.length);
+    const recentStats = this.trainingStats.slice(-recentCount);
+
+    const avgReward = recentStats.reduce((sum, stat) => sum + stat.totalReward, 0) / recentCount;
+    const winRate = recentStats.reduce((sum, stat) => sum + stat.winRate, 0) / recentCount * 100;
+    const avgActorLoss = recentStats.reduce((sum, stat) => sum + stat.actorLoss, 0) / recentCount;
+    const avgCriticLoss = recentStats.reduce((sum, stat) => sum + stat.criticLoss, 0) / recentCount;
+
+    const elapsed = (Date.now() - this.startTime) / 1000;
+    const remaining = (elapsed / episode) * (this.config.totalEpisodes - episode);
+
+    if (this.config.outputFormat === 'structured') {
+      const progress = {
+        episode,
+        progress: `${episode}/${this.config.totalEpisodes}`,
+        winRate: winRate.toFixed(1),
+        avgReward: avgReward.toFixed(1),
+        actorLoss: avgActorLoss.toFixed(4),
+        criticLoss: avgCriticLoss.toFixed(4),
+        remainingTime: `${Math.floor(remaining/60)}m${Math.floor(remaining%60)}s`
+      };
+      this.log('info', `📊 训练进度: ${JSON.stringify(progress)}`);
+    } else {
+      this.log('info', `📊 [${episode}轮] 近${recentCount}轮胜率:${winRate.toFixed(1)}% | 平均奖励:${avgReward.toFixed(1)} | Actor损失:${avgActorLoss.toFixed(4)} | Critic损失:${avgCriticLoss.toFixed(4)} | 剩余时间:${Math.floor(remaining/60)}m${Math.floor(remaining%60)}s`);
+    }
+  }
+
+  /**
+   * 输出最终统计
+   */
+  private outputFinalStats(): void {
+    if (this.trainingStats.length === 0) return;
+
+    const totalStats = this.trainingStats;
+    const avgReward = totalStats.reduce((sum, stat) => sum + stat.totalReward, 0) / totalStats.length;
+    const overallWinRate = totalStats.reduce((sum, stat) => sum + stat.winRate, 0) / totalStats.length * 100;
+    const avgActorLoss = totalStats.reduce((sum, stat) => sum + stat.actorLoss, 0) / totalStats.length;
+    const avgCriticLoss = totalStats.reduce((sum, stat) => sum + stat.criticLoss, 0) / totalStats.length;
+
+    if (this.config.outputFormat === 'structured') {
+      const finalStats = {
+        totalEpisodes: this.config.totalEpisodes,
+        overallWinRate: overallWinRate.toFixed(1),
+        avgReward: avgReward.toFixed(1),
+        avgActorLoss: avgActorLoss.toFixed(4),
+        avgCriticLoss: avgCriticLoss.toFixed(4),
+        trainingTime: `${((Date.now() - this.startTime) / 1000 / 60).toFixed(2)}分钟`
+      };
+      this.log('info', `📊 最终统计: ${JSON.stringify(finalStats)}`);
+    } else {
+      this.log('info', `📊 最终统计:`);
+      this.log('info', `   总体胜率: ${overallWinRate.toFixed(1)}%`);
+      this.log('info', `   平均奖励: ${avgReward.toFixed(1)}`);
+      this.log('info', `   平均Actor损失: ${avgActorLoss.toFixed(4)}`);
+      this.log('info', `   平均Critic损失: ${avgCriticLoss.toFixed(4)}`);
+    }
+  }
+
+  /**
    * 评估智能体性能
    */
   private async evaluate(episode: number): Promise<void> {
-    console.log(`\n🎯 第${episode}轮评估开始...`);
+    this.log('info', `\n🎯 第${episode}轮评估开始...`);
 
     const results = {
       vsRandom: 0,
@@ -300,10 +420,23 @@ export class A3CTrainer {
     const greedyWinRate = (results.vsGreedy / this.config.evaluationGames * 100).toFixed(1);
     const heuristicWinRate = (results.vsHeuristic / this.config.evaluationGames * 100).toFixed(1);
 
-    console.log(`📊 评估结果 (${this.config.evaluationGames}局):`);
-    console.log(`   vs 随机策略: ${randomWinRate}% (${results.vsRandom}胜)`);
-    console.log(`   vs 贪心策略: ${greedyWinRate}% (${results.vsGreedy}胜)`);
-    console.log(`   vs 启发式策略: ${heuristicWinRate}% (${results.vsHeuristic}胜)`);
+    if (this.config.outputFormat === 'structured') {
+      const evaluationResults = {
+        episode,
+        games: this.config.evaluationGames,
+        vsRandom: `${randomWinRate}%`,
+        vsGreedy: `${greedyWinRate}%`,
+        vsHeuristic: `${heuristicWinRate}%`
+      };
+      this.log('info', `📊 评估结果: ${JSON.stringify(evaluationResults)}`);
+    } else if (this.config.outputFormat === 'minimal') {
+      this.log('info', `📊 评估[${episode}轮]: 随机${randomWinRate}% | 贪心${greedyWinRate}% | 启发式${heuristicWinRate}%`);
+    } else {
+      this.log('info', `📊 评估结果 (${this.config.evaluationGames}局):`);
+      this.log('info', `   vs 随机策略: ${randomWinRate}% (${results.vsRandom}胜)`);
+      this.log('info', `   vs 贪心策略: ${greedyWinRate}% (${results.vsGreedy}胜)`);
+      this.log('info', `   vs 启发式策略: ${heuristicWinRate}% (${results.vsHeuristic}胜)`);
+    }
   }
 
   /**
@@ -355,4 +488,72 @@ export class A3CTrainer {
   dispose(): void {
     this.agent.dispose();
   }
+}
+
+/**
+ * 导出的A3C训练运行函数
+ */
+export async function runTraining(): Promise<void> {
+  console.log('🚀 启动A3C训练...');
+
+  // 使用优化配置
+  const trainer = new A3CTrainer(DEFAULT_A3C_AGENT_CONFIG, OPTIMIZED_A3C_TRAINING_CONFIG);
+
+  try {
+    await trainer.startTraining();
+    console.log('✅ A3C训练完成！');
+  } catch (error) {
+    console.error('❌ A3C训练失败:', error);
+  } finally {
+    trainer.dispose();
+  }
+}
+
+/**
+ * 运行优化的A3C训练（最小输出）
+ */
+export async function runOptimizedTraining(): Promise<void> {
+  const config: A3CTrainingConfig = {
+    ...OPTIMIZED_A3C_TRAINING_CONFIG,
+    outputFormat: 'minimal',
+    progressFrequency: 200,
+    verbose: false
+  };
+
+  const trainer = new A3CTrainer(DEFAULT_A3C_AGENT_CONFIG, config);
+
+  try {
+    await trainer.startTraining();
+  } catch (error) {
+    console.error('❌ A3C训练失败:', error);
+  } finally {
+    trainer.dispose();
+  }
+}
+
+/**
+ * 运行结构化输出的A3C训练（MCP友好）
+ */
+export async function runStructuredTraining(): Promise<void> {
+  const config: A3CTrainingConfig = {
+    ...OPTIMIZED_A3C_TRAINING_CONFIG,
+    outputFormat: 'structured',
+    enableMCP: true,
+    progressFrequency: 100
+  };
+
+  const trainer = new A3CTrainer(DEFAULT_A3C_AGENT_CONFIG, config);
+
+  try {
+    await trainer.startTraining();
+  } catch (error) {
+    console.error('❌ A3C训练失败:', error);
+  } finally {
+    trainer.dispose();
+  }
+}
+
+// 如果直接运行此文件
+if (require.main === module) {
+  runTraining().catch(console.error);
 }
