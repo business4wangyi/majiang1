@@ -43,6 +43,10 @@
     "othello:a3c-safe": "npx ts-node -e \"import('./src/othello/strategy/a3c-trainer-safe').then(m => m.runSafeA3CTraining())\"",
     "othello:a3c-safe-structured": "npx ts-node -e \"import('./src/othello/strategy/a3c-trainer-safe').then(m => m.runStructuredA3CTraining())\"",
     "othello:a3c-safe-console": "npx ts-node -e \"import('./src/othello/strategy/a3c-trainer-safe').then(m => m.runConsoleA3CTraining())\"",
+    "othello:alphazero-optimized": "npx ts-node src/othello/strategy/alphazero-trainer-optimized.ts",
+    "othello:alphazero-optimized-structured": "npx ts-node -e \"import('./src/othello/strategy/alphazero-trainer-optimized').then(m => m.runStructuredAlphaZeroTraining())\"",
+    "othello:alphazero-optimized-console": "npx ts-node -e \"import('./src/othello/strategy/alphazero-trainer-optimized').then(m => m.runConsoleAlphaZeroTraining())\"",
+    "othello:alphazero-optimized-longterm": "npx ts-node -e \"import('./src/othello/strategy/alphazero-trainer-optimized').then(m => m.runLongTermAlphaZeroTraining())\"",
     "othello:alphazero-battle": "npx ts-node -e \"import('./src/othello/strategy/alphazero-agent.ts').then(m => m.runHumanVsAI())\"",
     "othello:alphazero-ai-battle": "npx ts-node -e \"import('./src/othello/strategy/alphazero-agent.ts').then(m => m.runAIVsAI())\"",
     "othello:strategies-test": "npx ts-node -e \"import('./src/othello/strategy/index.ts').then(m => m.runStrategyComparison())\"",
@@ -67,7 +71,7 @@
     "othello:alphazero-dc-mcp-real-standard": "npx ts-node src/othello/strategy/alphazero-mcp-desktop-commander-real.ts standard",
     "othello:alphazero-dc-mcp-real-full": "npx ts-node src/othello/strategy/alphazero-mcp-desktop-commander-real.ts full",
     "othello:alphazero-dc-mcp-real-ultra": "npx ts-node src/othello/strategy/alphazero-mcp-desktop-commander-real.ts ultra",
-    "othello:alphazero-optimized": "npx ts-node src/othello/strategy/alphazero-mcp-optimized.ts"
+    "othello:alphazero-mcp-optimized": "npx ts-node src/othello/strategy/alphazero-mcp-optimized.ts"
   },
   "keywords": [
     "majiang",
