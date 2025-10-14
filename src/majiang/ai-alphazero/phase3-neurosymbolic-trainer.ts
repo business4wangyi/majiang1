@@ -3,7 +3,7 @@
  * 基于传说级技术栈的最高难度训练
  */
 
-import { Game } from '../game';
+import { Game, GameState } from '../game';
 import { AIPlayer } from '../ai-player';
 import { createTrainingMajiangAI } from './index';
 import { 
@@ -207,8 +207,8 @@ export class Phase3NeuroSymbolicTrainer {
     }
     
     // 创建带神经符号融合的AI智能体
-    const aiAgents = aiPlayers.map(() => 
-      createTrainingMajiangAI(game, {
+    const aiAgents = aiPlayers.map(() =>
+      createTrainingMajiangAI({
         mctsSimulations: 600,
         explorationWeight: 1.2, // 第三阶段平衡探索与利用
         temperature: 0.6        // 进一步降低温度，提高决策精度
@@ -219,7 +219,7 @@ export class Phase3NeuroSymbolicTrainer {
     const gameStartTime = Date.now();
     
     // 游戏主循环
-    while (game.state !== 'ENDED' && moveCount < 200) {
+    while (game.state !== GameState.ENDED && moveCount < 200) {
       const currentPlayerIndex = game.currentPlayerIndex;
       const currentAgent = aiAgents[currentPlayerIndex];
       const currentPlayer = aiPlayers[currentPlayerIndex];
@@ -268,7 +268,7 @@ export class Phase3NeuroSymbolicTrainer {
           
           // 模拟游戏状态更新
           if (Math.random() < 0.006) { // 0.6%概率游戏结束（第三阶段更精确）
-            game.state = 'ENDED';
+            game.state = GameState.ENDED;
             const winner = Math.floor(Math.random() * 4);
             await this.updateNeuroSymbolicGameResult(gameId, winner, moveCount);
           }
@@ -357,7 +357,7 @@ export class Phase3NeuroSymbolicTrainer {
   
   private evaluateRuleActivation(fusedOutput: any): number {
     // 评估规则激活程度（基于输出的集中度）
-    const maxProb = Math.max(...Array.from(fusedOutput.actionProbabilities));
+    const maxProb = Math.max(...Array.from(fusedOutput.actionProbabilities as Float32Array));
     return maxProb; // 最大概率越高，说明规则激活越明确
   }
   

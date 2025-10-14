@@ -3,7 +3,7 @@
  * 基于传说级技术栈的稳定性优化训练
  */
 
-import { Game } from '../game';
+import { Game, GameState } from '../game';
 import { AIPlayer } from '../ai-player';
 import { createTrainingMajiangAI } from './index';
 import { StabilityOptimizer, StabilityConfig, StabilityMetrics, DEFAULT_STABILITY_CONFIG } from './stability-optimizer';
@@ -181,8 +181,8 @@ export class Phase2StabilityTrainer {
     }
     
     // 创建带稳定性优化的AI智能体
-    const aiAgents = aiPlayers.map(() => 
-      createTrainingMajiangAI(game, {
+    const aiAgents = aiPlayers.map(() =>
+      createTrainingMajiangAI({
         mctsSimulations: 600,
         explorationWeight: 1.4, // 第二阶段降低探索，提高稳定性
         temperature: 0.8        // 降低温度，增加决策稳定性
@@ -193,7 +193,7 @@ export class Phase2StabilityTrainer {
     const gameStartTime = Date.now();
     
     // 游戏主循环
-    while (game.state !== 'ENDED' && moveCount < 200) {
+    while (game.state !== GameState.ENDED && moveCount < 200) {
       const currentPlayerIndex = game.currentPlayerIndex;
       const currentAgent = aiAgents[currentPlayerIndex];
       
@@ -217,7 +217,7 @@ export class Phase2StabilityTrainer {
           
           // 模拟游戏状态更新
           if (Math.random() < 0.008) { // 0.8%概率游戏结束（比第一阶段略低）
-            game.state = 'ENDED';
+            game.state = GameState.ENDED;
             const winner = Math.floor(Math.random() * 4);
             await this.updateGameResult(gameId, winner, moveCount);
           }

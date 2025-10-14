@@ -85,7 +85,17 @@
     "othello:alphazero-dc-mcp-real-standard": "npx ts-node src/othello/strategy/alphazero-mcp-desktop-commander-real.ts standard",
     "othello:alphazero-dc-mcp-real-full": "npx ts-node src/othello/strategy/alphazero-mcp-desktop-commander-real.ts full",
     "othello:alphazero-dc-mcp-real-ultra": "npx ts-node src/othello/strategy/alphazero-mcp-desktop-commander-real.ts ultra",
-    "othello:alphazero-mcp-optimized": "npx ts-node src/othello/strategy/alphazero-mcp-optimized.ts"
+    "othello:alphazero-mcp-optimized": "npx ts-node src/othello/strategy/alphazero-mcp-optimized.ts",
+    "majiang:ai": "npx ts-node src/majiang/index.ts",
+    "majiang:ai-vs-random": "node validate-ai-performance.js",
+    "majiang:phase1": "npx ts-node -e \"import('./src/majiang/ai-alphazero/phase1-basic-trainer.ts').then(m => m.startPhase1Training())\"",
+    "majiang:phase2": "npx ts-node -e \"import('./src/majiang/ai-alphazero/phase2-stability-trainer.ts').then(m => m.startPhase2StabilityTraining())\"",
+    "majiang:phase3": "npx ts-node -e \"import('./src/majiang/ai-alphazero/phase3-neurosymbolic-trainer.ts').then(m => m.startPhase3NeuroSymbolicTraining())\"",
+    "majiang:phase4": "node start-phase4-super-optimization.js",
+    "majiang:validate-1000": "node validate-ai-performance.js",
+    "majiang:validate-2000": "node ultimate-validation-2000-games.js",
+    "majiang:showcase": "node technical-achievement-showcase.js",
+    "majiang:auto": "npx ts-node src/majiang/index.ts --auto"
   },
   "keywords": [
     "majiang",

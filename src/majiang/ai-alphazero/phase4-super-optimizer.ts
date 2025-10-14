@@ -3,7 +3,7 @@
  * 基于1000局实战验证的深度优化
  */
 
-import { Game } from '../game';
+import { Game, GameState } from '../game';
 import { AIPlayer } from '../ai-player';
 import { createTrainingMajiangAI } from './index';
 import { 
@@ -563,8 +563,8 @@ export class Phase4SuperOptimizer {
     }
     
     // 创建带超级优化的AI智能体
-    const aiAgents = aiPlayers.map(() => 
-      createTrainingMajiangAI(game, {
+    const aiAgents = aiPlayers.map(() =>
+      createTrainingMajiangAI({
         mctsSimulations: 600,
         explorationWeight: 1.0, // 第四阶段降低探索，提高利用
         temperature: 0.4        // 进一步降低温度，提高决策精度
@@ -575,7 +575,7 @@ export class Phase4SuperOptimizer {
     const gameStartTime = Date.now();
     
     // 游戏主循环
-    while (game.state !== 'ENDED' && moveCount < 200) {
+    while (game.state !== GameState.ENDED && moveCount < 200) {
       const currentPlayerIndex = game.currentPlayerIndex;
       const currentAgent = aiAgents[currentPlayerIndex];
       const currentPlayer = aiPlayers[currentPlayerIndex];
@@ -639,7 +639,7 @@ export class Phase4SuperOptimizer {
           
           // 模拟游戏状态更新
           if (Math.random() < 0.005) { // 0.5%概率游戏结束（第四阶段更精确）
-            game.state = 'ENDED';
+            game.state = GameState.ENDED;
             const winner = Math.floor(Math.random() * 4);
             await this.updateSuperOptimizationGameResult(gameId, winner, moveCount);
           }

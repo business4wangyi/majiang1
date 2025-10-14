@@ -3,7 +3,7 @@
  * 基于传说级技术栈的训练系统
  */
 
-import { Game } from '../game';
+import { Game, GameState } from '../game';
 import { AIPlayer } from '../ai-player';
 import { createTrainingMajiangAI, createPlayingMajiangAI } from './index';
 import { TRAINING_CONFIG, PerformanceMonitor } from './performance-config';
@@ -138,8 +138,8 @@ export class SelfPlayTrainer {
     }
     
     // 创建AI智能体
-    const aiAgents = aiPlayers.map(() => 
-      createTrainingMajiangAI(game, {
+    const aiAgents = aiPlayers.map(() =>
+      createTrainingMajiangAI({
         mctsSimulations: this.config.mctsSimulations,
         explorationWeight: this.config.explorationWeight,
         temperature: this.config.temperature
@@ -150,7 +150,7 @@ export class SelfPlayTrainer {
     const gameStartTime = Date.now();
     
     // 游戏主循环
-    while (game.state !== 'ENDED' && moveCount < 200) { // 最大200步防止无限循环
+    while (game.state !== GameState.ENDED && moveCount < 200) { // 最大200步防止无限循环
       const currentPlayerIndex = game.currentPlayerIndex;
       const currentAgent = aiAgents[currentPlayerIndex];
       
@@ -173,7 +173,7 @@ export class SelfPlayTrainer {
           
           // 模拟游戏状态更新
           if (Math.random() < 0.01) { // 1%概率游戏结束
-            game.state = 'ENDED';
+            game.state = GameState.ENDED;
             // 随机决定获胜者
             const winner = Math.floor(Math.random() * 4);
             this.stats.winRates[winner]++;

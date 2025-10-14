@@ -560,39 +560,29 @@ export class NeuralSymbolicFusionEngine {
   ): MajiangNetworkOutput {
     switch (this.config.fusionStrategy) {
       case 'weighted':
-        return this.weightedFusion(neuralOutput, symbolicOutput);
+        return this.weightedFusionDefault(neuralOutput, symbolicOutput);
       case 'hierarchical':
         return this.hierarchicalFusion(neuralOutput, symbolicOutput, gameState, player);
       case 'adaptive':
         return this.adaptiveFusion(neuralOutput, symbolicOutput, gameState, player);
       default:
-        return this.weightedFusion(neuralOutput, symbolicOutput);
+        return this.weightedFusionDefault(neuralOutput, symbolicOutput);
     }
   }
   
   /**
-   * 加权融合
+   * 加权融合（使用默认权重）
    */
-  private weightedFusion(
+  private weightedFusionDefault(
     neuralOutput: MajiangNetworkOutput,
     symbolicOutput: MajiangNetworkOutput
   ): MajiangNetworkOutput {
-    const fusedActionProbs = new Float32Array(39);
-    
-    for (let i = 0; i < 39; i++) {
-      fusedActionProbs[i] = 
-        neuralOutput.actionProbabilities[i] * this.fusionWeights.neural +
-        symbolicOutput.actionProbabilities[i] * this.fusionWeights.symbolic;
-    }
-    
-    const fusedValue = 
-      neuralOutput.valueEstimation * this.fusionWeights.neural +
-      symbolicOutput.valueEstimation * this.fusionWeights.symbolic;
-    
-    return {
-      actionProbabilities: fusedActionProbs,
-      valueEstimation: fusedValue
-    };
+    return this.weightedFusion(
+      neuralOutput,
+      symbolicOutput,
+      this.fusionWeights.neural,
+      this.fusionWeights.symbolic
+    );
   }
   
   /**

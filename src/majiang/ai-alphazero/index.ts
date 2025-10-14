@@ -42,17 +42,24 @@ export function createMajiangAlphaZeroAI(game: Game, config?: {
 /**
  * 创建用于训练的麻将AlphaZero AI
  */
-export function createTrainingMajiangAI(game: Game): MajiangAlphaZeroAgent {
-  const agent = createMajiangAlphaZeroAI(game, {
+export function createTrainingMajiangAI(config?: {
+  mctsSimulations?: number;
+  explorationWeight?: number;
+  temperature?: number;
+}): MajiangAlphaZeroAgent {
+  // 创建一个临时游戏实例用于初始化
+  const tempGame = new Game();
+
+  const agent = createMajiangAlphaZeroAI(tempGame, {
     networkConfig: {
       hiddenLayers: [512, 256, 128],
       dropoutRate: 0.3,
       learningRate: 0.001
     },
     agentConfig: {
-      mctsSimulations: 1600,
-      explorationWeight: 1.4,
-      temperature: 1.2,
+      mctsSimulations: config?.mctsSimulations || 1600,
+      explorationWeight: config?.explorationWeight || 1.4,
+      temperature: config?.temperature || 1.2,
       enableSelfPlay: true,
       enableLogging: true
     },
@@ -62,7 +69,7 @@ export function createTrainingMajiangAI(game: Game): MajiangAlphaZeroAgent {
       autoSaveStates: true
     }
   });
-  
+
   agent.setTrainingMode(true);
   return agent;
 }
