@@ -1,0 +1,24 @@
+{
+  "config": {
+    "inputDim": 320,
+    "outputDim": 39,
+    "hiddenLayers": [
+      512,
+      256,
+      128
+    ],
+    "activationFunction": "relu",
+    "dropoutRate": 0.3,
+    "learningRate": 0.001,
+    "batchSize": 32,
+    "l2Regularization": 0.0001
+  },
+  "stats": {
+    "gamesPlayed": 150,
+    "trainingBatches": 150,
+    "averageLoss": 3.4365793992528673,
+    "averageConfidence": 0.4457996608173599,
+    "startTime": 1760454864646
+  },
+  "timestamp": "2025-10-14T15:15:42.202Z"
+}

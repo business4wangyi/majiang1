@@ -1,0 +1,11 @@
+{
+  "gamesPlayed": 300,
+  "totalMoves": 14889,
+  "trainingDataCollected": 5049,
+  "totalBatches": 299,
+  "averageLoss": 3.0436817851161964,
+  "averagePolicyLoss": 2.7077207848549394,
+  "averageValueLoss": 0.3325063315555205,
+  "averageGameLength": 49.63,
+  "startTime": 1760452595763
+}

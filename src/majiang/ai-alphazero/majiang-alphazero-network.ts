@@ -1,8 +1,9 @@
 /**
- * 麻将AlphaZero神经网络 - 基于传说级技术栈的核心网络架构
+ * 麻将AlphaZero神经网络 - 基于TensorFlow.js的真实训练实现
  * 输入：320维状态向量 → 输出：39维动作概率 + 1维价值评估
  */
 
+import * as tf from '@tensorflow/tfjs';
 import { MajiangStateVector, MajiangStateEncoder } from './majiang-state-encoder';
 import { MajiangActionSpace, MajiangActionDecoder } from './majiang-action-decoder';
 
@@ -22,12 +23,18 @@ export interface MajiangNetworkConfig {
   l2Regularization: number;   // L2正则化系数
 }
 
+export interface TrainingBatch {
+  states: tf.Tensor2D;        // 状态批次 [batchSize, 320]
+  actionProbs: tf.Tensor2D;   // 动作概率批次 [batchSize, 39]
+  values: tf.Tensor1D;        // 价值批次 [batchSize]
+}
+
 export class MajiangAlphaZeroNetwork {
   private config: MajiangNetworkConfig;
-  private weights: Map<string, Float32Array>;
-  private biases: Map<string, Float32Array>;
+  private model: tf.LayersModel;
+  private optimizer: tf.Optimizer;
   private isTraining: boolean;
-  
+
   constructor(config?: Partial<MajiangNetworkConfig>) {
     this.config = {
       inputDim: MajiangStateEncoder.getStateDimension(), // 320
@@ -40,12 +47,10 @@ export class MajiangAlphaZeroNetwork {
       l2Regularization: 0.0001,
       ...config
     };
-    
-    this.weights = new Map();
-    this.biases = new Map();
+
     this.isTraining = false;
-    
     this.initializeNetwork();
+    this.initializeOptimizer();
   }
   
   /**
