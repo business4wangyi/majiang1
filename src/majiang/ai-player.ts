@@ -248,7 +248,7 @@ export class AIPlayer extends Player {
           const lowestValueTile = tileValues[0];
           // 验证索引有效性
           if (lowestValueTile.index >= 0 && lowestValueTile.index < this.handTiles.length) {
-            errorLog(`手牌数量超过预期(${this.getExpectedHandSize()})，实际(${this.handTiles.length})，选择价值最低的牌，索引=${lowestValueTile.index}, 牌=${lowestValueTile.tile.toString()}, 价值=${lowestValueTile.value}`);
+            infoLog(`手牌数量超过预期(${this.getExpectedHandSize()})，实际(${this.handTiles.length})，选择价值最低的牌，索引=${lowestValueTile.index}, 牌=${lowestValueTile.tile.toString()}, 价值=${lowestValueTile.value}`);
             if (this.handTiles.length > this.getExpectedHandSize() + 1) {
               displayManager.displayPlayerHand(this)
               errorLog(`退出游戏排查问题`);

@@ -77,7 +77,7 @@ async function startGame() {
     } else {
       displayManager.printSuccess(`已选择: 不启用调试模式`);
 
-      setLogLevel(LogLevel.NONE);
+      setLogLevel(LogLevel.INFO);
       InputState.setDebugMode(false);
     }
     

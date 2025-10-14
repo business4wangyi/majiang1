@@ -21,7 +21,7 @@ export enum LogLevel {
 // 配置参数
 export const CONFIG = {
   // 当前日志级别 - 可以通过setLogLevel函数修改
-  currentLogLevel: LogLevel.DEBUG,
+  currentLogLevel: LogLevel.INFO,
   
   // 日志文件相关配置
   logDir: path.join(process.cwd(), 'logs', 'majiang'),
