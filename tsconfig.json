@@ -7,6 +7,7 @@
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
+    "downlevelIteration": true,
     "types": ["node", "mocha", "chai"],
     "baseUrl": "./src",
     "paths": {
