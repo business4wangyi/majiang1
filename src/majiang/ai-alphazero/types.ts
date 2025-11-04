@@ -40,7 +40,7 @@ export class GameStateAdapter implements GameState {
   }
 
   getRemainingTilesCount(): number {
-    return this.game.tileManager?.getRemainingTilesCount() || 0;
+    return this.game.tileManager?.getRemainingTiles() || 0;
   }
 
   getLastDiscardedTile(): Tile | null {

@@ -37,16 +37,18 @@ GameEventHandler.prototype.handleCurrentPlayerDiscard = async function(...args: 
   return result;
 };
 
-// 3. 注入 AIPlayer.getAIMove，AI决策耗时
-const origGetAIMove = AIPlayer.prototype.getAIMove;
-AIPlayer.prototype.getAIMove = function(...args) {
-  perfMonitor.mark(`AI决策-${this.name}`);
-  try {
-    return origGetAIMove.apply(this, args);
-  } finally {
-    perfMonitor.measure(`AI决策-${this.name}`);
-  }
-};
+// 3. 注入 AIPlayer.getAIMove，AI决策耗时（如果方法存在）
+if (AIPlayer && AIPlayer.prototype && typeof AIPlayer.prototype.getAIMove === 'function') {
+  const origGetAIMove = AIPlayer.prototype.getAIMove;
+  AIPlayer.prototype.getAIMove = function(...args) {
+    perfMonitor.mark(`AI决策-${this.name}`);
+    try {
+      return origGetAIMove.apply(this, args);
+    } finally {
+      perfMonitor.measure(`AI决策-${this.name}`);
+    }
+  };
+}
 
 // 4. 注入 GameEventHandler.dealInitialTiles，发牌流程耗时
 const origDealInitialTiles = GameEventHandler.prototype.dealInitialTiles;
