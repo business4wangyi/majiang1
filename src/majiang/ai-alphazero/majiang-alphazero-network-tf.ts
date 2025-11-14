@@ -241,6 +241,23 @@ export class MajiangAlphaZeroNetworkTF {
   public getParameterCount(): number {
     return this.model.countParams();
   }
+
+  /**
+   * 设置学习率（优化：支持动态调整学习率）
+   * 注意：TensorFlow.js的Adam优化器不支持直接设置学习率，需要重新创建优化器
+   */
+  public setLearningRate(newLearningRate: number): void {
+    if (this.optimizer) {
+      // 释放旧优化器
+      this.optimizer.dispose();
+    }
+    
+    // 重新创建优化器（使用新的学习率）
+    this.optimizer = tf.train.adam(newLearningRate);
+    this.config.learningRate = newLearningRate; // 更新配置
+    
+    console.log(`   ⚙️ 网络学习率已更新为: ${newLearningRate.toFixed(6)}`);
+  }
   
   /**
    * 将状态向量转换为数组

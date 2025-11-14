@@ -59,35 +59,44 @@ class ReinforcementLearningSelfPlay {
   private network: MajiangAlphaZeroNetworkTF;
   private experiences: SelfPlayExperience[] = [];
   private modelPath: string;
+  private checkpointPath: string; // 检查点路径
   private stats: RLTrainingStats;
   private game: Game | null = null; // 真实游戏实例（方案A：完整集成）
   private gameEventHandler: GameEventHandler | null = null; // 游戏事件处理器（方案A：完整集成）
   private tileManager: TileManager; // 牌管理器（方案A：完整集成）
+  private currentGameId: number = 0; // 当前游戏ID（用于优雅关闭）
+  private isShuttingDown: boolean = false; // 关闭标志
   
-  // 强化学习参数 - 优化版本（方案A：提升置信度）
-  private readonly MCTS_SIMULATIONS = 400; // 从300增加到400（方案A优化：提升置信度）
+  // 强化学习参数 - 优化版本（性能优化：批量前向传播+缓存）
+  private readonly MCTS_SIMULATIONS = 180; // 从250减少到180（性能优化：减少28%，提升训练速度）
   private readonly EXPLORATION_CONSTANT = 1.4;
   private readonly INITIAL_TEMPERATURE = 1.0; // 初始温度
   private readonly FINAL_TEMPERATURE = 0.1; // 最终温度（方案A优化：温度衰减）
   private readonly EXPERIENCE_BUFFER_SIZE = 5000;
   private readonly TRAINING_BATCH_SIZE = 32;
   private readonly DISCOUNT_FACTOR = 0.99;
-  private readonly TRAINING_PER_GAME = 3; // 每局游戏训练次数：1次→3次
+  private readonly TRAINING_PER_GAME = 2; // 每局游戏训练次数：从3次减少到2次（性能优化：减少33%，提升训练速度）
+  private readonly MCTS_BATCH_SIZE = 32; // MCTS批量前向传播批次大小
+  private readonly STATE_CACHE_SIZE = 10000; // 状态缓存大小
   private currentTemperature: number; // 当前温度（方案A优化：温度衰减）
+  private stateCache: Map<string, { actionProbs: Float32Array; value: number }>; // 状态缓存
 
   constructor() {
     console.log('🎯 初始化强化学习自对弈训练系统...');
+    this.stateCache = new Map();
     
-    // 基于根本原因分析，增加网络容量
+    // 基于根本原因分析，增加网络容量（优化：调整网络结构）
     this.network = new MajiangAlphaZeroNetworkTF({
       hiddenLayers: [1024, 512, 256, 128], // 增加层数和神经元数量
-      learningRate: 0.0003, // 降低学习率
+      learningRate: 0.0008, // 优化：进一步提高初始学习率（从0.0005增加到0.0008，基于优秀奖励信号）
       batchSize: this.TRAINING_BATCH_SIZE,
       dropoutRate: 0.15 // 降低dropout以增加容量
     });
     
     this.modelPath = path.join(__dirname, '../../models/reinforcement-learning');
+    this.checkpointPath = path.join(__dirname, '../../models/reinforcement-learning-checkpoint');
     this.ensureModelDirectory();
+    this.ensureCheckpointDirectory();
     
     this.stats = {
       selfPlayGames: 0,
@@ -104,7 +113,7 @@ class ReinforcementLearningSelfPlay {
       rewardHistory: [],
       confidenceHistory: [],
       bestLoss: Infinity,
-      patience: 15, // 早停耐心值：15局无改善则停止（方案A优化：从10增加到15）
+      patience: 30, // 优化：增加patience到30（对应10局游戏，更充分的观察窗口）
       noImprovementCount: 0
     };
     
@@ -150,6 +159,16 @@ class ReinforcementLearningSelfPlay {
   }
 
   /**
+   * 确保检查点目录存在
+   */
+  private ensureCheckpointDirectory(): void {
+    if (!fs.existsSync(this.checkpointPath)) {
+      fs.mkdirSync(this.checkpointPath, { recursive: true });
+      console.log('📁 创建检查点目录:', this.checkpointPath);
+    }
+  }
+
+  /**
    * 创建真实游戏状态（方案B：直接替换为真实游戏引擎）
    */
   private createGameState(gamePhase: 'early' | 'middle' | 'late', playerIndex: number): Float32Array {
@@ -171,7 +190,7 @@ class ReinforcementLearningSelfPlay {
   }
 
   /**
-   * MCTS搜索
+   * MCTS搜索（优化版本：批量前向传播+状态缓存）
    */
   private async mctsSearch(rootState: Float32Array): Promise<Float32Array> {
     const root: MCTSNode = {
@@ -185,6 +204,10 @@ class ReinforcementLearningSelfPlay {
       isExpanded: false
     };
     
+    // 批量扩展缓冲区
+    const batchExpandNodes: MCTSNode[] = [];
+    const batchExpandStates: Float32Array[] = [];
+    
     // 执行MCTS模拟
     for (let simulation = 0; simulation < this.MCTS_SIMULATIONS; simulation++) {
       let node = root;
@@ -196,9 +219,17 @@ class ReinforcementLearningSelfPlay {
         path.push(node);
       }
       
-      // 扩展阶段
+      // 扩展阶段（批量处理）
       if (!node.isExpanded) {
-        await this.expandNode(node);
+        batchExpandNodes.push(node);
+        batchExpandStates.push(node.state);
+        
+        // 当批次达到批量大小时，批量扩展
+        if (batchExpandNodes.length >= this.MCTS_BATCH_SIZE) {
+          await this.batchExpandNodes(batchExpandNodes, batchExpandStates);
+          batchExpandNodes.length = 0;
+          batchExpandStates.length = 0;
+        }
       }
       
       // 模拟阶段
@@ -208,8 +239,146 @@ class ReinforcementLearningSelfPlay {
       this.backpropagate(path, value);
     }
     
+    // 处理剩余的批量扩展
+    if (batchExpandNodes.length > 0) {
+      await this.batchExpandNodes(batchExpandNodes, batchExpandStates);
+    }
+    
     // 生成动作概率分布
     return this.getActionProbabilities(root);
+  }
+
+  /**
+   * 批量扩展节点（性能优化：批量网络前向传播）
+   */
+  private async batchExpandNodes(nodes: MCTSNode[], states: Float32Array[]): Promise<void> {
+    if (nodes.length === 0) return;
+
+    try {
+      // 检查缓存并准备批量网络调用
+      const uncachedNodes: MCTSNode[] = [];
+      const uncachedStates: Float32Array[] = [];
+      const cachedResults: Array<{ actionProbs: Float32Array; value: number } | null> = [];
+
+      for (let i = 0; i < nodes.length; i++) {
+        const stateHash = this.getStateHash(states[i]);
+        const cached = this.stateCache.get(stateHash);
+        
+        if (cached) {
+          cachedResults[i] = cached;
+        } else {
+          cachedResults[i] = null;
+          uncachedNodes.push(nodes[i]);
+          uncachedStates.push(states[i]);
+        }
+      }
+
+      // 批量网络前向传播（未缓存的状态）
+      if (uncachedStates.length > 0) {
+        // 将所有状态展平成2D数组
+        const stateArray: number[][] = [];
+        for (const state of uncachedStates) {
+          const stateVector = {
+            handTiles: state.slice(0, 136),
+            visibleTiles: state.slice(136, 272),
+            playerStates: state.slice(272, 304),
+            gameContext: state.slice(304, 320)
+          };
+          stateArray.push(Array.from(MajiangStateEncoder.flatten(stateVector)));
+        }
+        
+        // 创建批量tensor
+        const stateBatch = tf.tensor2d(stateArray, [uncachedStates.length, 320]);
+
+        const batchOutput = await this.network.forwardBatch(stateBatch);
+        const actionProbsArray = await batchOutput.actionProbs.array();
+        const valuesArray = await batchOutput.values.array();
+
+        // 清理tensor
+        stateBatch.dispose();
+        batchOutput.actionProbs.dispose();
+        batchOutput.values.dispose();
+
+        // 处理批量结果并更新缓存
+        let uncachedIndex = 0;
+        for (let i = 0; i < nodes.length; i++) {
+          if (cachedResults[i] === null) {
+            const actionProbs = new Float32Array(actionProbsArray[uncachedIndex]);
+            const value = valuesArray[uncachedIndex][0];
+            
+            cachedResults[i] = { actionProbs, value };
+            
+            // 更新缓存
+            const stateHash = this.getStateHash(states[i]);
+            this.stateCache.set(stateHash, { actionProbs, value });
+            
+            // 清理缓存（如果超过大小限制）
+            if (this.stateCache.size > this.STATE_CACHE_SIZE) {
+              const firstKey = this.stateCache.keys().next().value;
+              if (firstKey !== undefined) {
+                this.stateCache.delete(firstKey);
+              }
+            }
+            
+            uncachedIndex++;
+          }
+        }
+      }
+
+      // 使用缓存或批量结果扩展节点
+      for (let i = 0; i < nodes.length; i++) {
+        const node = nodes[i];
+        const result = cachedResults[i];
+        
+        if (result) {
+          const actionProbs = result.actionProbs;
+          
+          // 为每个可能的动作创建子节点
+          for (let action = 0; action < 39; action++) {
+            if (actionProbs[action] > 0.001) { // 只扩展有意义的动作
+              const childState = this.applyAction(node.state, action);
+              const child: MCTSNode = {
+                state: childState,
+                visits: 0,
+                totalValue: 0,
+                children: new Map(),
+                parent: node,
+                action,
+                priorProbability: actionProbs[action],
+                isExpanded: false
+              };
+              node.children.set(action, child);
+            }
+          }
+          
+          node.isExpanded = true;
+        }
+      }
+    } catch (error) {
+      // 如果批量扩展失败，回退到单节点扩展
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      const errorStack = error instanceof Error ? error.stack : undefined;
+      console.warn('⚠️ 批量扩展失败，回退到单节点扩展:', errorMessage);
+      if (errorStack && process.env.DEBUG) {
+        console.debug('错误堆栈:', errorStack);
+      }
+      
+      // 回退到单节点扩展
+      for (const node of nodes) {
+        if (!node.isExpanded) {
+          await this.expandNode(node);
+        }
+      }
+    }
+  }
+
+  /**
+   * 获取状态哈希（用于缓存）
+   */
+  private getStateHash(state: Float32Array): string {
+    // 使用状态的前64个值作为哈希（减少计算开销）
+    const hashValues = Array.from(state.slice(0, 64));
+    return hashValues.join(',');
   }
 
   /**
@@ -479,7 +648,8 @@ class ReinforcementLearningSelfPlay {
         moveCount++;
       } catch (error) {
         console.error(`⚠️ 游戏 ${gameId} 第 ${moveCount} 步出错:`, error);
-        break;
+        // 优化：游戏出错时返回空经验，避免训练中断
+        return [];
       }
     }
 
@@ -636,7 +806,7 @@ class ReinforcementLearningSelfPlay {
   }
 
   /**
-   * 计算真实游戏结果（方案B：使用真实游戏结果）
+   * 计算真实游戏结果（改进：使用真实游戏结果）
    */
   private calculateRealGameResults(): number[] {
     if (!this.game) {
@@ -644,24 +814,101 @@ class ReinforcementLearningSelfPlay {
     }
 
     const results = [0, 0, 0, 0];
-    const players = this.game.getPlayers();
+    const players = this.game.getAllPlayers();
 
-    // 简化的游戏结果计算（基于玩家手牌和明牌）
-    for (let i = 0; i < players.length; i++) {
-      const player = players[i];
-      const handTiles = player.getHandTiles();
-      const revealedSets = player.getRevealedSets();
+    // 检查游戏结束状态
+    const winningPlayer = players.find(p => p.state === PlayerState.WON);
+    const isDraw = this.game.state === GameState.ENDED && !winningPlayer && 
+                   this.game.getRemainingTiles() <= 0;
+
+    if (winningPlayer) {
+      // 有人胡牌：基于胜负结果计算奖励
+      const winnerIndex = players.indexOf(winningPlayer);
       
-      // 基于手牌数量计算分数
-      let score = handTiles.length * 0.1;
-      score += revealedSets.length * 0.3;
+      // 获取游戏结束时的得分信息
+      const winnerScore = winningPlayer.score || 0;
       
-      // 归一化到[-1, 1]范围
-      results[i] = Math.max(-1, Math.min(1, (score - 1.5) / 1.5));
+      // 计算基础奖励（基于胜负结果）
+      for (let i = 0; i < players.length; i++) {
+        if (i === winnerIndex) {
+          // 胡牌玩家：+1.0（主要奖励）
+          results[i] = 1.0;
+        } else {
+          // 其他玩家：基于得分差异计算惩罚（优化：扩大奖励信号范围）
+          const playerScore = players[i].score || 0;
+          const scoreDiff = winnerScore - playerScore;
+          
+          // 优化：调整基础惩罚（-0.33 → -0.5），增加得分差异影响（0.01 → 0.05）
+          const basePenalty = -0.5; // 优化：更明显的惩罚
+          // 优化：扩大scorePenalty范围（[-0.67, 0] → [-1.0, 0.33]），增加系数（0.01 → 0.05）
+          const scorePenalty = Math.max(-1.0, Math.min(0.33, scoreDiff * 0.05));
+          results[i] = basePenalty + scorePenalty;
+        }
+      }
+    } else if (isDraw) {
+      // 流局：所有玩家奖励为0，但根据得分差异微调
+      const scores = players.map(p => p.score || 0);
+      const maxScore = Math.max(...scores);
+      const minScore = Math.min(...scores);
+      const scoreRange = maxScore - minScore;
+      
+      if (scoreRange > 0.001) {
+        // 优化：扩大流局奖励范围（-0.1到+0.1 → -0.2到+0.2），更明显的差异
+        for (let i = 0; i < players.length; i++) {
+          const normalizedScore = (scores[i] - minScore) / scoreRange;
+          results[i] = (normalizedScore - 0.5) * 0.4; // 优化：映射到[-0.2, 0.2]
+        }
+      } else {
+        // 得分相同，所有玩家奖励为0
+        results.fill(0);
+      }
+    } else {
+      // 游戏未结束：基于手牌质量和游戏进度估算奖励（辅助）
+      for (let i = 0; i < players.length; i++) {
+        const player = players[i];
+        const handTiles = player.getHandTiles();
+        const revealedSets = player.getRevealedSets();
+        
+        // 基于手牌质量计算分数（辅助信号）
+        const handQuality = this.evaluateHandQualityForPlayer(player);
+        const setBonus = revealedSets.length * 0.1;
+        
+        // 优化：扩大辅助信号范围（[-0.5, 0.5] → [-0.8, 0.8]），更明显的中间奖励
+        results[i] = Math.max(-0.8, Math.min(0.8, (handQuality + setBonus - 0.5) * 1.6));
+      }
     }
 
-    // 应用奖励归一化
+    // 应用奖励归一化（确保在[-1, 1]范围）
     return this.normalizeRewards(results);
+  }
+
+  /**
+   * 评估玩家手牌质量（用于辅助奖励计算）
+   */
+  private evaluateHandQualityForPlayer(player: Player): number {
+    const handTiles = player.getHandTiles();
+    const revealedSets = player.getRevealedSets();
+    
+    let quality = 0;
+    
+    // 统计手牌分布
+    const tileCounts = new Map<string, number>();
+    for (const tile of handTiles) {
+      const key = `${tile.type}-${tile.value}`;
+      tileCounts.set(key, (tileCounts.get(key) || 0) + 1);
+    }
+    
+    // 评估对子、刻子
+    for (const count of tileCounts.values()) {
+      if (count >= 2) quality += 0.1; // 对子
+      if (count >= 3) quality += 0.2; // 刻子
+    }
+    
+    // 明牌加成
+    quality += revealedSets.length * 0.1;
+    
+    // 归一化到[0, 1]
+    return Math.max(0, Math.min(1, quality / 2));
   }
 
   /**
@@ -858,38 +1105,71 @@ class ReinforcementLearningSelfPlay {
       return rewards.map(() => 0);
     }
     
-    // 归一化到[-1, 1]范围
-    return rewards.map(r => {
-      const normalized = (r - minReward) / range;
-      return (normalized - 0.5) * 2;
-    });
+    // 优化：改进归一化策略，避免过度压缩奖励范围
+    // 如果奖励已经在合理范围内（[-2, 2]），仅做轻微缩放，保持原始差异
+    const maxAbsReward = Math.max(Math.abs(maxReward), Math.abs(minReward));
+    if (maxAbsReward <= 2.0) {
+      // 奖励在合理范围内，轻微缩放保持原始差异
+      const scaleFactor = 1.0 / Math.max(1.0, maxAbsReward);
+      return rewards.map(r => r * scaleFactor);
+    } else {
+      // 奖励超出范围，归一化到[-1, 1]
+      return rewards.map(r => {
+        const normalized = (r - minReward) / range;
+        return (normalized - 0.5) * 2;
+      });
+    }
   }
 
   /**
    * 经验优先回放采样（方案A优化：优先重要经验）
    */
   private prioritizedExperienceReplay(batchSize: number): number[] {
-    // 计算每个经验的重要性（基于奖励绝对值）
+    // 计算每个经验的重要性（优化：增强优先级计算）
     const priorities = this.experiences.map((exp, idx) => {
-      const importance = Math.abs(exp.gameResult) * (1 + exp.moveNumber * 0.01);
-      return { idx, importance };
+      // 奖励重要性（绝对值越大越重要）
+      const rewardScore = Math.abs(exp.gameResult);
+      
+      // 时间重要性（终局步骤更重要，因为直接关联最终结果）
+      const timeScore = exp.moveNumber > 100 ? 1.5 : 1.0; // 终局步骤权重更高
+      
+      // 游戏阶段重要性（终局经验更重要）
+      const phaseScore = exp.moveNumber > 120 ? 1.3 : 1.0;
+      
+      // 综合重要性计算
+      const importance = rewardScore * timeScore * phaseScore * (1 + exp.moveNumber * 0.01);
+      
+      return { idx, importance, rewardScore };
     });
     
     // 按重要性排序
     priorities.sort((a, b) => b.importance - a.importance);
     
-    // 采样：70%重要经验 + 30%随机经验
-    const importantCount = Math.floor(batchSize * 0.7);
+    // 采样：75%重要经验 + 25%随机经验（优化：提高重要经验比例）
+    const importantCount = Math.floor(batchSize * 0.75);
     const randomCount = batchSize - importantCount;
     
     const batchIndices: number[] = [];
     
-    // 选择重要经验
-    for (let i = 0; i < importantCount && i < priorities.length; i++) {
-      batchIndices.push(priorities[i].idx);
+    // 选择重要经验（使用加权随机，避免总是选择相同的）
+    const topK = Math.min(importantCount * 2, priorities.length);
+    for (let i = 0; i < importantCount && i < topK; i++) {
+      // 在topK中选择，使用softmax采样
+      const weights = priorities.slice(0, topK).map(p => p.importance);
+      const totalWeight = weights.reduce((sum, w) => sum + w, 0);
+      let random = Math.random() * totalWeight;
+      let selectedIdx = 0;
+      for (let j = 0; j < topK; j++) {
+        random -= weights[j];
+        if (random <= 0) {
+          selectedIdx = j;
+          break;
+        }
+      }
+      batchIndices.push(priorities[selectedIdx].idx);
     }
     
-    // 随机采样补充
+    // 随机采样补充（确保探索）
     for (let i = 0; i < randomCount; i++) {
       batchIndices.push(Math.floor(Math.random() * this.experiences.length));
     }
@@ -913,12 +1193,12 @@ class ReinforcementLearningSelfPlay {
     const states = tf.tensor2d(
       batch.map(exp => Array.from(exp.state)),
       [this.TRAINING_BATCH_SIZE, 320]
-    ) as tf.Tensor2D;
+    );
 
     const actionProbs = tf.tensor2d(
       batch.map(exp => Array.from(exp.actionProbabilities)),
       [this.TRAINING_BATCH_SIZE, 39]
-    ) as tf.Tensor2D;
+    );
 
     // 计算折扣奖励（方案A优化：添加奖励归一化和重要性权重）
     const rawRewards = batch.map(exp => {
@@ -940,7 +1220,7 @@ class ReinforcementLearningSelfPlay {
       return (normalized - 0.5) * 2;
     });
 
-    const values = tf.tensor1d(discountedRewards) as tf.Tensor1D;
+    const values = tf.tensor1d(discountedRewards);
 
     try {
       const loss = await this.network.trainBatch({ states, actionProbs, values });
@@ -961,11 +1241,17 @@ class ReinforcementLearningSelfPlay {
         this.stats.rewardHistory = this.stats.rewardHistory.slice(-100);
       }
 
-      // 检查loss是否改善（早停机制）
-      if (loss.totalLoss < this.stats.bestLoss) {
+      // 检查loss是否改善（早停机制，优化：考虑损失波动）
+      const improvementThreshold = this.stats.bestLoss * 0.01; // 1%的改善阈值
+      if (loss.totalLoss < this.stats.bestLoss - improvementThreshold) {
+        // 显著改善：超过1%才认为是真正的改善
         this.stats.bestLoss = loss.totalLoss;
         this.stats.noImprovementCount = 0;
+      } else if (loss.totalLoss <= this.stats.bestLoss * 1.05) {
+        // 损失在最佳值的5%范围内波动，不增加计数（优化：避免正常波动触发早停）
+        // noImprovementCount保持不变
       } else {
+        // 损失明显恶化，增加计数
         this.stats.noImprovementCount++;
       }
 
@@ -980,7 +1266,7 @@ class ReinforcementLearningSelfPlay {
   }
 
   /**
-   * 保存强化学习模型
+   * 保存强化学习模型（增强版：包含检查点功能）
    */
   private async saveRLModel(): Promise<void> {
     try {
@@ -1005,7 +1291,7 @@ class ReinforcementLearningSelfPlay {
           noImprovementCount: this.stats.noImprovementCount
         },
         timestamp: new Date().toISOString(),
-        version: 'reinforcement-learning-1.1' // 版本更新：添加监控功能
+        version: 'reinforcement-learning-1.2' // 版本更新：添加检查点功能
       };
 
       const modelFile = `${this.modelPath}.json`;
@@ -1016,6 +1302,164 @@ class ReinforcementLearningSelfPlay {
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : String(error);
       console.warn('⚠️ 模型保存失败:', errorMessage);
+    }
+  }
+
+  /**
+   * 保存训练检查点（新增：支持断点续训）
+   */
+  private async saveCheckpoint(gameId: number): Promise<void> {
+    try {
+      // 保存检查点元数据
+      const checkpointData = {
+        gameId: gameId,
+        stats: this.stats,
+        networkConfig: this.network.getConfig(),
+        rlConfig: {
+          mctsSimulations: this.MCTS_SIMULATIONS,
+          explorationConstant: this.EXPLORATION_CONSTANT,
+          initialTemperature: this.INITIAL_TEMPERATURE,
+          finalTemperature: this.FINAL_TEMPERATURE,
+          currentTemperature: this.currentTemperature,
+          discountFactor: this.DISCOUNT_FACTOR
+        },
+        monitoring: {
+          lossHistory: this.stats.lossHistory,
+          rewardHistory: this.stats.rewardHistory,
+          confidenceHistory: this.stats.confidenceHistory,
+          bestLoss: this.stats.bestLoss,
+          noImprovementCount: this.stats.noImprovementCount
+        },
+        timestamp: new Date().toISOString(),
+        version: 'reinforcement-learning-1.2'
+      };
+
+      const checkpointFile = path.join(this.checkpointPath, `checkpoint-${gameId}.json`);
+      fs.writeFileSync(checkpointFile, JSON.stringify(checkpointData, null, 2));
+
+      // 保存网络权重
+      const weightsPath = path.join(this.checkpointPath, `weights-${gameId}`);
+      await this.network.saveModel(weightsPath);
+
+      // 保存最新检查点引用
+      const latestCheckpointFile = path.join(this.checkpointPath, 'latest-checkpoint.json');
+      fs.writeFileSync(latestCheckpointFile, JSON.stringify({ gameId, timestamp: checkpointData.timestamp }, null, 2));
+
+      // 清理旧检查点（保留最近10个检查点）
+      this.cleanupOldCheckpoints(10);
+
+      console.log(`💾 检查点已保存: 游戏 ${gameId} (权重: ${weightsPath})`);
+
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      console.warn(`⚠️ 检查点保存失败 (游戏 ${gameId}):`, errorMessage);
+    }
+  }
+
+  /**
+   * 清理旧检查点（新增：避免检查点文件过多）
+   */
+  private cleanupOldCheckpoints(keepCount: number = 10): void {
+    try {
+      // 获取所有检查点文件
+      const checkpointFiles = fs.readdirSync(this.checkpointPath)
+        .filter(file => file.startsWith('checkpoint-') && file.endsWith('.json'))
+        .map(file => {
+          const match = file.match(/checkpoint-(\d+)\.json/);
+          if (match) {
+            const gameId = parseInt(match[1]);
+            const filePath = path.join(this.checkpointPath, file);
+            const stats = fs.statSync(filePath);
+            return { file, gameId, filePath, mtime: stats.mtime };
+          }
+          return null;
+        })
+        .filter((item): item is { file: string; gameId: number; filePath: string; mtime: Date } => item !== null)
+        .sort((a, b) => b.gameId - a.gameId); // 按游戏ID降序排序
+
+      // 如果检查点数量超过保留数量，删除旧的
+      if (checkpointFiles.length > keepCount) {
+        const toDelete = checkpointFiles.slice(keepCount);
+        for (const checkpoint of toDelete) {
+          try {
+            // 删除检查点元数据文件
+            fs.unlinkSync(checkpoint.filePath);
+            
+            // 删除对应的权重目录
+            const weightsDir = path.join(this.checkpointPath, `weights-${checkpoint.gameId}`);
+            if (fs.existsSync(weightsDir)) {
+              fs.rmSync(weightsDir, { recursive: true, force: true });
+            }
+            
+            console.log(`🧹 清理旧检查点: 游戏 ${checkpoint.gameId}`);
+          } catch (error) {
+            // 忽略删除失败的错误
+          }
+        }
+      }
+    } catch (error) {
+      // 忽略清理失败的错误
+    }
+  }
+
+  /**
+   * 加载训练检查点（新增：支持断点续训）
+   */
+  private async loadCheckpoint(gameId?: number): Promise<{ gameId: number; stats: RLTrainingStats } | null> {
+    try {
+      let checkpointFile: string;
+      
+      if (gameId !== undefined) {
+        // 加载指定游戏ID的检查点
+        checkpointFile = path.join(this.checkpointPath, `checkpoint-${gameId}.json`);
+      } else {
+        // 加载最新检查点
+        const latestCheckpointFile = path.join(this.checkpointPath, 'latest-checkpoint.json');
+        if (!fs.existsSync(latestCheckpointFile)) {
+          return null;
+        }
+        const latest = JSON.parse(fs.readFileSync(latestCheckpointFile, 'utf8'));
+        checkpointFile = path.join(this.checkpointPath, `checkpoint-${latest.gameId}.json`);
+        gameId = latest.gameId;
+      }
+
+      if (!fs.existsSync(checkpointFile)) {
+        return null;
+      }
+
+      const checkpointData = JSON.parse(fs.readFileSync(checkpointFile, 'utf8'));
+
+      // 加载网络权重
+      const weightsPath = path.join(this.checkpointPath, `weights-${checkpointData.gameId}`);
+      if (fs.existsSync(weightsPath)) {
+        await this.network.loadModel(weightsPath);
+      }
+
+      // 恢复统计信息（排除早停相关统计，避免立即早停）
+      const { patience, noImprovementCount, bestLoss, ...statsToLoad } = checkpointData.stats;
+      const restoredStats: RLTrainingStats = {
+        ...this.stats,
+        ...statsToLoad,
+        patience: 30, // 重置patience
+        noImprovementCount: 0, // 重置noImprovementCount
+        bestLoss: checkpointData.monitoring?.bestLoss || Infinity,
+        startTime: Date.now() // 重置开始时间
+      };
+
+      console.log(`📥 检查点加载成功: 游戏 ${checkpointData.gameId}`);
+      console.log(`   已训练游戏: ${restoredStats.selfPlayGames}`);
+      console.log(`   平均奖励: ${restoredStats.averageReward.toFixed(3)}`);
+      console.log(`   最佳损失: ${restoredStats.bestLoss.toFixed(4)}`);
+
+      return {
+        gameId: checkpointData.gameId,
+        stats: restoredStats
+      };
+
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      console.warn('⚠️ 检查点加载失败:', errorMessage);
+      return null;
     }
   }
 
@@ -1031,9 +1475,11 @@ class ReinforcementLearningSelfPlay {
         if (modelData.stats) {
           // 修复startTime问题（方案A优化）
           const savedStats = modelData.stats;
+          // 排除早停相关统计，避免从旧模型加载导致立即早停（修复：防止patience和noImprovementCount被覆盖）
+          const { patience, noImprovementCount, bestLoss, ...statsToLoad } = savedStats;
           this.stats = { 
             ...this.stats, 
-            ...savedStats,
+            ...statsToLoad,
             startTime: savedStats.startTime || Date.now() // 修复startTime
           };
           
@@ -1057,6 +1503,48 @@ class ReinforcementLearningSelfPlay {
       console.warn('⚠️ 模型加载失败:', errorMessage);
     }
     return false;
+  }
+
+  /**
+   * 验证训练配置（新增：配置验证）
+   */
+  private validateTrainingConfig(): boolean {
+    const errors: string[] = [];
+
+    // 验证学习率范围
+    const learningRate = this.network.getConfig().learningRate || 0.0008;
+    if (learningRate < 0.0001 || learningRate > 0.01) {
+      errors.push(`学习率超出合理范围: ${learningRate} (建议: 0.0001 - 0.01)`);
+    }
+
+    // 验证批次大小
+    if (![16, 32, 64, 128].includes(this.TRAINING_BATCH_SIZE)) {
+      errors.push(`批次大小不在推荐值: ${this.TRAINING_BATCH_SIZE} (建议: 16, 32, 64, 128)`);
+    }
+
+    // 验证MCTS模拟次数
+    if (this.MCTS_SIMULATIONS <= 0) {
+      errors.push(`MCTS模拟次数必须大于0: ${this.MCTS_SIMULATIONS}`);
+    }
+
+    // 验证经验缓冲区大小
+    if (this.EXPERIENCE_BUFFER_SIZE < this.TRAINING_BATCH_SIZE) {
+      errors.push(`经验缓冲区大小 (${this.EXPERIENCE_BUFFER_SIZE}) 必须大于批次大小 (${this.TRAINING_BATCH_SIZE})`);
+    }
+
+    // 验证早停patience
+    if (this.stats.patience <= 0) {
+      errors.push(`早停patience必须大于0: ${this.stats.patience}`);
+    }
+
+    if (errors.length > 0) {
+      console.error('❌ 训练配置验证失败:');
+      errors.forEach(error => console.error(`   - ${error}`));
+      return false;
+    }
+
+    console.log('✅ 训练配置验证通过');
+    return true;
   }
 
   /**
@@ -1108,37 +1596,43 @@ class ReinforcementLearningSelfPlay {
     // 基于loss改善的早停
     const lossBasedStop = this.stats.noImprovementCount >= this.stats.patience;
     
-    // 基于置信度下降的早停（方案A优化：新增）
-    const confidenceBasedStop = this.stats.confidenceHistory.length >= 5 && 
-      this.stats.confidenceHistory.slice(-3).reduce((a, b) => a + b, 0) / 3 < 
-      this.stats.confidenceHistory.slice(0, 3).reduce((a, b) => a + b, 0) / 3 * 0.8;
+    // 基于置信度下降的早停（修复：增加历史数据要求，避免过早触发）
+    const minGamesForConfidenceCheck = 50; // 至少训练50局后才检查置信度下降（修复：从20增加到50）
+    const minConfidenceHistoryLength = 30; // 需要至少30个历史数据点（修复：从10增加到30）
+    const confidenceBasedStop = this.stats.confidenceHistory.length >= minConfidenceHistoryLength && // 需要更多历史数据
+      this.stats.selfPlayGames >= minGamesForConfidenceCheck && // 至少训练50局
+      this.stats.confidenceHistory.slice(-10).reduce((a, b) => a + b, 0) / 10 < // 最近10个平均值（修复：从5增加到10）
+      this.stats.confidenceHistory.slice(0, 10).reduce((a, b) => a + b, 0) / 10 * 0.5; // 前10个平均值 * 0.5（修复：从0.7放宽到0.5）
     
     // 综合判断：loss无改善或置信度持续下降
     return lossBasedStop || confidenceBasedStop;
   }
 
   /**
-   * 更新学习率（方案A优化：学习率衰减）
-   * 注意：学习率衰减逻辑已实现，但需要网络支持setLearningRate方法
-   * 当前版本通过日志记录，实际衰减效果在下一轮训练中生效
+   * 更新学习率（优化：改进学习率衰减策略）
+   * 使用更平滑的衰减策略，提高训练稳定性
    */
   private updateLearningRate(gameId: number, totalGames: number): void {
-    const progress = gameId / totalGames;
-    const initialLearningRate = 0.0003;
-    let currentLearningRate = initialLearningRate;
+    // 优化：使用更平滑的衰减策略
+    const initialLearningRate = 0.0008; // 优化：进一步提高初始学习率（从0.0005增加到0.0008，基于优秀奖励信号）
+    const minLearningRate = 0.0001; // 最小学习率
+    const decayRate = 0.98; // 优化：降低衰减率（从0.95增加到0.98），更平滑
+    const decayStep = totalGames / 10; // 优化：增加衰减步数（从5增加到10），更平滑
     
-    // 指数衰减：每25%进度衰减一次
-    if (progress >= 0.75) {
-      // 75%-100%：衰减到50%
-      currentLearningRate = initialLearningRate * 0.5;
-    } else if (progress >= 0.5) {
-      // 50%-75%：衰减到75%
-      currentLearningRate = initialLearningRate * 0.75;
+    // 指数衰减：learningRate = initial * decayRate ^ (gameId / decayStep)
+    const newLearningRate = Math.max(
+      minLearningRate,
+      initialLearningRate * Math.pow(decayRate, Math.floor(gameId / decayStep))
+    );
+    
+    // 更新网络学习率（如果支持）
+    if (this.network && typeof (this.network as any).setLearningRate === 'function') {
+      (this.network as any).setLearningRate(newLearningRate);
     }
     
-    // 记录学习率变化（实际更新需要网络支持）
+    // 记录学习率变化（每10局记录一次）
     if (gameId % 10 === 0) {
-      console.log(`📉 学习率调整: ${(currentLearningRate * 10000).toFixed(1)}e-4 (进度: ${(progress * 100).toFixed(1)}%)`);
+      console.log(`   📉 学习率: ${newLearningRate.toFixed(6)}`);
     }
   }
 
@@ -1162,24 +1656,66 @@ class ReinforcementLearningSelfPlay {
   }
 
   /**
-   * 开始强化学习自对弈训练
+   * 开始强化学习自对弈训练（增强版：支持检查点恢复）
    */
-  public async startReinforcementLearning(): Promise<void> {
+  public async startReinforcementLearning(resumeFromCheckpoint: boolean = false, resumeGameId?: number): Promise<void> {
     console.log('🎯 开始强化学习自对弈训练');
-    console.log('🚀 特性: MCTS搜索 + 自对弈 + 强化学习 + 经验回放');
+    console.log('🚀 特性: MCTS搜索 + 自对弈 + 强化学习 + 经验回放 + 检查点恢复');
     console.log('');
 
-    // 加载已有模型
-    this.loadRLModel();
+    // 验证训练配置
+    if (!this.validateTrainingConfig()) {
+      throw new Error('训练配置验证失败，请修正配置后重试');
+    }
 
-    const totalGames = 1000; // 强化学习游戏数量：150→1000局（提交代码后运行1000局）
-    const startGame = this.stats.selfPlayGames + 1;
+    let startGame = 1;
+    const targetGames = 50; // 测试优化效果：训练50局获得更准确的性能数据
+
+    // 尝试从检查点恢复
+    if (resumeFromCheckpoint) {
+      const checkpoint = await this.loadCheckpoint(resumeGameId);
+      if (checkpoint) {
+        this.stats = checkpoint.stats;
+        startGame = checkpoint.gameId + 1; // 从下一局开始
+        console.log(`🔄 从检查点恢复训练: 从第 ${startGame} 局开始`);
+        console.log(`   已训练游戏: ${checkpoint.stats.selfPlayGames}`);
+        console.log(`   平均奖励: ${checkpoint.stats.averageReward.toFixed(3)}`);
+      } else {
+        console.log('⚠️ 未找到检查点，从头开始训练');
+        // 加载已有模型（但不使用已有进度，从新开始）
+        this.loadRLModel();
+        // 重置训练进度
+        this.stats.selfPlayGames = 0;
+        this.stats.totalExperiences = 0;
+        this.stats.trainingIterations = 0;
+        this.stats.networkUpdates = 0;
+        this.stats.startTime = Date.now();
+        this.stats.noImprovementCount = 0;
+        this.stats.bestLoss = Infinity;
+        this.stats.patience = 30;
+      }
+    } else {
+      // 加载已有模型（但不使用已有进度，从新开始）
+      this.loadRLModel();
+      // 重置训练进度，从第1局开始（修复早停问题）
+      this.stats.selfPlayGames = 0;
+      this.stats.totalExperiences = 0;
+      this.stats.trainingIterations = 0;
+      this.stats.networkUpdates = 0;
+      this.stats.startTime = Date.now();
+      // 重置早停相关统计（修复：防止从旧模型加载的noImprovementCount导致立即早停）
+      this.stats.noImprovementCount = 0;
+      this.stats.bestLoss = Infinity;
+      this.stats.patience = 30; // 优化：增加patience到30（对应10局游戏，更充分的观察窗口）
+    }
+
+    const totalGames = targetGames; // 目标总局数：200局（完整训练，所有优化已应用）
 
     // 记录训练开始时间
     const trainingStartTime = Date.now();
     const gameStartTimes: number[] = []; // 记录每局开始时间
 
-    console.log(`📊 强化学习配置: 从第${startGame}局开始，目标${totalGames}局`);
+    console.log(`📊 强化学习配置: 从第${startGame}局开始，训练${targetGames}局（验证修复）`);
     console.log(`🎮 MCTS模拟: ${this.MCTS_SIMULATIONS}次`);
     console.log(`🔍 探索常数: ${this.EXPLORATION_CONSTANT}`);
     console.log(`🌡️ 温度范围: ${this.INITIAL_TEMPERATURE} → ${this.FINAL_TEMPERATURE} (当前: ${this.currentTemperature.toFixed(3)})`);
@@ -1187,23 +1723,64 @@ class ReinforcementLearningSelfPlay {
     console.log('');
 
     for (let gameId = startGame; gameId <= totalGames; gameId++) {
+      // 检查是否正在关闭
+      if (this.isShuttingDown) {
+        console.log('\n⚠️ 检测到关闭信号，正在保存检查点...');
+        await this.saveCheckpoint(gameId - 1);
+        console.log('✅ 检查点已保存，训练已安全退出');
+        break;
+      }
+
+      // 更新当前游戏ID（用于优雅关闭）
+      this.currentGameId = gameId;
+
       // 记录单局开始时间
       const gameStartTime = Date.now();
       gameStartTimes.push(gameStartTime);
       
       // 执行自对弈游戏
-      const experiences = await this.playSelfPlayGame(gameId);
+      // 优化：加强错误处理，避免游戏引擎错误导致训练中断
+      let experiences: SelfPlayExperience[] = [];
+      try {
+        experiences = await this.playSelfPlayGame(gameId);
+      } catch (error) {
+        console.error(`⚠️ 游戏 ${gameId} 出错，跳过该局:`, error);
+        // 重置游戏状态，继续下一局
+        if (this.game) {
+          this.game.reset();
+        }
+        // 跳过该局，继续训练
+        continue;
+      }
       
-      // 计算单局耗时
+      // 计算单局耗时（用于性能监控）
       const gameElapsed = (Date.now() - gameStartTime) / 1000;
+      
+      // 性能监控：记录耗时较长的游戏
+      if (gameElapsed > 10) {
+        console.warn(`⚠️ 游戏 ${gameId} 耗时较长: ${gameElapsed.toFixed(2)}秒`);
+      }
 
       // 添加到经验缓冲区
       this.experiences.push(...experiences);
       this.stats.totalExperiences += experiences.length;
 
-      // 限制经验缓冲区大小
+      // 限制经验缓冲区大小（优化：基于优先级的保留策略）
       if (this.experiences.length > this.EXPERIENCE_BUFFER_SIZE) {
-        this.experiences = this.experiences.slice(-this.EXPERIENCE_BUFFER_SIZE);
+        // 计算每个经验的优先级（基于奖励、时间、置信度）
+        const priorities = this.experiences.map((exp, idx) => {
+          const rewardScore = Math.abs(exp.gameResult); // 奖励绝对值
+          const timeScore = 1 - (exp.moveNumber / 200); // 时间衰减（越早的步骤权重越高）
+          const importance = rewardScore * (1 + timeScore * 0.5); // 综合重要性
+          return { idx, importance, experience: exp };
+        });
+        
+        // 按重要性排序
+        priorities.sort((a, b) => b.importance - a.importance);
+        
+        // 保留最重要的经验
+        this.experiences = priorities.slice(0, this.EXPERIENCE_BUFFER_SIZE)
+          .map(p => p.experience);
       }
 
       // 训练网络（每局训练多次）
@@ -1216,12 +1793,16 @@ class ReinforcementLearningSelfPlay {
       this.stats.selfPlayGames = gameId;
       this.stats.averageGameLength = this.stats.totalExperiences / this.stats.selfPlayGames;
 
-      // 每局评估（方案A优化：增加评估频率）
+      // 每5局评估一次（优化：减少评估频率提升性能）
+      if (gameId % 5 === 0) {
         await this.evaluateRLModel();
+      }
 
       // 定期保存（每5局保存一次）
       if (gameId % 5 === 0) {
         await this.saveRLModel();
+        // 保存检查点（支持断点续训）
+        await this.saveCheckpoint(gameId);
         
         // 计算总耗时和平均单局耗时
         const totalElapsed = (Date.now() - trainingStartTime) / 1000;
@@ -1236,8 +1817,9 @@ class ReinforcementLearningSelfPlay {
         this.logRLProgress(gameId, totalGames, totalElapsed, avgGameElapsed);
       }
 
-      // 早停检查（方案A优化：改进早停逻辑）
-      if (this.shouldEarlyStop()) {
+      // 早停检查（优化：改进早停逻辑）
+      // 至少训练20局后才检查早停（优化：从50减少到20，但增加patience到30，平衡早停和训练时间）
+      if (gameId >= 20 && this.shouldEarlyStop()) {
         const avgRecentConfidence = this.stats.confidenceHistory.length >= 3 ?
           this.stats.confidenceHistory.slice(-3).reduce((a, b) => a + b, 0) / 3 : 0;
         const avgEarlyConfidence = this.stats.confidenceHistory.length >= 3 ?
@@ -1272,7 +1854,9 @@ class ReinforcementLearningSelfPlay {
       : 0;
 
     console.log('🎉 强化学习自对弈训练完成！');
-    this.printRLStats(finalTotalElapsed, finalAvgGameElapsed);
+    // 使用实际训练的局数进行统计（修复统计显示问题：使用实际完成的gameId）
+    const actualGamesPlayed = gameStartTimes.length; // 使用实际完成的游戏数量
+    this.printRLStats(finalTotalElapsed, finalAvgGameElapsed, actualGamesPlayed);
   }
 
   /**
@@ -1299,13 +1883,16 @@ class ReinforcementLearningSelfPlay {
   /**
    * 打印强化学习统计（添加耗时统计）
    */
-  private printRLStats(totalElapsed: number, avgGameElapsed: number): void {
+  private printRLStats(totalElapsed: number, avgGameElapsed: number, actualGamesPlayed?: number): void {
     const totalTime = (Date.now() - this.stats.startTime) / 1000;
     const recentWinRate = this.stats.winRates.length > 0 ?
       this.stats.winRates.reduce((sum, wr) => sum + wr, 0) / this.stats.winRates.length : 0;
 
     console.log('📈 强化学习自对弈最终统计:');
-    console.log(`   自对弈游戏数: ${this.stats.selfPlayGames}`);
+    // 使用实际训练的局数（如果提供），否则使用累积值
+    const gamesPlayed = actualGamesPlayed !== undefined ? actualGamesPlayed : this.stats.selfPlayGames;
+    console.log(`   本次训练游戏数: ${gamesPlayed}`);
+    console.log(`   累积游戏总数: ${this.stats.selfPlayGames}`);
     console.log(`   总经验数: ${this.stats.totalExperiences}`);
     console.log(`   训练迭代次数: ${this.stats.trainingIterations}`);
     console.log(`   网络更新次数: ${this.stats.networkUpdates}`);
@@ -1315,7 +1902,9 @@ class ReinforcementLearningSelfPlay {
     console.log(`   总训练时间: ${(totalTime/60).toFixed(1)}分钟 (${totalTime.toFixed(1)}秒)`);
     console.log(`   ⏱️ 本次训练总耗时: ${(totalElapsed / 60).toFixed(2)}分钟 (${totalElapsed.toFixed(1)}秒)`);
     console.log(`   ⏱️ 平均单局耗时: ${avgGameElapsed.toFixed(2)}秒`);
-    console.log(`   ⚡ 训练速度: ${(this.stats.selfPlayGames / totalElapsed).toFixed(2)}局/秒`);
+    // 使用实际训练的局数计算训练速度
+    const gamesForSpeed = actualGamesPlayed !== undefined ? actualGamesPlayed : this.stats.selfPlayGames;
+    console.log(`   ⚡ 训练速度: ${(gamesForSpeed / totalElapsed).toFixed(2)}局/秒`);
     console.log('');
     console.log('🎯 强化学习自对弈特性:');
     console.log('   ✅ MCTS树搜索算法');
@@ -1354,10 +1943,12 @@ class ReinforcementLearningSelfPlay {
       console.log('   📈 近期胜率有待提升，继续优化');
     }
 
-    const experienceEfficiency = this.stats.totalExperiences / this.stats.selfPlayGames;
+    // 使用实际训练的局数计算效率（如果提供）
+    const gamesForEfficiency = actualGamesPlayed !== undefined ? actualGamesPlayed : this.stats.selfPlayGames;
+    const experienceEfficiency = this.stats.totalExperiences / gamesForEfficiency;
     console.log(`   📚 经验效率: ${experienceEfficiency.toFixed(1)}条/游戏`);
 
-    const trainingEfficiency = this.stats.networkUpdates / this.stats.selfPlayGames;
+    const trainingEfficiency = this.stats.networkUpdates / gamesForEfficiency;
     console.log(`   🧠 训练效率: ${trainingEfficiency.toFixed(1)}次更新/游戏`);
 
     // 与之前方法对比
@@ -1371,27 +1962,137 @@ class ReinforcementLearningSelfPlay {
   }
 
   /**
-   * 释放资源
+   * 优雅关闭处理（新增：支持信号处理）
+   */
+  public async gracefulShutdown(): Promise<void> {
+    if (this.isShuttingDown) {
+      return; // 已经在关闭中
+    }
+
+    this.isShuttingDown = true;
+    console.log('\n⚠️ 收到关闭信号，正在保存检查点...');
+
+    try {
+      // 保存当前检查点
+      if (this.currentGameId > 0) {
+        await this.saveCheckpoint(this.currentGameId);
+        console.log(`✅ 检查点已保存: 游戏 ${this.currentGameId}`);
+      }
+
+      // 保存模型
+      await this.saveRLModel();
+
+      // 清理资源
+      this.dispose();
+
+      console.log('✅ 资源已清理，训练已安全退出');
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      console.error('⚠️ 关闭过程中出错:', errorMessage);
+    }
+  }
+
+  /**
+   * 释放资源（增强版：完整清理）
    */
   public dispose(): void {
-    this.network.dispose();
+    try {
+      // 清理网络资源
+      if (this.network) {
+        this.network.dispose();
+      }
+
+      // 清理状态缓存
+      if (this.stateCache) {
+        this.stateCache.clear();
+      }
+
+      // 清理游戏资源
+      if (this.game) {
+        this.game = null;
+      }
+
+      if (this.gameEventHandler) {
+        this.gameEventHandler = null;
+      }
+
+      // 清理经验缓冲区
+      this.experiences = [];
+
+      console.log('🧹 资源已清理');
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      console.warn('⚠️ 资源清理过程中出错:', errorMessage);
+    }
   }
 }
 
-// 主函数
+// 主函数（增强版：支持检查点恢复和优雅关闭）
 async function main() {
+  let rlTrainer: ReinforcementLearningSelfPlay | null = null;
+
+  // 优雅关闭处理（新增：信号处理）
+  const gracefulShutdown = async (signal: string) => {
+    console.log(`\n⚠️ 收到 ${signal} 信号，正在优雅关闭...`);
+    if (rlTrainer) {
+      await rlTrainer.gracefulShutdown();
+    }
+    process.exit(0);
+  };
+
+  // 注册信号处理器
+  process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+  process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+
+  // 处理未捕获的异常
+  process.on('uncaughtException', async (error) => {
+    console.error('❌ 未捕获的异常:', error);
+    if (rlTrainer) {
+      await rlTrainer.gracefulShutdown();
+    }
+    process.exit(1);
+  });
+
+  // 处理未处理的Promise拒绝
+  process.on('unhandledRejection', async (reason, promise) => {
+    console.error('❌ 未处理的Promise拒绝:', reason);
+    if (rlTrainer) {
+      await rlTrainer.gracefulShutdown();
+    }
+    process.exit(1);
+  });
+
   try {
     console.log('🀄 麻将AlphaZero强化学习自对弈训练');
     console.log('='.repeat(60));
 
-    const rlTrainer = new ReinforcementLearningSelfPlay();
-    await rlTrainer.startReinforcementLearning();
+    // 解析命令行参数
+    const args = process.argv.slice(2);
+    const resumeFromCheckpoint = args.includes('--resume') || args.includes('-r');
+    const resumeGameIdArg = args.find(arg => arg.startsWith('--resume-from=') || arg.startsWith('--game-id='));
+    const resumeGameId = resumeGameIdArg ? parseInt(resumeGameIdArg.split('=')[1]) : undefined;
+
+    if (resumeFromCheckpoint) {
+      console.log('🔄 检查点恢复模式已启用');
+      if (resumeGameId !== undefined) {
+        console.log(`   从游戏 ${resumeGameId} 的检查点恢复`);
+      } else {
+        console.log('   从最新检查点恢复');
+      }
+      console.log('');
+    }
+
+    rlTrainer = new ReinforcementLearningSelfPlay();
+    await rlTrainer.startReinforcementLearning(resumeFromCheckpoint, resumeGameId);
     rlTrainer.dispose();
 
     console.log('✅ 强化学习自对弈训练成功完成！');
 
   } catch (error) {
     console.error('❌ 强化学习训练失败:', error);
+    if (rlTrainer) {
+      await rlTrainer.gracefulShutdown();
+    }
     process.exit(1);
   }
 }
