@@ -11,7 +11,7 @@ const GAMES = 1000;
 // 选择对战双方
 // const agentX = new MinimaxAgent();         // 你可以换成 RandomAgent/GreedyAgent/DefensiveAgent/QLearningAgent
 const agentX = new QLearningAgent('X', 0);
-const QTABLE_X_PATH = 'src/ai/models/qtable-x.json';
+const QTABLE_X_PATH = 'models/tic-tac-toe/qtable-x.json';
 agentX.loadQTable(QTABLE_X_PATH);
 
 const agentO = new DefensiveAgent();       // 你可以换成 RandomAgent/GreedyAgent/DefensiveAgent/QLearningAgent

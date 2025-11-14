@@ -93,8 +93,8 @@ class ReinforcementLearningSelfPlay {
       dropoutRate: 0.15 // 降低dropout以增加容量
     });
     
-    this.modelPath = path.join(__dirname, '../../models/reinforcement-learning');
-    this.checkpointPath = path.join(__dirname, '../../models/reinforcement-learning-checkpoint');
+    this.modelPath = path.join(__dirname, '../../models/majiang/reinforcement-learning');
+    this.checkpointPath = path.join(__dirname, '../../models/majiang/reinforcement-learning-checkpoint');
     this.ensureModelDirectory();
     this.ensureCheckpointDirectory();
     

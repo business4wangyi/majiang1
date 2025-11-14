@@ -23,7 +23,7 @@ class ReinforcementLearningBattleTest {
   };
 
   constructor() {
-    this.modelPath = '/Users/felixfan/Desktop/AIUse/majiang1/models/reinforcement-learning';
+    this.modelPath = '/Users/felixfan/Desktop/AIUse/majiang1/models/majiang/reinforcement-learning';
     this.stats = {
       battleGames: 0,
       aiWins: 0,
@@ -481,7 +481,7 @@ class ReinforcementLearningBattleTest {
         parameterCount: this.network.getParameterCount()
       };
 
-      const resultsFile = '/Users/felixfan/Desktop/AIUse/majiang1/models/reinforcement-learning-battle-results.json';
+      const resultsFile = '/Users/felixfan/Desktop/AIUse/majiang1/models/majiang/reinforcement-learning-battle-results.json';
       fs.writeFileSync(resultsFile, JSON.stringify(results, null, 2));
 
       console.log(`💾 测试结果已保存: ${resultsFile}`);

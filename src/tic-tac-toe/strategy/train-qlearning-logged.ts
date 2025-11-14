@@ -15,7 +15,7 @@ class LCG {
 const SEED = Number(process.env.SEED || 12345);
 const rng = new LCG(SEED);
 
-const QTABLE_X_PATH = 'src/ai/models/qtable-x.json';
+const QTABLE_X_PATH = 'models/tic-tac-toe/qtable-x.json';
 const LOG_DIR = 'logs/tictactoe';
 const LOG_FILE = path.join(LOG_DIR, `qlearning_metrics.jsonl`);
 

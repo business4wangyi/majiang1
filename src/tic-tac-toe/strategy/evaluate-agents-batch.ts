@@ -7,7 +7,7 @@ import { createBoard, makeMove, checkWinner } from '../game';
 import { Player } from '../types';
 import * as fs from 'fs';
 
-const QTABLE_X_PATH = 'src/ai/models/qtable-x.json';
+const QTABLE_X_PATH = 'models/tic-tac-toe/qtable-x.json';
 const TEST_EPISODES = 1000;
 
 const agentsToTest = [

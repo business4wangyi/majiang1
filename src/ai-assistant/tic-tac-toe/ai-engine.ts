@@ -51,7 +51,7 @@ export class AIDecisionEngine {
     // 加载Q-Learning模型（如果存在）
     const qAgent = this.agents.get('qlearning') as QLearningAgent;
     try {
-      qAgent.loadQTable('src/ai/models/qtable-x.json');
+      qAgent.loadQTable('models/tic-tac-toe/qtable-x.json');
     } catch (error) {
       console.warn('Q表加载失败，使用未训练的模型');
     }

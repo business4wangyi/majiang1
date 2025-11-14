@@ -5,7 +5,7 @@ import { DefensiveAgent } from '@tic-tac-toe-strategy/defensive-agent';
 import { GreedyAgent } from '@tic-tac-toe-strategy/greedy-agent';
 import * as fs from 'fs';
 
-const QTABLE_X_PATH = 'src/ai/models/qtable-x.json';
+const QTABLE_X_PATH = 'models/tic-tac-toe/qtable-x.json';
 const agentX = new QLearningAgent('X', 0.2);
 if (fs.existsSync(QTABLE_X_PATH)) agentX.loadQTable(QTABLE_X_PATH);
 

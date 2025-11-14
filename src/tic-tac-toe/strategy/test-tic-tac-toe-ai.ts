@@ -8,8 +8,8 @@ import * as fs from 'fs';
 
 const TRAIN_EPISODES = 100000;
 const TEST_EPISODES = 1000;
-const QTABLE_X_PATH = 'src/ai/models/qtable-x.json';
-const QTABLE_O_PATH = 'src/ai/models/qtable-o.json';
+const QTABLE_X_PATH = 'models/tic-tac-toe/qtable-x.json';
+const QTABLE_O_PATH = 'models/tic-tac-toe/qtable-o.json';
 
 // 1. 实例化智能体
 const agentX = new QLearningAgent('X', 0.1); // 训练时允许探索
