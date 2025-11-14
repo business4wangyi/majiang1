@@ -17,7 +17,7 @@
     "ai:evaluate-agents-batch": "ts-node src/ai/evaluate-agents-batch.ts",
     "ai:analyze-qtable": "ts-node src/ai/analyze-qtable.ts",
     "ai:visualize-strategy": "ts-node src/ai/visualize-strategy.ts",
-    "ai-assistant:mvp": "ts-node scripts/tic-tac-toe/mvp.ts",
+    "ai-assistant:mvp": "ts-node scripts/demo/mvp.ts",
     "othello:cli": "npx ts-node src/othello/othello-cli.ts",
     "othello:api-server": "npx ts-node src/othello/othello-api-server.ts",
     "othello:demo": "npx ts-node src/othello/othello-demo.ts",
