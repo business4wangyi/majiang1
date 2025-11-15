@@ -1,6 +1,14 @@
 // {{ AURA-X: Add - DQN训练管理器，实现完整的训练流程. Approval: 寸止(ID:1735819200). }}
 // {{ Source: 基于深度强化学习和黑白棋特性设计 }}
 
+// Fix for isNullOrUndefined compatibility issue (must be first)
+import * as util from 'util';
+if (!util.isNullOrUndefined) {
+  (util as any).isNullOrUndefined = function(value: any): boolean {
+    return value === null || value === undefined;
+  };
+}
+
 // {{ AURA-X: Modify - 重新启用tfjs-node，Node.js v22.17.1兼容性已验证. Approval: 寸止(ID:1735819200). }}
 import '@tensorflow/tfjs-node';
 import * as tf from '@tensorflow/tfjs';
@@ -770,7 +778,7 @@ export async function runTraining(): Promise<void> {
   const trainer = new DQNTrainer(config);
 
   try {
-    await trainer.train();
+    await trainer.startTraining();
     console.log('✅ DQN训练完成！');
   } catch (error) {
     console.error('❌ DQN训练失败:', error);

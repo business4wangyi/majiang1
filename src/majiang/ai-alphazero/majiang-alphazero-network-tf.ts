@@ -4,6 +4,19 @@
  */
 
 import * as tf from '@tensorflow/tfjs';
+// Fix for isNullOrUndefined compatibility issue (if using tfjs-node)
+if (typeof require !== 'undefined') {
+  try {
+    const util = require('util');
+    if (!util.isNullOrUndefined) {
+      (util as any).isNullOrUndefined = function(value: any): boolean {
+        return value === null || value === undefined;
+      };
+    }
+  } catch (e) {
+    // Ignore if util is not available
+  }
+}
 import { MajiangStateVector, MajiangStateEncoder } from './majiang-state-encoder';
 import { MajiangActionSpace, MajiangActionDecoder } from './majiang-action-decoder';
 

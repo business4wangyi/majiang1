@@ -417,7 +417,7 @@ export class AlphaZeroBenchmark {
 /**
  * 导出的基准测试运行函数
  */
-export async function runBenchmark(): Promise<void> {
+export async function runFullBenchmark(): Promise<void> {
   console.log('📊 启动AlphaZero性能基准测试...');
 
   const benchmark = new AlphaZeroBenchmark();
@@ -425,17 +425,22 @@ export async function runBenchmark(): Promise<void> {
   try {
     // 运行标准配置的基准测试
     console.log('🔍 测试标准配置...');
-    const result = await benchmark.runBenchmark(STANDARD_ALPHAZERO_CONFIG, 'standard');
+    const results = await benchmark.runFullBenchmark();
 
     console.log('\n✅ 基准测试完成！');
-    console.log('📈 测试结果:');
-    console.log(`   配置: ${result.configName}`);
-    console.log(`   平均搜索时间: ${result.searchPerformance.avgSearchTime.toFixed(2)}ms`);
-    console.log(`   平均模拟次数: ${result.searchPerformance.avgSimulations}`);
-    console.log(`   vs 随机策略: ${result.battlePerformance.vsRandom.toFixed(1)}%`);
-    console.log(`   vs 贪心策略: ${result.battlePerformance.vsGreedy.toFixed(1)}%`);
-    console.log(`   vs 启发式策略: ${result.battlePerformance.vsHeuristic.toFixed(1)}%`);
-    console.log(`   内存使用: ${result.resourceUsage.memoryUsage.toFixed(1)}MB`);
+    if (results && results.length > 0) {
+      const result = results[0];
+      console.log('📈 测试结果:');
+      console.log(`   配置: ${result.configName}`);
+      console.log(`   平均搜索时间: ${result.searchPerformance.avgSearchTime.toFixed(2)}ms`);
+      console.log(`   平均模拟次数: ${result.searchPerformance.avgSimulations}`);
+      if (result.battleResults) {
+        for (const [opponent, stats] of Object.entries(result.battleResults)) {
+          console.log(`   vs ${opponent}: ${stats.winRate.toFixed(1)}%`);
+        }
+      }
+      console.log(`   内存使用: ${result.resourceUsage.peakMemoryMB.toFixed(1)}MB`);
+    }
 
   } catch (error) {
     console.error('❌ 基准测试失败:', error);
@@ -444,5 +449,5 @@ export async function runBenchmark(): Promise<void> {
 
 // 如果直接运行此文件
 if (require.main === module) {
-  runBenchmark().catch(console.error);
+  runFullBenchmark().catch(console.error);
 }

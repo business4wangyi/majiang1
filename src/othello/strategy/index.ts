@@ -279,11 +279,16 @@ export default createStrategy;
 export async function runStrategyComparison(): Promise<void> {
   console.log('⚔️ 启动策略对比测试...');
 
+  const { RandomOthelloAgent } = await import('./random-agent');
+  const { GreedyOthelloAgent } = await import('./greedy-agent');
+  const { HeuristicOthelloAgent } = await import('./heuristic-agent');
+  const { MinimaxOthelloAgent } = await import('./minimax-agent');
+
   const strategies = [
-    { name: '随机策略', agent: new RandomOthelloAgent() },
-    { name: '贪心策略', agent: new GreedyOthelloAgent() },
-    { name: '启发式策略', agent: new HeuristicOthelloAgent() },
-    { name: 'Minimax策略', agent: new MinimaxOthelloAgent(3) }
+    { name: '随机策略', agent: new (await import('./random-agent')).RandomOthelloAgent() },
+    { name: '贪心策略', agent: new (await import('./greedy-agent')).GreedyOthelloAgent() },
+    { name: '启发式策略', agent: new (await import('./heuristic-agent')).HeuristicOthelloAgent() },
+    { name: 'Minimax策略', agent: new (await import('./minimax-agent')).MinimaxOthelloAgent(3) }
   ];
 
   console.log('\n🎯 策略对比结果:');

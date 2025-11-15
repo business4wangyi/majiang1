@@ -10,6 +10,13 @@
  * - 混合精度训练：FP16加速计算
  */
 
+// Fix for isNullOrUndefined compatibility issue (must be first)
+import * as util from 'util';
+if (!util.isNullOrUndefined) {
+  (util as any).isNullOrUndefined = function(value: any): boolean {
+    return value === null || value === undefined;
+  };
+}
 import * as tf from '@tensorflow/tfjs-node';
 import { OthelloBoard, OthelloPlayer } from '../othello-types';
 import { AlphaZeroNetworkConfig, AlphaZeroPrediction, IAlphaZeroNetwork } from './alphazero-network';

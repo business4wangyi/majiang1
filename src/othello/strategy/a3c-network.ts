@@ -9,6 +9,13 @@
  * - Critic网络（价值网络）
  */
 
+// Fix for isNullOrUndefined compatibility issue (must be first)
+import * as util from 'util';
+if (!util.isNullOrUndefined) {
+  (util as any).isNullOrUndefined = function(value: any): boolean {
+    return value === null || value === undefined;
+  };
+}
 import * as tf from '@tensorflow/tfjs-node';
 import { OthelloBoard, OthelloPlayer } from '../othello-types';
 
