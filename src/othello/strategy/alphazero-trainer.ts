@@ -345,15 +345,20 @@ export class AlphaZeroTrainer {
     // 对战各种对手
     for (const opponent of this.opponents) {
       const opponentName = this.getOpponentName(opponent);
+      console.log(`   [评估] 开始对战 ${opponentName} (${this.config.evaluationGames}局)...`);
       let wins = 0;
 
       for (let game = 0; game < this.config.evaluationGames; game++) {
+        const gameStartTime = Date.now();
         const won = await this.playEvaluationGame(opponent);
         if (won) wins++;
+        const gameTime = (Date.now() - gameStartTime) / 1000;
+        console.log(`   [评估] ${opponentName} 第 ${game + 1}/${this.config.evaluationGames} 局: ${won ? '✅ 胜利' : '❌ 失败'} (用时: ${gameTime.toFixed(1)}秒)`);
       }
 
       const winRate = (wins / this.config.evaluationGames) * 100;
       results[opponentName] = winRate;
+      console.log(`   [评估] ${opponentName} 评估完成: ${winRate.toFixed(1)}% 胜率 (${wins}/${this.config.evaluationGames}胜)`);
     }
 
     // 恢复训练模式
