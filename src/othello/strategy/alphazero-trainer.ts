@@ -134,13 +134,23 @@ export class AlphaZeroTrainer {
     const startTime = Date.now();
 
     for (let iteration = 1; iteration <= this.config.totalIterations; iteration++) {
-      console.log(`\n📊 迭代 ${iteration}/${this.config.totalIterations}`);
+      const iterationStartTime = Date.now();
+      console.log(`\n📊 迭代 ${iteration}/${this.config.totalIterations} [开始时间: ${new Date().toLocaleTimeString()}]`);
+      console.log('─'.repeat(80));
       
       // 自我对弈阶段
+      console.log(`\n🎮 [迭代 ${iteration}] 开始自我对弈阶段 (${this.config.selfPlayGames}局)...`);
+      const selfPlayStartTime = Date.now();
       const selfPlayResults = await this.selfPlayPhase();
+      const selfPlayTime = (Date.now() - selfPlayStartTime) / 1000;
+      console.log(`✅ [迭代 ${iteration}] 自我对弈阶段完成，用时: ${(selfPlayTime / 60).toFixed(2)}分钟`);
       
       // 训练阶段
+      console.log(`\n🎓 [迭代 ${iteration}] 开始网络训练阶段...`);
+      const trainingStartTime = Date.now();
       const trainingResults = await this.trainingPhase();
+      const trainingTime = (Date.now() - trainingStartTime) / 1000;
+      console.log(`✅ [迭代 ${iteration}] 网络训练阶段完成，用时: ${(trainingTime / 60).toFixed(2)}分钟`);
       
       // 记录统计信息
       this.recordStats(iteration, selfPlayResults, trainingResults);
@@ -148,16 +158,33 @@ export class AlphaZeroTrainer {
       // 评估阶段
       let evaluationResults = {};
       if (iteration % this.config.evaluationFrequency === 0) {
+        console.log(`\n🎯 [迭代 ${iteration}] 开始评估阶段...`);
+        const evalStartTime = Date.now();
         evaluationResults = await this.evaluationPhase(iteration);
+        const evalTime = (Date.now() - evalStartTime) / 1000;
+        console.log(`✅ [迭代 ${iteration}] 评估阶段完成，用时: ${(evalTime / 60).toFixed(2)}分钟`);
       }
       
       // 保存模型
       if (iteration % this.config.saveFrequency === 0) {
+        console.log(`\n💾 [迭代 ${iteration}] 开始保存模型...`);
         await this.agent.saveModel(`${this.config.modelSavePath}-iteration-${iteration}`);
+        console.log(`✅ [迭代 ${iteration}] 模型已保存到: ${this.config.modelSavePath}-iteration-${iteration}`);
       }
       
       // 输出进度
+      const iterationTime = (Date.now() - iterationStartTime) / 1000;
+      const totalElapsed = (Date.now() - startTime) / 1000;
+      const avgIterationTime = totalElapsed / iteration;
+      const remainingIterations = this.config.totalIterations - iteration;
+      const estimatedRemaining = avgIterationTime * remainingIterations;
+      
       this.printProgress(iteration, selfPlayResults, trainingResults, evaluationResults);
+      console.log(`\n⏱️ [迭代 ${iteration}] 本次迭代用时: ${(iterationTime / 60).toFixed(2)}分钟`);
+      console.log(`⏱️ [迭代 ${iteration}] 总用时: ${(totalElapsed / 60).toFixed(2)}分钟`);
+      console.log(`⏱️ [迭代 ${iteration}] 平均每迭代: ${(avgIterationTime / 60).toFixed(2)}分钟`);
+      console.log(`⏱️ [迭代 ${iteration}] 预计剩余时间: ${(estimatedRemaining / 60).toFixed(2)}分钟`);
+      console.log('─'.repeat(80));
     }
 
     const totalTime = (Date.now() - startTime) / 1000;
@@ -175,15 +202,16 @@ export class AlphaZeroTrainer {
     const results: SelfPlayResult[] = [];
     
     for (let game = 0; game < this.config.selfPlayGames; game++) {
+      const gameStartTime = Date.now();
       const result = await this.playSelfPlayGame();
       results.push(result);
       
       // 添加经验到缓冲区
       this.addExperiencesToBuffer(result.experiences);
       
-      if (this.config.verbose && (game + 1) % 5 === 0) {
-        console.log(`   完成 ${game + 1}/${this.config.selfPlayGames} 局自我对弈`);
-      }
+      const gameTime = (Date.now() - gameStartTime) / 1000;
+      // 每局都输出进度，方便跟踪
+      console.log(`   [自我对弈] 完成 ${game + 1}/${this.config.selfPlayGames} 局 (用时: ${gameTime.toFixed(1)}秒, 游戏长度: ${result.gameLength}步, 胜者: ${result.winner})`);
     }
 
     return results;
@@ -261,14 +289,19 @@ export class AlphaZeroTrainer {
     }
 
     if (this.experienceBuffer.length === 0) {
+      console.log('   ⚠️ 经验池为空，跳过训练');
       return { policyLoss: 0, valueLoss: 0, totalLoss: 0 };
     }
+
+    console.log(`   📊 经验池大小: ${this.experienceBuffer.length}条`);
+    console.log(`   📊 训练轮数: ${this.config.trainingEpochs}个epoch`);
 
     let totalPolicyLoss = 0;
     let totalValueLoss = 0;
     let totalTotalLoss = 0;
 
     for (let epoch = 0; epoch < this.config.trainingEpochs; epoch++) {
+      const epochStartTime = Date.now();
       // 随机采样训练批次
       const batchSize = Math.min(this.agent['config'].networkConfig.batchSize, this.experienceBuffer.length);
       const batch = this.sampleBatch(batchSize);
@@ -284,6 +317,9 @@ export class AlphaZeroTrainer {
       totalPolicyLoss += lossInfo.policyLoss;
       totalValueLoss += lossInfo.valueLoss;
       totalTotalLoss += lossInfo.totalLoss;
+      
+      const epochTime = (Date.now() - epochStartTime) / 1000;
+      console.log(`   [训练] Epoch ${epoch + 1}/${this.config.trainingEpochs} 完成 (用时: ${epochTime.toFixed(1)}秒, 策略损失: ${lossInfo.policyLoss.toFixed(4)}, 价值损失: ${lossInfo.valueLoss.toFixed(4)})`);
     }
 
     return {
