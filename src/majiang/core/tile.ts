@@ -1,4 +1,4 @@
-import { debugLog } from "./logger";
+import { debugLog } from "../tools/logger";
 
 // 牌的类型
 export enum TileType {

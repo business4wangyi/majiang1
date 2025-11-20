@@ -1,4 +1,4 @@
-import './performance-injector';
+import './tools/performance-injector';
 import { Game } from '../core/game';
 import { runAutoGameLoop, runInteractiveGameLoop } from '../ui/gameLoop';
 import { Style } from '../ui/display';
