@@ -4,13 +4,18 @@
  */
 
 import * as tf from '@tensorflow/tfjs-node';
-import { RandomOthelloAgent } from '../../../src/othello/strategy/random-agent';
-import { QLearningOthelloAgent } from '../../../src/othello/strategy/qlearning-agent';
-import { DQNOthelloAgent, TRAINING_DQN_AGENT_CONFIG } from '../../../src/othello/strategy/dqn-agent';
-import { A3COthelloAgent, DEFAULT_A3C_AGENT_CONFIG } from '../../../src/othello/strategy/a3c-agent';
-import { AlphaZeroOthelloAgent, DEFAULT_ALPHAZERO_AGENT_CONFIG } from '../../../src/othello/strategy/alphazero-agent';
-import { createOthelloBoard, makeMove, isGameOver, countPieces, getLegalActions } from '../../../src/othello/othello-game';
-import { OthelloBoard, OthelloPlayer, OthelloAction } from '../../../src/othello/othello-types';
+import { 
+  RandomOthelloAgent,
+  QLearningOthelloAgent,
+  DQNOthelloAgent,
+  TRAINING_DQN_AGENT_CONFIG,
+  A3COthelloAgent,
+  DEFAULT_A3C_AGENT_CONFIG,
+  AlphaZeroOthelloAgent,
+  DEFAULT_ALPHAZERO_AGENT_CONFIG
+} from '../../../src/othello/strategy';
+import { createOthelloBoard, makeMove, isGameOver, countPieces, getLegalActions } from '../../../src/othello/core/game';
+import { OthelloBoard, OthelloPlayer, OthelloAction } from '../../../src/othello/core/types';
 
 interface TestResult {
   algorithm: string;

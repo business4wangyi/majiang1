@@ -4,10 +4,9 @@
  */
 
 import * as tf from '@tensorflow/tfjs-node';
-import { RandomOthelloAgent } from '../../../src/othello/strategy/random-agent';
-import { QLearningOthelloAgent } from '../../../src/othello/strategy/qlearning-agent';
-import { createOthelloBoard, makeMove, isGameOver, countPieces, getLegalActions } from '../../../src/othello/othello-game';
-import { OthelloBoard, OthelloPlayer, OthelloAction } from '../../../src/othello/othello-types';
+import { RandomOthelloAgent, QLearningOthelloAgent } from '../../../src/othello/strategy';
+import { createOthelloBoard, makeMove, isGameOver, countPieces, getLegalActions } from '../../../src/othello/core/game';
+import { OthelloBoard, OthelloPlayer, OthelloAction } from '../../../src/othello/core/types';
 
 interface TestResult {
   algorithm: string;
