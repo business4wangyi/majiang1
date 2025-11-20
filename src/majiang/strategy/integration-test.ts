@@ -3,7 +3,7 @@
  * 验证AI系统的基本功能和集成
  */
 
-import { Game } from '../game';
+import { Game } from '../core/game';
 import { AIPlayer } from '../ai-player';
 import { createTestMajiangAI } from './index';
 

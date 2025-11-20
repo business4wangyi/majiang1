@@ -3,7 +3,7 @@
  * 基于传说级技术栈的稳定性优化训练
  */
 
-import { Game, GameState } from '../game';
+import { Game, GameState } from '../core/game';
 import { AIPlayer } from '../ai-player';
 import { createTrainingMajiangAI } from './index';
 import { StabilityOptimizer, StabilityConfig, StabilityMetrics, DEFAULT_STABILITY_CONFIG } from './stability-optimizer';

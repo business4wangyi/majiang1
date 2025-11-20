@@ -1,5 +1,5 @@
-import { createBoard, makeMove, checkWinner } from '../game';
-import { Player } from '../types';
+import { createBoard, makeMove, checkWinner } from '../core/game';
+import { Player } from '../core/types';
 import { RandomAgent } from '@tic-tac-toe-strategy/random-agent';
 import { GreedyAgent } from '@tic-tac-toe-strategy/greedy-agent';
 import { DefensiveAgent } from '@tic-tac-toe-strategy/defensive-agent';

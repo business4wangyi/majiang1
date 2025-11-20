@@ -14,7 +14,7 @@ export { MajiangAlphaZeroAgent, AgentConfig, MCTSNode } from './majiang-alphazer
 export * from './types';
 
 // 便捷工厂函数
-import { Game } from '../game';
+import { Game } from '../core/game';
 import { MajiangAlphaZeroNetwork } from './majiang-alphazero-network';
 import { MajiangGameAdapter } from './majiang-game-adapter';
 import { MajiangAlphaZeroAgent } from './majiang-alphazero-agent';

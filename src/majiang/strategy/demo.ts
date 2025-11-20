@@ -3,7 +3,7 @@
  * 展示如何集成和使用AlphaZero AI系统
  */
 
-import { Game } from '../game';
+import { Game } from '../core/game';
 import { AIPlayer } from '../ai-player';
 import { createTestMajiangAI, MAJIANG_ALPHAZERO_INFO } from './index';
 

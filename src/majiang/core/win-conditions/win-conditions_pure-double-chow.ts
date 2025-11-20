@@ -1,7 +1,7 @@
-import { Tile, TileType } from '../tile';
-import { TileSet } from '../rule-types';
-import { HuType } from '../rule-types';
-import { Player } from '../player';
+import { Tile, TileType } from '../core/tile';
+import { TileSet } from '../core/rule-types';
+import { HuType } from '../core/rule-types';
+import { Player } from '../core/player';
 import { BaseWinConditionDetector, WinConditionRegistry } from './win-condition-detector';
 
 /**

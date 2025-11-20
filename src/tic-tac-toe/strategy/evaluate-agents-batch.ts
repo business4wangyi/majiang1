@@ -3,8 +3,8 @@ import { MinimaxAgent } from '@tic-tac-toe-strategy/minimax-agent';
 import { RandomAgent } from '@tic-tac-toe-strategy/random-agent';
 import { GreedyAgent } from '@tic-tac-toe-strategy/greedy-agent';
 import { DefensiveAgent } from '@tic-tac-toe-strategy/defensive-agent';
-import { createBoard, makeMove, checkWinner } from '../game';
-import { Player } from '../types';
+import { createBoard, makeMove, checkWinner } from '../core/game';
+import { Player } from '../core/types';
 import * as fs from 'fs';
 
 const QTABLE_X_PATH = 'models/tic-tac-toe/qtable-x.json';

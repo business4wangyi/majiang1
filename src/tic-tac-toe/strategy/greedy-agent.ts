@@ -1,5 +1,5 @@
-import { Board, Player, Action } from '../types';
-import { getLegalActions, makeMove, checkWinner } from '../game';
+import { Board, Player, Action } from '../core/types';
+import { getLegalActions, makeMove, checkWinner } from '../core/game';
 import { Agent } from '@tic-tac-toe-strategy/random-agent';
 
 export class GreedyAgent implements Agent {

@@ -3,8 +3,8 @@
  * 第三阶段：将麻将规则知识与神经网络深度融合
  */
 
-import { Tile, TileType } from '../tile';
-import { Player } from '../player';
+import { Tile, TileType } from '../core/tile';
+import { Player } from '../core/player';
 import { MajiangNetworkOutput } from './majiang-alphazero-network';
 import { MajiangAction } from './majiang-action-decoder';
 
