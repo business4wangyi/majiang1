@@ -1,5 +1,5 @@
-import { Player } from './player';
-import { HuType } from './rule-types';
+import { Player } from '../core/player';
+import { HuType } from '../core/rule-types';
 
 
 /**

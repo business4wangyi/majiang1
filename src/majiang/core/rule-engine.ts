@@ -1,6 +1,6 @@
-import { Player } from './player';
-import { Tile, TileType } from './tile';
-import { PlayerAction, GangType, HuType } from './rule-types';
+import { Player } from '../core/player';
+import { Tile, TileType } from '../core/tile';
+import { PlayerAction, GangType, HuType } from '../core/rule-types';
 import { WinConditions } from './win-conditions/win-conditions-main';
 import { ScoreCalculator } from './score-calculator';
 

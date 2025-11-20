@@ -1,4 +1,4 @@
-import { Board, Player, Action } from './types';
+import { Board, Player, Action } from '../core/types';
 
 // 创建初始棋盘
 export function createBoard(): Board {

@@ -1,4 +1,4 @@
-import { Tile } from './tile';
+import { Tile } from '../core/tile';
 
 // 玩家动作枚举
 export enum PlayerAction {

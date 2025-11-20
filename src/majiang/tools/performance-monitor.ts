@@ -1,5 +1,5 @@
-import { savePerformanceLogToFile, getPerfLogFileName, CONFIG } from './logger';
-import { formatDuration, formatTimestamp } from './time-utils';
+import { savePerformanceLogToFile, getPerfLogFileName, CONFIG } from '../tools/logger';
+import { formatDuration, formatTimestamp } from '../tools/time-utils';
 import fs from 'fs';
 import path from 'path';
 

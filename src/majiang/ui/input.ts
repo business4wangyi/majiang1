@@ -1,13 +1,13 @@
-import { Style } from './display';
-import { Game } from './game';
-import { PlayerAction } from './rule-types';
-import { debugLog, errorLog, infoLog, warnLog } from './logger';
-import { Tile } from './tile';
-import { CountdownManager } from './countdown-manager';
-import { displayManager } from './display-manager';
+import { Style } from '../ui/display';
+import { Game } from '../core/game';
+import { PlayerAction } from '../core/rule-types';
+import { debugLog, errorLog, infoLog, warnLog } from '../tools/logger';
+import { Tile } from '../core/tile';
+import { CountdownManager } from '../ui/countdown-manager';
+import { displayManager } from '../ui/display-manager';
 import * as readline from 'readline';
-import { RuleEngine } from './rule-engine';
-import { GameEventHandler } from './game-event-handler';
+import { RuleEngine } from '../core/rule-engine';
+import { GameEventHandler } from '../ui/game-event-handler';
 
 /**
  * 用户输入相关的配置选项

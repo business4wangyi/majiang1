@@ -1,18 +1,18 @@
-import { Game, GameState } from './game';
-import { displayManager } from './display-manager';
-import { askConfirmation, askQuestion, askMultipleChoice, InputState, getNextDiscardIndex } from './input';
-import { Player, PlayerState, PlayerType } from './player';
-import { debugLog, errorLog, infoLog } from './logger';
-import { Tile, TileType } from './tile';
-import { TileManager } from './tile-manager';
+import { Game, GameState } from '../core/game';
+import { displayManager } from '../ui/display-manager';
+import { askConfirmation, askQuestion, askMultipleChoice, InputState, getNextDiscardIndex } from '../ui/input';
+import { Player, PlayerState, PlayerType } from '../core/player';
+import { debugLog, errorLog, infoLog } from '../tools/logger';
+import { Tile, TileType } from '../core/tile';
+import { TileManager } from '../core/tile-manager';
 import { WinConditions } from './win-conditions/win-conditions-main';
-import { GangType, PlayerAction } from './rule-types';
-import { RuleEngine } from './rule-engine';
-import { AIPlayer } from './ai-player';
+import { GangType, PlayerAction } from '../core/rule-types';
+import { RuleEngine } from '../core/rule-engine';
+import { AIPlayer } from '../strategy/ai-player';
 import { DEBUG_MODE, AUTO_PLAY_MODE } from './index';
 import { AUTO_PLAY_ROUNDS } from './config/config';
 import { ScoreCalculator } from './score-calculator';
-import { runAutoGameLoop, runInteractiveGameLoop } from './gameLoop';
+import { runAutoGameLoop, runInteractiveGameLoop } from '../ui/gameLoop';
 
 /**
  * 游戏事件处理器类

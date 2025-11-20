@@ -1,5 +1,5 @@
-import { createBoard, getLegalActions, makeMove, checkWinner } from './game';
-import { Player } from './types';
+import { createBoard, getLegalActions, makeMove, checkWinner } from '../core/game';
+import { Player } from '../core/types';
 
 const GAMES = 1000;
 let xWin = 0;

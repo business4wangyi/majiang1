@@ -1,6 +1,6 @@
-import { Tile, createFullTileSet, shuffleTiles } from './tile';
-import { infoLog, warnLog } from './logger';
-import { displayManager } from './display-manager';
+import { Tile, createFullTileSet, shuffleTiles } from '../core/tile';
+import { infoLog, warnLog } from '../tools/logger';
+import { displayManager } from '../ui/display-manager';
 
 /**
  * TileManager 单例类 - 管理麻将牌山

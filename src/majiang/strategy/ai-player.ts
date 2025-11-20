@@ -1,8 +1,8 @@
-import { debugLog, errorLog, infoLog } from './logger';
-import { Player, PlayerType } from './player';
-import { Tile, TileType } from './tile';
-import { displayManager } from './display-manager';
-import { GameEventHandler } from './game-event-handler';
+import { debugLog, errorLog, infoLog } from '../tools/logger';
+import { Player, PlayerType } from '../core/player';
+import { Tile, TileType } from '../core/tile';
+import { displayManager } from '../ui/display-manager';
+import { GameEventHandler } from '../ui/game-event-handler';
 import { AUTO_PLAY_MODE } from './index';
 import { WinConditions } from './win-conditions/win-conditions-main';
 

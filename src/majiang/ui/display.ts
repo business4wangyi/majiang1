@@ -1,6 +1,6 @@
-import { Player } from './player';
-import { Tile } from './tile';
-import { TileSet } from './rule-types';
+import { Player } from '../core/player';
+import { Tile } from '../core/tile';
+import { TileSet } from '../core/rule-types';
 
 /**
  * 显示基础库 - 提供基础的显示常量和工具函数

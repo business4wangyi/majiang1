@@ -1,9 +1,9 @@
-import { perfMonitor } from './performance-monitor';
-import { GameEventHandler } from './game-event-handler';
-import { AIPlayer } from './ai-player';
+import { perfMonitor } from '../tools/performance-monitor';
+import { GameEventHandler } from '../ui/game-event-handler';
+import { AIPlayer } from '../strategy/ai-player';
 import { AUTO_PLAY_MODE } from './index';
 import { AUTO_PLAY_ROUNDS } from './config/config';
-import { debugLog } from './logger';
+import { debugLog } from '../tools/logger';
 
 // 0. 注入 GameEventHandler.startGame，自动开启新一局统计
 const origStartGame = GameEventHandler.prototype.startGame;
@@ -73,7 +73,7 @@ GameEventHandler.prototype.drawTileForPlayer = function(player, options) {
 };
 
 // 6. 注入 savePerformanceLogToFile，日志写入耗时
-import { savePerformanceLogToFile } from './logger';
+import { savePerformanceLogToFile } from '../tools/logger';
 const origSavePerfLog = savePerformanceLogToFile;
 // @ts-ignore
 (global as any).savePerformanceLogToFile = function(log: string) {

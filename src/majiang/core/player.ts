@@ -1,7 +1,7 @@
-import { Tile, sortTiles } from './tile';
-import { TileSet } from './rule-types';
-import { Style } from './display';
-import { debugLog, errorLog } from './logger';
+import { Tile, sortTiles } from '../core/tile';
+import { TileSet } from '../core/rule-types';
+import { Style } from '../ui/display';
+import { debugLog, errorLog } from '../tools/logger';
 import { WinConditions } from './win-conditions/win-conditions-main';
 import { exit } from 'process';
 

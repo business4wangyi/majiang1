@@ -1,18 +1,18 @@
-import { Game, GameState } from './game';
-import { PlayerState } from './player';
+import { Game, GameState } from '../core/game';
+import { PlayerState } from '../core/player';
 import { 
   debugLog, 
   saveGameLogToFile,
   errorLog,
   infoLog
-} from './logger';
+} from '../tools/logger';
 import {
   askQuestion, InputState
-} from './input';
+} from '../ui/input';
 import { DEBUG_MODE, AUTO_PLAY_MODE } from './index';
-import { displayManager } from './display-manager';
-import { GameEventHandler } from './game-event-handler';
-import { TileManager } from './tile-manager';
+import { displayManager } from '../ui/display-manager';
+import { GameEventHandler } from '../ui/game-event-handler';
+import { TileManager } from '../core/tile-manager';
 import { AUTO_PLAY_ROUNDS } from './config/config';
 
 // 游戏循环检查间隔（毫秒）

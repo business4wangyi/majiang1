@@ -1,8 +1,8 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import { Game } from './game';
-import { displayManager } from './display-manager';
-import { perfMonitor } from './performance-monitor';
+import { Game } from '../core/game';
+import { displayManager } from '../ui/display-manager';
+import { perfMonitor } from '../tools/performance-monitor';
 
 /**
  * 日志系统 - 提供全面的日志记录功能

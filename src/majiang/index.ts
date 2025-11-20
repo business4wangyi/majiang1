@@ -1,13 +1,13 @@
 import './performance-injector';
-import { Game } from './game';
-import { runAutoGameLoop, runInteractiveGameLoop } from './gameLoop';
-import { Style } from './display';
-import { InputState, askQuestion } from './input';
-import { errorLog, setLogLevel, LogLevel } from './logger';
-import { displayManager } from './display-manager';
-import { CountdownManager } from './countdown-manager';
-import { GameEventHandler } from './game-event-handler';
-import { PerformanceMonitor } from './performance-monitor';
+import { Game } from '../core/game';
+import { runAutoGameLoop, runInteractiveGameLoop } from '../ui/gameLoop';
+import { Style } from '../ui/display';
+import { InputState, askQuestion } from '../ui/input';
+import { errorLog, setLogLevel, LogLevel } from '../tools/logger';
+import { displayManager } from '../ui/display-manager';
+import { CountdownManager } from '../ui/countdown-manager';
+import { GameEventHandler } from '../ui/game-event-handler';
+import { PerformanceMonitor } from '../tools/performance-monitor';
 import { AUTO_PLAY_ROUNDS } from './config/config';
 
 // 自动打牌模式标志（导出以在其他模块中使用）

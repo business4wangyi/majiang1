@@ -1,11 +1,11 @@
-import { Tile } from './tile';
-import { Player, PlayerType, PlayerState } from './player';
-import { PlayerAction } from './rule-types';
-import { TileManager } from './tile-manager';
-import { RuleEngine } from './rule-engine';
-import { displayManager } from './display-manager';
-import { AIPlayer } from './ai-player';
-import { HumanPlayer } from './human-player';
+import { Tile } from '../core/tile';
+import { Player, PlayerType, PlayerState } from '../core/player';
+import { PlayerAction } from '../core/rule-types';
+import { TileManager } from '../core/tile-manager';
+import { RuleEngine } from '../core/rule-engine';
+import { displayManager } from '../ui/display-manager';
+import { AIPlayer } from '../strategy/ai-player';
+import { HumanPlayer } from '../ui/human-player';
 
 // 游戏状态
 export enum GameState {

@@ -1,10 +1,10 @@
-import { Style, groupTilesByType, TileTypeNames, TileTypeOrder, analyzeHand, formatTileSet } from './display';
-import { Player } from './player';
-import { Tile, sortTiles } from './tile';
-import { GameState } from './game';
-import { Game } from './game';
-import { infoLog, warnLog, errorLog } from './logger';
-import { TileSet } from './rule-types';
+import { Style, groupTilesByType, TileTypeNames, TileTypeOrder, analyzeHand, formatTileSet } from '../ui/display';
+import { Player } from '../core/player';
+import { Tile, sortTiles } from '../core/tile';
+import { GameState } from '../core/game';
+import { Game } from '../core/game';
+import { infoLog, warnLog, errorLog } from '../tools/logger';
+import { TileSet } from '../core/rule-types';
 
 /**
  * DisplayManager类 - 负责处理所有UI相关的打印功能

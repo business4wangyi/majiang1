@@ -1,6 +1,6 @@
-import { Style } from './display';
-import { infoLog, warnLog } from './logger';
-import { displayManager } from './display-manager';
+import { Style } from '../ui/display';
+import { infoLog, warnLog } from '../tools/logger';
+import { displayManager } from '../ui/display-manager';
 
 /**
  * 倒计时管理器类
