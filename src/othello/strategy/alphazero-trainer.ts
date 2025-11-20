@@ -498,6 +498,47 @@ export class AlphaZeroTrainer {
   dispose(): void {
     this.agent.dispose();
   }
+
+  /**
+   * 运行自我对弈基准测试
+   */
+  public async runSelfPlayBenchmark(gameCount: number): Promise<void> {
+    console.log('\n🚀 开始自我对弈基准测试...');
+    console.log(`   总对局数: ${gameCount}`);
+    const mctsSimulations = (this.agent as any)['config']?.mctsConfig?.numSimulations ?? DEFAULT_ALPHAZERO_AGENT_CONFIG.mctsConfig.numSimulations;
+    console.log(`   MCTS模拟次数: ${mctsSimulations}`);
+    console.log('='.repeat(80));
+
+    const startTime = Date.now();
+    let totalMoves = 0;
+    let blackWins = 0;
+    let whiteWins = 0;
+    let draws = 0;
+
+    for (let game = 0; game < gameCount; game++) {
+      const gameStart = Date.now();
+      const result = await this.playSelfPlayGame();
+      const gameDuration = (Date.now() - gameStart) / 1000;
+      totalMoves += result.gameLength;
+
+      if (result.winner === 'B') blackWins++;
+      else if (result.winner === 'W') whiteWins++;
+      else draws++;
+
+      console.log(
+        `[Benchmark] 第 ${game + 1}/${gameCount} 局 -> 胜者: ${result.winner} | 步数: ${result.gameLength} | 用时: ${gameDuration.toFixed(1)}秒`
+      );
+    }
+
+    const totalTime = (Date.now() - startTime) / 1000;
+    console.log('='.repeat(80));
+    console.log('📊 基准测试结果:');
+    console.log(`   总运行时间: ${(totalTime / 60).toFixed(2)}分钟 (${totalTime.toFixed(1)}秒)`);
+    console.log(`   平均每局时间: ${(totalTime / gameCount).toFixed(1)}秒`);
+    console.log(`   平均每局步数: ${(totalMoves / gameCount).toFixed(1)}步`);
+    console.log(`   胜率统计: 黑方 ${blackWins} | 白方 ${whiteWins} | 平局 ${draws}`);
+    console.log('='.repeat(80));
+  }
 }
 
 /**
@@ -506,17 +547,28 @@ export class AlphaZeroTrainer {
 export async function runTraining(): Promise<void> {
   console.log('🚀 启动AlphaZero训练...');
 
+  const agentConfig: AlphaZeroAgentConfig = {
+    ...DEFAULT_ALPHAZERO_AGENT_CONFIG,
+    mctsConfig: {
+      ...DEFAULT_ALPHAZERO_AGENT_CONFIG.mctsConfig,
+      numSimulations: Number(process.env.ALPHAZERO_MCTS) || 200
+    }
+  };
+
   const config: AlphaZeroTrainingConfig = {
     ...DEFAULT_ALPHAZERO_TRAINING_CONFIG,
-    totalIterations: 10,
-    selfPlayGames: 25,
-    trainingEpochs: 5,
-    experienceBufferSize: 2000,
+    totalIterations: Number(process.env.ALPHAZERO_TOTAL_ITERATIONS) || 10,
+    selfPlayGames: Number(process.env.ALPHAZERO_SELFPLAY_GAMES) || 10,
+    trainingEpochs: Number(process.env.ALPHAZERO_TRAINING_EPOCHS) || 3,
+    experienceBufferSize: Number(process.env.ALPHAZERO_EXP_BUFFER) || 4000,
+    evaluationFrequency: Number(process.env.ALPHAZERO_EVAL_FREQUENCY) || 10,
+    saveFrequency: Number(process.env.ALPHAZERO_SAVE_FREQUENCY) || 10,
+    maxGameSteps: Number(process.env.ALPHAZERO_MAX_STEPS) || 80,
     verbose: true
   };
 
   const trainer = new AlphaZeroTrainer(
-    DEFAULT_ALPHAZERO_AGENT_CONFIG,
+    agentConfig,
     config
   );
 
@@ -530,7 +582,36 @@ export async function runTraining(): Promise<void> {
   }
 }
 
+async function runSelfPlayBenchmark(gameCount: number): Promise<void> {
+  const agentConfig = { ...DEFAULT_ALPHAZERO_AGENT_CONFIG };
+  const config: AlphaZeroTrainingConfig = {
+    ...DEFAULT_ALPHAZERO_TRAINING_CONFIG,
+    totalIterations: 1,
+    selfPlayGames: gameCount,
+    trainingEpochs: 0,
+    evaluationFrequency: Number.MAX_SAFE_INTEGER,
+    saveFrequency: Number.MAX_SAFE_INTEGER,
+    verbose: true
+  };
+
+  const trainer = new AlphaZeroTrainer(agentConfig, config);
+
+  try {
+    await trainer.runSelfPlayBenchmark(gameCount);
+  } catch (error) {
+    console.error('❌ 自我对弈基准测试失败:', error);
+  } finally {
+    trainer.dispose();
+  }
+}
+
 // 如果直接运行此文件
 if (require.main === module) {
-  runTraining().catch(console.error);
+  const mode = process.env.ALPHAZERO_MODE;
+  if (mode === 'benchmark') {
+    const games = Number(process.env.SELFPLAY_GAMES) || 100;
+    runSelfPlayBenchmark(games).catch(console.error);
+  } else {
+    runTraining().catch(console.error);
+  }
 }

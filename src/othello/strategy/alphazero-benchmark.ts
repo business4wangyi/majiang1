@@ -430,10 +430,10 @@ export async function runFullBenchmark(): Promise<void> {
     console.log('\n✅ 基准测试完成！');
     if (results && results.length > 0) {
       const result = results[0];
-      console.log('📈 测试结果:');
-      console.log(`   配置: ${result.configName}`);
-      console.log(`   平均搜索时间: ${result.searchPerformance.avgSearchTime.toFixed(2)}ms`);
-      console.log(`   平均模拟次数: ${result.searchPerformance.avgSimulations}`);
+    console.log('📈 测试结果:');
+    console.log(`   配置: ${result.configName}`);
+    console.log(`   平均搜索时间: ${result.searchPerformance.avgSearchTime.toFixed(2)}ms`);
+    console.log(`   平均模拟次数: ${result.searchPerformance.avgSimulations}`);
       if (result.battleResults) {
         for (const [opponent, stats] of Object.entries(result.battleResults)) {
           console.log(`   vs ${opponent}: ${stats.winRate.toFixed(1)}%`);
