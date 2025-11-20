@@ -583,7 +583,15 @@ export async function runTraining(): Promise<void> {
 }
 
 async function runSelfPlayBenchmark(gameCount: number): Promise<void> {
-  const agentConfig = { ...DEFAULT_ALPHAZERO_AGENT_CONFIG };
+  // 基准测试使用较低的MCTS模拟次数以加快速度
+  const mctsSimulations = Number(process.env.ALPHAZERO_MCTS) || 200;
+  const agentConfig = { 
+    ...DEFAULT_ALPHAZERO_AGENT_CONFIG,
+    mctsConfig: {
+      ...DEFAULT_ALPHAZERO_AGENT_CONFIG.mctsConfig,
+      numSimulations: mctsSimulations
+    }
+  };
   const config: AlphaZeroTrainingConfig = {
     ...DEFAULT_ALPHAZERO_TRAINING_CONFIG,
     totalIterations: 1,
