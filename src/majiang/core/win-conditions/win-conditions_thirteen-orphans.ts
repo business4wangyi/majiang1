@@ -1,6 +1,6 @@
-import { Tile, TileType, FengValue, JianValue } from '../core/tile';
-import { TileSet, HuType } from '../core/rule-types';
-import { Player } from '../core/player';
+import { Tile, TileType, FengValue, JianValue } from '../tile';
+import { TileSet, HuType } from '../rule-types';
+import { Player } from '../player';
 import { BaseWinConditionDetector, WinConditionRegistry } from './win-condition-detector';
 
 /**

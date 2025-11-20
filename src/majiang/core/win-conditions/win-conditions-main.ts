@@ -1,8 +1,8 @@
-import { Tile } from '../core/tile';
-import { TileSet, HuType } from '../core/rule-types';
-import { Player } from '../core/player';
+import { Tile } from '../tile';
+import { TileSet, HuType } from '../rule-types';
+import { Player } from '../player';
 import { WinConditionRegistry } from './win-condition-detector';
-import { debugLog } from '../tools/logger';
+import { debugLog } from '../../tools/logger';
 
 // 导入所有胡牌检测器
 import './index'; // 这会自动注册所有检测器

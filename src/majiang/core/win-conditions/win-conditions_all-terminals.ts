@@ -1,5 +1,5 @@
-import { Tile, TileType } from '../core/tile';
-import { TileSet, TileSetType, HuType } from '../core/rule-types';
+import { Tile, TileType } from '../tile';
+import { TileSet, TileSetType, HuType } from '../rule-types';
 import { BaseWinConditionDetector } from './win-condition-detector';
 
 /**
