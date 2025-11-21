@@ -1,5 +1,5 @@
-import { Board, Player, Action } from '../core/types';
-import { getLegalActions } from '../core/game';
+import { Board, Player, Action } from '../../core/types';
+import { getLegalActions } from '../../core/game';
 
 export interface Agent {
   chooseAction(board: Board, player: Player): Action;

@@ -1,5 +1,5 @@
-import { Board, Player, Action } from '../core/types';
-import { getLegalActions, makeMove, checkWinner } from '../core/game';
+import { Board, Player, Action } from '../../core/types';
+import { getLegalActions, makeMove, checkWinner } from '../../core/game';
 import { Agent } from '../agents/random-agent';
 import * as fs from 'fs';
 
