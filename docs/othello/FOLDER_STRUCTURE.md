@@ -17,6 +17,9 @@ src/othello/
 │   ├── types.ts            # 类型定义
 │   └── index.ts            # 核心模块导出
 │
+├── config/                  # 游戏核心配置
+│   └── config.ts           # 游戏配置参数
+│
 ├── strategy/                # AI策略和算法
 │   ├── agents/             # AI智能体
 │   │   ├── random-agent.ts
@@ -81,7 +84,15 @@ src/othello/
 - 无外部依赖（除了基础类型）
 - 可被任何模块复用（训练、测试、UI等）
 
-### 2. `strategy/` - AI策略和算法
+### 2. `config/` - 游戏核心配置
+**职责**：游戏核心配置参数
+- `config.ts`: 游戏配置（棋盘大小、初始棋子数等）
+
+**特点**：
+- 游戏级配置，不涉及AI
+- 可被 core/ 和 strategy/ 模块使用
+
+### 3. `strategy/` - AI策略和算法
 **职责**：所有AI相关的实现
 - `agents/`: 各种AI智能体实现
 - `networks/`: 神经网络实现
@@ -94,7 +105,7 @@ src/othello/
 - 依赖 `core/` 模块
 - 可独立训练和测试
 
-### 3. `ui/` - 用户界面
+### 4. `ui/` - 用户界面
 **职责**：用户交互相关的代码
 - `cli.ts`: 命令行界面
 - `demo.ts`: 演示程序
@@ -104,25 +115,25 @@ src/othello/
 - 依赖 `core/` 和 `strategy/` 模块
 - 面向最终用户
 
-### 4. `tools/` - 工具和辅助脚本
+### 5. `tools/` - 工具和辅助脚本
 **职责**：辅助工具、指南、配置等
 - `config-guide.ts`: 配置指南
 - `program-guide.ts`: 程序指南
 - `run-commands.ts`: 命令运行工具
 
-### 5. `tests/` - 测试文件
+### 6. `tests/` - 测试文件
 **职责**：各种测试脚本
 - `model-test.ts`: 模型测试
 - `performance-test.ts`: 性能测试
 
-### 6. `models/` - 训练好的模型
+### 7. `models/` - 训练好的模型
 **职责**：存储训练好的模型文件
 
 ## 🔗 依赖关系
 
 ```
 ui/ ──┐
-      ├──> strategy/ ──> core/
+      ├──> strategy/ ──> core/ ──> config/
 tools/┘
-tests/ ──> core/
+tests/ ──> core/ ──> config/
 ```

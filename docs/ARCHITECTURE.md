@@ -45,6 +45,9 @@ src/<game>/
 │   ├── types.ts            # 类型定义
 │   └── index.ts            # 核心模块导出
 │
+├── config/                  # 游戏核心配置（可选）
+│   └── config.ts           # 游戏配置参数
+│
 ├── strategy/                # AI策略和算法
 │   ├── agents/             # AI智能体（推荐）
 │   ├── networks/           # 神经网络（可选）
@@ -109,6 +112,7 @@ src/<game>/
 
 **核心模块**：
 - `core/`: 游戏核心逻辑和类型定义
+- `config/`: 游戏核心配置（棋盘大小等）
 - `strategy/`: 多种AI策略实现
   - `agents/`: 各种AI智能体
   - `networks/`: 神经网络实现
@@ -148,10 +152,14 @@ src/<game>/
 
 ```
 ui/ ──┐
-      ├──> strategy/ ──> core/
+      ├──> strategy/ ──> core/ ──> config/
 tools/┘
-tests/ ──> core/
+tests/ ──> core/ ──> config/
 ```
+
+**说明**：
+- `config/`: 游戏核心配置，被 core/ 使用
+- `strategy/configs/`: AI训练配置，被 strategy/ 使用
 
 ### 跨模块依赖
 
@@ -196,14 +204,18 @@ src/utils/ ──> (被所有模块共享)
 
 ### 文件组织
 1. **核心逻辑**：放在 `core/` 目录
-2. **AI策略**：放在 `strategy/` 目录
-3. **用户界面**：放在 `ui/` 目录
-4. **工具函数**：放在 `tools/` 目录
-5. **测试文件**：放在 `tests/` 目录
+2. **游戏配置**：放在 `config/` 目录（游戏级配置）
+3. **AI策略**：放在 `strategy/` 目录
+4. **AI配置**：放在 `strategy/configs/` 目录（AI训练配置）
+5. **用户界面**：放在 `ui/` 目录
+6. **工具函数**：放在 `tools/` 目录
+7. **测试文件**：放在 `tests/` 目录
 
 ### 导入规范
 - 核心模块：`from '../core/game'`
+- 游戏配置：`from '../config/config'`
 - 策略模块：`from '../strategy'` 或 `from '../strategy/agents/xxx'`
+- AI配置：`from '../strategy/configs/xxx'`
 - UI模块：`from '../ui/xxx'`
 - 工具模块：`from '../tools/xxx'`
 
