@@ -10,12 +10,7 @@
  */
 
 // Fix for isNullOrUndefined compatibility issue (must be first)
-import * as util from 'util';
-if (!util.isNullOrUndefined) {
-  (util as any).isNullOrUndefined = function(value: any): boolean {
-    return value === null || value === undefined;
-  };
-}
+import '../../shared/utils/tfjs-compat-fix';
 import * as tf from '@tensorflow/tfjs-node';
 import { OthelloBoard, OthelloPlayer } from '../../core/types';
 
