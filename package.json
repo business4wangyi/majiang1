@@ -4,6 +4,7 @@
   "description": "广东麻将命令行游戏",
   "main": "dist/majiang/index.js",
   "scripts": {
+    "docs:update-file-list": "node scripts/docs/generate-file-list.js all",
     "start": "node dist/majiang/index.js",
     "build": "tsc",
     "dev": "ts-node src/majiang/index.ts",

@@ -89,18 +89,21 @@ src/<game>/
 **位置**：`src/majiang/`
 
 **特点**：
-- 复杂的游戏规则和胡牌条件
-- 完整的AlphaZero AI实现
+- 复杂的游戏规则和胡牌条件（40+ 种胡牌条件）
+- 完整的AlphaZero AI实现（320维状态编码，39维动作解码）
 - 支持人类玩家和AI玩家对弈
+- 多阶段训练策略（稳定性训练、神经符号融合等）
 
 **核心模块**：
 - `core/`: 游戏核心逻辑、规则引擎、牌管理、胡牌条件
 - `strategy/`: AI策略实现
-  - `agents/`: AI智能体
-  - `ai-alphazero/`: AlphaZero AI完整实现
+  - `agents/`: AI智能体（基于规则的AI）
+  - `ai-alphazero/`: AlphaZero AI完整实现（神经网络、MCTS、训练器）
 - `ui/`: 显示、输入、游戏循环、事件处理
 - `tools/`: 日志、性能监控
 - `config/`: 游戏配置
+
+**适用场景**：复杂规则游戏、多阶段AI训练、状态空间大的游戏
 
 **详细架构**：参见 [docs/majiang/FOLDER_STRUCTURE.md](./majiang/FOLDER_STRUCTURE.md)
 
@@ -111,22 +114,25 @@ src/<game>/
 **特点**：
 - 多种AI算法实现（随机、贪心、启发式、Minimax、Q-Learning、DQN、A3C、AlphaZero）
 - 完整的训练和评估框架
-- 支持多种训练模式
+- 支持多种训练模式（演示、标准、高性能、生产级）
+- 最规范的架构示例（推荐参考）
 
 **核心模块**：
 - `core/`: 游戏核心逻辑和类型定义
 - `config/`: 游戏核心配置（棋盘大小等）
 - `strategy/`: 多种AI策略实现
-  - `agents/`: 各种AI智能体
-  - `networks/`: 神经网络实现
+  - `agents/`: 各种AI智能体（8种算法）
+  - `networks/`: 神经网络实现（DQN、A3C、AlphaZero）
   - `trainers/`: 训练器实现
   - `mcts/`: MCTS算法实现
-  - `configs/`: 配置管理
+  - `configs/`: 配置管理（多种预设配置）
   - `utils/`: 工具函数
 - `ui/`: CLI、演示、API服务器
 - `tools/`: 配置指南、程序指南
 - `tests/`: 模型测试、性能测试
 - `models/`: 训练好的模型
+
+**适用场景**：中等复杂度游戏、多种AI算法对比、完整的训练框架
 
 **详细架构**：参见 [docs/othello/FOLDER_STRUCTURE.md](./othello/FOLDER_STRUCTURE.md)
 
@@ -135,17 +141,20 @@ src/<game>/
 **位置**：`src/tic-tac-toe/`
 
 **特点**：
-- 简单的游戏规则
+- 简单的游戏规则（3x3棋盘，9个位置）
 - 多种AI策略（随机、贪心、Minimax、防守、Q-Learning）
 - 完整的训练和评估工具
+- 适合作为入门示例
 
 **核心模块**：
 - `core/`: 游戏核心逻辑和类型定义
 - `strategy/`: AI策略实现和训练工具
-  - `agents/`: AI智能体
-  - `trainers/`: 训练器
-  - `utils/`: 工具函数
+  - `agents/`: AI智能体（5种算法）
+  - `trainers/`: 训练器（Q-Learning训练）
+  - `utils/`: 工具函数（Q表分析、策略可视化等）
 - `ui/`: 演示程序
+
+**适用场景**：简单游戏、快速原型、AI算法学习
 
 **详细架构**：参见 [docs/tic-tac-toe/FOLDER_STRUCTURE.md](./tic-tac-toe/FOLDER_STRUCTURE.md)
 
@@ -153,11 +162,22 @@ src/<game>/
 
 ### 游戏模块内部依赖
 
-```
-ui/ ──┐
-      ├──> strategy/ ──> core/ ──> config/
-tools/┘
-tests/ ──> core/ ──> config/
+```mermaid
+graph TD
+    A[ui/] --> B[strategy/]
+    B --> C[core/]
+    C --> D[config/]
+    E[tools/] --> C
+    F[tests/] --> C
+    F --> D
+    B --> G[strategy/configs/]
+    
+    style D fill:#e1f5ff
+    style C fill:#fff4e1
+    style B fill:#f0e1ff
+    style A fill:#e1ffe1
+    style E fill:#ffe1f5
+    style F fill:#f5ffe1
 ```
 
 **依赖说明**：
@@ -167,6 +187,8 @@ tests/ ──> core/ ──> config/
 - `strategy/configs/`: AI训练配置，被 `strategy/` 内部使用
 - `tools/`: 工具函数，可被其他模块使用
 - `tests/`: 测试模块，测试 `core/` 和 `config/`
+
+**依赖方向**：`ui/ → strategy/ → core/ → config/`（单向依赖，避免循环）
 
 ### 跨模块依赖
 
