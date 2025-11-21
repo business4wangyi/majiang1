@@ -267,7 +267,6 @@ A:
 
 ## 📚 相关文档
 
-- [架构审查文档](./ARCHITECTURE_REVIEW.md) - 架构优化建议和审查结果
 - [麻将架构文档](./majiang/FOLDER_STRUCTURE.md)
 - [黑白棋架构文档](./othello/FOLDER_STRUCTURE.md)
 - [井字棋架构文档](./tic-tac-toe/FOLDER_STRUCTURE.md)
