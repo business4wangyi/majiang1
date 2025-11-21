@@ -1,5 +1,8 @@
 # 麻将项目架构文档
 
+> **最后更新**: 2024-11-21  
+> **文档版本**: v2.0.0
+
 ## 📁 目录结构
 
 ### 核心原则
@@ -47,8 +50,7 @@ src/majiang/
 │   │   ├── performance-config.ts
 │   │   ├── integration-test.ts
 │   │   ├── demo.ts
-│   │   ├── types.ts
-│   │   └── index.ts
+│   │   └── types.ts
 │   └── index.ts            # 策略模块导出
 │
 ├── ui/                     # 用户界面相关
@@ -148,4 +150,7 @@ config/ ──> core/
 - ✅ 所有文件已移动到正确位置
 - ✅ 导入路径已更新
 - ✅ config/ 目录已存在并包含游戏配置
+
+**已知问题**：
+- ⚠️ `strategy/ai-alphazero/index.ts` 在文档中列出但实际不存在，已从文档中移除
 

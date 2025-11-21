@@ -1,5 +1,8 @@
 # 项目整体架构文档
 
+> **最后更新**: 2024-11-21  
+> **文档版本**: v2.0.0
+
 ## 📁 项目结构概览
 
 本项目是一个多游戏AI训练平台，包含多个游戏实现和统一的AI训练框架。
@@ -157,9 +160,13 @@ tools/┘
 tests/ ──> core/ ──> config/
 ```
 
-**说明**：
-- `config/`: 游戏核心配置，被 core/ 使用
-- `strategy/configs/`: AI训练配置，被 strategy/ 使用
+**依赖说明**：
+- `config/`: 游戏核心配置，被 `core/` 使用
+- `core/`: 游戏核心逻辑，被 `strategy/`、`ui/`、`tests/` 使用
+- `strategy/`: AI策略实现，被 `ui/` 使用
+- `strategy/configs/`: AI训练配置，被 `strategy/` 内部使用
+- `tools/`: 工具函数，可被其他模块使用
+- `tests/`: 测试模块，测试 `core/` 和 `config/`
 
 ### 跨模块依赖
 

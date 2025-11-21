@@ -29,7 +29,8 @@ src/othello/
 │   │   ├── qlearning-agent.ts
 │   │   ├── dqn-agent.ts
 │   │   ├── a3c-agent.ts
-│   │   └── alphazero-agent.ts
+│   │   ├── alphazero-agent.ts
+│   │   └── alphazero-agent-optimized.ts
 │   ├── networks/           # 神经网络实现
 │   │   ├── dqn-network.ts
 │   │   ├── a3c-network.ts
@@ -39,7 +40,8 @@ src/othello/
 │   │   ├── dqn-trainer.ts
 │   │   ├── a3c-trainer.ts
 │   │   ├── alphazero-trainer.ts
-│   │   └── alphazero-trainer-optimized.ts
+│   │   ├── alphazero-trainer-optimized.ts
+│   │   └── alphazero-training-manager.ts
 │   ├── mcts/               # MCTS相关
 │   │   ├── alphazero-mcts.ts
 │   │   └── alphazero-mcts-optimized.ts
