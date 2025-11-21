@@ -280,7 +280,11 @@ A:
 
 ## 📚 相关文档
 
-- [麻将架构文档](./majiang/FOLDER_STRUCTURE.md)
-- [黑白棋架构文档](./othello/FOLDER_STRUCTURE.md)
-- [井字棋架构文档](./tic-tac-toe/FOLDER_STRUCTURE.md)
+### 游戏架构文档
+- [麻将架构文档](./majiang/FOLDER_STRUCTURE.md) - 复杂游戏架构示例
+- [黑白棋架构文档](./othello/FOLDER_STRUCTURE.md) - 最规范的架构示例
+- [井字棋架构文档](./tic-tac-toe/FOLDER_STRUCTURE.md) - 简单游戏架构示例
+
+### 其他文档
+- [架构优化建议](./ARCHITECTURE_OPTIMIZATION.md) - 架构文档的优化建议和改进方向
 
