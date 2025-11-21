@@ -199,7 +199,6 @@ graph TD
 ### 项目文档
 - [项目整体架构](../ARCHITECTURE.md) - 了解整体架构规范
 - [架构迁移指南](../ARCHITECTURE.md#架构迁移指南) - 添加新游戏时的参考
-- [架构优化建议](../ARCHITECTURE_OPTIMIZATION.md) - 架构文档的优化建议
 
 ### 其他游戏
 - [黑白棋架构文档](../othello/FOLDER_STRUCTURE.md) - 参考规范的游戏架构（多种AI算法、完整训练框架）

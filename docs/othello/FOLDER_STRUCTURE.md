@@ -308,6 +308,3 @@ graph TD
 - ✅ 导出文件已创建
 - ✅ config/ 目录已创建并包含游戏核心配置
 - ✅ strategy/ 子目录结构完整（agents/, networks/, trainers/, mcts/, configs/, utils/）
-
-**已知问题**：
-- ⚠️ `strategy/trainers/alphazero-training-manager.ts` 和 `strategy/agents/alphazero-agent-optimized.ts` 已添加到文档
