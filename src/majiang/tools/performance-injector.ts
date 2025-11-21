@@ -1,6 +1,6 @@
 import { perfMonitor } from '../tools/performance-monitor';
 import { GameEventHandler } from '../ui/game-event-handler';
-import { AIPlayer } from '../strategy/ai-player';
+import { AIPlayer } from '../strategy/agents/ai-player';
 import { AUTO_PLAY_MODE } from './index';
 import { AUTO_PLAY_ROUNDS } from './config/config';
 import { debugLog } from '../tools/logger';

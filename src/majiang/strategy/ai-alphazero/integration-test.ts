@@ -4,7 +4,7 @@
  */
 
 import { Game } from '../core/game';
-import { AIPlayer } from '../ai-player';
+import { AIPlayer } from '../agents/ai-player';
 import { createTestMajiangAI } from './index';
 
 /**

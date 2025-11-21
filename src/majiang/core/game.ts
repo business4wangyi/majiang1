@@ -4,7 +4,7 @@ import { PlayerAction } from '../core/rule-types';
 import { TileManager } from '../core/tile-manager';
 import { RuleEngine } from '../core/rule-engine';
 import { displayManager } from '../ui/display-manager';
-import { AIPlayer } from '../strategy/ai-player';
+import { AIPlayer } from '../strategy/agents/ai-player';
 import { HumanPlayer } from '../ui/human-player';
 
 // 游戏状态

@@ -4,7 +4,7 @@
  */
 
 import { Game, GameState } from '../core/game';
-import { AIPlayer } from '../ai-player';
+import { AIPlayer } from '../agents/ai-player';
 import { createTrainingMajiangAI } from './index';
 import { 
   NeuralSymbolicFusionEngine, 

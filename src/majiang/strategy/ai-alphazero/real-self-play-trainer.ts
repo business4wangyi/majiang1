@@ -5,7 +5,7 @@
 
 import * as tf from '@tensorflow/tfjs';
 import { Game, GameState } from '../core/game';
-import { AIPlayer } from './ai-player';
+import { AIPlayer } from '../agents/ai-player';
 import { MajiangAlphaZeroNetworkTF, TrainingBatch, TrainingLoss } from './majiang-alphazero-network-tf';
 import { MajiangStateEncoder } from './majiang-state-encoder';
 import { MajiangActionDecoder } from './majiang-action-decoder';

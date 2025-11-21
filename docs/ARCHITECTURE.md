@@ -46,13 +46,13 @@ src/<game>/
 │   └── index.ts            # 核心模块导出
 │
 ├── strategy/                # AI策略和算法
-│   ├── agents/             # AI智能体（可选）
+│   ├── agents/             # AI智能体（推荐）
 │   ├── networks/           # 神经网络（可选）
 │   ├── trainers/           # 训练器（可选）
 │   ├── mcts/               # MCTS算法（可选）
 │   ├── configs/            # 配置管理（可选）
 │   ├── utils/              # 工具函数（可选）
-│   └── index.ts            # 策略模块导出
+│   └── index.ts            # 策略模块导出（推荐）
 │
 ├── ui/                     # 用户界面
 │   ├── cli.ts              # 命令行界面（可选）
@@ -89,7 +89,9 @@ src/<game>/
 
 **核心模块**：
 - `core/`: 游戏核心逻辑、规则引擎、牌管理、胡牌条件
-- `strategy/`: AlphaZero AI实现
+- `strategy/`: AI策略实现
+  - `agents/`: AI智能体
+  - `ai-alphazero/`: AlphaZero AI完整实现
 - `ui/`: 显示、输入、游戏循环、事件处理
 - `tools/`: 日志、性能监控
 - `config/`: 游戏配置
@@ -133,6 +135,9 @@ src/<game>/
 **核心模块**：
 - `core/`: 游戏核心逻辑和类型定义
 - `strategy/`: AI策略实现和训练工具
+  - `agents/`: AI智能体
+  - `trainers/`: 训练器
+  - `utils/`: 工具函数
 - `ui/`: 演示程序
 
 **详细架构**：参见 [docs/tic-tac-toe/FOLDER_STRUCTURE.md](./tic-tac-toe/FOLDER_STRUCTURE.md)

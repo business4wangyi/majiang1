@@ -18,18 +18,22 @@ src/tic-tac-toe/
 │   └── index.ts            # 核心模块导出
 │
 ├── strategy/                # AI策略和算法
-│   ├── random-agent.ts     # 随机策略
-│   ├── greedy-agent.ts     # 贪心策略
-│   ├── minimax-agent.ts    # Minimax算法
-│   ├── defensive-agent.ts  # 防守策略
-│   ├── qlearning-agent.ts  # Q-Learning算法
-│   ├── train-qlearning-agent.ts # Q-Learning训练
-│   ├── train-qlearning-logged.ts # Q-Learning训练（带日志）
-│   ├── analyze-qtable.ts   # Q表分析
-│   ├── compare-ai-batch.ts # AI批量比较
-│   ├── evaluate-agents-batch.ts # 智能体批量评估
-│   ├── test-tic-tac-toe-ai.ts # AI测试
-│   └── visualize-strategy.ts # 策略可视化
+│   ├── agents/             # AI智能体
+│   │   ├── random-agent.ts     # 随机策略
+│   │   ├── greedy-agent.ts     # 贪心策略
+│   │   ├── minimax-agent.ts    # Minimax算法
+│   │   ├── defensive-agent.ts  # 防守策略
+│   │   └── qlearning-agent.ts  # Q-Learning算法
+│   ├── trainers/           # 训练器
+│   │   ├── train-qlearning-agent.ts # Q-Learning训练
+│   │   └── train-qlearning-logged.ts # Q-Learning训练（带日志）
+│   ├── utils/              # 工具函数
+│   │   ├── analyze-qtable.ts   # Q表分析
+│   │   ├── compare-ai-batch.ts # AI批量比较
+│   │   ├── evaluate-agents-batch.ts # 智能体批量评估
+│   │   ├── test-tic-tac-toe-ai.ts # AI测试
+│   │   └── visualize-strategy.ts # 策略可视化
+│   └── index.ts            # 策略模块导出
 │
 └── ui/                     # 用户界面相关
     └── demo.ts             # 演示程序
@@ -49,18 +53,22 @@ src/tic-tac-toe/
 
 ### 2. `strategy/` - AI策略和算法
 **职责**：所有AI相关的实现
-- `random-agent.ts`: 随机策略智能体
-- `greedy-agent.ts`: 贪心策略智能体
-- `minimax-agent.ts`: Minimax算法智能体
-- `defensive-agent.ts`: 防守策略智能体
-- `qlearning-agent.ts`: Q-Learning算法智能体
-- `train-qlearning-agent.ts`: Q-Learning训练脚本
-- `train-qlearning-logged.ts`: Q-Learning训练脚本（带日志）
-- `analyze-qtable.ts`: Q表分析工具
-- `compare-ai-batch.ts`: AI批量比较工具
-- `evaluate-agents-batch.ts`: 智能体批量评估工具
-- `test-tic-tac-toe-ai.ts`: AI测试脚本
-- `visualize-strategy.ts`: 策略可视化工具
+- `agents/`: AI智能体
+  - `random-agent.ts`: 随机策略智能体
+  - `greedy-agent.ts`: 贪心策略智能体
+  - `minimax-agent.ts`: Minimax算法智能体
+  - `defensive-agent.ts`: 防守策略智能体
+  - `qlearning-agent.ts`: Q-Learning算法智能体
+- `trainers/`: 训练器
+  - `train-qlearning-agent.ts`: Q-Learning训练脚本
+  - `train-qlearning-logged.ts`: Q-Learning训练脚本（带日志）
+- `utils/`: 工具函数
+  - `analyze-qtable.ts`: Q表分析工具
+  - `compare-ai-batch.ts`: AI批量比较工具
+  - `evaluate-agents-batch.ts`: 智能体批量评估工具
+  - `test-tic-tac-toe-ai.ts`: AI测试脚本
+  - `visualize-strategy.ts`: 策略可视化工具
+- `index.ts`: 策略模块统一导出
 
 **特点**：
 - 依赖 `core/` 模块

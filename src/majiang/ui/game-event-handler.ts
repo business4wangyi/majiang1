@@ -8,7 +8,7 @@ import { TileManager } from '../core/tile-manager';
 import { WinConditions } from './win-conditions/win-conditions-main';
 import { GangType, PlayerAction } from '../core/rule-types';
 import { RuleEngine } from '../core/rule-engine';
-import { AIPlayer } from '../strategy/ai-player';
+import { AIPlayer } from '../strategy/agents/ai-player';
 import { DEBUG_MODE, AUTO_PLAY_MODE } from './index';
 import { AUTO_PLAY_ROUNDS } from './config/config';
 import { ScoreCalculator } from './score-calculator';

@@ -4,7 +4,7 @@
  */
 
 import { Game, GameState } from '../core/game';
-import { AIPlayer } from '../ai-player';
+import { AIPlayer } from '../agents/ai-player';
 import { createTrainingMajiangAI, createPlayingMajiangAI } from './index';
 import { TRAINING_CONFIG, PerformanceMonitor } from './performance-config';
 

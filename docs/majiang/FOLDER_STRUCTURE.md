@@ -28,6 +28,8 @@ src/majiang/
 │   └── index.ts            # 核心模块导出
 │
 ├── strategy/                # AI策略和算法
+│   ├── agents/             # AI智能体
+│   │   └── ai-player.ts   # AI玩家实现
 │   ├── ai-alphazero/       # AlphaZero AI实现
 │   │   ├── majiang-alphazero-agent.ts
 │   │   ├── majiang-alphazero-network.ts
@@ -47,7 +49,7 @@ src/majiang/
 │   │   ├── demo.ts
 │   │   ├── types.ts
 │   │   └── index.ts
-│   └── ai-player.ts        # AI玩家实现
+│   └── index.ts            # 策略模块导出
 │
 ├── ui/                     # 用户界面相关
 │   ├── display.ts          # 显示相关
@@ -91,9 +93,11 @@ src/majiang/
 
 ### 2. `strategy/` - AI策略和算法
 **职责**：所有AI相关的实现
+- `agents/`: AI智能体
+  - `ai-player.ts`: AI玩家实现
 - `ai-alphazero/`: AlphaZero AI完整实现
   - 智能体、网络、训练器等
-- `ai-player.ts`: AI玩家实现
+- `index.ts`: 策略模块统一导出
 
 **特点**：
 - 依赖 `core/` 模块
