@@ -9,11 +9,11 @@ export * from './agents/ai-player';
 // 导出 AlphaZero AI
 export * from './ai-alphazero';
 
-// 便捷工厂函数
+// 便捷工厂函数（从 ai-alphazero 重新导出）
 import { Game } from '../core/game';
-import { MajiangAlphaZeroNetwork } from './majiang-alphazero-network';
-import { MajiangGameAdapter } from './majiang-game-adapter';
-import { MajiangAlphaZeroAgent } from './majiang-alphazero-agent';
+import { MajiangAlphaZeroNetwork } from './ai-alphazero/majiang-alphazero-network';
+import { MajiangGameAdapter } from './ai-alphazero/majiang-game-adapter';
+import { MajiangAlphaZeroAgent } from './ai-alphazero/majiang-alphazero-agent';
 
 /**
  * 创建标准配置的麻将AlphaZero AI
