@@ -1,17 +1,13 @@
 /**
- * 麻将AlphaZero AI系统入口文件
- * 导出所有核心组件，提供统一的API接口
+ * 麻将策略模块
+ * 统一导出所有AI策略和工具
  */
 
-// 核心组件导出
-export { MajiangStateEncoder, MajiangStateVector } from './majiang-state-encoder';
-export { MajiangActionDecoder, MajiangAction, MajiangActionSpace } from './majiang-action-decoder';
-export { MajiangAlphaZeroNetwork, MajiangNetworkOutput, MajiangNetworkConfig } from './majiang-alphazero-network';
-export { MajiangGameAdapter, GameAdapterConfig, GameSnapshot } from './majiang-game-adapter';
-export { MajiangAlphaZeroAgent, AgentConfig, MCTSNode } from './majiang-alphazero-agent';
+// 导出智能体
+export * from './agents/ai-player';
 
-// 类型定义导出
-export * from './types';
+// 导出 AlphaZero AI
+export * from './ai-alphazero';
 
 // 便捷工厂函数
 import { Game } from '../core/game';

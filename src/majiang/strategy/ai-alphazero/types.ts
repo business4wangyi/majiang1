@@ -3,14 +3,14 @@
  * 提供与现有麻将游戏系统的兼容性接口
  */
 
-import { Tile, TileType } from '../core/tile';
-import { Player, PlayerState } from '../core/player';
-import { TileSet } from '../core/rule-types';
+import { Tile, TileType } from '../../core/tile';
+import { Player, PlayerState } from '../../core/player';
+import { TileSet } from '../../core/rule-types';
 
 // 重新导出核心类型，确保兼容性
-export { Tile, TileType } from '../core/tile';
-export { Player, PlayerState } from '../core/player';
-export { TileSet } from '../core/rule-types';
+export { Tile, TileType } from '../../core/tile';
+export { Player, PlayerState } from '../../core/player';
+export { TileSet } from '../../core/rule-types';
 
 /**
  * 游戏状态接口 - 适配现有Game类

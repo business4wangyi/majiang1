@@ -3,7 +3,7 @@
  * 提供统一的接口用于状态获取、动作执行和游戏控制
  */
 
-import { Game } from '../core/game';
+import { Game } from '../../core/game';
 import { Tile, Player, GameState, GameStateAdapter } from './types';
 import { MajiangStateVector, MajiangStateEncoder } from './majiang-state-encoder';
 import { MajiangAction, MajiangActionDecoder } from './majiang-action-decoder';

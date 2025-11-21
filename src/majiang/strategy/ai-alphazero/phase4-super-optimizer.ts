@@ -3,7 +3,7 @@
  * 基于1000局实战验证的深度优化
  */
 
-import { Game, GameState } from '../core/game';
+import { Game, GameState } from '../../core/game';
 import { AIPlayer } from '../agents/ai-player';
 import { createTrainingMajiangAI } from './index';
 import { 

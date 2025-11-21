@@ -3,7 +3,7 @@
  * 基于传说级技术栈的最高难度训练
  */
 
-import { Game, GameState } from '../core/game';
+import { Game, GameState } from '../../core/game';
 import { AIPlayer } from '../agents/ai-player';
 import { createTrainingMajiangAI } from './index';
 import { 
