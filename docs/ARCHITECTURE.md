@@ -223,8 +223,51 @@ src/utils/ ──> (被所有模块共享)
 - 每个模块目录应有 `index.ts` 统一导出
 - 公共API通过 `index.ts` 暴露
 
+## 🔄 架构迁移指南
+
+当需要将新游戏添加到项目时，请遵循以下步骤：
+
+1. **创建标准目录结构**
+   - 创建 `core/`, `strategy/`, `ui/` 目录
+   - 根据需要创建 `config/`, `tools/`, `tests/`, `models/` 目录
+
+2. **组织文件**
+   - 游戏核心逻辑 → `core/`
+   - 游戏配置 → `config/`
+   - AI策略 → `strategy/`（按需创建子目录：agents/, networks/, trainers/, mcts/, configs/, utils/）
+   - 用户界面 → `ui/`
+   - 工具函数 → `tools/`
+   - 测试文件 → `tests/`
+
+3. **创建导出文件**
+   - 为 `core/` 和 `strategy/` 创建 `index.ts` 统一导出
+
+4. **更新文档**
+   - 创建 `<game>/FOLDER_STRUCTURE.md` 架构文档
+   - 更新本文档
+
+## ❓ 常见问题
+
+**Q: 应该把配置文件放在哪里？**
+A: 
+- 游戏核心配置（如棋盘大小、游戏规则参数）→ `config/`
+- AI训练配置（如网络参数、训练超参数）→ `strategy/configs/`
+
+**Q: 测试文件应该放在哪里？**
+A: 放在 `tests/` 目录，与游戏模块同级。例如：`src/<game>/tests/`
+
+**Q: strategy/ 子目录是必须的吗？**
+A: 不是必须的，但推荐使用。如果文件较少，可以直接放在 `strategy/` 根目录。如果文件较多，建议按功能分类到子目录。
+
+**Q: 如何保持架构一致性？**
+A: 
+- 遵循本文档的标准目录结构
+- 参考 othello 的实现（最规范的示例）
+- 定期检查架构审查文档
+
 ## 📚 相关文档
 
+- [架构审查文档](./ARCHITECTURE_REVIEW.md) - 架构优化建议和审查结果
 - [麻将架构文档](./majiang/FOLDER_STRUCTURE.md)
 - [黑白棋架构文档](./othello/FOLDER_STRUCTURE.md)
 - [井字棋架构文档](./tic-tac-toe/FOLDER_STRUCTURE.md)
