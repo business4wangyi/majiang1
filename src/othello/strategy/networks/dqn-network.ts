@@ -2,7 +2,7 @@
 
 // {{ AURA-X: Modify - 重新启用tfjs-node，Node.js v22.17.1兼容性已验证. Approval: 寸止(ID:1735819200). }}
 // Fix for isNullOrUndefined compatibility issue (must be imported before tfjs-node)
-import '../../../utils/tfjs-compat-fix';
+import '../../../shared/utils/tfjs-compat-fix';
 import '@tensorflow/tfjs-node';
 import * as tf from '@tensorflow/tfjs';
 import { OthelloBoard, OthelloPlayer } from '../../core/types';
