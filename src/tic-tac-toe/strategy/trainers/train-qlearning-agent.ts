@@ -1,8 +1,8 @@
-import { QLearningAgent } from '@tic-tac-toe-strategy/qlearning-agent';
-import { MinimaxAgent } from '@tic-tac-toe-strategy/minimax-agent';
-import { RandomAgent } from '@tic-tac-toe-strategy/random-agent';
-import { DefensiveAgent } from '@tic-tac-toe-strategy/defensive-agent';
-import { GreedyAgent } from '@tic-tac-toe-strategy/greedy-agent';
+import { QLearningAgent } from '../agents/qlearning-agent';
+import { MinimaxAgent } from '../agents/minimax-agent';
+import { RandomAgent } from '../agents/random-agent';
+import { DefensiveAgent } from '../agents/defensive-agent';
+import { GreedyAgent } from '../agents/greedy-agent';
 import * as fs from 'fs';
 
 const QTABLE_X_PATH = 'models/tic-tac-toe/qtable-x.json';

@@ -1,6 +1,6 @@
 import { Board, Player, Action } from '../core/types';
 import { getLegalActions, makeMove, checkWinner } from '../core/game';
-import { Agent } from '@tic-tac-toe-strategy/random-agent';
+import { Agent } from '../agents/random-agent';
 import * as fs from 'fs';
 
 type QTable = Record<string, number[]>;

@@ -1,10 +1,10 @@
 import { debugLog, errorLog, infoLog } from '../../tools/logger';
-import { Player, PlayerType } from '../core/player';
-import { Tile, TileType } from '../core/tile';
+import { Player, PlayerType } from '../../core/player';
+import { Tile, TileType } from '../../core/tile';
 import { displayManager } from '../../ui/display-manager';
 import { GameEventHandler } from '../../ui/game-event-handler';
-import { AUTO_PLAY_MODE } from './index';
-import { WinConditions } from '../core/win-conditions/win-conditions-main';
+import { AUTO_PLAY_MODE } from '../../../index';
+import { WinConditions } from '../../core/win-conditions/win-conditions-main';
 
 export class AIPlayer extends Player {
   private static idCounter = 1;

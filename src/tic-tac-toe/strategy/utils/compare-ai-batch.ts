@@ -1,10 +1,10 @@
 import { createBoard, makeMove, checkWinner } from '../core/game';
 import { Player } from '../core/types';
-import { RandomAgent } from '@tic-tac-toe-strategy/random-agent';
-import { GreedyAgent } from '@tic-tac-toe-strategy/greedy-agent';
-import { DefensiveAgent } from '@tic-tac-toe-strategy/defensive-agent';
-import { MinimaxAgent } from '@tic-tac-toe-strategy/minimax-agent';
-import { QLearningAgent } from '@tic-tac-toe-strategy/qlearning-agent';
+import { RandomAgent } from '../agents/random-agent';
+import { GreedyAgent } from '../agents/greedy-agent';
+import { DefensiveAgent } from '../agents/defensive-agent';
+import { MinimaxAgent } from '../agents/minimax-agent';
+import { QLearningAgent } from '../agents/qlearning-agent';
 
 const GAMES = 1000;
 

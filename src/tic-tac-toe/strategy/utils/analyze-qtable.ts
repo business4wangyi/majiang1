@@ -1,5 +1,5 @@
 import * as fs from 'fs';
-import { QLearningAgent } from '@tic-tac-toe-strategy/qlearning-agent';
+import { QLearningAgent } from '../agents/qlearning-agent';
 import { createBoard, makeMove, checkWinner } from '../core/game';
 import { Player, Action, Board } from '../core/types';
 
