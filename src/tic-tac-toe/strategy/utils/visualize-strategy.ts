@@ -1,7 +1,7 @@
 import * as fs from 'fs';
 import { QLearningAgent } from '../agents/qlearning-agent';
-import { createBoard, getLegalActions, makeMove } from '../core/game';
-import { Player, Action, Board } from '../core/types';
+import { createBoard, getLegalActions, makeMove } from '../../core/game';
+import { Player, Action, Board } from '../../core/types';
 
 const QTABLE_X_PATH = 'models/tic-tac-toe/qtable-x.json';
 

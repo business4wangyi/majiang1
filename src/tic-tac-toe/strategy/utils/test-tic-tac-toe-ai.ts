@@ -1,5 +1,5 @@
-import { createBoard, makeMove, checkWinner } from '../core/game';
-import { Player } from '../core/types';
+import { createBoard, makeMove, checkWinner } from '../../core/game';
+import { Player } from '../../core/types';
 import { RandomAgent } from '../agents/random-agent';
 import { QLearningAgent } from '../agents/qlearning-agent';
 import { MinimaxAgent } from '../agents/minimax-agent';

@@ -1,5 +1,5 @@
-import { createBoard, makeMove, checkWinner } from '../core/game';
-import { Player } from '../core/types';
+import { createBoard, makeMove, checkWinner } from '../../core/game';
+import { Player } from '../../core/types';
 import { RandomAgent } from '../agents/random-agent';
 import { GreedyAgent } from '../agents/greedy-agent';
 import { DefensiveAgent } from '../agents/defensive-agent';
