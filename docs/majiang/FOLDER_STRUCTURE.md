@@ -139,6 +139,12 @@ tools/┘
 config/ ──> core/
 ```
 
+**说明**：
+- `config/` 提供游戏配置，被 `core/` 使用
+- `core/` 提供游戏核心逻辑，被 `strategy/` 和 `ui/` 使用
+- `strategy/` 提供AI策略，被 `ui/` 使用
+- `tools/` 提供工具函数，可被其他模块使用
+
 ## 📊 实际结构验证
 
 本文档最后更新于：2024-11-21  
@@ -150,6 +156,9 @@ config/ ──> core/
 - ✅ 所有文件已移动到正确位置
 - ✅ 导入路径已更新
 - ✅ config/ 目录已存在并包含游戏配置
+
+**已知问题**：
+- ⚠️ `strategy/ai-alphazero/index.ts` 在文档中列出但实际不存在，已从文档中移除
 
 **已知问题**：
 - ⚠️ `strategy/ai-alphazero/index.ts` 在文档中列出但实际不存在，已从文档中移除

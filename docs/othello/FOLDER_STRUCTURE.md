@@ -1,5 +1,8 @@
 # 黑白棋项目架构文档
 
+> **最后更新**: 2024-11-21  
+> **文档版本**: v2.0.0
+
 ## 📁 目录结构
 
 ### 核心原则
@@ -140,6 +143,13 @@ tools/┘
 tests/ ──> core/ ──> config/
 ```
 
+**说明**：
+- `config/` 提供游戏配置，被 `core/` 使用
+- `core/` 提供游戏核心逻辑，被 `strategy/`、`ui/` 和 `tests/` 使用
+- `strategy/` 提供AI策略，被 `ui/` 使用
+- `tools/` 提供工具函数，可被其他模块使用
+- `tests/` 测试 `core/` 和 `config/` 模块
+
 ## 📊 实际结构验证
 
 本文档最后更新于：2024-11-21  
@@ -151,3 +161,7 @@ tests/ ──> core/ ──> config/
 - ✅ 导入路径已更新
 - ✅ 导出文件已创建
 - ✅ config/ 目录已创建并包含游戏核心配置
+- ✅ strategy/ 子目录结构完整（agents/, networks/, trainers/, mcts/, configs/, utils/）
+
+**已知问题**：
+- ⚠️ `strategy/trainers/alphazero-training-manager.ts` 和 `strategy/agents/alphazero-agent-optimized.ts` 已添加到文档
