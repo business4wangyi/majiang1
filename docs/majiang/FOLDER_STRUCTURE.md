@@ -324,9 +324,10 @@ graph TD
 - `tools/performance-monitor.ts` ✅
 - `tools/time-utils.ts` ✅
 
-### index.ts/
+### 根目录
 
 - `index.ts` ✅
+
 
 
 ## 📊 实际结构验证
@@ -340,10 +341,4 @@ graph TD
 - ✅ 所有文件已移动到正确位置
 - ✅ 导入路径已更新
 - ✅ config/ 目录已存在并包含游戏配置
-
-**已知问题**：
-- ⚠️ `strategy/ai-alphazero/index.ts` 在文档中列出但实际不存在，已从文档中移除
-
-**已知问题**：
-- ⚠️ `strategy/ai-alphazero/index.ts` 在文档中列出但实际不存在，已从文档中移除
 

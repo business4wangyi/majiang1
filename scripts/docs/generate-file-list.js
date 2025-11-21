@@ -48,7 +48,9 @@ function generateFileListMarkdown(game, files) {
   // 按目录分组
   for (const file of files) {
     const parts = file.split('/');
-    const section = parts[0] || 'root';
+    // 如果文件在根目录（只有文件名，没有目录），归类为 'root'
+    // 否则使用第一个目录名作为 section
+    const section = parts.length > 1 ? parts[0] : 'root';
     
     if (!sections[section]) {
       sections[section] = [];
@@ -67,22 +69,30 @@ function generateFileListMarkdown(game, files) {
     if (sections[section]) {
       markdown += `### ${section}/\n\n`;
       for (const file of sections[section]) {
-        const fileName = file.split('/').pop();
         markdown += `- \`${file}\` ✅\n`;
       }
       markdown += '\n';
     }
   }
   
-  // 其他目录
+  // 其他目录（排除 root）
   for (const section of Object.keys(sections).sort()) {
-    if (!sectionOrder.includes(section)) {
+    if (!sectionOrder.includes(section) && section !== 'root') {
       markdown += `### ${section}/\n\n`;
       for (const file of sections[section]) {
         markdown += `- \`${file}\` ✅\n`;
       }
       markdown += '\n';
     }
+  }
+  
+  // 根目录文件（如果有）
+  if (sections['root'] && sections['root'].length > 0) {
+    markdown += `### 根目录\n\n`;
+    for (const file of sections['root']) {
+      markdown += `- \`${file}\` ✅\n`;
+    }
+    markdown += '\n';
   }
   
   return markdown;
@@ -110,18 +120,17 @@ function updateArchitectureDoc(game) {
   let content = fs.readFileSync(docPath, 'utf-8');
   
   // 查找并替换文件清单部分
-  const fileListRegex = /## 📋 文件清单[\s\S]*?(?=## |$)/;
-  if (fileListRegex.test(content)) {
-    content = content.replace(fileListRegex, fileListMarkdown);
+  // 先删除所有现有的文件清单部分（可能有重复）
+  const fileListRegex = /## 📋 文件清单[\s\S]*?(?=## 📊 实际结构验证|## 🔗 相关文档|$)/g;
+  content = content.replace(fileListRegex, '');
+  
+  // 在实际结构验证之前插入新的文件清单
+  const validationRegex = /## 📊 实际结构验证/;
+  if (validationRegex.test(content)) {
+    content = content.replace(validationRegex, fileListMarkdown + '\n\n## 📊 实际结构验证');
   } else {
-    // 在实际结构验证之前插入
-    const validationRegex = /## 📊 实际结构验证/;
-    if (validationRegex.test(content)) {
-      content = content.replace(validationRegex, fileListMarkdown + '\n## 📊 实际结构验证');
-    } else {
-      // 在文档末尾添加
-      content += '\n\n' + fileListMarkdown;
-    }
+    // 在文档末尾添加
+    content += '\n\n' + fileListMarkdown;
   }
   
   fs.writeFileSync(docPath, content, 'utf-8');
