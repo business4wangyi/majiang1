@@ -54,10 +54,10 @@ export interface AlphaZeroTrainingConfig {
  */
 export const DEFAULT_ALPHAZERO_TRAINING_CONFIG: AlphaZeroTrainingConfig = {
   totalIterations: 100,
-  selfPlayGames: 10,  // 从25降至10（基于性能分析优化）
-  trainingEpochs: 10,
+  selfPlayGames: 20,  // 从10增加到20（基于训练报告建议：20-50局）
+  trainingEpochs: 5,  // 从10降至5（基于训练报告建议：5-10个epoch，平衡性能）
   experienceBufferSize: 10000,
-  evaluationFrequency: 10,
+  evaluationFrequency: 5,  // 从10改为5（基于训练报告建议：每5次迭代评估一次）
   evaluationGames: 20,
   saveFrequency: 10,
   modelSavePath: 'src/othello/models/alphazero-model',
@@ -654,17 +654,17 @@ export async function runTraining(): Promise<void> {
     ...DEFAULT_ALPHAZERO_AGENT_CONFIG,
     mctsConfig: {
       ...DEFAULT_ALPHAZERO_AGENT_CONFIG.mctsConfig,
-      numSimulations: Number(process.env.ALPHAZERO_MCTS) || 200
+      numSimulations: Number(process.env.ALPHAZERO_MCTS) || 400  // 从200增加到400（基于训练报告建议：400-800次）
     }
   };
 
   const config: AlphaZeroTrainingConfig = {
     ...DEFAULT_ALPHAZERO_TRAINING_CONFIG,
-    totalIterations: Number(process.env.ALPHAZERO_TOTAL_ITERATIONS) || 10,
-    selfPlayGames: Number(process.env.ALPHAZERO_SELFPLAY_GAMES) || 10,
-    trainingEpochs: Number(process.env.ALPHAZERO_TRAINING_EPOCHS) || 3,
+    totalIterations: Number(process.env.ALPHAZERO_TOTAL_ITERATIONS) || 30,  // 从10增加到30（基于训练报告建议：20-50次）
+    selfPlayGames: Number(process.env.ALPHAZERO_SELFPLAY_GAMES) || 20,      // 从10增加到20（基于训练报告建议：20-50局）
+    trainingEpochs: Number(process.env.ALPHAZERO_TRAINING_EPOCHS) || 5,      // 从3增加到5（基于训练报告建议：5-10个epoch）
     experienceBufferSize: Number(process.env.ALPHAZERO_EXP_BUFFER) || 4000,
-    evaluationFrequency: Number(process.env.ALPHAZERO_EVAL_FREQUENCY) || 10,
+    evaluationFrequency: Number(process.env.ALPHAZERO_EVAL_FREQUENCY) || 5, // 从10改为5（基于训练报告建议：每5次迭代评估一次）
     saveFrequency: Number(process.env.ALPHAZERO_SAVE_FREQUENCY) || 10,
     maxGameSteps: Number(process.env.ALPHAZERO_MAX_STEPS) || 80,
     maxGameTime: Number(process.env.ALPHAZERO_MAX_GAME_TIME) || 15 * 60 * 1000, // 15分钟（基于实际数据：平均6.5分钟/局）
