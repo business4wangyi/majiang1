@@ -126,6 +126,7 @@ export class AlphaZeroTrainer {
     console.log('🎯 AlphaZero训练器初始化完成');
     console.log(`   总迭代次数: ${this.config.totalIterations}`);
     console.log(`   每次迭代自我对弈: ${this.config.selfPlayGames}局`);
+    console.log(`   训练轮数: ${this.config.trainingEpochs}个epoch`);
     console.log(`   经验池大小: ${this.config.experienceBufferSize}`);
     console.log(`   评估频率: 每${this.config.evaluationFrequency}次迭代`);
   }
