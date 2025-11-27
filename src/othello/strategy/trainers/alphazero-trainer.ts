@@ -104,6 +104,8 @@ export class AlphaZeroTrainer {
     totalLoss: number;
     evaluationResults: { [key: string]: number };
   }[] = [];
+  private bestEvaluationWinRate: number = 0;  // 最佳评估胜率
+  private bestModelIteration: number = 0;      // 最佳模型迭代号
 
   constructor(
     agentConfig: AlphaZeroAgentConfig = DEFAULT_ALPHAZERO_AGENT_CONFIG,
@@ -170,13 +172,31 @@ export class AlphaZeroTrainer {
         evaluationResults = await this.evaluationPhase(iteration);
         const evalTime = (Date.now() - evalStartTime) / 1000;
         console.log(`✅ [迭代 ${iteration}] 评估阶段完成，用时: ${(evalTime / 60).toFixed(2)}分钟`);
+        
+        // 更新最佳模型（基于评估胜率）
+        if (Object.keys(evaluationResults).length > 0) {
+          const rates = Object.values(evaluationResults) as number[];
+          const avgWinRate = rates.reduce((sum, rate) => sum + rate, 0) / rates.length;
+          if (avgWinRate > this.bestEvaluationWinRate) {
+            this.bestEvaluationWinRate = avgWinRate;
+            this.bestModelIteration = iteration;
+            console.log(`🏆 [迭代 ${iteration}] 发现更好的模型！平均评估胜率: ${avgWinRate.toFixed(1)}% (最佳: ${this.bestEvaluationWinRate.toFixed(1)}%)`);
+          }
+        }
       }
       
-      // 保存模型
+      // 保存模型（保存最佳模型和定期保存）
       if (iteration % this.config.saveFrequency === 0) {
         console.log(`\n💾 [迭代 ${iteration}] 开始保存模型...`);
         await this.agent.saveModel(`${this.config.modelSavePath}-iteration-${iteration}`);
         console.log(`✅ [迭代 ${iteration}] 模型已保存到: ${this.config.modelSavePath}-iteration-${iteration}`);
+      }
+      
+      // 保存最佳模型
+      if (iteration === this.bestModelIteration && this.bestModelIteration > 0) {
+        console.log(`\n💾 [迭代 ${iteration}] 保存最佳模型（评估胜率: ${this.bestEvaluationWinRate.toFixed(1)}%）...`);
+        await this.agent.saveModel(`${this.config.modelSavePath}-best`);
+        console.log(`✅ [迭代 ${iteration}] 最佳模型已保存到: ${this.config.modelSavePath}-best`);
       }
       
       // 输出进度
