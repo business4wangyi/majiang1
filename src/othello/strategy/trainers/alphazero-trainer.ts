@@ -55,7 +55,7 @@ export interface AlphaZeroTrainingConfig {
 export const DEFAULT_ALPHAZERO_TRAINING_CONFIG: AlphaZeroTrainingConfig = {
   totalIterations: 100,
   selfPlayGames: 20,  // 从10增加到20（基于训练报告建议：20-50局）
-  trainingEpochs: 5,  // 从10降至5（基于训练报告建议：5-10个epoch，平衡性能）
+  trainingEpochs: 10,  // 从5增加到10（紧急修复：解决性能下降问题）
   experienceBufferSize: 10000,
   evaluationFrequency: 5,  // 从10改为5（基于训练报告建议：每5次迭代评估一次）
   evaluationGames: 20,
@@ -667,7 +667,7 @@ export async function runTraining(): Promise<void> {
     ...DEFAULT_ALPHAZERO_AGENT_CONFIG,
     mctsConfig: {
       ...DEFAULT_ALPHAZERO_AGENT_CONFIG.mctsConfig,
-      numSimulations: Number(process.env.ALPHAZERO_MCTS) || 400  // 从200增加到400（基于训练报告建议：400-800次）
+      numSimulations: Number(process.env.ALPHAZERO_MCTS) || 600  // 从400增加到600（紧急修复：解决性能下降问题，建议400-800次）
     }
   };
 
@@ -675,7 +675,7 @@ export async function runTraining(): Promise<void> {
     ...DEFAULT_ALPHAZERO_TRAINING_CONFIG,
     totalIterations: Number(process.env.ALPHAZERO_TOTAL_ITERATIONS) || 30,  // 从10增加到30（基于训练报告建议：20-50次）
     selfPlayGames: Number(process.env.ALPHAZERO_SELFPLAY_GAMES) || 20,      // 从10增加到20（基于训练报告建议：20-50局）
-    trainingEpochs: Number(process.env.ALPHAZERO_TRAINING_EPOCHS) || 5,      // 从3增加到5（基于训练报告建议：5-10个epoch）
+    trainingEpochs: Number(process.env.ALPHAZERO_TRAINING_EPOCHS) || 10,     // 从5增加到10（紧急修复：解决性能下降问题）
     experienceBufferSize: Number(process.env.ALPHAZERO_EXP_BUFFER) || 4000,
     evaluationFrequency: Number(process.env.ALPHAZERO_EVAL_FREQUENCY) || 5, // 从10改为5（基于训练报告建议：每5次迭代评估一次）
     saveFrequency: Number(process.env.ALPHAZERO_SAVE_FREQUENCY) || 10,
