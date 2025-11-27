@@ -40,7 +40,7 @@ export interface AlphaZeroNetworkConfig {
  * 默认AlphaZero网络配置
  */
 export const DEFAULT_ALPHAZERO_CONFIG: AlphaZeroNetworkConfig = {
-  learningRate: 0.0002,  // 从0.0005进一步降低到0.0002（修复：解决评估胜率持续下降问题）
+  learningRate: 0.0003,  // 从0.0002调整到0.0003（平衡点：0.0002太低导致学习太慢，0.0005可能过高）
   numResidualBlocks: 10,
   numFilters: 256,
   l2Regularization: 1e-4,
