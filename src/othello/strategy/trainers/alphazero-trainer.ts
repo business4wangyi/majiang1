@@ -10,7 +10,7 @@
  * - 训练进度监控
  */
 
-import { AlphaZeroOthelloAgent, AlphaZeroAgentConfig, DEFAULT_ALPHAZERO_AGENT_CONFIG } from '../agents/alphazero-agent';
+import { AlphaZeroOthelloAgent, AlphaZeroAgentConfig, DEFAULT_ALPHAZERO_AGENT_CONFIG, AlphaZeroSearchResult } from '../agents/alphazero-agent';
 import { RandomOthelloAgent } from '../agents/random-agent';
 import { GreedyOthelloAgent } from '../agents/greedy-agent';
 import { HeuristicOthelloAgent } from '../agents/heuristic-agent';
@@ -39,6 +39,10 @@ export interface AlphaZeroTrainingConfig {
   modelSavePath: string;
   /** 最大游戏步数 */
   maxGameSteps: number;
+  /** 单局游戏最大时间（毫秒），默认15分钟（基于实际数据：平均6.5分钟/局） */
+  maxGameTime?: number;
+  /** 单步搜索最大时间（毫秒），默认15秒（基于实际数据：平均6.5秒/步） */
+  maxStepTime?: number;
   /** 是否启用详细日志 */
   verbose: boolean;
   /** 可选随机种子（提升可复现性） */
@@ -50,7 +54,7 @@ export interface AlphaZeroTrainingConfig {
  */
 export const DEFAULT_ALPHAZERO_TRAINING_CONFIG: AlphaZeroTrainingConfig = {
   totalIterations: 100,
-  selfPlayGames: 25,
+  selfPlayGames: 10,  // 从25降至10（基于性能分析优化）
   trainingEpochs: 10,
   experienceBufferSize: 10000,
   evaluationFrequency: 10,
@@ -58,6 +62,8 @@ export const DEFAULT_ALPHAZERO_TRAINING_CONFIG: AlphaZeroTrainingConfig = {
   saveFrequency: 10,
   modelSavePath: 'src/othello/models/alphazero-model',
   maxGameSteps: 100,
+  maxGameTime: 15 * 60 * 1000, // 15分钟（基于实际数据：平均6.5分钟/局）
+  maxStepTime: 15 * 1000,      // 15秒（基于实际数据：平均6.5秒/步）
   verbose: true
 };
 
@@ -200,18 +206,48 @@ export class AlphaZeroTrainer {
     }
 
     const results: SelfPlayResult[] = [];
+    const maxGameTime = this.config.maxGameTime || 15 * 60 * 1000; // 默认15分钟（基于实际数据：平均6.5分钟/局）
+    let skippedGames = 0;
     
     for (let game = 0; game < this.config.selfPlayGames; game++) {
       const gameStartTime = Date.now();
-      const result = await this.playSelfPlayGame();
-      results.push(result);
       
-      // 添加经验到缓冲区
-      this.addExperiencesToBuffer(result.experiences);
-      
-      const gameTime = (Date.now() - gameStartTime) / 1000;
-      // 每局都输出进度，方便跟踪
-      console.log(`   [自我对弈] 完成 ${game + 1}/${this.config.selfPlayGames} 局 (用时: ${gameTime.toFixed(1)}秒, 游戏长度: ${result.gameLength}步, 胜者: ${result.winner})`);
+      try {
+        // 使用Promise.race实现游戏级超时保护
+        const gamePromise = this.playSelfPlayGame();
+        const timeoutPromise = new Promise<SelfPlayResult>((_, reject) => {
+          setTimeout(() => reject(new Error(`Game timeout after ${maxGameTime}ms`)), maxGameTime);
+        });
+        
+        let result: SelfPlayResult;
+        try {
+          result = await Promise.race([gamePromise, timeoutPromise]);
+        } catch (error: any) {
+          if (error.message && error.message.includes('timeout')) {
+            console.error(`❌ [自我对弈] 游戏 ${game + 1} 超时，跳过 (耗时: ${((Date.now() - gameStartTime) / 1000).toFixed(1)}秒)`);
+            skippedGames++;
+            continue; // 跳过异常游戏，继续下一局
+          }
+          throw error;
+        }
+        
+        results.push(result);
+        
+        // 添加经验到缓冲区
+        this.addExperiencesToBuffer(result.experiences);
+        
+        const gameTime = (Date.now() - gameStartTime) / 1000;
+        // 每局都输出进度，方便跟踪
+        console.log(`   [自我对弈] 完成 ${game + 1}/${this.config.selfPlayGames} 局 (用时: ${gameTime.toFixed(1)}秒, 游戏长度: ${result.gameLength}步, 胜者: ${result.winner})`);
+      } catch (error: any) {
+        console.error(`❌ [自我对弈] 游戏 ${game + 1} 异常: ${error.message || error}，跳过`);
+        skippedGames++;
+        continue; // 跳过异常游戏，继续下一局
+      }
+    }
+    
+    if (skippedGames > 0) {
+      console.warn(`⚠️ [自我对弈] 阶段完成，但跳过了 ${skippedGames} 局异常游戏`);
     }
 
     return results;
@@ -221,32 +257,99 @@ export class AlphaZeroTrainer {
    * 进行一局自我对弈
    */
   private async playSelfPlayGame(): Promise<SelfPlayResult> {
+    const gameStartTime = Date.now();
+    const maxGameTime = this.config.maxGameTime || 15 * 60 * 1000; // 默认15分钟（基于实际数据：平均6.5分钟/局）
+    const maxStepTime = this.config.maxStepTime || 15 * 1000;      // 默认15秒（基于实际数据：平均6.5秒/步）
+    
     let board = createOthelloBoard();
     let currentPlayer: OthelloPlayer = 'B';
     let gameLength = 0;
     const experiences: TrainingExperience[] = [];
+    let timeoutCount = 0;
+    let errorCount = 0;
 
     while (!isGameOver(board) && gameLength < this.config.maxGameSteps) {
+      // 检查游戏总时间超时
+      if (Date.now() - gameStartTime > maxGameTime) {
+        if (this.config.verbose) {
+          console.warn(`⚠️ [自我对弈] 游戏超时，强制结束 (已进行 ${gameLength} 步，耗时 ${((Date.now() - gameStartTime) / 1000).toFixed(1)}秒)`);
+        }
+        break;
+      }
+      
       const legalActions = getLegalActions(board, currentPlayer);
       
       if (legalActions.length > 0) {
-        // 获取动作概率分布
-        const searchResult = this.agent.searchBestAction(board, currentPlayer);
+        const stepStartTime = Date.now();
         
-        // 记录经验（稍后会设置价值）
-        experiences.push({
-          state: board.map(row => [...row]), // 深拷贝
-          actionProbs: [...searchResult.actionProbs],
-          value: 0, // 稍后设置
-          player: currentPlayer
-        });
-        
-        // 执行动作
-        board = makeMove(board, searchResult.action, currentPlayer);
+        try {
+          // 获取动作概率分布（带超时保护）
+          // 使用async方法避免同步等待问题
+          let searchResult: AlphaZeroSearchResult;
+          
+          // 使用Promise.race实现单步超时
+          // 优先使用async方法（如果可用），否则使用同步方法
+          const searchPromise = 'searchBestActionAsync' in this.agent && typeof (this.agent as any).searchBestActionAsync === 'function'
+            ? (this.agent as any).searchBestActionAsync(board, currentPlayer)
+            : Promise.resolve(this.agent.searchBestAction(board, currentPlayer));
+          
+          const timeoutPromise = new Promise<AlphaZeroSearchResult>((_, reject) => {
+            setTimeout(() => reject(new Error(`Step timeout after ${maxStepTime}ms`)), maxStepTime);
+          });
+          
+          try {
+            searchResult = await Promise.race([searchPromise, timeoutPromise]);
+          } catch (error: any) {
+            if (error.message && error.message.includes('timeout')) {
+              timeoutCount++;
+              if (this.config.verbose) {
+                console.warn(`⚠️ [自我对弈] 单步搜索超时，使用随机动作 (步数: ${gameLength})`);
+              }
+              // 使用随机动作作为fallback
+              const randomAction = legalActions[Math.floor(Math.random() * legalActions.length)];
+              board = makeMove(board, randomAction, currentPlayer);
+              currentPlayer = currentPlayer === 'B' ? 'W' : 'B';
+              gameLength++;
+              continue;
+            }
+            throw error;
+          }
+          
+          const stepTime = Date.now() - stepStartTime;
+          
+          // 记录单步耗时警告
+          if (stepTime > maxStepTime * 0.8 && this.config.verbose) {
+            console.warn(`⚠️ [自我对弈] 单步搜索耗时较长: ${(stepTime / 1000).toFixed(1)}秒 (步数: ${gameLength})`);
+          }
+          
+          // 记录经验（稍后会设置价值）
+          experiences.push({
+            state: board.map(row => [...row]), // 深拷贝
+            actionProbs: [...searchResult.actionProbs],
+            value: 0, // 稍后设置
+            player: currentPlayer
+          });
+          
+          // 执行动作
+          board = makeMove(board, searchResult.action, currentPlayer);
+        } catch (error: any) {
+          errorCount++;
+          if (this.config.verbose) {
+            console.error(`❌ [自我对弈] 搜索失败: ${error.message || error} (步数: ${gameLength})`);
+          }
+          // 使用随机动作作为fallback
+          const randomAction = legalActions[Math.floor(Math.random() * legalActions.length)];
+          board = makeMove(board, randomAction, currentPlayer);
+        }
       }
 
       currentPlayer = currentPlayer === 'B' ? 'W' : 'B';
       gameLength++;
+    }
+    
+    // 如果出现超时或错误，记录警告
+    if ((timeoutCount > 0 || errorCount > 0) && this.config.verbose) {
+      console.warn(`⚠️ [自我对弈] 游戏完成，但出现异常: 超时${timeoutCount}次，错误${errorCount}次`);
     }
 
     // 计算最终结果
@@ -419,7 +522,7 @@ export class AlphaZeroTrainer {
   private sampleBatch(batchSize: number): TrainingExperience[] {
     const batch: TrainingExperience[] = [];
     // 使用可复现的rng（若提供seed）
-    const { rngRandInt, initGlobalRng } = require('./utils/rng');
+    const { rngRandInt, initGlobalRng } = require('../utils/rng');
     if (typeof this.config.seed === 'number') {
       initGlobalRng(this.config.seed);
     }
@@ -564,6 +667,8 @@ export async function runTraining(): Promise<void> {
     evaluationFrequency: Number(process.env.ALPHAZERO_EVAL_FREQUENCY) || 10,
     saveFrequency: Number(process.env.ALPHAZERO_SAVE_FREQUENCY) || 10,
     maxGameSteps: Number(process.env.ALPHAZERO_MAX_STEPS) || 80,
+    maxGameTime: Number(process.env.ALPHAZERO_MAX_GAME_TIME) || 15 * 60 * 1000, // 15分钟（基于实际数据：平均6.5分钟/局）
+    maxStepTime: Number(process.env.ALPHAZERO_MAX_STEP_TIME) || 15 * 1000,      // 15秒（基于实际数据：平均6.5秒/步）
     verbose: true
   };
 
@@ -577,8 +682,11 @@ export async function runTraining(): Promise<void> {
     console.log('✅ 训练完成！');
   } catch (error) {
     console.error('❌ 训练失败:', error);
+    process.exit(1);
   } finally {
     trainer.dispose();
+    // 确保程序正常退出
+    process.exit(0);
   }
 }
 
@@ -608,8 +716,11 @@ async function runSelfPlayBenchmark(gameCount: number): Promise<void> {
     await trainer.runSelfPlayBenchmark(gameCount);
   } catch (error) {
     console.error('❌ 自我对弈基准测试失败:', error);
+    process.exit(1);
   } finally {
     trainer.dispose();
+    // 确保程序正常退出
+    process.exit(0);
   }
 }
 

@@ -30,6 +30,8 @@ export * from './trainers/alphazero-training-manager';
 // MCTS
 export * from './mcts/alphazero-mcts';
 export * from './mcts/alphazero-mcts-optimized';
+export * from './mcts/alphazero-mcts-universal';
+export * from './mcts/othello-game-adapter';
 
 // 配置
 export * from './configs/alphazero-configs';

@@ -10,7 +10,7 @@
  */
 
 // Fix for isNullOrUndefined compatibility issue (must be first)
-import '../../shared/utils/tfjs-compat-fix';
+import '../../../shared/utils/tfjs-compat-fix';
 import * as tf from '@tensorflow/tfjs-node';
 import { OthelloAgent } from '../agents/random-agent';
 import { OthelloBoard, OthelloPlayer, OthelloAction } from '../../core/types';
@@ -18,6 +18,7 @@ import { getLegalActions } from '../../core/game';
 import { AlphaZeroNetwork, AlphaZeroNetworkConfig, DEFAULT_ALPHAZERO_CONFIG } from '../networks/alphazero-network';
 import { AlphaZeroAdvancedNetwork, AdvancedNetworkConfig, DEFAULT_ADVANCED_CONFIG } from '../networks/alphazero-network-advanced';
 import { AlphaZeroMCTS, MCTSConfig, DEFAULT_MCTS_CONFIG } from '../mcts/alphazero-mcts';
+import { AlphaZeroMCTSUniversal } from '../mcts/alphazero-mcts-universal';
 
 /**
  * AlphaZero智能体配置接口
@@ -76,9 +77,18 @@ export interface AlphaZeroSearchResult {
  */
 export class AlphaZeroOthelloAgent implements OthelloAgent {
   private network: AlphaZeroNetwork | AlphaZeroAdvancedNetwork;
-  private mcts: AlphaZeroMCTS;
+  private mcts: AlphaZeroMCTS | AlphaZeroMCTSUniversal;
   private config: AlphaZeroAgentConfig;
   private moveCount: number = 0;
+  private useUniversalMCTS: boolean;
+  
+  // 暴露universalMCTS以便异步访问（如果需要）
+  get universalMCTS(): any | null {
+    if (this.useUniversalMCTS && this.mcts instanceof AlphaZeroMCTSUniversal) {
+      return this.mcts.universalMCTS;
+    }
+    return null;
+  }
 
   constructor(config: AlphaZeroAgentConfig = DEFAULT_ALPHAZERO_AGENT_CONFIG) {
     this.config = { ...config };
@@ -92,7 +102,18 @@ export class AlphaZeroOthelloAgent implements OthelloAgent {
       console.log(`📊 使用标准网络架构`);
     }
 
-    this.mcts = new AlphaZeroMCTS(this.network, this.config.mctsConfig);
+    // 默认使用通用MCTS（已优化，包含超时机制和状态缓存）
+    // 可通过环境变量 USE_UNIVERSAL_MCTS=false 切换回原MCTS
+    this.useUniversalMCTS = process.env.USE_UNIVERSAL_MCTS !== 'false';
+    
+    if (this.useUniversalMCTS) {
+      this.mcts = new AlphaZeroMCTSUniversal(this.network, this.config.mctsConfig);
+      console.log(`🔄 使用通用MCTS框架（推荐：包含超时机制和状态缓存）`);
+    } else {
+      this.mcts = new AlphaZeroMCTS(this.network, this.config.mctsConfig);
+      console.log(`📦 使用原MCTS实现（不推荐：缺少超时机制）`);
+    }
+    
     this.moveCount = 0;
 
     console.log(`🤖 AlphaZero智能体已创建: ${this.config.name}`);
@@ -179,6 +200,59 @@ export class AlphaZeroOthelloAgent implements OthelloAgent {
         searchTime
       }
     };
+  }
+
+  /**
+   * 异步执行MCTS搜索（推荐用于训练）
+   * 直接使用异步MCTS，避免同步等待问题
+   */
+  async searchBestActionAsync(board: OthelloBoard, player: OthelloPlayer): Promise<AlphaZeroSearchResult> {
+    const startTime = Date.now();
+    
+    // 如果使用Universal MCTS，直接调用异步方法
+    if (this.useUniversalMCTS && this.mcts instanceof AlphaZeroMCTSUniversal) {
+      const universalMCTS = this.mcts.universalMCTS;
+      const searchResult = await universalMCTS.search(board, player);
+      
+      // 根据模式选择温度参数
+      const temperature = this.config.isTraining ? 
+        this.config.trainingTemperature : 
+        this.config.inferenceTemperature;
+      
+      // 将Map格式转换为数组格式
+      const actionProbs = new Array(64).fill(0);
+      const legalActions = getLegalActions(board, player);
+      
+      for (const action of legalActions) {
+        const actionKey = `${action.row},${action.col}`;
+        const prob = searchResult.actionProbs.get(actionKey) || 0;
+        const actionIndex = action.row * 8 + action.col;
+        actionProbs[actionIndex] = prob;
+      }
+      
+      // 根据温度选择动作
+      const actionIndex = this.mcts.selectActionByTemperature(actionProbs, temperature);
+      
+      const action = {
+        row: Math.floor(actionIndex / 8),
+        col: actionIndex % 8
+      };
+
+      const searchTime = Date.now() - startTime;
+
+      return {
+        action,
+        actionProbs,
+        rootValue: searchResult.rootValue,
+        searchStats: {
+          simulations: this.config.mctsConfig.numSimulations,
+          searchTime
+        }
+      };
+    }
+    
+    // 否则使用同步方法（兼容旧代码）
+    return this.searchBestAction(board, player);
   }
 
   /**

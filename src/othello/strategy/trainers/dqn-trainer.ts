@@ -2,7 +2,7 @@
 // {{ Source: 基于深度强化学习和黑白棋特性设计 }}
 
 // Fix for isNullOrUndefined compatibility issue (must be first)
-import '../../shared/utils/tfjs-compat-fix';
+import '../../../shared/utils/tfjs-compat-fix';
 
 // {{ AURA-X: Modify - 重新启用tfjs-node，Node.js v22.17.1兼容性已验证. Approval: 寸止(ID:1735819200). }}
 import '@tensorflow/tfjs-node';

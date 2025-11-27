@@ -19,6 +19,7 @@ export interface AgentConfig {
   thinkingTimeMs: number;
   enableSelfPlay: boolean;
   enableLogging: boolean;
+  useUniversalMCTS?: boolean; // 是否使用通用MCTS框架
 }
 
 export interface MCTSNode {
@@ -40,6 +41,7 @@ export class MajiangAlphaZeroAgent {
   private currentTemperature: number;
   private moveCount: number;
   private thinkingStartTime: number;
+  private universalMCTSWrapper: any; // MajiangUniversalMCTSWrapper，如果使用通用MCTS
   
   constructor(
     network: MajiangAlphaZeroNetwork,
@@ -57,12 +59,45 @@ export class MajiangAlphaZeroAgent {
       thinkingTimeMs: 5000,
       enableSelfPlay: false,
       enableLogging: true,
+      useUniversalMCTS: process.env.USE_UNIVERSAL_MCTS === 'true', // 通过环境变量控制
       ...config
     };
     
     this.currentTemperature = this.config.temperature;
     this.moveCount = 0;
     this.thinkingStartTime = 0;
+
+    // 如果使用通用MCTS，初始化包装器
+    if (this.config.useUniversalMCTS) {
+      try {
+        const { MajiangUniversalMCTSWrapper } = require('./majiang-universal-mcts-wrapper');
+        const mctsModule = require('../../../ai/common/mcts');
+        
+        const mctsConfig = {
+          ...mctsModule.DEFAULT_MCTS_CONFIG,
+          numSimulations: this.config.mctsSimulations
+        };
+        
+        const snapshot = this.gameAdapter.createSnapshot();
+        this.universalMCTSWrapper = new MajiangUniversalMCTSWrapper(
+          network as any, // 需要类型转换
+          snapshot,
+          mctsConfig,
+          this.gameAdapter
+        );
+        
+        if (this.config.enableLogging) {
+          console.log(`🔄 [MajiangAlphaZeroAgent] 使用通用MCTS框架`);
+        }
+      } catch (error) {
+        console.warn(`[MajiangAlphaZeroAgent] 无法初始化通用MCTS，回退到原实现: ${error}`);
+        this.config.useUniversalMCTS = false;
+      }
+    } else {
+      if (this.config.enableLogging) {
+        console.log(`📦 [MajiangAlphaZeroAgent] 使用原MCTS实现`);
+      }
+    }
   }
   
   /**
@@ -94,11 +129,38 @@ export class MajiangAlphaZeroAgent {
     }
     
     // 执行MCTS搜索
+    let bestAction: MajiangAction | null = null;
+    
+    if (this.config.useUniversalMCTS && this.universalMCTSWrapper) {
+      // 使用通用MCTS
+      try {
+        // 更新包装器的快照
+        this.universalMCTSWrapper.updateSnapshot(currentSnapshot);
+        
+        // 执行MCTS搜索
+        const actionProbs = await this.universalMCTSWrapper.search(currentSnapshot);
+        
+        // 根据温度选择动作
+        bestAction = this.universalMCTSWrapper.selectActionByTemperature(
+          actionProbs,
+          currentSnapshot.availableActions,
+          this.currentTemperature
+        );
+      } catch (error) {
+        if (this.config.enableLogging) {
+          console.error(`[AlphaZero Agent] 通用MCTS搜索失败，回退到原实现: ${error}`);
+        }
+        // 回退到原实现
+        const rootNode = this.createRootNode(currentSnapshot);
+        await this.runMCTS(rootNode);
+        bestAction = this.selectBestAction(rootNode);
+      }
+    } else {
+      // 使用原MCTS实现
     const rootNode = this.createRootNode(currentSnapshot);
     await this.runMCTS(rootNode);
-    
-    // 选择最佳动作
-    const bestAction = this.selectBestAction(rootNode);
+      bestAction = this.selectBestAction(rootNode);
+    }
     
     // 更新温度和移动计数
     this.updateTemperature();

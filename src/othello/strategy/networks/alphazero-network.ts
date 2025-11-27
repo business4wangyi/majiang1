@@ -10,9 +10,13 @@
  */
 
 // Fix for isNullOrUndefined compatibility issue (must be first)
-import '../../shared/utils/tfjs-compat-fix';
+import '../../../shared/utils/tfjs-compat-fix';
 import * as tf from '@tensorflow/tfjs-node';
+import { initializeTFJSOptimization } from '../../../shared/utils/tfjs-optimizer';
 import { OthelloBoard, OthelloPlayer } from '../../core/types';
+
+// 初始化TensorFlow.js优化（全局一次）
+initializeTFJSOptimization();
 
 /**
  * AlphaZero网络配置接口
@@ -60,6 +64,7 @@ export interface AlphaZeroPrediction {
 export interface IAlphaZeroNetwork {
   boardToTensor(board: OthelloBoard, player: OthelloPlayer): tf.Tensor4D;
   predict(boardTensor: tf.Tensor4D): AlphaZeroPrediction;
+  predictBatch?(boardTensors: tf.Tensor4D[]): AlphaZeroPrediction[]; // 批量预测（可选）
   train(statesBatch: tf.Tensor4D, targetPolicies: tf.Tensor2D, targetValues: tf.Tensor2D): Promise<{ policyLoss: number; valueLoss: number; totalLoss: number }>;
   saveModel(path: string): Promise<void>;
   loadModel(path: string): Promise<void>;
@@ -210,19 +215,63 @@ export class AlphaZeroNetwork implements IAlphaZeroNetwork {
   }
 
   /**
-   * 预测函数
+   * 预测函数（优化内存管理）
    */
   predict(boardTensor: tf.Tensor4D): AlphaZeroPrediction {
-    const [policyTensor, valueTensor] = this.model.predict(boardTensor) as [tf.Tensor2D, tf.Tensor2D];
+    // 使用tf.tidy自动管理内存（只管理张量，不返回结果）
+    let policyProbs: Float32Array;
+    let value: number;
     
-    const policyProbs = policyTensor.dataSync() as Float32Array;
-    const value = valueTensor.dataSync()[0];
+    tf.tidy(() => {
+      const [policyTensor, valueTensor] = this.model.predict(boardTensor) as [tf.Tensor2D, tf.Tensor2D];
+      
+      // 使用dataSync()同步获取数据（在tidy中会自动管理）
+      const policyData = policyTensor.dataSync() as Float32Array;
+      value = valueTensor.dataSync()[0];
+      
+      // 复制数据（因为tidy结束后张量会被清理）
+      policyProbs = new Float32Array(policyData.length);
+      policyProbs.set(policyData);
+    });
     
-    // 清理张量
-    policyTensor.dispose();
-    valueTensor.dispose();
+    return { policyProbs: policyProbs!, value: value! };
+  }
+
+  /**
+   * 批量预测函数（性能优化：利用GPU并行计算 + 内存优化）
+   */
+  predictBatch(boardTensors: tf.Tensor4D[]): AlphaZeroPrediction[] {
+    if (boardTensors.length === 0) {
+      return [];
+    }
+
+    // 使用tf.tidy自动管理内存（只管理张量，不返回结果）
+    let results: AlphaZeroPrediction[] = [];
     
-    return { policyProbs, value };
+    tf.tidy(() => {
+      // 合并所有张量为一个批次
+      const batchInput = tf.concat(boardTensors, 0);
+      const [policyTensor, valueTensor] = this.model.predict(batchInput) as [tf.Tensor2D, tf.Tensor2D];
+      
+      const policyData = policyTensor.dataSync() as Float32Array;
+      const valueData = valueTensor.dataSync() as Float32Array;
+      
+      // 分离每个预测结果（复制数据，因为tidy结束后张量会被清理）
+      const policySize = 64; // 8x8棋盘 = 64个位置
+      
+      for (let i = 0; i < boardTensors.length; i++) {
+        const policyProbs = new Float32Array(policySize);
+        for (let j = 0; j < policySize; j++) {
+          policyProbs[j] = policyData[i * policySize + j];
+        }
+        results.push({
+          policyProbs,
+          value: valueData[i]
+        });
+      }
+    });
+    
+    return results;
   }
 
   /**
@@ -248,12 +297,18 @@ export class AlphaZeroNetwork implements IAlphaZeroNetwork {
       return totalLoss;
     }, true);
 
-    // 计算损失值用于监控
-    const [predictedPolicies, predictedValues] = this.model.predict(states) as [tf.Tensor2D, tf.Tensor2D];
-    const policyLoss = tf.losses.softmaxCrossEntropy(targetPolicies, predictedPolicies);
-    const valueLoss = tf.losses.meanSquaredError(targetValues, predictedValues);
-    const totalLoss = tf.add(policyLoss, valueLoss);
+    // 计算损失值用于监控（优化内存：使用tf.tidy管理张量）
+    let losses: { policyLoss: number; valueLoss: number; totalLoss: number };
+    
+    const [predictedPolicies, predictedValues, policyLoss, valueLoss, totalLoss] = tf.tidy(() => {
+      const [pred, val] = this.model.predict(states) as [tf.Tensor2D, tf.Tensor2D];
+      const polLoss = tf.losses.softmaxCrossEntropy(targetPolicies, pred);
+      const valLoss = tf.losses.meanSquaredError(targetValues, val);
+      const totLoss = tf.add(polLoss, valLoss);
+      return [pred, val, polLoss, valLoss, totLoss];
+    });
 
+    // 异步获取数据（在tidy外执行）
     const policyLossValue = await policyLoss.data();
     const valueLossValue = await valueLoss.data();
     const totalLossValue = await totalLoss.data();

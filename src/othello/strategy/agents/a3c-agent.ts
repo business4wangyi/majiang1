@@ -8,7 +8,7 @@
  */
 
 // Fix for isNullOrUndefined compatibility issue (must be first)
-import '../../shared/utils/tfjs-compat-fix';
+import '../../../shared/utils/tfjs-compat-fix';
 import * as tf from '@tensorflow/tfjs-node';
 import { OthelloAgent } from '../agents/random-agent';
 import { OthelloBoard, OthelloPlayer, OthelloAction } from '../../core/types';
