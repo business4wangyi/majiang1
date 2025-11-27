@@ -486,7 +486,19 @@ export class AlphaZeroTrainer {
         let action: OthelloAction | null = null;
         
         if (currentPlayer === 'B') {
-          action = this.agent.chooseAction(board, currentPlayer);
+          // 评估阶段使用异步方法，避免MCTS超时
+          if ('searchBestActionAsync' in this.agent && typeof (this.agent as any).searchBestActionAsync === 'function') {
+            try {
+              const searchResult = await (this.agent as any).searchBestActionAsync(board, currentPlayer);
+              action = searchResult.action;
+            } catch (error: any) {
+              console.warn(`⚠️ [评估] 异步搜索失败，使用随机动作: ${error.message || error}`);
+              action = legalActions[Math.floor(Math.random() * legalActions.length)];
+            }
+          } else {
+            // 回退到同步方法
+            action = this.agent.chooseAction(board, currentPlayer);
+          }
         } else {
           action = opponent.chooseAction(board, currentPlayer);
         }
