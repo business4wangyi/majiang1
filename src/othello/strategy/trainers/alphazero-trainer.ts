@@ -158,8 +158,8 @@ export class AlphaZeroTrainer {
       console.log(`\n🎓 [迭代 ${iteration}] 开始网络训练阶段...`);
       
       // 更新学习率（学习率调度）
-      if ('updateLearningRate' in this.agent.network && typeof (this.agent.network as any).updateLearningRate === 'function') {
-        (this.agent.network as any).updateLearningRate(iteration, this.config.totalIterations);
+      if ('updateLearningRate' in this.agent && typeof (this.agent as any).updateLearningRate === 'function') {
+        (this.agent as any).updateLearningRate(iteration, this.config.totalIterations);
       }
       
       const trainingStartTime = Date.now();
