@@ -80,16 +80,55 @@ export class AlphaZeroNetwork implements IAlphaZeroNetwork {
   private model: tf.LayersModel;
   private optimizer: tf.Optimizer;
   private config: AlphaZeroNetworkConfig;
+  private initialLearningRate: number;
+  private currentIteration: number = 0;
 
   constructor(config: AlphaZeroNetworkConfig = DEFAULT_ALPHAZERO_CONFIG) {
     this.config = { ...config };
+    this.initialLearningRate = this.config.learningRate;
     this.optimizer = tf.train.momentum(this.config.learningRate, this.config.momentum);
     this.model = this.buildModel();
     
     console.log('🧠 AlphaZero神经网络已创建');
     console.log(`   残差块数量: ${this.config.numResidualBlocks}`);
     console.log(`   滤波器数量: ${this.config.numFilters}`);
-    console.log(`   学习率: ${this.config.learningRate}`);
+    console.log(`   初始学习率: ${this.config.learningRate}`);
+  }
+
+  /**
+   * 更新学习率（学习率调度）
+   * @param iteration 当前迭代次数
+   * @param totalIterations 总迭代次数
+   */
+  updateLearningRate(iteration: number, totalIterations: number): void {
+    this.currentIteration = iteration;
+    
+    // 学习率调度策略：从0.0005开始，逐步衰减到0.0002
+    // 使用余弦退火：lr = lr_min + (lr_max - lr_min) * (1 + cos(π * iteration / totalIterations)) / 2
+    const lrMax = 0.0005;
+    const lrMin = 0.0002;
+    const progress = iteration / totalIterations;
+    const newLearningRate = lrMin + (lrMax - lrMin) * (1 + Math.cos(Math.PI * progress)) / 2;
+    
+    // 更新优化器学习率
+    if (this.optimizer && 'setLearningRate' in this.optimizer) {
+      (this.optimizer as any).setLearningRate(newLearningRate);
+    } else {
+      // 如果优化器不支持直接设置学习率，重新创建优化器
+      this.optimizer = tf.train.momentum(newLearningRate, this.config.momentum);
+      // 重新编译模型以使用新的优化器
+      this.model.compile({
+        optimizer: this.optimizer,
+        loss: ['categoricalCrossentropy', 'meanSquaredError'],
+        lossWeights: [1.0, 1.0]
+      });
+    }
+    
+    this.config.learningRate = newLearningRate;
+    
+    if (iteration % 5 === 0 || iteration === 1) {
+      console.log(`📉 [学习率调度] 迭代 ${iteration}: 学习率 = ${newLearningRate.toFixed(6)}`);
+    }
   }
 
   /**
