@@ -119,8 +119,7 @@ export class AlphaZeroNetwork implements IAlphaZeroNetwork {
       // 重新编译模型以使用新的优化器
       this.model.compile({
         optimizer: this.optimizer,
-        loss: ['categoricalCrossentropy', 'meanSquaredError'],
-        lossWeights: [1.0, 1.0]
+        loss: ['categoricalCrossentropy', 'meanSquaredError']
       });
     }
     

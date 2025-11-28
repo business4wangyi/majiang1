@@ -203,6 +203,15 @@ export class AlphaZeroOthelloAgent implements OthelloAgent {
   }
 
   /**
+   * 更新学习率（学习率调度）
+   */
+  updateLearningRate(iteration: number, totalIterations: number): void {
+    if (this.network && 'updateLearningRate' in this.network && typeof (this.network as any).updateLearningRate === 'function') {
+      (this.network as any).updateLearningRate(iteration, totalIterations);
+    }
+  }
+
+  /**
    * 异步执行MCTS搜索（推荐用于训练）
    * 直接使用异步MCTS，避免同步等待问题
    */
