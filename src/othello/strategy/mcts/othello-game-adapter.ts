@@ -136,23 +136,51 @@ export class OthelloNetworkAdapter implements INetwork {
   async predictBatch(inputs: any[]): Promise<NetworkPrediction[]> {
     if (this.network.predictBatch && inputs.length > 0) {
       try {
-        // predictBatch是同步方法，直接调用
-        const predictions = this.network.predictBatch(inputs);
-        if (!predictions || predictions.length !== inputs.length) {
-          // 如果批量预测失败，回退到单次预测
-          const fallbackPredictions: NetworkPrediction[] = [];
-          for (const input of inputs) {
-            fallbackPredictions.push(await this.predict(input));
-          }
-          return fallbackPredictions;
+        // 关键修复：将大批次拆分成小批次（每次2个），避免长时间阻塞事件循环
+        // 这样超时机制可以在每个小批次之间检查，及时中断长时间运行的预测
+        const BATCH_CHUNK_SIZE = 2; // 每个小批次的大小（减少阻塞时间）
+        const allPredictions: NetworkPrediction[] = [];
+        
+        // 将输入拆分成多个小批次
+        for (let i = 0; i < inputs.length; i += BATCH_CHUNK_SIZE) {
+          const chunk = inputs.slice(i, i + BATCH_CHUNK_SIZE);
+          
+          // 每个小批次包装为异步，确保不阻塞事件循环
+          const chunkPredictions = await new Promise<NetworkPrediction[]>((resolve, reject) => {
+            // 使用setTimeout确保在下一个事件循环中执行，不阻塞当前事件循环
+            // 这允许Promise.race中的超时Promise有机会执行
+            setTimeout(() => {
+              try {
+                // predictBatch是同步方法，但在异步上下文中执行
+                // 由于批次较小（2个），阻塞时间较短，超时机制可以正常工作
+                const syncPredictions = this.network.predictBatch!(chunk);
+                if (!syncPredictions || syncPredictions.length !== chunk.length) {
+                  reject(new Error(`批量预测返回结果数量不匹配: 期望${chunk.length}，实际${syncPredictions?.length || 0}`));
+                  return;
+                }
+                const mappedPredictions = syncPredictions.map(p => ({
+                  policyProbs: p.policyProbs,
+                  value: p.value
+                }));
+                resolve(mappedPredictions);
+              } catch (error) {
+                reject(error);
+              }
+            }, 0); // 延迟0ms，确保在下一个事件循环中执行
+          });
+          
+          allPredictions.push(...chunkPredictions);
+          
+          // 在每个小批次之间让出控制权，允许超时检查
+          // 使用setImmediate确保事件循环有机会执行超时检查
+          await new Promise(resolve => setImmediate(resolve));
         }
-        return predictions.map(p => ({
-          policyProbs: p.policyProbs,
-          value: p.value
-        }));
+        
+        return allPredictions;
       } catch (error) {
         // 批量预测出错，回退到单次预测
-        console.warn('⚠️ 批量预测失败，回退到单次预测:', error);
+        const errorMsg = error instanceof Error ? error.message : String(error);
+        console.warn(`⚠️ [网络适配器] 批量预测失败，回退到单次预测: ${errorMsg}`);
         const fallbackPredictions: NetworkPrediction[] = [];
         for (const input of inputs) {
           fallbackPredictions.push(await this.predict(input));

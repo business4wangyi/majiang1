@@ -53,10 +53,10 @@ export interface AlphaZeroTrainingConfig {
  * 默认AlphaZero训练配置
  */
 export const DEFAULT_ALPHAZERO_TRAINING_CONFIG: AlphaZeroTrainingConfig = {
-  totalIterations: 100,
-  selfPlayGames: 50,  // 从20增加到50（优化：增加训练数据量，目标vs随机策略90%胜率）
-  trainingEpochs: 15,  // 保持15个epoch
-  experienceBufferSize: 20000,  // 从10000增加到20000（配合更多游戏数）
+  totalIterations: 100,  // 从50增加到100（优化：提升模型性能，目标vs随机策略90%胜率）
+  selfPlayGames: 100,  // 从50增加到100（优化：增加训练数据量，提升模型学习质量）
+  trainingEpochs: 20,  // 从15增加到20（优化：提升模型学习质量）
+  experienceBufferSize: 30000,  // 从20000增加到30000（配合更多游戏数）
   evaluationFrequency: 5,  // 保持每5次迭代评估一次
   evaluationGames: 20,
   saveFrequency: 10,
@@ -705,10 +705,10 @@ export async function runTraining(): Promise<void> {
 
   const config: AlphaZeroTrainingConfig = {
     ...DEFAULT_ALPHAZERO_TRAINING_CONFIG,
-    totalIterations: Number(process.env.ALPHAZERO_TOTAL_ITERATIONS) || 50,  // 从30增加到50（优化：目标vs随机策略90%胜率）
-    selfPlayGames: Number(process.env.ALPHAZERO_SELFPLAY_GAMES) || 50,      // 从20增加到50（优化：增加训练数据量）
-    trainingEpochs: Number(process.env.ALPHAZERO_TRAINING_EPOCHS) || 15,     // 从10增加到15（修复：解决评估胜率持续下降问题）
-    experienceBufferSize: Number(process.env.ALPHAZERO_EXP_BUFFER) || 20000,  // 从4000增加到20000（配合更多游戏数）
+    totalIterations: Number(process.env.ALPHAZERO_TOTAL_ITERATIONS) || 100,  // 从50增加到100（优化：提升模型性能，目标vs随机策略90%胜率）
+    selfPlayGames: Number(process.env.ALPHAZERO_SELFPLAY_GAMES) || 100,      // 从50增加到100（优化：增加训练数据量，提升模型学习质量）
+    trainingEpochs: Number(process.env.ALPHAZERO_TRAINING_EPOCHS) || 20,     // 从15增加到20（优化：提升模型学习质量）
+    experienceBufferSize: Number(process.env.ALPHAZERO_EXP_BUFFER) || 30000,  // 从20000增加到30000（配合更多游戏数）
     evaluationFrequency: Number(process.env.ALPHAZERO_EVAL_FREQUENCY) || 5, // 从10改为5（基于训练报告建议：每5次迭代评估一次）
     saveFrequency: Number(process.env.ALPHAZERO_SAVE_FREQUENCY) || 10,
     maxGameSteps: Number(process.env.ALPHAZERO_MAX_STEPS) || 80,
