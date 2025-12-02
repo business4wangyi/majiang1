@@ -120,81 +120,129 @@ export class OthelloNetworkAdapter implements INetwork {
   }
 
   async predict(input: any): Promise<NetworkPrediction> {
-    // IAlphaZeroNetwork.predict是同步方法，直接调用并立即返回Promise
-    try {
-      const prediction = this.network.predict(input);
-      return Promise.resolve({
-        policyProbs: prediction.policyProbs,
-        value: prediction.value
+    // 检查网络是否支持异步预测（Worker模式）
+    if ('predictAsync' in this.network && typeof (this.network as any).predictAsync === 'function') {
+      // 使用异步预测（Worker模式）
+      try {
+        const prediction = await (this.network as any).predictAsync(input);
+        return {
+          policyProbs: prediction.policyProbs,
+          value: prediction.value
+        };
+      } catch (error) {
+        console.error('❌ [网络预测] 异步预测失败:', error);
+        return {
+          policyProbs: new Array(64).fill(0),
+          value: 0
+        };
+      }
+    } else {
+      // 同步预测（传统模式），包装为异步以避免阻塞事件循环
+      return Promise.race([
+        new Promise<NetworkPrediction>((resolve, reject) => {
+          setTimeout(() => {
+            try {
+              const prediction = this.network.predict(input);
+              resolve({
+                policyProbs: prediction.policyProbs,
+                value: prediction.value
+              });
+            } catch (error) {
+              console.error('❌ [网络预测] 预测失败:', error);
+              reject(error);
+            }
+          }, 0); // 延迟0ms，确保在下一个事件循环中执行
+        }),
+        // 单次预测超时：5秒
+        new Promise<NetworkPrediction>((_, reject) => 
+          setTimeout(() => reject(new Error('单次预测超时（5秒）')), 5000)
+        )
+      ]).catch(error => {
+        // 预测失败时返回零预测
+        console.warn(`⚠️ [网络适配器] 预测失败，使用零预测: ${error instanceof Error ? error.message : String(error)}`);
+        return {
+          policyProbs: new Array(64).fill(0),
+          value: 0
+        };
       });
-    } catch (error) {
-      console.error('❌ [网络预测] 预测失败:', error);
-      throw error;
     }
   }
 
   async predictBatch(inputs: any[]): Promise<NetworkPrediction[]> {
-    if (this.network.predictBatch && inputs.length > 0) {
+    if (inputs.length === 0) {
+      return [];
+    }
+
+    // 检查网络是否支持异步批量预测（Worker模式）
+    if ('predictBatchAsync' in this.network && typeof (this.network as any).predictBatchAsync === 'function') {
+      // 使用异步批量预测（Worker模式）
       try {
-        // 关键修复：将大批次拆分成小批次（每次2个），避免长时间阻塞事件循环
-        // 这样超时机制可以在每个小批次之间检查，及时中断长时间运行的预测
-        const BATCH_CHUNK_SIZE = 2; // 每个小批次的大小（减少阻塞时间）
-        const allPredictions: NetworkPrediction[] = [];
-        
-        // 将输入拆分成多个小批次
-        for (let i = 0; i < inputs.length; i += BATCH_CHUNK_SIZE) {
-          const chunk = inputs.slice(i, i + BATCH_CHUNK_SIZE);
-          
-          // 每个小批次包装为异步，确保不阻塞事件循环
-          const chunkPredictions = await new Promise<NetworkPrediction[]>((resolve, reject) => {
-            // 使用setTimeout确保在下一个事件循环中执行，不阻塞当前事件循环
-            // 这允许Promise.race中的超时Promise有机会执行
-            setTimeout(() => {
-              try {
-                // predictBatch是同步方法，但在异步上下文中执行
-                // 由于批次较小（2个），阻塞时间较短，超时机制可以正常工作
-                const syncPredictions = this.network.predictBatch!(chunk);
-                if (!syncPredictions || syncPredictions.length !== chunk.length) {
-                  reject(new Error(`批量预测返回结果数量不匹配: 期望${chunk.length}，实际${syncPredictions?.length || 0}`));
-                  return;
-                }
-                const mappedPredictions = syncPredictions.map(p => ({
-                  policyProbs: p.policyProbs,
-                  value: p.value
-                }));
-                resolve(mappedPredictions);
-              } catch (error) {
-                reject(error);
-              }
-            }, 0); // 延迟0ms，确保在下一个事件循环中执行
-          });
-          
-          allPredictions.push(...chunkPredictions);
-          
-          // 在每个小批次之间让出控制权，允许超时检查
-          // 使用setImmediate确保事件循环有机会执行超时检查
-          await new Promise(resolve => setImmediate(resolve));
-        }
-        
-        return allPredictions;
+        const predictions = await (this.network as any).predictBatchAsync(inputs);
+        return predictions.map((p: any) => ({
+          policyProbs: p.policyProbs,
+          value: p.value
+        }));
       } catch (error) {
-        // 批量预测出错，回退到单次预测
-        const errorMsg = error instanceof Error ? error.message : String(error);
-        console.warn(`⚠️ [网络适配器] 批量预测失败，回退到单次预测: ${errorMsg}`);
-        const fallbackPredictions: NetworkPrediction[] = [];
-        for (const input of inputs) {
-          fallbackPredictions.push(await this.predict(input));
-        }
-        return fallbackPredictions;
+        console.error('❌ [网络适配器] 异步批量预测失败:', error);
+        // 回退到单次预测
+        return this.fallbackToSinglePredictions(inputs);
       }
+    } else if (this.network.predictBatch) {
+      // 同步批量预测（传统模式），改为单次预测以避免阻塞
+      return this.fallbackToSinglePredictions(inputs);
     } else {
       // 回退到单次预测
-      const predictions: NetworkPrediction[] = [];
-      for (const input of inputs) {
-        predictions.push(await this.predict(input));
-      }
-      return predictions;
+      return this.fallbackToSinglePredictions(inputs);
     }
+  }
+
+  /**
+   * 回退到单次预测（避免阻塞）
+   */
+  private async fallbackToSinglePredictions(inputs: any[]): Promise<NetworkPrediction[]> {
+    const allPredictions: NetworkPrediction[] = [];
+    
+    // 逐个预测，每次预测后让出控制权
+    for (let i = 0; i < inputs.length; i++) {
+      const input = inputs[i];
+      
+      // 每个预测包装为异步，并添加超时保护
+      const prediction = await Promise.race([
+        new Promise<NetworkPrediction>((resolve, reject) => {
+          // 使用setTimeout确保在下一个事件循环中执行
+          setTimeout(() => {
+            try {
+              // 使用单次预测，避免批量预测阻塞
+              const singlePrediction = this.network.predict(input);
+              resolve({
+                policyProbs: singlePrediction.policyProbs,
+                value: singlePrediction.value
+              });
+            } catch (error) {
+              reject(error);
+            }
+          }, 0);
+        }),
+        // 单次预测超时：5秒
+        new Promise<NetworkPrediction>((_, reject) => 
+          setTimeout(() => reject(new Error(`单次预测超时（5秒）`)), 5000)
+        )
+      ]).catch(error => {
+        // 预测失败时返回零预测
+        console.warn(`⚠️ [网络适配器] 预测失败，使用零预测: ${error instanceof Error ? error.message : String(error)}`);
+        return {
+          policyProbs: new Array(64).fill(0),
+          value: 0
+        };
+      });
+      
+      allPredictions.push(prediction);
+      
+      // 在每个预测之间让出控制权，允许超时检查
+      await new Promise(resolve => setImmediate(resolve));
+    }
+    
+    return allPredictions;
   }
 }
 

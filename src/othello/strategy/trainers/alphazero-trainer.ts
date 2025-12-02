@@ -171,7 +171,7 @@ export class AlphaZeroTrainer {
       this.recordStats(iteration, selfPlayResults, trainingResults);
       
       // 评估阶段
-      let evaluationResults = {};
+      let evaluationResults: { [key: string]: number } = {};
       if (iteration % this.config.evaluationFrequency === 0) {
         console.log(`\n🎯 [迭代 ${iteration}] 开始评估阶段...`);
         const evalStartTime = Date.now();
@@ -179,14 +179,21 @@ export class AlphaZeroTrainer {
         const evalTime = (Date.now() - evalStartTime) / 1000;
         console.log(`✅ [迭代 ${iteration}] 评估阶段完成，用时: ${(evalTime / 60).toFixed(2)}分钟`);
         
-        // 更新最佳模型（基于评估胜率）
+        // 更新最佳模型（基于vs随机策略胜率 - 优化：符合训练目标）
         if (Object.keys(evaluationResults).length > 0) {
+          // 优先使用vs随机策略胜率（主要训练目标）
+          const randomWinRate = evaluationResults['随机策略'] || evaluationResults['随机'] || 0;
+          
+          // 如果没有vs随机策略数据，则使用平均胜率作为备选
           const rates = Object.values(evaluationResults) as number[];
-          const avgWinRate = rates.reduce((sum, rate) => sum + rate, 0) / rates.length;
-          if (avgWinRate > this.bestEvaluationWinRate) {
-            this.bestEvaluationWinRate = avgWinRate;
+          const avgWinRate = rates.length > 0 ? rates.reduce((sum: number, rate: number) => sum + rate, 0) / rates.length : 0;
+          const winRateToCompare = randomWinRate > 0 ? randomWinRate : avgWinRate;
+          
+          if (winRateToCompare > this.bestEvaluationWinRate) {
+            this.bestEvaluationWinRate = winRateToCompare;
             this.bestModelIteration = iteration;
-            console.log(`🏆 [迭代 ${iteration}] 发现更好的模型！平均评估胜率: ${avgWinRate.toFixed(1)}% (最佳: ${this.bestEvaluationWinRate.toFixed(1)}%)`);
+            const strategyName = randomWinRate > 0 ? 'vs随机策略' : '平均评估';
+            console.log(`🏆 [迭代 ${iteration}] 发现更好的模型！${strategyName}胜率: ${winRateToCompare.toFixed(1)}% (最佳: ${this.bestEvaluationWinRate.toFixed(1)}%)`);
           }
         }
       }
@@ -439,7 +446,10 @@ export class AlphaZeroTrainer {
     for (let epoch = 0; epoch < this.config.trainingEpochs; epoch++) {
       const epochStartTime = Date.now();
       // 随机采样训练批次
-      const batchSize = Math.min(this.agent['config'].networkConfig.batchSize, this.experienceBuffer.length);
+      const networkConfig = this.agent['config']?.networkConfig;
+      const batchSize = networkConfig && 'batchSize' in networkConfig 
+        ? Math.min(networkConfig.batchSize, this.experienceBuffer.length)
+        : Math.min(32, this.experienceBuffer.length); // 默认批次大小32
       const batch = this.sampleBatch(batchSize);
       
       // 准备训练数据

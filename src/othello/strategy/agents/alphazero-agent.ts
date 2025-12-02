@@ -15,7 +15,7 @@ import * as tf from '@tensorflow/tfjs-node';
 import { OthelloAgent } from '../agents/random-agent';
 import { OthelloBoard, OthelloPlayer, OthelloAction } from '../../core/types';
 import { getLegalActions } from '../../core/game';
-import { AlphaZeroNetwork, AlphaZeroNetworkConfig, DEFAULT_ALPHAZERO_CONFIG } from '../networks/alphazero-network';
+import { AlphaZeroNetwork, AlphaZeroNetworkConfig, DEFAULT_ALPHAZERO_CONFIG, IAlphaZeroNetwork } from '../networks/alphazero-network';
 import { AlphaZeroAdvancedNetwork, AdvancedNetworkConfig, DEFAULT_ADVANCED_CONFIG } from '../networks/alphazero-network-advanced';
 import { AlphaZeroMCTS, MCTSConfig, DEFAULT_MCTS_CONFIG } from '../mcts/alphazero-mcts';
 import { AlphaZeroMCTSUniversal } from '../mcts/alphazero-mcts-universal';
@@ -25,7 +25,7 @@ import { AlphaZeroMCTSUniversal } from '../mcts/alphazero-mcts-universal';
  */
 export interface AlphaZeroAgentConfig {
   /** 网络配置 */
-  networkConfig: AlphaZeroNetworkConfig | AdvancedNetworkConfig;
+  networkConfig?: AlphaZeroNetworkConfig | AdvancedNetworkConfig;
   /** MCTS配置 */
   mctsConfig: MCTSConfig;
   /** 智能体名称 */
@@ -40,6 +40,8 @@ export interface AlphaZeroAgentConfig {
   verbose: boolean;
   /** 是否使用高级网络架构 */
   useAdvancedNetwork?: boolean;
+  /** 自定义网络实例（如果提供，将使用此实例而不是根据配置创建） */
+  customNetwork?: IAlphaZeroNetwork;
 }
 
 /**
@@ -52,7 +54,8 @@ export const DEFAULT_ALPHAZERO_AGENT_CONFIG: AlphaZeroAgentConfig = {
   isTraining: true,
   trainingTemperature: 1.0,
   inferenceTemperature: 0.1,
-  verbose: false
+  verbose: false,
+  customNetwork: undefined
 };
 
 /**
@@ -76,7 +79,7 @@ export interface AlphaZeroSearchResult {
  * AlphaZero智能体类
  */
 export class AlphaZeroOthelloAgent implements OthelloAgent {
-  private network: AlphaZeroNetwork | AlphaZeroAdvancedNetwork;
+  private network: IAlphaZeroNetwork;
   private mcts: AlphaZeroMCTS | AlphaZeroMCTSUniversal;
   private config: AlphaZeroAgentConfig;
   private moveCount: number = 0;
@@ -93,13 +96,23 @@ export class AlphaZeroOthelloAgent implements OthelloAgent {
   constructor(config: AlphaZeroAgentConfig = DEFAULT_ALPHAZERO_AGENT_CONFIG) {
     this.config = { ...config };
 
-    // 根据配置选择网络类型
-    if (this.config.useAdvancedNetwork && 'useDepthwiseConv' in this.config.networkConfig) {
-      this.network = new AlphaZeroAdvancedNetwork(this.config.networkConfig as AdvancedNetworkConfig);
-      console.log(`🚀 使用高级网络架构`);
+    // 如果提供了自定义网络实例，使用它（例如Worker模式）
+    if (this.config.customNetwork) {
+      this.network = this.config.customNetwork;
+      console.log(`🔧 使用自定义网络实例（可能是Worker模式）`);
+    } else if (this.config.networkConfig) {
+      // 根据配置选择网络类型
+      if (this.config.useAdvancedNetwork && 'useDepthwiseConv' in this.config.networkConfig) {
+        this.network = new AlphaZeroAdvancedNetwork(this.config.networkConfig as AdvancedNetworkConfig);
+        console.log(`🚀 使用高级网络架构`);
+      } else {
+        this.network = new AlphaZeroNetwork(this.config.networkConfig as AlphaZeroNetworkConfig);
+        console.log(`📊 使用标准网络架构`);
+      }
     } else {
-      this.network = new AlphaZeroNetwork(this.config.networkConfig as AlphaZeroNetworkConfig);
-      console.log(`📊 使用标准网络架构`);
+      // 如果没有提供网络配置和自定义网络，使用默认配置
+      this.network = new AlphaZeroNetwork(DEFAULT_ALPHAZERO_CONFIG);
+      console.log(`📊 使用默认标准网络架构`);
     }
 
     // 默认使用通用MCTS（已优化，包含超时机制和状态缓存）
@@ -119,7 +132,9 @@ export class AlphaZeroOthelloAgent implements OthelloAgent {
     console.log(`🤖 AlphaZero智能体已创建: ${this.config.name}`);
     console.log(`   训练模式: ${this.config.isTraining}`);
     console.log(`   MCTS模拟次数: ${this.config.mctsConfig.numSimulations}`);
-    console.log(`   网络残差块: ${this.config.networkConfig.numResidualBlocks}`);
+    if (this.config.networkConfig && 'numResidualBlocks' in this.config.networkConfig) {
+      console.log(`   网络残差块: ${this.config.networkConfig.numResidualBlocks}`);
+    }
 
     if (this.config.useAdvancedNetwork) {
       const advConfig = this.config.networkConfig as AdvancedNetworkConfig;

@@ -375,10 +375,20 @@ export class AlphaZeroMCTS<State = any, Action = any, Player = any> {
       stateHashes.push(pending.stateHash);
     }
 
-    // 批量预测
+    // 批量预测（带超时保护）
     if (inputs.length > 0 && this.network.predictBatch) {
       try {
-        const predictions = await this.network.predictBatch(inputs);
+        // 批量预测超时：根据批次大小动态调整（批次越大，允许时间越长）
+        // 基础时间10秒 + 每个输入2秒，最多30秒
+        const batchTimeout = Math.min(10000 + inputs.length * 2000, 30000);
+        
+        const predictions = await Promise.race([
+          this.network.predictBatch(inputs),
+          new Promise<NetworkPrediction[]>((_, reject) => 
+            setTimeout(() => reject(new Error(`批量预测超时（${batchTimeout / 1000}秒，批次大小: ${inputs.length}）`)), batchTimeout)
+          )
+        ]);
+        
         for (let i = 0; i < predictions.length; i++) {
           const prediction = predictions[i];
           const stateHash = stateHashes[i];
@@ -390,27 +400,67 @@ export class AlphaZeroMCTS<State = any, Action = any, Player = any> {
           }
         }
       } catch (error) {
-        // 批量预测失败，回退到单次预测
-        console.warn('⚠️ [MCTS] 批量预测失败，回退到单次预测:', error);
+        // 批量预测失败或超时，回退到单次预测（带超时保护）
+        const errorMsg = error instanceof Error ? error.message : String(error);
+        if (errorMsg.includes('超时')) {
+          console.warn(`⚠️ [MCTS] 批量预测超时（批次大小: ${inputs.length}），回退到单次预测`);
+        } else {
+          console.warn('⚠️ [MCTS] 批量预测失败，回退到单次预测:', errorMsg);
+        }
+        
+        // 回退到单次预测，每个预测都有5秒超时保护
         for (let i = 0; i < inputs.length; i++) {
-          const prediction = await this.network.predict(inputs[i]);
+          try {
+            const prediction = await Promise.race([
+              this.network.predict(inputs[i]),
+              new Promise<NetworkPrediction>((_, reject) => 
+                setTimeout(() => reject(new Error('单次预测超时（5秒）')), 5000)
+              )
+            ]);
+            const stateHash = stateHashes[i];
+            pendingPredictions.set(stateHash, prediction);
+            
+            if (this.enableCache) {
+              this.stateCache.set(stateHash, prediction);
+            }
+          } catch (singleError) {
+            // 单次预测也失败，使用默认值或跳过
+            console.error(`❌ [MCTS] 单次预测失败（索引 ${i}）:`, singleError instanceof Error ? singleError.message : String(singleError));
+            // 使用零策略和零价值作为fallback
+            const stateHash = stateHashes[i];
+            const fallbackPrediction: NetworkPrediction = {
+              policyProbs: new Float32Array(64).fill(0),
+              value: 0
+            };
+            pendingPredictions.set(stateHash, fallbackPrediction);
+          }
+        }
+      }
+    } else if (inputs.length > 0) {
+      // 回退到单次预测（带超时保护）
+      for (let i = 0; i < inputs.length; i++) {
+        try {
+          const prediction = await Promise.race([
+            this.network.predict(inputs[i]),
+            new Promise<NetworkPrediction>((_, reject) => 
+              setTimeout(() => reject(new Error('单次预测超时（5秒）')), 5000)
+            )
+          ]);
           const stateHash = stateHashes[i];
           pendingPredictions.set(stateHash, prediction);
           
           if (this.enableCache) {
             this.stateCache.set(stateHash, prediction);
           }
-        }
-      }
-    } else if (inputs.length > 0) {
-      // 回退到单次预测
-      for (let i = 0; i < inputs.length; i++) {
-        const prediction = await this.network.predict(inputs[i]);
-        const stateHash = stateHashes[i];
-        pendingPredictions.set(stateHash, prediction);
-        
-        if (this.enableCache) {
-          this.stateCache.set(stateHash, prediction);
+        } catch (error) {
+          // 单次预测失败，使用默认值
+          console.error(`❌ [MCTS] 单次预测失败（索引 ${i}）:`, error instanceof Error ? error.message : String(error));
+          const stateHash = stateHashes[i];
+          const fallbackPrediction: NetworkPrediction = {
+            policyProbs: new Float32Array(64).fill(0),
+            value: 0
+          };
+          pendingPredictions.set(stateHash, fallbackPrediction);
         }
       }
     }
