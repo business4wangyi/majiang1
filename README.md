@@ -43,6 +43,12 @@ npm run othello:cli
 
 # 启动Othello API服务器
 npm run othello:api-server
+
+# AlphaZero训练（标准模式）
+npm run othello:alphazero-train
+
+# AlphaZero快速训练（性能优化，100轮约2小时）
+npm run othello:alphazero-fast-train
 ```
 
 ### 🀄 麻将游戏
@@ -65,6 +71,13 @@ npm start -- --test
 - 🎮 **[井字棋实现](src/ai-assistant/tic-tac-toe/README.md)** - 井字棋具体实现
 - ⚫ **[Othello实现](src/othello/README.md)** - Othello AI助手完整文档
 - 🚀 **[Othello快速开始](docs/OTHELLO_QUICK_START.md)** - Othello快速使用指南
+- ⚡ **[AlphaZero快速训练指南](docs/ALPHAZERO_FAST_TRAINING.md)** - 高性能训练优化指南
+- 📊 **[性能基准报告](docs/ALPHAZERO_PERFORMANCE_BASELINE.md)** - 性能基准和优化路线图
+- ☁️ **[云端训练自动化文档中心](docs/cloud-automation/README.md)** - 所有云端训练和自动化方案（推荐）
+  - 🤖 [AI调度训练指南](docs/cloud-automation/AI_SCHEDULING_GUIDE.md) - AI直接调度GitHub Actions（研发阶段首选）
+  - 🤖 [云端训练自动化方案指南](docs/cloud-automation/CLOUD_DEVELOPMENT_AUTOMATION_GUIDE.md) - 完全自动化方案对比
+  - ☁️ [云端开发环境指南](docs/cloud-automation/CLOUD_DEVELOPMENT_GUIDE.md) - 免费方案优先
+  - 🤖 [Augment Remote Agent使用指南](docs/cloud-automation/AUGMENT_REMOTE_AGENT_GUIDE.md) - AI辅助开发工具
 - 🧠 **[策略系统](src/tic-tac-toe/strategy/)** - AI算法实现和训练工具
 
 ## 🎯 项目亮点

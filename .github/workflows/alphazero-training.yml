@@ -1,0 +1,232 @@
+name: AlphaZero Training
+
+on:
+  # 定时触发（每天凌晨2点UTC，即北京时间上午10点）
+  schedule:
+    - cron: '0 2 * * *'
+  
+  # 手动触发（支持AI调度）
+  workflow_dispatch:
+    inputs:
+      training_type:
+        description: 'Training type'
+        required: true
+        default: 'fast'
+        type: choice
+        options:
+          - fast
+          - standard
+          - full
+      iterations:
+        description: 'Number of iterations (optional, overrides default)'
+        required: false
+        type: string
+      selfplay_games:
+        description: 'Number of selfplay games (optional, overrides default)'
+        required: false
+        type: string
+      mcts_simulations:
+        description: 'MCTS simulations (optional, overrides default)'
+        required: false
+        type: string
+  
+  # 代码推送触发（可选，当训练相关代码变更时）
+  # 注意：首次部署时建议先手动触发测试，避免立即触发长时间训练
+  # push:
+  #   branches:
+  #     - develop
+  #   paths:
+  #     - 'src/othello/**'
+  #     - 'package.json'
+  #     - '.github/workflows/alphazero-training.yml'
+
+jobs:
+  train:
+    runs-on: ubuntu-latest
+    timeout-minutes: 360  # 6小时超时（GitHub Actions免费账户限制）
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Run training
+        id: training
+        run: |
+          echo "🚀 开始AlphaZero训练任务"
+          echo "训练类型: ${{ github.event.inputs.training_type || 'scheduled' }}"
+          
+          # 设置环境变量（支持AI自定义参数）
+          if [ -n "${{ github.event.inputs.iterations }}" ]; then
+            export ALPHAZERO_TOTAL_ITERATIONS="${{ github.event.inputs.iterations }}"
+            echo "自定义迭代次数: ${{ github.event.inputs.iterations }}"
+          elif [ "${{ github.event.inputs.training_type }}" == "full" ]; then
+            export ALPHAZERO_TOTAL_ITERATIONS=200
+          elif [ "${{ github.event.inputs.training_type }}" == "standard" ]; then
+            export ALPHAZERO_TOTAL_ITERATIONS=150
+          else
+            export ALPHAZERO_TOTAL_ITERATIONS=100
+          fi
+          
+          if [ -n "${{ github.event.inputs.selfplay_games }}" ]; then
+            export ALPHAZERO_SELFPLAY_GAMES="${{ github.event.inputs.selfplay_games }}"
+            echo "自定义自我对弈局数: ${{ github.event.inputs.selfplay_games }}"
+          elif [ "${{ github.event.inputs.training_type }}" == "full" ]; then
+            export ALPHAZERO_SELFPLAY_GAMES=100
+          elif [ "${{ github.event.inputs.training_type }}" == "standard" ]; then
+            export ALPHAZERO_SELFPLAY_GAMES=90
+          else
+            export ALPHAZERO_SELFPLAY_GAMES=80
+          fi
+          
+          if [ -n "${{ github.event.inputs.mcts_simulations }}" ]; then
+            export ALPHAZERO_MCTS="${{ github.event.inputs.mcts_simulations }}"
+            echo "自定义MCTS模拟次数: ${{ github.event.inputs.mcts_simulations }}"
+          fi
+          
+          # 运行训练
+          if [ "${{ github.event.inputs.training_type }}" == "fast" ]; then
+            npm run othello:alphazero-fast-train
+          elif [ "${{ github.event.inputs.training_type }}" == "standard" ]; then
+            npm run othello:alphazero-train
+          elif [ "${{ github.event.inputs.training_type }}" == "full" ]; then
+            npm run othello:alphazero-fast-train
+          else
+            npm run othello:alphazero-fast-train
+          fi
+      
+      - name: Generate AI-readable training report
+        if: always()
+        run: |
+          # 创建AI可读的训练报告JSON
+          mkdir -p training-reports
+          
+          # 查找训练报告JSON文件
+          REPORT_FILE=$(find src/othello/models -name "training_report.json" -type f | head -1)
+          
+          if [ -n "$REPORT_FILE" ]; then
+            # 复制训练报告
+            cp "$REPORT_FILE" "training-reports/training_report.json"
+            
+            # 添加运行元数据
+            cat > training-reports/metadata.json << EOF
+          {
+            "run_id": ${{ github.run_id }},
+            "run_number": ${{ github.run_number }},
+            "workflow": "${{ github.workflow }}",
+            "triggered_by": "${{ github.event_name }}",
+            "training_type": "${{ github.event.inputs.training_type || 'scheduled' }}",
+            "commit_sha": "${{ github.sha }}",
+            "commit_message": "${{ github.event.head_commit.message }}",
+            "timestamp": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+            "repository": "${{ github.repository }}",
+            "workflow_url": "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          }
+          EOF
+          else
+            # 如果没有训练报告，创建基本报告
+            cat > training-reports/training_report.json << EOF
+          {
+            "summary": {
+              "status": "${{ job.status }}",
+              "message": "Training completed but no detailed report found"
+            },
+            "metadata": {
+              "run_id": ${{ github.run_id }},
+              "run_number": ${{ github.run_number }},
+              "training_type": "${{ github.event.inputs.training_type || 'scheduled' }}"
+            }
+          }
+          EOF
+          fi
+          
+          # 创建AI可读的摘要文件
+          cat > training-reports/ai_summary.json << EOF
+          {
+            "training_status": "${{ job.status }}",
+            "run_id": ${{ github.run_id }},
+            "training_type": "${{ github.event.inputs.training_type || 'scheduled' }}",
+            "workflow_url": "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}",
+            "artifacts_available": true,
+            "timestamp": "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          }
+          EOF
+      
+      - name: Upload training results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: training-results-${{ github.run_number }}-${{ github.sha }}
+          path: |
+            src/othello/models/**
+            logs/**
+            training-reports/**
+          retention-days: 30
+          if-no-files-found: warn
+      
+      - name: Create training report
+        if: always()
+        run: |
+          echo "## 🎯 AlphaZero训练报告" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 训练信息" >> $GITHUB_STEP_SUMMARY
+          echo "- **训练类型**: ${{ github.event.inputs.training_type || 'scheduled (定时)' }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **运行编号**: ${{ github.run_number }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **运行ID**: ${{ github.run_id }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **提交哈希**: ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **触发方式**: ${{ github.event_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **运行时间**: $(date -u +'%Y-%m-%d %H:%M:%S UTC')" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 训练结果" >> $GITHUB_STEP_SUMMARY
+          echo "训练结果已保存到Artifacts，请下载查看。" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### AI可读格式" >> $GITHUB_STEP_SUMMARY
+          echo "训练结果以JSON格式保存在 \`training-reports/\` 目录中：" >> $GITHUB_STEP_SUMMARY
+          echo "- \`training_report.json\` - 完整训练报告" >> $GITHUB_STEP_SUMMARY
+          echo "- \`metadata.json\` - 运行元数据" >> $GITHUB_STEP_SUMMARY
+          echo "- \`ai_summary.json\` - AI可读摘要" >> $GITHUB_STEP_SUMMARY
+      
+      - name: Notify completion
+        if: always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const status = '${{ job.status }}';
+            const trainingType = '${{ github.event.inputs.training_type || 'scheduled' }}';
+            const runNumber = '${{ github.run_number }}';
+            const runUrl = `https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}`;
+            
+            if (status === 'success') {
+              github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title: `✅ 训练完成: ${trainingType} (Run #${runNumber})`,
+                body: `## 🎉 AlphaZero训练完成\n\n` +
+                      `- **训练类型**: ${trainingType}\n` +
+                      `- **运行编号**: #${runNumber}\n` +
+                      `- **状态**: ✅ 成功\n` +
+                      `- **查看详情**: ${runUrl}\n\n` +
+                      `训练结果已保存到Artifacts，请下载查看。`
+              });
+            } else {
+              github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title: `❌ 训练失败: ${trainingType} (Run #${runNumber})`,
+                body: `## ⚠️ AlphaZero训练失败\n\n` +
+                      `- **训练类型**: ${trainingType}\n` +
+                      `- **运行编号**: #${runNumber}\n` +
+                      `- **状态**: ❌ 失败\n` +
+                      `- **查看详情**: ${runUrl}\n\n` +
+                      `请检查日志以了解失败原因。`
+              });
+            }
+
