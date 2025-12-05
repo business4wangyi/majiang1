@@ -28,6 +28,11 @@
    - GitHub Actions完全自动化配置
    - 其他自动化方案对比
 
+5. **[GitHub Token获取和配置指南](GITHUB_TOKEN_SETUP.md)** 🔑 **必读**
+   - 如何获取GitHub Personal Access Token
+   - 配置到Cursor MCP和GitHub CLI
+   - 安全最佳实践
+
 ### 📖 详细文档
 
 3. **[云端开发环境指南](CLOUD_DEVELOPMENT_GUIDE.md)**
