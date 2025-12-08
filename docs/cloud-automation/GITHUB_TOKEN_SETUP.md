@@ -62,17 +62,37 @@ GitHub Token用于：
    - 或选择 **"All repositories"**（所有仓库，如果信任）
 
 5. **Repository permissions**（仓库权限）：
-   勾选以下权限：
-   - ✅ **Actions**: Read and write（读写）
-   - ✅ **Contents**: Read and write（读写）
-   - ✅ **Issues**: Read and write（读写）
-   - ✅ **Metadata**: Read-only（只读，自动勾选）
-   - ✅ **Pull requests**: Read and write（读写）
-   - ✅ **Workflows**: Read and write（读写）
+   
+   ⚠️ **注意**：GitHub的权限选项可能会更新，实际界面可能有所不同。请根据实际显示的权限选项进行选择。
+   
+   **最小必需权限**（用于GitHub MCP和Actions）：
+   - ✅ **Contents**: Read and write（读写仓库内容）
+   - ✅ **Metadata**: Read-only（只读，通常自动勾选，必需）
+   
+   **推荐权限**（如果需要完整功能）：
+   - ✅ **Actions**: Read and write（读写Actions，用于触发工作流）
+   - ✅ **Workflows**: Read and write（读写工作流文件，如果存在此选项）
+   - ✅ **Issues**: Read and write（读写Issues，如果需要）
+   - ✅ **Pull requests**: Read and write（读写PR，如果需要）
+   
+   **其他可能存在的权限**（根据实际界面选择）：
+   - Administration（管理权限，用于创建仓库）
+   - Secrets（密钥管理）
+   - Variables（变量管理）
+   - Environments（环境管理）
+   - Deployments（部署管理）
+   - Pages（Pages管理）
+   - Security events（安全事件）
+   
+   💡 **提示**：如果界面中没有列出某个权限，说明该权限可能：
+   - 已合并到其他权限中
+   - 需要特定的账户类型或组织设置
+   - GitHub已更新权限结构
 
 6. **Account permissions**（账户权限）：
    - 通常不需要额外权限
    - 保持默认即可
+   - 如果创建仓库失败，可能需要检查是否有 **Administration** 相关权限
 
 7. **点击 "Generate token"**（生成令牌）
 
@@ -87,16 +107,26 @@ GitHub Token用于：
    - 选择 **"90 days"**（90天）或自定义
 
 3. **Select scopes**（选择权限范围）：
-   勾选以下权限：
-   - ✅ **repo** - 完整仓库访问权限
-     - ✅ **repo:status** - 访问提交状态
-     - ✅ **repo_deployment** - 访问部署状态
-     - ✅ **public_repo** - 访问公共仓库
-     - ✅ **repo:invite** - 访问仓库邀请
-     - ✅ **security_events** - 访问安全事件
-   - ✅ **workflow** - 更新GitHub Actions工作流
-   - ✅ **write:packages** - 上传包（如果需要）
-   - ✅ **read:packages** - 下载包（如果需要）
+   
+   ⚠️ **注意**：Classic tokens的权限选项是固定的，但GitHub可能会更新。请根据实际显示的权限选项进行选择。
+   
+   **必需权限**（用于GitHub MCP和Actions）：
+   - ✅ **repo** - 完整仓库访问权限（包含所有仓库操作）
+     - 勾选 `repo` 会自动包含以下子权限：
+       - `repo:status` - 访问提交状态
+       - `repo_deployment` - 访问部署状态
+       - `public_repo` - 访问公共仓库
+       - `repo:invite` - 访问仓库邀请
+       - `security_events` - 访问安全事件
+   - ✅ **workflow** - 更新GitHub Actions工作流（用于触发和管理工作流）
+   
+   **可选权限**（根据需要选择）：
+   - `write:packages` - 上传包（如果需要发布包）
+   - `read:packages` - 下载包（如果需要下载包）
+   - `admin:repo_hook` - 管理仓库Webhooks（如果需要）
+   - `delete_repo` - 删除仓库（如果需要）
+   
+   💡 **提示**：`repo` 权限是最重要的，它包含了创建、读取、更新仓库所需的所有权限。
 
 4. **点击 "Generate token"**（生成令牌）
 
@@ -345,9 +375,37 @@ const token = process.env.GITHUB_PERSONAL_ACCESS_TOKEN;
 3. 点击 **"Revoke"**（撤销）
 4. 确认撤销
 
+## ⚠️ 重要说明
+
+### 权限选项可能会变化
+
+GitHub的权限选项可能会根据以下因素而变化：
+- GitHub平台更新
+- 账户类型（个人账户 vs 组织账户）
+- 组织设置
+- Fine-grained tokens vs Classic tokens
+
+**建议**：
+1. 创建Token时，请根据实际界面显示的权限选项进行选择
+2. 如果遇到权限不足的问题，参考GitHub官方文档获取最新信息
+3. 优先使用Fine-grained tokens，权限更细粒度，更安全
+
+### 创建仓库所需的权限
+
+如果使用Token创建仓库失败，可能需要：
+- **Fine-grained tokens**: `Administration` 权限（Read and write）
+- **Classic tokens**: `repo` 权限（已包含创建仓库权限）
+
+如果Token权限不足，建议：
+1. 手动在GitHub网页创建仓库（最简单）
+2. 或使用GitHub CLI创建（如果已安装）
+3. 或更新Token权限后重试
+
 ## 📚 相关资源
 
 - [GitHub官方文档：创建个人访问令牌](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token)
+- [GitHub官方文档：Fine-grained personal access tokens](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens#fine-grained-personal-access-tokens)
+- [GitHub官方文档：Classic personal access tokens](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens#classic-personal-access-tokens)
 - [GitHub CLI文档](https://cli.github.com/manual/)
 - [GitHub API文档](https://docs.github.com/en/rest)
 - [MCP GitHub服务器文档](https://github.com/modelcontextprotocol/servers/tree/main/src/github)
