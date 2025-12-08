@@ -8,39 +8,35 @@
 
 ### 🚀 快速开始
 
-1. **[5分钟快速部署](QUICK_START.md)** ⭐⭐⭐ **立即开始**
-   - 快速部署GitHub Actions
-   - 测试验证步骤
-   - **首次使用必读**
+1. **[初始设置指南](SETUP_GUIDE.md)** ⭐⭐⭐ **首次使用必读**
+   - 创建GitHub仓库
+   - 推送代码到GitHub
+   - 配置Git远程仓库
 
-2. **[AI调度训练指南](AI_SCHEDULING_GUIDE.md)** ⭐⭐ **推荐**
+2. **[部署和测试指南](DEPLOYMENT_GUIDE.md)** ⭐⭐⭐ **立即开始**
+   - 快速开始（5分钟）
+   - 详细部署步骤
+   - 故障排查和测试验证
+
+3. **[GitHub Token获取和配置指南](GITHUB_TOKEN_SETUP.md)** 🔑 **必读**
+   - 如何获取GitHub Personal Access Token
+   - 配置到Cursor MCP和GitHub CLI
+   - 界面操作指南和常见问题
+
+4. **[AI调度训练指南](AI_SCHEDULING_GUIDE.md)** ⭐⭐ **推荐**
    - AI直接调度GitHub Actions训练
    - 支持随时触发，AI可读格式
    - **研发阶段首选方案**
 
-3. **[部署和测试指南](DEPLOYMENT_GUIDE.md)** ⭐⭐ **详细说明**
-   - 完整部署步骤
-   - 故障排查
-   - 测试验证清单
-
-4. **[云端训练自动化方案指南](CLOUD_DEVELOPMENT_AUTOMATION_GUIDE.md)** ⭐ **方案对比**
-   - 按自动化程度排序的所有方案
-   - GitHub Actions完全自动化配置
-   - 其他自动化方案对比
-
-5. **[GitHub Token获取和配置指南](GITHUB_TOKEN_SETUP.md)** 🔑 **必读**
-   - 如何获取GitHub Personal Access Token
-   - 配置到Cursor MCP和GitHub CLI
-   - 安全最佳实践
-
 ### 📖 详细文档
 
-3. **[云端开发环境指南](CLOUD_DEVELOPMENT_GUIDE.md)**
+5. **[云端训练方案完整指南](CLOUD_DEVELOPMENT_AUTOMATION_GUIDE.md)** ⭐ **方案对比**
+   - 按自动化程度排序的所有方案
    - 按费用排序的所有方案
-   - 免费方案优先
-   - 手动操作方案
+   - GitHub Actions完全自动化配置
+   - 手动操作方案（SSH、VS Code Remote等）
 
-4. **[Augment Remote Agent使用指南](AUGMENT_REMOTE_AGENT_GUIDE.md)**
+6. **[Augment Remote Agent使用指南](AUGMENT_REMOTE_AGENT_GUIDE.md)**
    - Augment Remote Agent详细说明
    - Cursor集成限制说明
    - 费用和使用方法
@@ -55,14 +51,14 @@
 
 ### 生产环境（完全自动化）
 
-1. 阅读 [云端训练自动化方案指南](CLOUD_DEVELOPMENT_AUTOMATION_GUIDE.md)
+1. 阅读 [云端训练方案完整指南](CLOUD_DEVELOPMENT_AUTOMATION_GUIDE.md)
 2. 配置GitHub Actions定时训练
 3. 设置自动保存和通知
 
 ### 了解所有方案
 
-1. 阅读 [云端开发环境指南](CLOUD_DEVELOPMENT_GUIDE.md)
-2. 根据需求选择最适合的方案
+1. 阅读 [云端训练方案完整指南](CLOUD_DEVELOPMENT_AUTOMATION_GUIDE.md)
+2. 根据需求选择最适合的方案（按自动化程度或费用）
 3. 参考具体方案的配置步骤
 
 ## 🚀 快速开始

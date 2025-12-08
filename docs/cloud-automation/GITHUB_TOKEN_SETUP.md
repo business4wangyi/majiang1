@@ -70,15 +70,54 @@ GitHub Token用于：
    - 滚动页面查看（可能在页面下方）
    - 刷新页面重试
    
-   📚 **详细界面指南**：参考 [GitHub Token创建界面指南](GITHUB_TOKEN_INTERFACE_GUIDE.md)
+   ### 📍 如何找到Repository Permissions（详细说明）
+   
+   在创建Fine-grained token时，权限分为**三个部分**：
+   1. **Repository permissions**（仓库权限）- 这是最重要的部分
+   2. **Organization permissions**（组织权限）- 通常不需要
+   3. **User permissions**（用户权限）- 您看到的"Block another user"等就在这里
+   
+   **界面结构示意**：
+   ```
+   ┌─────────────────────────────────────┐
+   │ Fine-grained personal access token  │
+   ├─────────────────────────────────────┤
+   │ Token name: [输入框]                │
+   │ Expiration: [下拉选择]               │
+   │ Description: [输入框]               │
+   ├─────────────────────────────────────┤
+   │ Repository access                    │
+   │ ○ All repositories                   │
+   │ ○ Only select repositories          │
+   │   [选择仓库...]                      │
+   ├─────────────────────────────────────┤
+   │ Repository permissions  ← 这里！     │
+   │ ☐ Administration: [Read/Write]      │
+   │ ☐ Actions: [Read/Write]             │
+   │ ☐ Workflows: [Read/Write]           │
+   │ ☐ Contents: [Read/Write]            │
+   │ ☐ Metadata: [Read-only] (自动勾选)  │
+   │ ...更多权限...                       │
+   ├─────────────────────────────────────┤
+   │ User permissions                     │
+   │ ☐ Block another user                │
+   │ ☐ Codespaces user secrets           │
+   │ ☐ Email addresses                   │
+   │ ...更多用户权限...                   │
+   └─────────────────────────────────────┘
+   ```
+   
+   **重要提示**：
+   - Repository permissions在"Repository access"选择后，在"User permissions"之前显示
+   - 如果看不到，请确保已选择Repository access并滚动页面查看
+   - User permissions是用户级别的操作，与仓库操作无关，通常不需要勾选
    
    在Repository permissions部分，勾选以下权限：
    
    ⚠️ **重要**：根据实际创建Token时的界面，某些权限（如Metadata、Contents）可能**不在界面上显示**。这可能是GitHub界面更新导致的。
    
    📚 **参考文档**：
-   - [实际需要勾选的权限](GITHUB_TOKEN_ACTUAL_PERMISSIONS.md) - 基于实际界面
-   - [完整权限列表](GITHUB_FINE_GRAINED_PERMISSIONS.md) - 所有可用权限
+   - [GitHub Token创建界面指南](GITHUB_TOKEN_INTERFACE_GUIDE.md) - 详细的界面操作指南
    
    **实际需要勾选的权限**（如果界面显示）：
    
@@ -491,6 +530,18 @@ gh auth status
 3. 设置较短的过期时间
 4. 使用环境变量存储
 5. 定期轮换token
+
+### Q6: 为什么我只看到User permissions，看不到Repository permissions？
+
+**A**: 您可能还没有选择"Repository access"。必须先选择"All repositories"或"Only select repositories"，才会显示Repository permissions部分。如果还是看不到：
+1. 确保已选择Repository access
+2. 滚动页面查看（Repository permissions在User permissions之前）
+3. 刷新页面重试
+4. 尝试使用不同的浏览器
+
+### Q7: 需要勾选User permissions吗？
+
+**A**: 通常不需要。User permissions是用户级别的操作（如管理自己的GPG密钥、关注者等），与仓库操作无关。只需要勾选Repository permissions即可。
 
 ## 🎉 完成
 
