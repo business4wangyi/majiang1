@@ -19,21 +19,21 @@ export class AlphaZeroMCTSUniversal {
   public readonly universalMCTS: AlphaZeroMCTS<OthelloBoard, OthelloAction, OthelloPlayer>;
   private config: MCTSConfig;
 
-  constructor(network: IAlphaZeroNetwork, config: MCTSConfig = DEFAULT_MCTS_CONFIG) {
+  constructor(network: IAlphaZeroNetwork, config: MCTSConfig = DEFAULT_MCTS_CONFIG, batchSize: number = 8) {
     this.config = { ...config };
     
     // 创建适配器
     const gameAdapter = new OthelloGameAdapter(network);
     const networkAdapter = new OthelloNetworkAdapter(network);
     
-    // 创建通用MCTS（启用缓存，缓存大小10000，批量大小8）
+    // 创建通用MCTS（启用缓存，缓存大小10000，批量大小可配置）
     this.universalMCTS = new AlphaZeroMCTS(
       networkAdapter, 
       gameAdapter, 
       this.config,
       true,  // enableCache: true
       10000, // maxCacheSize: 10000（从5000增加到10000以进一步提升性能）
-      8      // batchSize: 8（重新启用批量推理，批次大小8）
+      batchSize  // batchSize: 可配置（优化：支持更大的批量推理批次）
     );
   }
 

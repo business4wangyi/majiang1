@@ -1,13 +1,13 @@
-# 📚 AI辅助井字棋系统 - 文档中心
+# 📚 AI游戏系统 - 文档中心
 
 ## 🎯 文档导航
 
 根据您的角色和需求，选择合适的文档：
 
 ### 👤 最终用户
-如果您想要使用AI辅助井字棋工具学习和游戏：
+如果您想要使用AI游戏工具学习和游戏：
 
-📖 **[MVP用户指南](MVP_USER_GUIDE.md)** - 完整的使用教程
+📖 **[井字棋用户指南](tic-tac-toe/MVP_USER_GUIDE.md)** - 完整的使用教程
 - 快速开始指南
 - 详细功能说明
 - 使用技巧和学习建议
@@ -16,41 +16,44 @@
 ### 👨‍💻 开发者
 如果您想要了解技术实现或进行二次开发：
 
-🏗️ **[架构决策文档](ARCHITECTURE_DECISION.md)** - 系统架构设计
+🏗️ **[系统架构文档](ARCHITECTURE.md)** - 系统架构设计
 - 架构决策分析
 - 组件关系图
 - 职责分离说明
 - 未来扩展计划
 
-🎮 **[井字棋实现文档](../src/ai-assistant/tic-tac-toe/README.md)** - 具体实现
-- 井字棋特定功能
-- 框架集成方式
-- 开发者API
-- 使用示例
+🎮 **游戏实现文档**
+- [井字棋实现](../src/tic-tac-toe/)
+- [奥赛罗实现](../src/othello/)
+- [麻将实现](../src/majiang/)
 
 ### 🔬 研究者
-如果您对AI算法和策略系统感兴趣：
+如果您对AI算法和性能优化感兴趣：
 
-🧠 **[策略系统](../src/tic-tac-toe/strategy/)** - AI算法实现
-- 各种AI策略实现（Minimax、Q-Learning、防守、贪心等）
-- 算法比较和评估工具
+🧠 **AlphaZero训练优化**
+- 📊 **[性能基准报告](ALPHAZERO_PERFORMANCE_BASELINE.md)** - 当前最优配置和性能基准
+- 🚀 **[方案B实施报告](SCHEME_B_IMPLEMENTATION.md)** - 早停机制优化实施和验证
+- 各种AI策略实现（Minimax、Q-Learning、AlphaZero等）
 - 性能优化和训练脚本
 
 ## 📋 文档结构说明
 
 ### 文档层次
 ```
-docs/                           # 用户文档
-├── README.md                   # 本文档（导航中心）
-├── MVP_USER_GUIDE.md          # MVP工具用户指南
-└── ARCHITECTURE_DECISION.md   # 架构决策文档
-
-src/ai-assistant/              # 框架实现
-└── tic-tac-toe/
-    └── README.md              # 井字棋实现文档
-
-src/tic-tac-toe/               # 算法实现
-└── strategy/                  # 策略系统实现
+docs/                                    # 文档根目录
+├── README.md                            # 本文档（导航中心）
+├── ARCHITECTURE.md                      # 系统架构文档
+├── ALPHAZERO_PERFORMANCE_BASELINE.md   # 性能基准（最新状态）
+├── SCHEME_B_IMPLEMENTATION.md           # 方案B实施报告（最新状态）
+├── tic-tac-toe/                         # 井字棋文档
+│   ├── MVP_USER_GUIDE.md               # 用户指南
+│   ├── ARCHITECTURE_DECISION.md        # 架构决策
+│   └── FOLDER_STRUCTURE.md             # 目录结构
+├── othello/                             # 奥赛罗文档
+│   ├── OTHELLO_QUICK_START.md          # 快速开始
+│   └── FOLDER_STRUCTURE.md              # 目录结构
+└── majiang/                             # 麻将文档
+    └── FOLDER_STRUCTURE.md              # 目录结构
 ```
 
 ### 内容范围定义
@@ -87,17 +90,18 @@ src/tic-tac-toe/               # 算法实现
 ## 🎯 快速链接
 
 ### 立即开始
-- 🚀 [快速启动MVP工具](MVP_USER_GUIDE.md#快速开始)
-- 🎮 [交互模式使用](MVP_USER_GUIDE.md#交互模式命令)
-- 🤖 [AI分析功能](MVP_USER_GUIDE.md#ai分析功能)
+- 🚀 [井字棋快速开始](tic-tac-toe/MVP_USER_GUIDE.md#快速开始)
+- 🎮 [奥赛罗快速开始](othello/OTHELLO_QUICK_START.md)
+- 🤖 [AI分析功能](tic-tac-toe/MVP_USER_GUIDE.md#ai分析功能)
 
 ### 深入了解
-- 🏗️ [系统架构设计](ARCHITECTURE_DECISION.md#架构设计)
-- 🧠 [AI策略算法](../src/tic-tac-toe/strategy/)
+- 🏗️ [系统架构设计](ARCHITECTURE.md)
+- 📊 [AlphaZero性能基准](ALPHAZERO_PERFORMANCE_BASELINE.md)
+- 🚀 [方案B优化实施](SCHEME_B_IMPLEMENTATION.md)
 
 ### 开发扩展
-- 🔌 [扩展接口](../src/ai-assistant/tic-tac-toe/README.md#开发者api)
-- 🎲 [策略实现](../src/tic-tac-toe/strategy/)
+- 🎲 [游戏实现](../src/)
+- 🧠 [AI策略算法](../src/)
 
 ## 📞 获取帮助
 

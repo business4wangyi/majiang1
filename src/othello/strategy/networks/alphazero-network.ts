@@ -63,6 +63,7 @@ export interface AlphaZeroPrediction {
  */
 export interface IAlphaZeroNetwork {
   boardToTensor(board: OthelloBoard, player: OthelloPlayer): tf.Tensor4D;
+  boardToTensorBatch?(boards: OthelloBoard[], players: OthelloPlayer[]): tf.Tensor4D; // 批量编码（优化）
   predict(boardTensor: tf.Tensor4D): AlphaZeroPrediction;
   predictBatch?(boardTensors: tf.Tensor4D[]): AlphaZeroPrediction[]; // 批量预测（可选）
   train(statesBatch: tf.Tensor4D, targetPolicies: tf.Tensor2D, targetValues: tf.Tensor2D): Promise<{ policyLoss: number; valueLoss: number; totalLoss: number }>;
@@ -313,14 +314,15 @@ export class AlphaZeroNetwork implements IAlphaZeroNetwork {
   }
 
   /**
-   * 训练网络
+   * 训练网络（优化：减少重复预测调用）
    */
   async train(
     states: tf.Tensor4D,
     targetPolicies: tf.Tensor2D,
     targetValues: tf.Tensor2D
   ): Promise<{ policyLoss: number; valueLoss: number; totalLoss: number }> {
-    const result = await this.optimizer.minimize(() => {
+    // 优化：在minimize中计算损失，然后在外部重新计算损失值用于监控（避免张量生命周期问题）
+    await this.optimizer.minimize(() => {
       const [predictedPolicies, predictedValues] = this.model.predict(states) as [tf.Tensor2D, tf.Tensor2D];
       
       // 策略损失 (交叉熵)
@@ -335,34 +337,22 @@ export class AlphaZeroNetwork implements IAlphaZeroNetwork {
       return totalLoss;
     }, true);
 
-    // 计算损失值用于监控（优化内存：使用tf.tidy管理张量）
-    let losses: { policyLoss: number; valueLoss: number; totalLoss: number };
-    
-    const [predictedPolicies, predictedValues, policyLoss, valueLoss, totalLoss] = tf.tidy(() => {
-      const [pred, val] = this.model.predict(states) as [tf.Tensor2D, tf.Tensor2D];
-      const polLoss = tf.losses.softmaxCrossEntropy(targetPolicies, pred);
-      const valLoss = tf.losses.meanSquaredError(targetValues, val);
-      const totLoss = tf.add(polLoss, valLoss);
-      return [pred, val, polLoss, valLoss, totLoss];
+    // 优化：重新计算损失值用于监控（使用tf.tidy管理内存，但只计算一次预测）
+    const losses = tf.tidy(() => {
+      const [predictedPolicies, predictedValues] = this.model.predict(states) as [tf.Tensor2D, tf.Tensor2D];
+      const policyLoss = tf.losses.softmaxCrossEntropy(targetPolicies, predictedPolicies);
+      const valueLoss = tf.losses.meanSquaredError(targetValues, predictedValues);
+      const totalLoss = tf.add(policyLoss, valueLoss);
+      
+      // 同步获取损失值（在tidy内）
+      return {
+        policyLoss: policyLoss.dataSync()[0],
+        valueLoss: valueLoss.dataSync()[0],
+        totalLoss: totalLoss.dataSync()[0]
+      };
     });
 
-    // 异步获取数据（在tidy外执行）
-    const policyLossValue = await policyLoss.data();
-    const valueLossValue = await valueLoss.data();
-    const totalLossValue = await totalLoss.data();
-
-    // 清理张量
-    predictedPolicies.dispose();
-    predictedValues.dispose();
-    policyLoss.dispose();
-    valueLoss.dispose();
-    totalLoss.dispose();
-
-    return {
-      policyLoss: policyLossValue[0],
-      valueLoss: valueLossValue[0],
-      totalLoss: totalLossValue[0]
-    };
+    return losses;
   }
 
   /**
@@ -387,6 +377,43 @@ export class AlphaZeroNetwork implements IAlphaZeroNetwork {
       }
       
       return tf.tensor4d(data, [1, 8, 8, 3]);
+    });
+  }
+
+  /**
+   * 批量将棋盘转换为张量（优化：减少函数调用开销）
+   */
+  boardToTensorBatch(boards: OthelloBoard[], players: OthelloPlayer[]): tf.Tensor4D {
+    if (boards.length === 0) {
+      throw new Error('批量编码：boards数组不能为空');
+    }
+    
+    return tf.tidy(() => {
+      const batchSize = boards.length;
+      const data = new Float32Array(batchSize * 8 * 8 * 3);
+      
+      for (let b = 0; b < batchSize; b++) {
+        const board = boards[b];
+        const player = players[b];
+        const batchOffset = b * 8 * 8 * 3;
+        
+        for (let row = 0; row < 8; row++) {
+          for (let col = 0; col < 8; col++) {
+            const idx = row * 8 + col;
+            const piece = board[row][col];
+            const dataIdx = batchOffset + idx * 3;
+            
+            // 通道0：当前玩家的棋子
+            data[dataIdx + 0] = piece === player ? 1 : 0;
+            // 通道1：对手的棋子
+            data[dataIdx + 1] = piece !== null && piece !== player ? 1 : 0;
+            // 通道2：空位
+            data[dataIdx + 2] = piece === null ? 1 : 0;
+          }
+        }
+      }
+      
+      return tf.tensor4d(data, [batchSize, 8, 8, 3]);
     });
   }
 

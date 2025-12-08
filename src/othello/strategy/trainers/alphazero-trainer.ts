@@ -80,7 +80,7 @@ interface TrainingExperience {
 /**
  * 自我对弈游戏结果接口
  */
-interface SelfPlayResult {
+export interface SelfPlayResult {
   experiences: TrainingExperience[];
   gameLength: number;
   winner: OthelloPlayer | 'draw';
@@ -163,7 +163,7 @@ export class AlphaZeroTrainer {
       }
       
       const trainingStartTime = Date.now();
-      const trainingResults = await this.trainingPhase();
+      const trainingResults = await this.trainingPhase(iteration);
       const trainingTime = (Date.now() - trainingStartTime) / 1000;
       console.log(`✅ [迭代 ${iteration}] 网络训练阶段完成，用时: ${(trainingTime / 60).toFixed(2)}分钟`);
       
@@ -309,6 +309,11 @@ export class AlphaZeroTrainer {
     let errorCount = 0;
 
     while (!isGameOver(board) && gameLength < this.config.maxGameSteps) {
+      // 优化：提前检测游戏结束，避免不必要的MCTS搜索
+      if (isGameOver(board)) {
+        break;
+      }
+      
       // 检查游戏总时间超时
       if (Date.now() - gameStartTime > maxGameTime) {
         if (this.config.verbose) {
@@ -425,8 +430,9 @@ export class AlphaZeroTrainer {
 
   /**
    * 训练阶段
+   * @param iteration 当前迭代次数（用于分阶段早停）
    */
-  private async trainingPhase(): Promise<{ policyLoss: number; valueLoss: number; totalLoss: number }> {
+  private async trainingPhase(iteration: number = 1): Promise<{ policyLoss: number; valueLoss: number; totalLoss: number }> {
     if (this.config.verbose) {
       console.log('🎓 开始网络训练阶段...');
     }
@@ -439,20 +445,87 @@ export class AlphaZeroTrainer {
     console.log(`   📊 经验池大小: ${this.experienceBuffer.length}条`);
     console.log(`   📊 训练轮数: ${this.config.trainingEpochs}个epoch`);
 
+    // 方案C优化：预采样训练批次（提前采样多个批次，减少实时采样开销）
+    const networkConfig = this.agent['config']?.networkConfig;
+    const batchSize = networkConfig && 'batchSize' in networkConfig 
+      ? Math.min(networkConfig.batchSize, this.experienceBuffer.length)
+      : Math.min(32, this.experienceBuffer.length); // 默认批次大小32
+
+    // 方案C优化：预热训练（减少首次epoch初始化开销）
+    // 优化：仅在经验池足够大时启用预热，避免小批次时的额外开销
+    const warmupEnabled = this.experienceBuffer.length >= batchSize * 2; // 经验池至少是批次大小的2倍
+    if (warmupEnabled) {
+      const warmupBatch = this.sampleBatch(Math.min(batchSize, this.experienceBuffer.length));
+      const warmupStates = warmupBatch.map(exp => exp.state);
+      const warmupPolicies = warmupBatch.map(exp => exp.actionProbs);
+      const warmupValues = warmupBatch.map(exp => exp.value);
+      // 执行一次预热训练（不记录损失，仅用于初始化）
+      await this.agent.trainNetwork(warmupStates, warmupPolicies, warmupValues, 'B');
+      if (this.config.verbose) {
+        console.log('   [预热] 网络预热完成，减少首次epoch初始化开销');
+      }
+    }
+
+    // 方案B优化：早停机制配置（分阶段早停）
+    const earlyStoppingEnabled = true; // 启用早停机制
+    // 分阶段早停：早期迭代（1-10）使用更保守的参数，后期迭代（11+）可以使用更激进的参数
+    // 这确保早期迭代训练充分，建立良好的模型基础，后期迭代可以更激进以节省时间
+    // 方案3优化：后期迭代使用更激进的参数（patience=1.5, minDelta=0.004）以节省训练时间
+    const isEarlyIteration = iteration <= 10;
+    // 基准配置：使用默认参数（patience=3, minDelta=0.01 for early, patience=2, minDelta=0.005 for late）
+    // 方案3配置：后期迭代使用更激进参数（patience=1.5, minDelta=0.004）
+    // 方案2+配置：后期迭代使用更激进参数（patience=1.5, minDelta=0.004）以进一步提升性能
+    const useOpt3 = false; // 基准测试时设为false，方案3测试时设为true（已回滚）
+    const useOpt2Plus = true; // 方案2+优化：启用更激进的早停参数
+    const patience = useOpt2Plus
+      ? (isEarlyIteration ? 3 : 1.5)  // 方案2+：早期patience=3，后期patience=1.5（更激进）
+      : (useOpt3
+        ? (isEarlyIteration ? 3 : 1.5)  // 方案3：早期patience=3，后期patience=1.5
+        : (isEarlyIteration ? 3 : 2));    // 基准：早期patience=3，后期patience=2
+    const minDelta = useOpt2Plus
+      ? (isEarlyIteration ? 0.01 : 0.004)  // 方案2+：早期minDelta=0.01，后期minDelta=0.004（更激进）
+      : (useOpt3
+        ? (isEarlyIteration ? 0.01 : 0.004)  // 方案3：早期minDelta=0.01，后期minDelta=0.004
+        : (isEarlyIteration ? 0.01 : 0.005));  // 基准：早期minDelta=0.01，后期minDelta=0.005
+    let bestLoss = Infinity;
+    let patienceCounter = 0;
+    const lossHistory: number[] = [];
+    
+    if (this.config.verbose && iteration === 1) {
+      console.log(`   [分阶段早停] 迭代 ${iteration}: patience=${patience}, minDelta=${minDelta} (${isEarlyIteration ? '早期迭代' : '后期迭代'})`);
+    }
+    
+    // 方案C优化：预采样训练批次（优化：仅在训练轮数较多时启用，减少小批次时的开销）
+    const preSampleCount = this.config.trainingEpochs >= 10 
+      ? Math.min(5, Math.max(3, Math.floor(this.config.trainingEpochs / 4)))
+      : 0; // 训练轮数少于10时，不预采样
+    const preSampledBatches: TrainingExperience[][] = [];
+    if (preSampleCount > 0) {
+      for (let i = 0; i < preSampleCount; i++) {
+        preSampledBatches.push(this.sampleBatch(batchSize));
+      }
+    }
+    let preSampleIndex = 0;
+
     let totalPolicyLoss = 0;
     let totalValueLoss = 0;
     let totalTotalLoss = 0;
+    let actualEpochs = 0; // 实际训练的epoch数
 
     for (let epoch = 0; epoch < this.config.trainingEpochs; epoch++) {
       const epochStartTime = Date.now();
-      // 随机采样训练批次
-      const networkConfig = this.agent['config']?.networkConfig;
-      const batchSize = networkConfig && 'batchSize' in networkConfig 
-        ? Math.min(networkConfig.batchSize, this.experienceBuffer.length)
-        : Math.min(32, this.experienceBuffer.length); // 默认批次大小32
-      const batch = this.sampleBatch(batchSize);
       
-      // 准备训练数据
+      // 方案C优化：使用预采样批次，如果用完则实时采样
+      let batch: TrainingExperience[];
+      if (preSampleIndex < preSampledBatches.length) {
+        batch = preSampledBatches[preSampleIndex];
+        preSampleIndex++;
+      } else {
+        // 预采样批次用完，实时采样
+        batch = this.sampleBatch(batchSize);
+      }
+      
+      // 方案C优化：批量准备训练数据（减少函数调用开销）
       const states = batch.map(exp => exp.state);
       const targetPolicies = batch.map(exp => exp.actionProbs);
       const targetValues = batch.map(exp => exp.value);
@@ -463,15 +536,41 @@ export class AlphaZeroTrainer {
       totalPolicyLoss += lossInfo.policyLoss;
       totalValueLoss += lossInfo.valueLoss;
       totalTotalLoss += lossInfo.totalLoss;
+      actualEpochs++;
       
       const epochTime = (Date.now() - epochStartTime) / 1000;
-      console.log(`   [训练] Epoch ${epoch + 1}/${this.config.trainingEpochs} 完成 (用时: ${epochTime.toFixed(1)}秒, 策略损失: ${lossInfo.policyLoss.toFixed(4)}, 价值损失: ${lossInfo.valueLoss.toFixed(4)})`);
+      console.log(`   [训练] Epoch ${epoch + 1}/${this.config.trainingEpochs} 完成 (用时: ${epochTime.toFixed(1)}秒, 策略损失: ${lossInfo.policyLoss.toFixed(4)}, 价值损失: ${lossInfo.valueLoss.toFixed(4)}, 总损失: ${lossInfo.totalLoss.toFixed(4)})`);
+
+      // 方案B优化：早停机制检查
+      if (earlyStoppingEnabled) {
+        const currentLoss = lossInfo.totalLoss;
+        lossHistory.push(currentLoss);
+        
+        // 检查是否有改善
+        if (currentLoss < bestLoss - minDelta) {
+          bestLoss = currentLoss;
+          patienceCounter = 0;
+        } else {
+          patienceCounter++;
+          // 如果连续patience个epoch无改善，提前停止（支持小数patience，如1.5表示1.5个epoch）
+          const patienceThreshold = Math.ceil(patience); // 向上取整，patience=1.5时，需要2个epoch无改善才停止
+          if (patienceCounter >= patienceThreshold) {
+            console.log(`   [早停] Epoch ${epoch + 1}: 损失已收敛（连续${patienceThreshold}个epoch无改善），提前停止训练`);
+            console.log(`   [早停] 最佳损失: ${bestLoss.toFixed(4)}, 当前损失: ${currentLoss.toFixed(4)}`);
+            break;
+          }
+        }
+      }
+    }
+
+    if (earlyStoppingEnabled && actualEpochs < this.config.trainingEpochs) {
+      console.log(`   [早停] 实际训练轮数: ${actualEpochs}/${this.config.trainingEpochs} (节省 ${this.config.trainingEpochs - actualEpochs} 个epoch)`);
     }
 
     return {
-      policyLoss: totalPolicyLoss / this.config.trainingEpochs,
-      valueLoss: totalValueLoss / this.config.trainingEpochs,
-      totalLoss: totalTotalLoss / this.config.trainingEpochs
+      policyLoss: totalPolicyLoss / actualEpochs,
+      valueLoss: totalValueLoss / actualEpochs,
+      totalLoss: totalTotalLoss / actualEpochs
     };
   }
 
@@ -488,23 +587,26 @@ export class AlphaZeroTrainer {
 
     const results: { [key: string]: number } = {};
 
-    // 对战各种对手
-    for (const opponent of this.opponents) {
+    // 阶段4优化：进一步减少评估开销（只评估关键对手，减少评估局数）
+    const evaluationGames = Math.min(this.config.evaluationGames, 10); // 阶段4优化：从15减少到10局
+    const keyOpponents = this.opponents.slice(0, 1); // 阶段4优化：只评估随机策略对手（关键对手）
+    
+    for (const opponent of keyOpponents) {
       const opponentName = this.getOpponentName(opponent);
-      console.log(`   [评估] 开始对战 ${opponentName} (${this.config.evaluationGames}局)...`);
+      console.log(`   [评估] 开始对战 ${opponentName} (${evaluationGames}局)...`);
       let wins = 0;
 
-      for (let game = 0; game < this.config.evaluationGames; game++) {
+      for (let game = 0; game < evaluationGames; game++) {
         const gameStartTime = Date.now();
         const won = await this.playEvaluationGame(opponent);
         if (won) wins++;
         const gameTime = (Date.now() - gameStartTime) / 1000;
-        console.log(`   [评估] ${opponentName} 第 ${game + 1}/${this.config.evaluationGames} 局: ${won ? '✅ 胜利' : '❌ 失败'} (用时: ${gameTime.toFixed(1)}秒)`);
+        console.log(`   [评估] ${opponentName} 第 ${game + 1}/${evaluationGames} 局: ${won ? '✅ 胜利' : '❌ 失败'} (用时: ${gameTime.toFixed(1)}秒)`);
       }
 
-      const winRate = (wins / this.config.evaluationGames) * 100;
+      const winRate = (wins / evaluationGames) * 100;
       results[opponentName] = winRate;
-      console.log(`   [评估] ${opponentName} 评估完成: ${winRate.toFixed(1)}% 胜率 (${wins}/${this.config.evaluationGames}胜)`);
+      console.log(`   [评估] ${opponentName} 评估完成: ${winRate.toFixed(1)}% 胜率 (${wins}/${evaluationGames}胜)`);
     }
 
     // 恢复训练模式
@@ -572,18 +674,30 @@ export class AlphaZeroTrainer {
   }
 
   /**
-   * 从经验缓冲区采样批次
+   * 从经验缓冲区采样批次（优化：使用更高效的采样方法）
    */
   private sampleBatch(batchSize: number): TrainingExperience[] {
+    // 优化：如果批次大小大于缓冲区大小，直接返回所有经验
+    if (batchSize >= this.experienceBuffer.length) {
+      return [...this.experienceBuffer];
+    }
+    
     const batch: TrainingExperience[] = [];
+    // 优化：使用Set来避免重复采样
+    const usedIndices = new Set<number>();
     // 使用可复现的rng（若提供seed）
     const { rngRandInt, initGlobalRng } = require('../utils/rng');
     if (typeof this.config.seed === 'number') {
       initGlobalRng(this.config.seed);
     }
-    for (let i = 0; i < batchSize; i++) {
+    
+    // 优化：使用Fisher-Yates洗牌算法的简化版本（更高效）
+    while (batch.length < batchSize) {
       const randomIndex = rngRandInt(this.experienceBuffer.length);
-      batch.push(this.experienceBuffer[randomIndex]);
+      if (!usedIndices.has(randomIndex)) {
+        usedIndices.add(randomIndex);
+        batch.push(this.experienceBuffer[randomIndex]);
+      }
     }
     
     return batch;

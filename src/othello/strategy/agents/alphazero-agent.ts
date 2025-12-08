@@ -42,6 +42,8 @@ export interface AlphaZeroAgentConfig {
   useAdvancedNetwork?: boolean;
   /** 自定义网络实例（如果提供，将使用此实例而不是根据配置创建） */
   customNetwork?: IAlphaZeroNetwork;
+  /** MCTS批量推理批次大小（优化：支持更大的批量推理） */
+  mctsBatchSize?: number;
 }
 
 /**
@@ -119,9 +121,12 @@ export class AlphaZeroOthelloAgent implements OthelloAgent {
     // 可通过环境变量 USE_UNIVERSAL_MCTS=false 切换回原MCTS
     this.useUniversalMCTS = process.env.USE_UNIVERSAL_MCTS !== 'false';
     
+    // 获取MCTS批量推理批次大小（优化：支持配置）
+    const mctsBatchSize = this.config.mctsBatchSize || Number(process.env.ALPHAZERO_MCTS_BATCH_SIZE) || 8;
+    
     if (this.useUniversalMCTS) {
-      this.mcts = new AlphaZeroMCTSUniversal(this.network, this.config.mctsConfig);
-      console.log(`🔄 使用通用MCTS框架（推荐：包含超时机制和状态缓存）`);
+      this.mcts = new AlphaZeroMCTSUniversal(this.network, this.config.mctsConfig, mctsBatchSize);
+      console.log(`🔄 使用通用MCTS框架（推荐：包含超时机制和状态缓存，批量大小: ${mctsBatchSize}）`);
     } else {
       this.mcts = new AlphaZeroMCTS(this.network, this.config.mctsConfig);
       console.log(`📦 使用原MCTS实现（不推荐：缺少超时机制）`);
@@ -311,11 +316,11 @@ export class AlphaZeroOthelloAgent implements OthelloAgent {
       throw new Error('智能体不在训练模式');
     }
 
-    // 转换为张量
-    const stateTensors = states.map(state => this.network.boardToTensor(state, player));
-    const statesBatch = stateTensors.length > 1 ?
-      tf.concat(stateTensors, 0) :
-      stateTensors[0];
+    // 优化：批量编码状态（减少函数调用开销）
+    const players = states.map(() => player);
+    const statesBatch = this.network.boardToTensorBatch 
+      ? this.network.boardToTensorBatch(states, players)
+      : tf.concat(states.map(state => this.network.boardToTensor(state, player)), 0);
 
     const targetPoliciesTensor = tf.tensor2d(targetPolicies);
     const targetValuesTensor = tf.tensor2d(targetValues.map(v => [v]));
@@ -328,10 +333,7 @@ export class AlphaZeroOthelloAgent implements OthelloAgent {
     );
 
     // 清理张量
-    stateTensors.forEach(tensor => tensor.dispose());
-    if (stateTensors.length > 1) {
-      (statesBatch as tf.Tensor4D).dispose();
-    }
+    statesBatch.dispose();
     targetPoliciesTensor.dispose();
     targetValuesTensor.dispose();
 
