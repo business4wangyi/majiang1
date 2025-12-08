@@ -63,43 +63,48 @@ GitHub Token用于：
 
 5. **Repository permissions**（仓库权限）：
    
-   ⚠️ **注意**：GitHub的权限选项可能会更新，实际界面可能有所不同。请根据实际显示的权限选项进行选择。
+   ⚠️ **重要**：根据实际创建Token时的界面，某些权限（如Metadata、Contents）可能**不在界面上显示**。这可能是GitHub界面更新导致的。
    
-   📚 **完整权限列表**：参考 [GitHub Fine-grained Permissions完整列表](GITHUB_FINE_GRAINED_PERMISSIONS.md) 获取所有可用权限的详细信息。
+   📚 **参考文档**：
+   - [实际需要勾选的权限](GITHUB_TOKEN_ACTUAL_PERMISSIONS.md) - 基于实际界面
+   - [完整权限列表](GITHUB_FINE_GRAINED_PERMISSIONS.md) - 所有可用权限
    
-   **最小必需权限**（用于GitHub MCP和Actions）：
-   - ✅ **Metadata**: Read-only（只读，通常自动勾选，必需）
-   - ✅ **Contents**: Read and write（读写仓库内容）
+   **实际需要勾选的权限**（如果界面显示）：
    
-   **推荐权限**（如果需要完整功能）：
-   - ✅ **Actions**: Read and write（读写Actions，用于触发工作流）
-   - ✅ **Workflows**: Read and write（读写工作流文件）
-   - ✅ **Issues**: Read and write（读写Issues，如果需要）
-   - ✅ **Pull requests**: Read and write（读写PR，如果需要）
-   
-   **创建仓库所需权限**：
+   **必需权限**：
    - ✅ **Administration**: Read and write（**必需**，用于创建仓库）
+   - ✅ **Actions**: Read and write（**必需**，用于触发工作流）
+   - ✅ **Workflows**: Read and write（**必需**，用于管理工作流）
    
-   **其他常用权限**（根据实际需求选择）：
-   - **Secrets**: Read and write（密钥管理）
-   - **Variables**: Read and write（变量管理）
-   - **Environments**: Read and write（环境管理）
-   - **Deployments**: Read and write（部署管理）
-   - **Pages**: Read and write（Pages管理）
-   - **Webhooks**: Read and write（Webhooks管理）
-   - **Commit statuses**: Read and write（提交状态）
+   **可选权限**（根据需求勾选）：
+   - ✅ **Contents**: Read and write（如果界面显示，用于读写仓库内容）
+   - ✅ **Issues**: Read and write（如果需要创建Issues）
+   - ✅ **Pull requests**: Read and write（如果需要创建PR）
+   - ✅ **Secrets**: Read and write（如果需要管理Secrets）
+   - ✅ **Variables**: Read and write（如果需要管理Variables）
+   - ✅ **Environments**: Read and write（如果需要管理环境）
+   - ✅ **Deployments**: Read and write（如果需要管理部署）
+   - ✅ **Pages**: Read and write（如果需要管理Pages）
+   - ✅ **Webhooks**: Read and write（如果需要管理Webhooks）
    
-   **安全相关权限**（可选）：
-   - **Code scanning alerts**: Read and write（代码扫描警报）
-   - **Dependabot alerts**: Read and write（Dependabot警报）
-   - **Secret scanning alerts**: Read and write（密钥扫描警报）
-   - **Repository security advisories**: Read and write（安全公告）
+   **关于Metadata和Contents权限**：
+   - ⚠️ 如果界面**没有显示**这些权限选项，可能：
+     1. 已自动包含在其他权限中（如Administration）
+     2. 已合并到其他权限
+     3. GitHub界面已更新，显示方式不同
+   - 💡 **建议**：创建Token后测试，如果权限不足，查看API错误响应中的 `X-Accepted-GitHub-Permissions` 头
    
-   💡 **提示**：
-   - 所有权限都有 **Read** 和 **Read and write** 两个级别
-   - **Metadata** 权限通常是自动勾选的，且必需
-   - 如果界面中没有列出某个权限，说明该权限可能已合并或需要特定设置
-   - 参考 [GitHub官方文档](https://docs.github.com/en/rest/authentication/permissions-required-for-fine-grained-personal-access-tokens?apiVersion=2022-11-28) 获取最新权限列表
+   **测试Token权限**：
+   ```bash
+   # 测试创建仓库（需要Administration权限）
+   curl -X POST \
+     -H "Authorization: token YOUR_TOKEN" \
+     -H "Accept: application/vnd.github.v3+json" \
+     https://api.github.com/user/repos \
+     -d '{"name":"test-repo","private":false}'
+   
+   # 如果失败，检查响应头中的 X-Accepted-GitHub-Permissions
+   ```
 
 6. **Account permissions**（账户权限）：
    - 通常不需要额外权限
