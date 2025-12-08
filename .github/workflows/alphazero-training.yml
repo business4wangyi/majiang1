@@ -1,6 +1,6 @@
 name: AlphaZero Training
 
-on:
+'on':
   # 定时触发（每天凌晨2点UTC，即北京时间上午10点）
   schedule:
     - cron: '0 2 * * *'
