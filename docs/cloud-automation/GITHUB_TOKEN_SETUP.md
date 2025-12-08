@@ -57,11 +57,22 @@ GitHub Token用于：
    - 建议：首次使用选择较短时间，测试通过后可以延长
 
 4. **Repository access**（仓库访问）：
-   - 选择 **"Only select repositories"**（仅选定的仓库）
-   - 选择您要使用的仓库
-   - 或选择 **"All repositories"**（所有仓库，如果信任）
+   - ⚠️ **重要**：必须先选择此项，才会显示Repository permissions
+   - 选择 **"All repositories"**（所有仓库，推荐）
+   - 或选择 **"Only select repositories"**（仅选定的仓库）
 
 5. **Repository permissions**（仓库权限）：
+   
+   ⚠️ **关键**：Repository permissions在选择了"Repository access"后才会显示！
+   
+   **如果看不到Repository permissions**：
+   - 确保已选择"Repository access"（All repositories或Only select repositories）
+   - 滚动页面查看（可能在页面下方）
+   - 刷新页面重试
+   
+   📚 **详细界面指南**：参考 [GitHub Token创建界面指南](GITHUB_TOKEN_INTERFACE_GUIDE.md)
+   
+   在Repository permissions部分，勾选以下权限：
    
    ⚠️ **重要**：根据实际创建Token时的界面，某些权限（如Metadata、Contents）可能**不在界面上显示**。这可能是GitHub界面更新导致的。
    
