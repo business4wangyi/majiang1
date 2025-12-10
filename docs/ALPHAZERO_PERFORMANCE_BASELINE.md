@@ -45,6 +45,12 @@
 }
 ```
 
+### GitHub Actions 运行方式
+- workflow: `.github/workflows/alphazero-perf.yml`
+- 触发：`workflow_dispatch`（可选输入 `iterations`，`selfplay_games`），或针对 `src/othello/**`、`docs/**`、workflow 自身的 push
+- Runner：`ubuntu-latest`，默认 4 核限制（通过 `ALPHAZERO_PARALLEL_GAMES=4` 固定）
+- 默认参数：5 轮、12 局自我对弈、MCTS 300→300、评估频率 10；日志以 artifact 形式上传 `/tmp/alphazero-perf.log`
+
 ### 性能基准（最新优化后 - 当前基准）
 
 **5轮测试基准（分阶段早停优化后）**：

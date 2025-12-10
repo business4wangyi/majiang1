@@ -1,5 +1,11 @@
 # 🔍 性能优化空间分析（4核限制，MCTS 600次模拟）
 
+## ⚙️ GitHub Actions运行指引（4核、MCTS 300/600可切换）
+- workflow: `.github/workflows/alphazero-perf.yml`
+- 触发：`workflow_dispatch`（inputs: `iterations` 默认5，`selfplay_games` 默认12）；或针对 `src/othello/**`、`docs/**`、workflow 自身的 push
+- Runner：`ubuntu-latest`（2 核物理/4 线程），通过 `ALPHAZERO_PARALLEL_GAMES=4` 固定并行
+- 默认参数：5 轮、12 局、MCTS 300→300（可在 inputs/环境变量覆盖），评估频率 10，日志 `/tmp/alphazero-perf.log` 作为 artifact 上传
+
 ## 📊 基准方案性能分析
 
 ### 测试配置

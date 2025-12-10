@@ -1,5 +1,11 @@
 # 🚀 方案B优化实施报告
 
+## ⚙️ GitHub Actions运行（方案B/方案2场景）
+- workflow: `.github/workflows/alphazero-perf.yml`
+- 触发：`workflow_dispatch`（inputs: `iterations` 默认5，`selfplay_games` 默认12），或针对核心代码/文档的 push
+- Runner：`ubuntu-latest`，并行固定 `ALPHAZERO_PARALLEL_GAMES=4`
+- 默认：MCTS 300→300，评估频率 10，日志 `/tmp/alphazero-perf.log` 自动上传为 artifact
+
 ## 📋 实施内容
 
 ### 1. ✅ 早停机制（Early Stopping）

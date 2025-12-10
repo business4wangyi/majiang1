@@ -1,0 +1,54 @@
+name: AlphaZero Performance CI
+
+on:
+  workflow_dispatch:
+    inputs:
+      iterations:
+        description: "总迭代数（默认5）"
+        required: false
+        default: "5"
+      selfplay_games:
+        description: "自我对弈局数（默认12，4核限制）"
+        required: false
+        default: "12"
+  push:
+    paths:
+      - "src/othello/**"
+      - "docs/**"
+      - ".github/workflows/alphazero-perf.yml"
+
+jobs:
+  perf-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "18"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run fast AlphaZero training (4核限制场景)
+        env:
+          ALPHAZERO_TOTAL_ITERATIONS: ${{ github.event.inputs.iterations || 5 }}
+          ALPHAZERO_SELFPLAY_GAMES: ${{ github.event.inputs.selfplay_games || 12 }}
+          ALPHAZERO_PARALLEL_GAMES: 4
+          ALPHAZERO_INITIAL_MCTS: 300
+          ALPHAZERO_FINAL_MCTS: 300
+          ALPHAZERO_EVAL_FREQUENCY: 10
+        run: |
+          npm run othello:alphazero-fast-train 2>&1 | tee /tmp/alphazero-perf.log
+
+      - name: Upload training log
+        uses: actions/upload-artifact@v4
+        with:
+          name: alphazero-perf-log
+          path: /tmp/alphazero-perf.log
+
+
