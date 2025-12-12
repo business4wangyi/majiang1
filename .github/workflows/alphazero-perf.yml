@@ -8,9 +8,9 @@ on:
         required: false
         default: "5"
       selfplay_games:
-        description: "自我对弈局数（默认10，稳定性优化）"
+        description: "自我对弈局数（默认9，时间压缩+稳定性平衡）"
         required: false
-        default: "10"
+        default: "9"
   push:
     paths:
       - "src/othello/**"
@@ -37,12 +37,13 @@ jobs:
       - name: Run fast AlphaZero training (4核限制场景)
         env:
           ALPHAZERO_TOTAL_ITERATIONS: ${{ github.event.inputs.iterations || 5 }}
-          ALPHAZERO_SELFPLAY_GAMES: ${{ github.event.inputs.selfplay_games || 10 }}
+          ALPHAZERO_SELFPLAY_GAMES: ${{ github.event.inputs.selfplay_games || 9 }}
           ALPHAZERO_PARALLEL_GAMES: 4
           ALPHAZERO_INITIAL_MCTS: 250  # 稳定性优化：MCTS 250次（平衡性能和效果，改善训练稳定性）
           ALPHAZERO_FINAL_MCTS: 250  # 稳定性优化：MCTS 250次（平衡性能和效果，改善训练稳定性）
           ALPHAZERO_DYNAMIC_MCTS: false  # 稳定性优化：禁用动态MCTS，固定250次
           ALPHAZERO_EVAL_FREQUENCY: 10
+          ALPHAZERO_LATE_EPOCHS: 14  # 时间压缩优化：后期训练上限14个epoch（从15减少）
         run: |
           npm run othello:alphazero-fast-train 2>&1 | tee /tmp/alphazero-perf.log
 

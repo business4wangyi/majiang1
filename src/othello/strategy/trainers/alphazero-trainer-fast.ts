@@ -59,9 +59,9 @@ export const DEFAULT_FAST_TRAINING_CONFIG: FastTrainingConfig = {
   enableBatchInference: true,  // 启用批量推理
   batchInferenceSize: 16,  // 回滚方案3：批量大小16（方案3效果不明显，已回滚）
   earlyTrainingEpochs: 5,  // 早期5个epoch（优化：已验证最优）
-  lateTrainingEpochs: 15,  // 30分钟目标优化：后期15个epoch（从20减少到15，减少25%训练时间上限）
+  lateTrainingEpochs: 14,  // 时间压缩优化：后期14个epoch（在保持稳定性的前提下进一步缩短训练）
   evaluationFrequency: 10,  // 每10次迭代评估一次
-  selfPlayGames: 10,  // 稳定性优化：从8增加到10（增加25%，改善训练稳定性，配合MCTS 250次）
+  selfPlayGames: 9,  // 时间压缩优化：10→9局/迭代（在保持稳定性的前提下小幅降低自我对弈时间）
   trainingEpochs: 12,  // 方案2+优化：默认12（从15减少到12，减少25%）
 };
 
