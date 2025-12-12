@@ -485,7 +485,7 @@ export class AlphaZeroTrainer {
           ? (isEarlyIteration ? 3 : 1.5)  // 已废弃
           : (isEarlyIteration ? 3 : 2)));    // 基准：早期patience=3，后期patience=2
     const minDelta = useOpt30min
-      ? (isEarlyIteration ? 0.01 : 0.005)  // 时间压缩优化：后期minDelta=0.005（更激进，配合自我对弈9局/迭代）
+      ? (isEarlyIteration ? 0.01 : 0.0045)  // 更激进时间压缩：后期minDelta=0.0045（配合自我对弈8局/迭代）
       : (useOpt2Plus
         ? (isEarlyIteration ? 0.01 : 0.004)  // 已废弃
         : (useOpt3
