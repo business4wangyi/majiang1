@@ -61,7 +61,7 @@ export const DEFAULT_FAST_TRAINING_CONFIG: FastTrainingConfig = {
   earlyTrainingEpochs: 5,  // 早期5个epoch（优化：已验证最优）
   lateTrainingEpochs: 12,  // 方案2+优化：后期12个epoch（从15减少到12，减少25%训练时间）
   evaluationFrequency: 10,  // 每10次迭代评估一次
-  selfPlayGames: 60,  // 方案2+优化：从80减少到60（减少25%，配合固定MCTS 300次）
+  selfPlayGames: 8,  // 30分钟目标优化：从12减少到8（减少33%，配合MCTS 200次）
   trainingEpochs: 12,  // 方案2+优化：默认12（从15减少到12，减少25%）
 };
 
