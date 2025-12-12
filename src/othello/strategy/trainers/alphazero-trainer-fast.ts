@@ -53,9 +53,9 @@ const optimalParallelGames = Math.min(Math.max(4, Math.floor(cpuCount * 0.5)), 4
 export const DEFAULT_FAST_TRAINING_CONFIG: FastTrainingConfig = {
   ...DEFAULT_ALPHAZERO_TRAINING_CONFIG,
   parallelGames: optimalParallelGames,  // 优化：动态调整并行游戏数（6-8核）
-  enableDynamicMCTS: false,  // 方案2优化：禁用动态MCTS，固定为300次模拟
-  initialMCTSSimulations: 300,  // 方案2优化：固定300次模拟（折中方案）
-  finalMCTSSimulations: 300,  // 方案2优化：固定300次模拟（折中方案）
+  enableDynamicMCTS: false,  // 30分钟目标优化：禁用动态MCTS，固定为200次模拟
+  initialMCTSSimulations: 200,  // 30分钟目标优化：固定200次模拟（从300减少到200，减少33%）
+  finalMCTSSimulations: 200,  // 30分钟目标优化：固定200次模拟（从300减少到200，减少33%）
   enableBatchInference: true,  // 启用批量推理
   batchInferenceSize: 16,  // 回滚方案3：批量大小16（方案3效果不明显，已回滚）
   earlyTrainingEpochs: 5,  // 早期5个epoch（优化：已验证最优）
@@ -393,9 +393,9 @@ export async function runFastTraining(): Promise<void> {
     totalIterations: Number(process.env.ALPHAZERO_TOTAL_ITERATIONS) || 100,
     selfPlayGames: Number(process.env.ALPHAZERO_SELFPLAY_GAMES) || DEFAULT_FAST_TRAINING_CONFIG.selfPlayGames,  // 方案2+优化：默认60局（从80减少到60）
     parallelGames: Number(process.env.ALPHAZERO_PARALLEL_GAMES) || 4,  // 并行游戏数
-    enableDynamicMCTS: process.env.ALPHAZERO_DYNAMIC_MCTS !== 'false',
-    initialMCTSSimulations: Number(process.env.ALPHAZERO_INITIAL_MCTS) || 200,
-    finalMCTSSimulations: Number(process.env.ALPHAZERO_FINAL_MCTS) || 600,
+    enableDynamicMCTS: process.env.ALPHAZERO_DYNAMIC_MCTS === 'true' ? true : false,  // 30分钟目标优化：默认禁用动态MCTS，固定200次
+    initialMCTSSimulations: Number(process.env.ALPHAZERO_INITIAL_MCTS) || DEFAULT_FAST_TRAINING_CONFIG.initialMCTSSimulations,  // 30分钟目标优化：默认200次（从300减少到200）
+    finalMCTSSimulations: Number(process.env.ALPHAZERO_FINAL_MCTS) || DEFAULT_FAST_TRAINING_CONFIG.finalMCTSSimulations,  // 30分钟目标优化：默认200次（从300减少到200）
     enableBatchInference: process.env.ALPHAZERO_BATCH_INFERENCE !== 'false',
     batchInferenceSize: Number(process.env.ALPHAZERO_BATCH_SIZE) || 16,  // 方案A优化：批次大小16（回滚方案C的32）
     earlyTrainingEpochs: Number(process.env.ALPHAZERO_EARLY_EPOCHS) || 5,  // 优化：从10减少到5
