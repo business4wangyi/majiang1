@@ -470,23 +470,27 @@ export class AlphaZeroTrainer {
     const earlyStoppingEnabled = true; // 启用早停机制
     // 分阶段早停：早期迭代（1-10）使用更保守的参数，后期迭代（11+）可以使用更激进的参数
     // 这确保早期迭代训练充分，建立良好的模型基础，后期迭代可以更激进以节省时间
-    // 方案3优化：后期迭代使用更激进的参数（patience=1.5, minDelta=0.004）以节省训练时间
     const isEarlyIteration = iteration <= 10;
-    // 基准配置：使用默认参数（patience=3, minDelta=0.01 for early, patience=2, minDelta=0.005 for late）
-    // 方案3配置：后期迭代使用更激进参数（patience=1.5, minDelta=0.004）
-    // 方案2+配置：后期迭代使用更激进参数（patience=1.5, minDelta=0.004）以进一步提升性能
-    const useOpt3 = false; // 基准测试时设为false，方案3测试时设为true（已回滚）
-    const useOpt2Plus = true; // 方案2+优化：启用更激进的早停参数
-    const patience = useOpt2Plus
-      ? (isEarlyIteration ? 3 : 1.5)  // 方案2+：早期patience=3，后期patience=1.5（更激进）
-      : (useOpt3
-        ? (isEarlyIteration ? 3 : 1.5)  // 方案3：早期patience=3，后期patience=1.5
-        : (isEarlyIteration ? 3 : 2));    // 基准：早期patience=3，后期patience=2
-    const minDelta = useOpt2Plus
-      ? (isEarlyIteration ? 0.01 : 0.004)  // 方案2+：早期minDelta=0.01，后期minDelta=0.004（更激进）
-      : (useOpt3
-        ? (isEarlyIteration ? 0.01 : 0.004)  // 方案3：早期minDelta=0.01，后期minDelta=0.004
-        : (isEarlyIteration ? 0.01 : 0.005));  // 基准：早期minDelta=0.01，后期minDelta=0.005
+    // 回滚阶段1优化A3：恢复到基准早停参数
+    // 基准配置：早期patience=3, minDelta=0.01；后期patience=2, minDelta=0.005
+    // 阶段1优化A3测试结果：minDelta=0.004导致训练轮数增加，已回滚
+    const useOpt3 = false; // 已废弃（方案3已回滚）
+    const useOpt2Plus = false; // 回滚：阶段1优化A3效果不佳，已回滚到基准配置
+    const useOpt30min = true; // 30分钟目标优化：方案3+4 - 早停参数优化
+    const patience = useOpt30min
+      ? (isEarlyIteration ? 3 : 1.5)  // 30分钟目标优化：后期patience=1.5（从2减少到1.5）
+      : (useOpt2Plus
+        ? (isEarlyIteration ? 3 : 2)  // 已废弃
+        : (useOpt3
+          ? (isEarlyIteration ? 3 : 1.5)  // 已废弃
+          : (isEarlyIteration ? 3 : 2)));    // 基准：早期patience=3，后期patience=2
+    const minDelta = useOpt30min
+      ? (isEarlyIteration ? 0.01 : 0.006)  // 30分钟目标优化：后期minDelta=0.006（从0.005增加到0.006，更保守）
+      : (useOpt2Plus
+        ? (isEarlyIteration ? 0.01 : 0.004)  // 已废弃
+        : (useOpt3
+          ? (isEarlyIteration ? 0.01 : 0.004)  // 已废弃
+          : (isEarlyIteration ? 0.01 : 0.005)));  // 基准：早期minDelta=0.01，后期minDelta=0.005
     let bestLoss = Infinity;
     let patienceCounter = 0;
     const lossHistory: number[] = [];

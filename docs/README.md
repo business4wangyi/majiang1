@@ -31,8 +31,9 @@
 如果您对AI算法和性能优化感兴趣：
 
 🧠 **AlphaZero训练优化**
-- 📊 **[性能基准报告](ALPHAZERO_PERFORMANCE_BASELINE.md)** - 当前最优配置和性能基准
-- 🚀 **[方案B实施报告](SCHEME_B_IMPLEMENTATION.md)** - 早停机制优化实施和验证
+- 📊 **[当前状态总结](othello/ALPHAZERO_CURRENT_STATE.md)** - 当前基准配置和性能数据
+- 🚀 **[下一步优化方案](othello/performance/NEXT_OPTIMIZATION_RECOMMENDATIONS.md)** - 推荐优化方向和方案
+- 📈 **[性能基准详细报告](othello/performance/ALPHAZERO_PERFORMANCE_BASELINE.md)** - 完整性能基准数据
 - 各种AI策略实现（Minimax、Q-Learning、AlphaZero等）
 - 性能优化和训练脚本
 
@@ -43,15 +44,21 @@
 docs/                                    # 文档根目录
 ├── README.md                            # 本文档（导航中心）
 ├── ARCHITECTURE.md                      # 系统架构文档
-├── ALPHAZERO_PERFORMANCE_BASELINE.md   # 性能基准（最新状态）
-├── SCHEME_B_IMPLEMENTATION.md           # 方案B实施报告（最新状态）
 ├── tic-tac-toe/                         # 井字棋文档
 │   ├── MVP_USER_GUIDE.md               # 用户指南
 │   ├── ARCHITECTURE_DECISION.md        # 架构决策
 │   └── FOLDER_STRUCTURE.md             # 目录结构
 ├── othello/                             # 奥赛罗文档
+│   ├── ALPHAZERO_CURRENT_STATE.md      # 当前状态总结（最新）
 │   ├── OTHELLO_QUICK_START.md          # 快速开始
-│   └── FOLDER_STRUCTURE.md              # 目录结构
+│   ├── FOLDER_STRUCTURE.md              # 目录结构
+│   └── performance/                     # 性能分析文档
+│       ├── README.md                   # 性能分析目录说明
+│       ├── ALPHAZERO_PERFORMANCE_BASELINE.md  # 性能基准详细报告
+│       ├── NEXT_OPTIMIZATION_RECOMMENDATIONS.md  # 下一步优化方案
+│       ├── NEXT_OPTIMIZATION_PLAN.md   # 历史优化计划
+│       ├── OPTIMIZATION_SPACE_ANALYSIS.md  # 优化空间分析
+│       └── SCHEME_B_IMPLEMENTATION.md  # 方案B实施报告
 └── majiang/                             # 麻将文档
     └── FOLDER_STRUCTURE.md              # 目录结构
 ```
@@ -96,8 +103,8 @@ docs/                                    # 文档根目录
 
 ### 深入了解
 - 🏗️ [系统架构设计](ARCHITECTURE.md)
-- 📊 [AlphaZero性能基准](ALPHAZERO_PERFORMANCE_BASELINE.md)
-- 🚀 [方案B优化实施](SCHEME_B_IMPLEMENTATION.md)
+- 📊 [AlphaZero当前状态](othello/ALPHAZERO_CURRENT_STATE.md)
+- 🚀 [下一步优化方案](othello/performance/NEXT_OPTIMIZATION_RECOMMENDATIONS.md)
 
 ### 开发扩展
 - 🎲 [游戏实现](../src/)

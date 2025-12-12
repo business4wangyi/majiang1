@@ -343,7 +343,7 @@ export class AlphaZeroNetwork implements IAlphaZeroNetwork {
       const policyLoss = tf.losses.softmaxCrossEntropy(targetPolicies, predictedPolicies);
       const valueLoss = tf.losses.meanSquaredError(targetValues, predictedValues);
       const totalLoss = tf.add(policyLoss, valueLoss);
-      
+
       // 同步获取损失值（在tidy内）
       return {
         policyLoss: policyLoss.dataSync()[0],

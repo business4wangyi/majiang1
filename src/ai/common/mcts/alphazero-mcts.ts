@@ -36,8 +36,8 @@ export const DEFAULT_MCTS_CONFIG: MCTSConfig = {
   dirichletAlpha: 0.3,
   noiseWeight: 0.25,
   temperature: 1.0,
-  earlyTerminationThreshold: 0.90,  // 回滚：保持0.90（0.88过于激进，导致性能下降）
-  minSimulations: undefined  // 使用默认值（18%，回滚16%）
+  earlyTerminationThreshold: 0.90,  // 回滚：恢复到基准值0.90（阶段1优化A1效果不明显，已回滚）
+  minSimulations: undefined  // 使用默认值（18%，回滚：恢复到基准值18%）
 };
 
 /**
@@ -207,8 +207,8 @@ export class AlphaZeroMCTS<State = any, Action = any, Player = any> {
    */
   async search(state: State, player: Player): Promise<MCTSSearchResult> {
     const root = new MCTSNode(state, player, this.adapter);
-    const minSimulations = this.config.minSimulations || Math.floor(this.config.numSimulations * 0.18); // 回滚：保持18%（16%过于激进，导致性能下降）
-    const earlyTerminationThreshold = this.config.earlyTerminationThreshold || 0.90; // 回滚：保持0.90（0.88过于激进，导致性能下降）
+    const minSimulations = this.config.minSimulations || Math.floor(this.config.numSimulations * 0.18); // 回滚：恢复到基准值18%（阶段1优化A1效果不明显，已回滚）
+    const earlyTerminationThreshold = this.config.earlyTerminationThreshold || 0.90; // 回滚：恢复到基准值0.90（阶段1优化A1效果不明显，已回滚）
 
     // 批量推理支持：如果batchSize > 0，使用批量推理；否则使用单次预测
     const useBatchInference = this.batchSize > 0 && this.network.predictBatch;

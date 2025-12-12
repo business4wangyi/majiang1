@@ -165,9 +165,8 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: training-results-${{ github.run_number }}-${{ github.sha }}
+          # 仅上传训练报告（精简体积，便于下载/解析）
           path: |
-            src/othello/models/**
-            logs/**
             training-reports/**
           retention-days: 30
           if-no-files-found: warn
@@ -186,7 +185,7 @@ jobs:
           echo "- **运行时间**: $(date -u +'%Y-%m-%d %H:%M:%S UTC')" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### 训练结果" >> $GITHUB_STEP_SUMMARY
-          echo "训练结果已保存到Artifacts，请下载查看。" >> $GITHUB_STEP_SUMMARY
+          echo "训练结果（精简版，仅 JSON 报告）已保存到Artifacts，请下载查看。" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### AI可读格式" >> $GITHUB_STEP_SUMMARY
           echo "训练结果以JSON格式保存在 \`training-reports/\` 目录中：" >> $GITHUB_STEP_SUMMARY

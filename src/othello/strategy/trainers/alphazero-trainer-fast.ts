@@ -59,7 +59,7 @@ export const DEFAULT_FAST_TRAINING_CONFIG: FastTrainingConfig = {
   enableBatchInference: true,  // 启用批量推理
   batchInferenceSize: 16,  // 回滚方案3：批量大小16（方案3效果不明显，已回滚）
   earlyTrainingEpochs: 5,  // 早期5个epoch（优化：已验证最优）
-  lateTrainingEpochs: 12,  // 方案2+优化：后期12个epoch（从15减少到12，减少25%训练时间）
+  lateTrainingEpochs: 15,  // 30分钟目标优化：后期15个epoch（从20减少到15，减少25%训练时间上限）
   evaluationFrequency: 10,  // 每10次迭代评估一次
   selfPlayGames: 8,  // 30分钟目标优化：从12减少到8（减少33%，配合MCTS 200次）
   trainingEpochs: 12,  // 方案2+优化：默认12（从15减少到12，减少25%）
@@ -399,7 +399,7 @@ export async function runFastTraining(): Promise<void> {
     enableBatchInference: process.env.ALPHAZERO_BATCH_INFERENCE !== 'false',
     batchInferenceSize: Number(process.env.ALPHAZERO_BATCH_SIZE) || 16,  // 方案A优化：批次大小16（回滚方案C的32）
     earlyTrainingEpochs: Number(process.env.ALPHAZERO_EARLY_EPOCHS) || 5,  // 优化：从10减少到5
-    lateTrainingEpochs: Number(process.env.ALPHAZERO_LATE_EPOCHS) || 20,
+    lateTrainingEpochs: Number(process.env.ALPHAZERO_LATE_EPOCHS) || DEFAULT_FAST_TRAINING_CONFIG.lateTrainingEpochs,  // 30分钟目标优化：默认15 epoch（从20减少到15）
     evaluationFrequency: Number(process.env.ALPHAZERO_EVAL_FREQUENCY) || 10,
     saveFrequency: Number(process.env.ALPHAZERO_SAVE_FREQUENCY) || 10,
     maxGameSteps: Number(process.env.ALPHAZERO_MAX_STEPS) || 80,
