@@ -12,6 +12,12 @@
   - 性能瓶颈分析
   - 优化历史记录
 
+- **[PERFORMANCE_EFFECT_BALANCE_ANALYSIS.md](./PERFORMANCE_EFFECT_BALANCE_ANALYSIS.md)**: 性能与效果平衡分析 ⭐ **重要**
+  - 综合优化测试结果
+  - 性能指标 vs 效果指标对比
+  - 训练稳定性分析
+  - 优化建议和风险提示
+
 ### 优化方案文档
 - **[PERFORMANCE_OPTIMIZATION_30MIN_TARGET.md](./PERFORMANCE_OPTIMIZATION_30MIN_TARGET.md)**: 30分钟目标优化方案 ⭐ **推荐**
   - 目标：100轮迭代 ≤ 30分钟
