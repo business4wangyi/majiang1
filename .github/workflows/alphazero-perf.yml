@@ -37,7 +37,7 @@ jobs:
       - name: Run fast AlphaZero training (4核限制场景)
         env:
           ALPHAZERO_TOTAL_ITERATIONS: ${{ github.event.inputs.iterations || 5 }}
-          ALPHAZERO_SELFPLAY_GAMES: ${{ github.event.inputs.selfplay_games || 12 }}
+          ALPHAZERO_SELFPLAY_GAMES: ${{ github.event.inputs.selfplay_games || 10 }}
           ALPHAZERO_PARALLEL_GAMES: 4
           ALPHAZERO_INITIAL_MCTS: 250  # 稳定性优化：MCTS 250次（平衡性能和效果，改善训练稳定性）
           ALPHAZERO_FINAL_MCTS: 250  # 稳定性优化：MCTS 250次（平衡性能和效果，改善训练稳定性）
