@@ -53,15 +53,15 @@ const optimalParallelGames = Math.min(Math.max(4, Math.floor(cpuCount * 0.5)), 4
 export const DEFAULT_FAST_TRAINING_CONFIG: FastTrainingConfig = {
   ...DEFAULT_ALPHAZERO_TRAINING_CONFIG,
   parallelGames: optimalParallelGames,  // 优化：动态调整并行游戏数（6-8核）
-  enableDynamicMCTS: false,  // 30分钟目标优化：禁用动态MCTS，固定为200次模拟
-  initialMCTSSimulations: 200,  // 30分钟目标优化：固定200次模拟（从300减少到200，减少33%）
-  finalMCTSSimulations: 200,  // 30分钟目标优化：固定200次模拟（从300减少到200，减少33%）
+  enableDynamicMCTS: false,  // 稳定性优化：禁用动态MCTS，固定为250次模拟（平衡性能和效果）
+  initialMCTSSimulations: 250,  // 稳定性优化：固定250次模拟（从200增加到250，改善训练稳定性）
+  finalMCTSSimulations: 250,  // 稳定性优化：固定250次模拟（从200增加到250，改善训练稳定性）
   enableBatchInference: true,  // 启用批量推理
   batchInferenceSize: 16,  // 回滚方案3：批量大小16（方案3效果不明显，已回滚）
   earlyTrainingEpochs: 5,  // 早期5个epoch（优化：已验证最优）
   lateTrainingEpochs: 15,  // 30分钟目标优化：后期15个epoch（从20减少到15，减少25%训练时间上限）
   evaluationFrequency: 10,  // 每10次迭代评估一次
-  selfPlayGames: 8,  // 30分钟目标优化：从12减少到8（减少33%，配合MCTS 200次）
+  selfPlayGames: 10,  // 稳定性优化：从8增加到10（增加25%，改善训练稳定性，配合MCTS 250次）
   trainingEpochs: 12,  // 方案2+优化：默认12（从15减少到12，减少25%）
 };
 

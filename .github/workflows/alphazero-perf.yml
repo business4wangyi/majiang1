@@ -7,10 +7,10 @@ on:
         description: "总迭代数（默认5）"
         required: false
         default: "5"
-      selfplay_games:
-        description: "自我对弈局数（默认8，30分钟目标优化）"
-        required: false
-        default: "8"
+            selfplay_games:
+              description: "自我对弈局数（默认10，稳定性优化）"
+              required: false
+              default: "10"
   push:
     paths:
       - "src/othello/**"
@@ -39,9 +39,9 @@ jobs:
           ALPHAZERO_TOTAL_ITERATIONS: ${{ github.event.inputs.iterations || 5 }}
           ALPHAZERO_SELFPLAY_GAMES: ${{ github.event.inputs.selfplay_games || 12 }}
           ALPHAZERO_PARALLEL_GAMES: 4
-          ALPHAZERO_INITIAL_MCTS: 200  # 30分钟目标优化：方案1 - MCTS 200次（从300减少到200）
-          ALPHAZERO_FINAL_MCTS: 200  # 30分钟目标优化：方案1 - MCTS 200次（从300减少到200）
-          ALPHAZERO_DYNAMIC_MCTS: false  # 30分钟目标优化：禁用动态MCTS，固定200次
+          ALPHAZERO_INITIAL_MCTS: 250  # 稳定性优化：MCTS 250次（平衡性能和效果，改善训练稳定性）
+          ALPHAZERO_FINAL_MCTS: 250  # 稳定性优化：MCTS 250次（平衡性能和效果，改善训练稳定性）
+          ALPHAZERO_DYNAMIC_MCTS: false  # 稳定性优化：禁用动态MCTS，固定250次
           ALPHAZERO_EVAL_FREQUENCY: 10
         run: |
           npm run othello:alphazero-fast-train 2>&1 | tee /tmp/alphazero-perf.log
