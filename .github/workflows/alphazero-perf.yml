@@ -7,10 +7,10 @@ on:
         description: "总迭代数（默认5）"
         required: false
         default: "5"
-            selfplay_games:
-              description: "自我对弈局数（默认10，稳定性优化）"
-              required: false
-              default: "10"
+      selfplay_games:
+        description: "自我对弈局数（默认10，稳定性优化）"
+        required: false
+        default: "10"
   push:
     paths:
       - "src/othello/**"
@@ -51,5 +51,3 @@ jobs:
         with:
           name: alphazero-perf-log
           path: /tmp/alphazero-perf.log
-
-
