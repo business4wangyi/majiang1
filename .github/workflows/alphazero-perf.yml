@@ -7,10 +7,10 @@ on:
         description: "总迭代数（默认5）"
         required: false
         default: "5"
-            selfplay_games:
-              description: "自我对弈局数（默认8，30分钟目标优化）"
-              required: false
-              default: "8"
+      selfplay_games:
+        description: "自我对弈局数（默认8，30分钟目标优化）"
+        required: false
+        default: "8"
   push:
     paths:
       - "src/othello/**"
