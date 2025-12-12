@@ -19,10 +19,16 @@
   - 优化建议和风险提示
 
 ### 优化方案文档
+- **[STABILITY_OPTIMIZATION_RESULTS.md](./STABILITY_OPTIMIZATION_RESULTS.md)**: 稳定性优化结果报告 ⭐ **推荐**
+  - 方案C测试结果（MCTS 250次 + 10局/迭代）
+  - 训练稳定性问题已解决（胜率标准差13.94% ≤ 15%）
+  - 性能、效果和稳定性的良好平衡
+  - 当前推荐配置
+
 - **[PERFORMANCE_EFFECT_BALANCE_ANALYSIS.md](./PERFORMANCE_EFFECT_BALANCE_ANALYSIS.md)**: 性能与效果平衡分析 ⭐ **重要**
   - 综合优化测试结果（方案1+2+3+4）
   - 性能指标 vs 效果指标对比
-  - 训练稳定性分析
+  - 训练稳定性问题识别
   - 优化建议和风险提示
 
 - **[NEXT_STEPS_RECOMMENDATIONS.md](./NEXT_STEPS_RECOMMENDATIONS.md)**: 下一步优化建议 ⭐ **推荐**
