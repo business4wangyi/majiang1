@@ -16,6 +16,7 @@ import { GreedyOthelloAgent } from '../agents/greedy-agent';
 import { HeuristicOthelloAgent } from '../agents/heuristic-agent';
 import { OthelloBoard, OthelloPlayer, OthelloAction } from '../../core/types';
 import { createOthelloBoard, makeMove, isGameOver, countPieces, getLegalActions } from '../../core/game';
+import { applyAlphaZeroTrainingProfile } from './alphazero-training-profiles';
 
 /**
  * AlphaZero训练配置接口
@@ -47,6 +48,10 @@ export interface AlphaZeroTrainingConfig {
   verbose: boolean;
   /** 可选随机种子（提升可复现性） */
   seed?: number;
+  /** 评估模式：仅随机策略，或全部基线策略 */
+  evaluationMode?: 'random-only' | 'all-baselines';
+  /** 评估时是否按局交替先后手 */
+  evalSwapSides?: boolean;
 }
 
 /**
@@ -64,7 +69,8 @@ export const DEFAULT_ALPHAZERO_TRAINING_CONFIG: AlphaZeroTrainingConfig = {
   maxGameSteps: 100,
   maxGameTime: 15 * 60 * 1000, // 15分钟（基于实际数据：平均6.5分钟/局）
   maxStepTime: 15 * 1000,      // 15秒（基于实际数据：平均6.5秒/步）
-  verbose: true
+  verbose: true,
+  evaluationMode: 'random-only'
 };
 
 /**
@@ -117,6 +123,11 @@ export class AlphaZeroTrainer {
       isTraining: true,
       verbose: this.config.verbose
     });
+    const { initGlobalRng } = require('../utils/rng');
+    if (typeof this.config.seed === 'number') {
+      initGlobalRng(this.config.seed);
+      console.log(`🎲 使用固定随机种子: ${this.config.seed}`);
+    }
     
     // 初始化评估对手
     this.opponents = [
@@ -178,22 +189,22 @@ export class AlphaZeroTrainer {
         evaluationResults = await this.evaluationPhase(iteration);
         const evalTime = (Date.now() - evalStartTime) / 1000;
         console.log(`✅ [迭代 ${iteration}] 评估阶段完成，用时: ${(evalTime / 60).toFixed(2)}分钟`);
-        
-        // 更新最佳模型（基于vs随机策略胜率 - 优化：符合训练目标）
         if (Object.keys(evaluationResults).length > 0) {
-          // 优先使用vs随机策略胜率（主要训练目标）
-          const randomWinRate = evaluationResults['随机策略'] || evaluationResults['随机'] || 0;
-          
-          // 如果没有vs随机策略数据，则使用平均胜率作为备选
-          const rates = Object.values(evaluationResults) as number[];
-          const avgWinRate = rates.length > 0 ? rates.reduce((sum: number, rate: number) => sum + rate, 0) / rates.length : 0;
-          const winRateToCompare = randomWinRate > 0 ? randomWinRate : avgWinRate;
-          
-          if (winRateToCompare > this.bestEvaluationWinRate) {
-            this.bestEvaluationWinRate = winRateToCompare;
+          const evaluationScore = this.computeEvaluationScore(evaluationResults);
+          console.log(`📊 [迭代 ${iteration}] 加权评估分: ${evaluationScore.toFixed(1)}%`);
+          console.log(
+            `📌 [EvalSummary] iteration=${iteration} evaluationFrequency=${this.config.evaluationFrequency} evalSwapSides=${this.config.evalSwapSides === true} seed=${this.config.seed ?? 'unset'} weightedScore=${evaluationScore.toFixed(1)}`
+          );
+        }
+        
+        // 更新最佳模型（基于多基线加权评分，降低单一对手带来的偏差）
+        if (Object.keys(evaluationResults).length > 0) {
+          const evaluationScore = this.computeEvaluationScore(evaluationResults);
+
+          if (evaluationScore > this.bestEvaluationWinRate) {
+            this.bestEvaluationWinRate = evaluationScore;
             this.bestModelIteration = iteration;
-            const strategyName = randomWinRate > 0 ? 'vs随机策略' : '平均评估';
-            console.log(`🏆 [迭代 ${iteration}] 发现更好的模型！${strategyName}胜率: ${winRateToCompare.toFixed(1)}% (最佳: ${this.bestEvaluationWinRate.toFixed(1)}%)`);
+            console.log(`🏆 [迭代 ${iteration}] 发现更好的模型！加权评估分: ${evaluationScore.toFixed(1)}% (最佳: ${this.bestEvaluationWinRate.toFixed(1)}%)`);
           }
         }
       }
@@ -207,7 +218,7 @@ export class AlphaZeroTrainer {
       
       // 保存最佳模型
       if (iteration === this.bestModelIteration && this.bestModelIteration > 0) {
-        console.log(`\n💾 [迭代 ${iteration}] 保存最佳模型（评估胜率: ${this.bestEvaluationWinRate.toFixed(1)}%）...`);
+        console.log(`\n💾 [迭代 ${iteration}] 保存最佳模型（加权评估分: ${this.bestEvaluationWinRate.toFixed(1)}%）...`);
         await this.agent.saveModel(`${this.config.modelSavePath}-best`);
         console.log(`✅ [迭代 ${iteration}] 最佳模型已保存到: ${this.config.modelSavePath}-best`);
       }
@@ -232,9 +243,40 @@ export class AlphaZeroTrainer {
     
     // 输出最佳模型信息
     if (this.bestModelIteration > 0) {
-      console.log(`\n🏆 最佳模型: 迭代 ${this.bestModelIteration}, 平均评估胜率: ${this.bestEvaluationWinRate.toFixed(1)}%`);
+      console.log(`\n🏆 最佳模型: 迭代 ${this.bestModelIteration}, 加权评估分: ${this.bestEvaluationWinRate.toFixed(1)}%`);
       console.log(`   模型路径: ${this.config.modelSavePath}-best`);
     }
+  }
+
+  /**
+   * 计算评估综合分（加权）。
+   * 启发式对手更强，给予更高权重，减少“只会打随机”导致的误判。
+   */
+  protected computeEvaluationScore(evaluationResults: { [key: string]: number }): number {
+    const getRate = (aliases: string[]): number | null => {
+      for (const key of aliases) {
+        if (typeof evaluationResults[key] === 'number') {
+          return evaluationResults[key];
+        }
+      }
+      return null;
+    };
+
+    const weightedItems = [
+      { rate: getRate(['随机策略', '随机']), weight: 0.2 },
+      { rate: getRate(['贪心策略', '贪心']), weight: 0.3 },
+      { rate: getRate(['启发式策略', '启发式']), weight: 0.5 }
+    ].filter(item => item.rate !== null) as Array<{ rate: number; weight: number }>;
+
+    if (weightedItems.length === 0) {
+      const rates = Object.values(evaluationResults) as number[];
+      if (rates.length === 0) return 0;
+      return rates.reduce((sum, rate) => sum + rate, 0) / rates.length;
+    }
+
+    const totalWeight = weightedItems.reduce((sum, item) => sum + item.weight, 0);
+    const weightedScore = weightedItems.reduce((sum, item) => sum + item.rate * item.weight, 0);
+    return weightedScore / totalWeight;
   }
 
   /**
@@ -591,9 +633,12 @@ export class AlphaZeroTrainer {
 
     const results: { [key: string]: number } = {};
 
-    // 阶段4优化：进一步减少评估开销（只评估关键对手，减少评估局数）
-    const evaluationGames = Math.min(this.config.evaluationGames, 10); // 阶段4优化：从15减少到10局
-    const keyOpponents = this.opponents.slice(0, 1); // 阶段4优化：只评估随机策略对手（关键对手）
+    // 评估局数不再硬编码裁剪，直接使用配置值（最小为1）
+    const evaluationGames = Math.max(1, this.config.evaluationGames);
+    const evalSwapSides = this.config.evalSwapSides === true;
+    const keyOpponents = this.config.evaluationMode === 'all-baselines'
+      ? this.opponents
+      : this.opponents.slice(0, 1);
     
     for (const opponent of keyOpponents) {
       const opponentName = this.getOpponentName(opponent);
@@ -602,7 +647,8 @@ export class AlphaZeroTrainer {
 
       for (let game = 0; game < evaluationGames; game++) {
         const gameStartTime = Date.now();
-        const won = await this.playEvaluationGame(opponent);
+        const alphaZeroPlayer: OthelloPlayer = evalSwapSides && game % 2 === 1 ? 'W' : 'B';
+        const won = await this.playEvaluationGame(opponent, alphaZeroPlayer);
         if (won) wins++;
         const gameTime = (Date.now() - gameStartTime) / 1000;
         console.log(`   [评估] ${opponentName} 第 ${game + 1}/${evaluationGames} 局: ${won ? '✅ 胜利' : '❌ 失败'} (用时: ${gameTime.toFixed(1)}秒)`);
@@ -622,30 +668,57 @@ export class AlphaZeroTrainer {
   /**
    * 进行评估游戏
    */
-  private async playEvaluationGame(opponent: any): Promise<boolean> {
+  private async playEvaluationGame(opponent: any, alphaZeroPlayer: OthelloPlayer = 'B'): Promise<boolean> {
+    const gameStartTime = Date.now();
+    const maxGameTime = this.config.maxGameTime || 15 * 60 * 1000;
+    const maxStepTime = this.config.maxStepTime || 15 * 1000;
+
     let board = createOthelloBoard();
     let currentPlayer: OthelloPlayer = 'B';
     let gameLength = 0;
+    let timeoutCount = 0;
+    let errorCount = 0;
 
     while (!isGameOver(board) && gameLength < this.config.maxGameSteps) {
+      if (Date.now() - gameStartTime > maxGameTime) {
+        if (this.config.verbose) {
+          console.warn(`⚠️ [评估] 单局超时，提前结束 (步数: ${gameLength}, 用时: ${((Date.now() - gameStartTime) / 1000).toFixed(1)}秒)`);
+        }
+        break;
+      }
+
       const legalActions = getLegalActions(board, currentPlayer);
       
       if (legalActions.length > 0) {
         let action: OthelloAction | null = null;
         
-        if (currentPlayer === 'B') {
-          // 评估阶段使用异步方法，避免MCTS超时
+        if (currentPlayer === alphaZeroPlayer) {
+          // 统一异步评估路径，避免同步MCTS阻塞和超时噪声
           if ('searchBestActionAsync' in this.agent && typeof (this.agent as any).searchBestActionAsync === 'function') {
             try {
-              const searchResult = await (this.agent as any).searchBestActionAsync(board, currentPlayer);
+              const searchPromise = (this.agent as any).searchBestActionAsync(board, currentPlayer);
+              const timeoutPromise = new Promise<never>((_, reject) => {
+                setTimeout(() => reject(new Error(`Evaluation step timeout after ${maxStepTime}ms`)), maxStepTime);
+              });
+              const searchResult = await Promise.race([searchPromise, timeoutPromise]);
               action = searchResult.action;
             } catch (error: any) {
-              console.warn(`⚠️ [评估] 异步搜索失败，使用随机动作: ${error.message || error}`);
+              const message = error?.message || String(error);
+              if (message.includes('timeout')) {
+                timeoutCount++;
+                if (this.config.verbose) {
+                  console.warn(`⚠️ [评估] 单步搜索超时，使用随机动作 (步数: ${gameLength})`);
+                }
+              } else {
+                errorCount++;
+                console.warn(`⚠️ [评估] 异步搜索失败，使用随机动作: ${message}`);
+              }
               action = legalActions[Math.floor(Math.random() * legalActions.length)];
             }
           } else {
-            // 回退到同步方法
-            action = this.agent.chooseAction(board, currentPlayer);
+            errorCount++;
+            console.warn('⚠️ [评估] 异步搜索不可用，使用随机动作');
+            action = legalActions[Math.floor(Math.random() * legalActions.length)];
           }
         } else {
           action = opponent.chooseAction(board, currentPlayer);
@@ -660,8 +733,12 @@ export class AlphaZeroTrainer {
       gameLength++;
     }
 
+    if ((timeoutCount > 0 || errorCount > 0) && this.config.verbose) {
+      console.warn(`⚠️ [评估] 对局包含异常回退: 超时${timeoutCount}次，错误${errorCount}次`);
+    }
+
     const { B, W } = countPieces(board);
-    return B > W;
+    return alphaZeroPlayer === 'B' ? B > W : W > B;
   }
 
   /**
@@ -691,9 +768,6 @@ export class AlphaZeroTrainer {
     const usedIndices = new Set<number>();
     // 使用可复现的rng（若提供seed）
     const { rngRandInt, initGlobalRng } = require('../utils/rng');
-    if (typeof this.config.seed === 'number') {
-      initGlobalRng(this.config.seed);
-    }
     
     // 优化：使用Fisher-Yates洗牌算法的简化版本（更高效）
     while (batch.length < batchSize) {
@@ -755,6 +829,8 @@ export class AlphaZeroTrainer {
       for (const [opponent, winRate] of Object.entries(evaluationResults)) {
         console.log(`     vs ${opponent}: ${winRate.toFixed(1)}%`);
       }
+      const weightedScore = this.computeEvaluationScore(evaluationResults);
+      console.log(`   加权评估分: ${weightedScore.toFixed(1)}%`);
     }
   }
 
@@ -831,19 +907,29 @@ export async function runTraining(): Promise<void> {
     }
   };
 
-  const config: AlphaZeroTrainingConfig = {
+  const baseConfig: AlphaZeroTrainingConfig = {
     ...DEFAULT_ALPHAZERO_TRAINING_CONFIG,
     totalIterations: Number(process.env.ALPHAZERO_TOTAL_ITERATIONS) || 100,  // 从50增加到100（优化：提升模型性能，目标vs随机策略90%胜率）
     selfPlayGames: Number(process.env.ALPHAZERO_SELFPLAY_GAMES) || 100,      // 从50增加到100（优化：增加训练数据量，提升模型学习质量）
     trainingEpochs: Number(process.env.ALPHAZERO_TRAINING_EPOCHS) || 20,     // 从15增加到20（优化：提升模型学习质量）
     experienceBufferSize: Number(process.env.ALPHAZERO_EXP_BUFFER) || 30000,  // 从20000增加到30000（配合更多游戏数）
     evaluationFrequency: Number(process.env.ALPHAZERO_EVAL_FREQUENCY) || 5, // 从10改为5（基于训练报告建议：每5次迭代评估一次）
+    evaluationGames: Number(process.env.ALPHAZERO_EVALUATION_GAMES) || DEFAULT_ALPHAZERO_TRAINING_CONFIG.evaluationGames,
     saveFrequency: Number(process.env.ALPHAZERO_SAVE_FREQUENCY) || 10,
     maxGameSteps: Number(process.env.ALPHAZERO_MAX_STEPS) || 80,
     maxGameTime: Number(process.env.ALPHAZERO_MAX_GAME_TIME) || 15 * 60 * 1000, // 15分钟（基于实际数据：平均6.5分钟/局）
     maxStepTime: Number(process.env.ALPHAZERO_MAX_STEP_TIME) || 15 * 1000,      // 15秒（基于实际数据：平均6.5秒/步）
-    verbose: true
+    seed: process.env.ALPHAZERO_SEED !== undefined ? Number(process.env.ALPHAZERO_SEED) : undefined,
+    verbose: true,
+    evaluationMode: process.env.ALPHAZERO_EVALUATION_MODE === 'all-baselines' ? 'all-baselines' : 'random-only',
+    evalSwapSides: process.env.ALPHAZERO_EVAL_SWAP_SIDES === 'true'
   };
+  const profileName = process.env.ALPHAZERO_TRAINING_PROFILE;
+  const config = applyAlphaZeroTrainingProfile(baseConfig, profileName);
+  if (profileName) {
+    console.log(`🧩 训练配置档案: ${profileName}`);
+    console.log(`   固化评估: ${config.evaluationGames}局, 模式=${config.evaluationMode}`);
+  }
 
   const trainer = new AlphaZeroTrainer(
     agentConfig,

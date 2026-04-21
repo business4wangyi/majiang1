@@ -27,6 +27,9 @@
     "othello:interactive": "npx ts-node src/othello/run-commands.ts --interactive",
     "othello:alphazero-train": "node -r ./scripts/training/othello/tfjs-polyfill.js -r ts-node/register src/othello/strategy/trainers/alphazero-trainer.ts",
     "othello:alphazero-fast-train": "node -r ./scripts/training/othello/tfjs-polyfill.js -r ts-node/register src/othello/strategy/trainers/alphazero-trainer-fast.ts",
+    "othello:alphazero-baseline-train": "ALPHAZERO_TRAINING_PROFILE=baseline-eval-v1 node -r ./scripts/training/othello/tfjs-polyfill.js -r ts-node/register src/othello/strategy/trainers/alphazero-trainer-fast.ts",
+    "othello:alphazero-edax-smoke": "npx ts-node src/othello/strategy/integrations/edax-integration.ts",
+    "othello:wthor-sample-pipeline": "npx ts-node src/othello/strategy/data/wthor-parser.ts",
     "ai:schedule-training": "ts-node scripts/ai-scheduler/github-actions-trigger.ts",
     "test:github-actions": "bash scripts/test-github-actions.sh",
     "othello:alphazero-smart-train": "npx ts-node -e \"import('./src/othello/strategy/alphazero-training-manager.ts').then(m => m.runSmartTraining())\"",
@@ -99,7 +102,8 @@
     "majiang:validate-1000": "node validate-ai-performance.js",
     "majiang:validate-2000": "node ultimate-validation-2000-games.js",
     "majiang:showcase": "node technical-achievement-showcase.js",
-    "majiang:auto": "npx ts-node src/majiang/index.ts --auto"
+    "majiang:auto": "npx ts-node src/majiang/index.ts --auto",
+    "othello:alphazero-baseline-compare-summary": "bash scripts/training/othello/summarize-baseline-compare.sh"
   },
   "keywords": [
     "majiang",

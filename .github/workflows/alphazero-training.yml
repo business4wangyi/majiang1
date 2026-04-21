@@ -14,6 +14,7 @@ name: AlphaZero Training
         default: 'fast'
         type: choice
         options:
+          - baseline
           - fast
           - standard
           - full
@@ -68,33 +69,82 @@ jobs:
           if [ -n "${{ github.event.inputs.iterations }}" ]; then
             export ALPHAZERO_TOTAL_ITERATIONS="${{ github.event.inputs.iterations }}"
             echo "自定义迭代次数: ${{ github.event.inputs.iterations }}"
+          elif [ "${{ github.event.inputs.training_type }}" == "baseline" ]; then
+            export ALPHAZERO_TOTAL_ITERATIONS=20
           elif [ "${{ github.event.inputs.training_type }}" == "full" ]; then
             export ALPHAZERO_TOTAL_ITERATIONS=200
           elif [ "${{ github.event.inputs.training_type }}" == "standard" ]; then
             export ALPHAZERO_TOTAL_ITERATIONS=150
           else
-            export ALPHAZERO_TOTAL_ITERATIONS=100
+            export ALPHAZERO_TOTAL_ITERATIONS=10
           fi
           
           if [ -n "${{ github.event.inputs.selfplay_games }}" ]; then
             export ALPHAZERO_SELFPLAY_GAMES="${{ github.event.inputs.selfplay_games }}"
             echo "自定义自我对弈局数: ${{ github.event.inputs.selfplay_games }}"
+          elif [ "${{ github.event.inputs.training_type }}" == "baseline" ]; then
+            export ALPHAZERO_SELFPLAY_GAMES=30
           elif [ "${{ github.event.inputs.training_type }}" == "full" ]; then
             export ALPHAZERO_SELFPLAY_GAMES=100
           elif [ "${{ github.event.inputs.training_type }}" == "standard" ]; then
             export ALPHAZERO_SELFPLAY_GAMES=90
           else
-            export ALPHAZERO_SELFPLAY_GAMES=80
+            export ALPHAZERO_SELFPLAY_GAMES=10
           fi
           
           if [ -n "${{ github.event.inputs.mcts_simulations }}" ]; then
             export ALPHAZERO_MCTS="${{ github.event.inputs.mcts_simulations }}"
             echo "自定义MCTS模拟次数: ${{ github.event.inputs.mcts_simulations }}"
+          elif [ "${{ github.event.inputs.training_type }}" == "baseline" ]; then
+            export ALPHAZERO_MCTS=40
+          elif [ "${{ github.event.inputs.training_type }}" == "full" ]; then
+            export ALPHAZERO_MCTS=200
+          elif [ "${{ github.event.inputs.training_type }}" == "standard" ]; then
+            export ALPHAZERO_MCTS=100
+          else
+            export ALPHAZERO_MCTS=20
+          fi
+
+          if [ "${{ github.event.inputs.training_type }}" == "baseline" ]; then
+            export ALPHAZERO_TRAINING_PROFILE=baseline-eval-v1
+            export ALPHAZERO_TRAINING_EPOCHS=2
+            export ALPHAZERO_EVALUATION_GAMES=30
+            export ALPHAZERO_EVALUATION_MODE=all-baselines
+            export ALPHAZERO_EVAL_FREQUENCY=5
+            export ALPHAZERO_EVAL_SWAP_SIDES=true
+            export ALPHAZERO_SEED=20260419
+            export ALPHAZERO_SAVE_FREQUENCY=10
+            export ALPHAZERO_PARALLEL_GAMES=4
+          fi
+
+          if [ "${{ github.event.inputs.training_type }}" == "baseline" ]; then
+            # 固化基线复现参数（允许手动输入覆盖后仍能在日志审计当前生效值）
+            export ALPHAZERO_EVAL_FREQUENCY="${ALPHAZERO_EVAL_FREQUENCY:-5}"
+            export ALPHAZERO_EVAL_SWAP_SIDES="${ALPHAZERO_EVAL_SWAP_SIDES:-true}"
+            export ALPHAZERO_SEED="${ALPHAZERO_SEED:-20260419}"
+          fi
+
+          echo "📌 [BaselineAudit] ALPHAZERO_EVAL_FREQUENCY=${ALPHAZERO_EVAL_FREQUENCY:-unset}"
+          echo "📌 [BaselineAudit] ALPHAZERO_EVAL_SWAP_SIDES=${ALPHAZERO_EVAL_SWAP_SIDES:-unset}"
+          echo "📌 [BaselineAudit] ALPHAZERO_SEED=${ALPHAZERO_SEED:-unset}"
+
+          # 为 fast smoke test 提供更稳定的轻量默认值
+          if [ "${{ github.event.inputs.training_type }}" == "fast" ]; then
+            export ALPHAZERO_PARALLEL_GAMES=2
+            export ALPHAZERO_EARLY_EPOCHS=1
+            export ALPHAZERO_LATE_EPOCHS=1
+            export ALPHAZERO_EVAL_FREQUENCY=10
+            export ALPHAZERO_SAVE_FREQUENCY=10
+            export ALPHAZERO_MCTS_BATCH_SIZE=4
+            export ALPHAZERO_BATCH_SIZE=8
+            export ALPHAZERO_TRAINING_BATCH_SIZE=8
           fi
           
           # 运行训练
           if [ "${{ github.event.inputs.training_type }}" == "fast" ]; then
             npm run othello:alphazero-fast-train
+          elif [ "${{ github.event.inputs.training_type }}" == "baseline" ]; then
+            npm run othello:alphazero-baseline-train
           elif [ "${{ github.event.inputs.training_type }}" == "standard" ]; then
             npm run othello:alphazero-train
           elif [ "${{ github.event.inputs.training_type }}" == "full" ]; then
@@ -228,4 +278,3 @@ jobs:
                       `请检查日志以了解失败原因。`
               });
             }
-

@@ -17,6 +17,7 @@ import '@tensorflow/tfjs-node';
 
 import { AlphaZeroTrainer, AlphaZeroTrainingConfig, DEFAULT_ALPHAZERO_TRAINING_CONFIG, SelfPlayResult } from './alphazero-trainer';
 import { AlphaZeroOthelloAgent, AlphaZeroAgentConfig, DEFAULT_ALPHAZERO_AGENT_CONFIG } from '../agents/alphazero-agent';
+import { applyFastTrainingProfile } from './alphazero-training-profiles';
 
 /**
  * 快速训练配置接口
@@ -59,9 +60,9 @@ export const DEFAULT_FAST_TRAINING_CONFIG: FastTrainingConfig = {
   enableBatchInference: true,  // 启用批量推理
   batchInferenceSize: 16,  // 回滚方案3：批量大小16（方案3效果不明显，已回滚）
   earlyTrainingEpochs: 5,  // 早期5个epoch（优化：已验证最优）
-  lateTrainingEpochs: 13,  // 更激进时间压缩：后期13个epoch（再降约7%，需验证稳定性）
+  lateTrainingEpochs: 14,  // 时间压缩优化：后期14个epoch（在保持稳定性的前提下进一步缩短训练）
   evaluationFrequency: 10,  // 每10次迭代评估一次
-  selfPlayGames: 8,  // 更激进时间压缩：9→8局/迭代（再降约11%，需验证稳定性）
+  selfPlayGames: 9,  // 时间压缩优化：10→9局/迭代（在保持稳定性的前提下小幅降低自我对弈时间）
   trainingEpochs: 12,  // 方案2+优化：默认12（从15减少到12，减少25%）
 };
 
@@ -178,19 +179,22 @@ export class FastAlphaZeroTrainer extends AlphaZeroTrainer {
         evaluationResults = await (this as any).evaluationPhase(iteration);
         const evalTime = (Date.now() - evalStartTime) / 1000;
         console.log(`✅ [迭代 ${iteration}] 评估阶段完成，用时: ${(evalTime / 60).toFixed(2)}分钟`);
-        
-        // 更新最佳模型
         if (Object.keys(evaluationResults).length > 0) {
-          const randomWinRate = evaluationResults['随机策略'] || evaluationResults['随机'] || 0;
-          const rates = Object.values(evaluationResults) as number[];
-          const avgWinRate = rates.length > 0 ? rates.reduce((sum: number, rate: number) => sum + rate, 0) / rates.length : 0;
-          const winRateToCompare = randomWinRate > 0 ? randomWinRate : avgWinRate;
+          const evaluationScore = (this as any).computeEvaluationScore(evaluationResults);
+          console.log(`📊 [迭代 ${iteration}] 加权评估分: ${evaluationScore.toFixed(1)}%`);
+          console.log(
+            `📌 [EvalSummary] iteration=${iteration} evaluationFrequency=${(this as any).config.evaluationFrequency} evalSwapSides=${(this as any).config.evalSwapSides === true} seed=${(this as any).config.seed ?? 'unset'} weightedScore=${evaluationScore.toFixed(1)}`
+          );
+        }
+        
+        // 更新最佳模型（与主训练器一致：使用多基线加权评分）
+        if (Object.keys(evaluationResults).length > 0) {
+          const winRateToCompare = (this as any).computeEvaluationScore(evaluationResults);
           
           if (winRateToCompare > (this as any).bestEvaluationWinRate) {
             (this as any).bestEvaluationWinRate = winRateToCompare;
             (this as any).bestModelIteration = iteration;
-            const strategyName = randomWinRate > 0 ? 'vs随机策略' : '平均评估';
-            console.log(`🏆 [迭代 ${iteration}] 发现更好的模型！${strategyName}胜率: ${winRateToCompare.toFixed(1)}%`);
+            console.log(`🏆 [迭代 ${iteration}] 发现更好的模型！加权评估分: ${winRateToCompare.toFixed(1)}%`);
           }
         }
       }
@@ -228,7 +232,7 @@ export class FastAlphaZeroTrainer extends AlphaZeroTrainer {
     console.log(`\n✅ 高性能AlphaZero训练完成! 总用时: ${(totalTime / 60).toFixed(2)}分钟`);
     
     if ((this as any).bestModelIteration > 0) {
-      console.log(`\n🏆 最佳模型: 迭代 ${(this as any).bestModelIteration}, 评估胜率: ${(this as any).bestEvaluationWinRate.toFixed(1)}%`);
+      console.log(`\n🏆 最佳模型: 迭代 ${(this as any).bestModelIteration}, 加权评估分: ${(this as any).bestEvaluationWinRate.toFixed(1)}%`);
     }
   }
 
@@ -375,12 +379,13 @@ export class FastAlphaZeroTrainer extends AlphaZeroTrainer {
 export async function runFastTraining(): Promise<void> {
   console.log('⚡ 启动高性能AlphaZero训练...');
 
+  const sharedMCTSSimulations = Number(process.env.ALPHAZERO_MCTS) || 200;
   const baseNetworkConfig = DEFAULT_ALPHAZERO_AGENT_CONFIG.networkConfig || {};
   const agentConfig: AlphaZeroAgentConfig = {
     ...DEFAULT_ALPHAZERO_AGENT_CONFIG,
     mctsConfig: {
       ...DEFAULT_ALPHAZERO_AGENT_CONFIG.mctsConfig,
-      numSimulations: Number(process.env.ALPHAZERO_MCTS) || 200  // 初始使用200次
+      numSimulations: sharedMCTSSimulations
     },
     networkConfig: {
       ...baseNetworkConfig,
@@ -389,24 +394,39 @@ export async function runFastTraining(): Promise<void> {
     mctsBatchSize: Number(process.env.ALPHAZERO_MCTS_BATCH_SIZE) || 16  // 方案A优化：MCTS批量推理批次大小16（回滚方案C的32）
   };
 
-  const config: Partial<FastTrainingConfig> = {
+  const baseConfig: Partial<FastTrainingConfig> = {
     totalIterations: Number(process.env.ALPHAZERO_TOTAL_ITERATIONS) || 100,
     selfPlayGames: Number(process.env.ALPHAZERO_SELFPLAY_GAMES) || DEFAULT_FAST_TRAINING_CONFIG.selfPlayGames,  // 方案2+优化：默认60局（从80减少到60）
     parallelGames: Number(process.env.ALPHAZERO_PARALLEL_GAMES) || 4,  // 并行游戏数
     enableDynamicMCTS: process.env.ALPHAZERO_DYNAMIC_MCTS === 'true' ? true : false,  // 30分钟目标优化：默认禁用动态MCTS，固定200次
-    initialMCTSSimulations: Number(process.env.ALPHAZERO_INITIAL_MCTS) || DEFAULT_FAST_TRAINING_CONFIG.initialMCTSSimulations,  // 30分钟目标优化：默认200次（从300减少到200）
-    finalMCTSSimulations: Number(process.env.ALPHAZERO_FINAL_MCTS) || DEFAULT_FAST_TRAINING_CONFIG.finalMCTSSimulations,  // 30分钟目标优化：默认200次（从300减少到200）
+    // Allow one env var to control fast-trainer MCTS, while keeping the more specific overrides.
+    initialMCTSSimulations: Number(process.env.ALPHAZERO_INITIAL_MCTS) || sharedMCTSSimulations || DEFAULT_FAST_TRAINING_CONFIG.initialMCTSSimulations,
+    finalMCTSSimulations: Number(process.env.ALPHAZERO_FINAL_MCTS) || sharedMCTSSimulations || DEFAULT_FAST_TRAINING_CONFIG.finalMCTSSimulations,
     enableBatchInference: process.env.ALPHAZERO_BATCH_INFERENCE !== 'false',
     batchInferenceSize: Number(process.env.ALPHAZERO_BATCH_SIZE) || 16,  // 方案A优化：批次大小16（回滚方案C的32）
     earlyTrainingEpochs: Number(process.env.ALPHAZERO_EARLY_EPOCHS) || 5,  // 优化：从10减少到5
     lateTrainingEpochs: Number(process.env.ALPHAZERO_LATE_EPOCHS) || DEFAULT_FAST_TRAINING_CONFIG.lateTrainingEpochs,  // 30分钟目标优化：默认15 epoch（从20减少到15）
     evaluationFrequency: Number(process.env.ALPHAZERO_EVAL_FREQUENCY) || 10,
+    evaluationGames: Number(process.env.ALPHAZERO_EVALUATION_GAMES) || DEFAULT_FAST_TRAINING_CONFIG.evaluationGames,
+    evaluationMode: process.env.ALPHAZERO_EVALUATION_MODE === 'all-baselines' ? 'all-baselines' : 'random-only',
     saveFrequency: Number(process.env.ALPHAZERO_SAVE_FREQUENCY) || 10,
     maxGameSteps: Number(process.env.ALPHAZERO_MAX_STEPS) || 80,
     maxGameTime: Number(process.env.ALPHAZERO_MAX_GAME_TIME) || 15 * 60 * 1000,
     maxStepTime: Number(process.env.ALPHAZERO_MAX_STEP_TIME) || 15 * 1000,
+    seed: process.env.ALPHAZERO_SEED !== undefined ? Number(process.env.ALPHAZERO_SEED) : undefined,
+    evalSwapSides: process.env.ALPHAZERO_EVAL_SWAP_SIDES === 'true',
     verbose: true
   };
+  const profileName = process.env.ALPHAZERO_TRAINING_PROFILE;
+  const config = applyFastTrainingProfile(baseConfig, profileName);
+  if (profileName === 'baseline-eval-v1') {
+    config.seed = process.env.ALPHAZERO_SEED !== undefined ? Number(process.env.ALPHAZERO_SEED) : 20260419;
+    config.evalSwapSides = process.env.ALPHAZERO_EVAL_SWAP_SIDES !== 'false';
+  }
+  if (profileName) {
+    console.log(`🧩 训练配置档案: ${profileName}`);
+    console.log(`   固化评估: ${config.evaluationGames}局, 模式=${config.evaluationMode}`);
+  }
 
   const trainer = new FastAlphaZeroTrainer(agentConfig, config);
 
@@ -426,4 +446,3 @@ export async function runFastTraining(): Promise<void> {
 if (require.main === module) {
   runFastTraining().catch(console.error);
 }
-
