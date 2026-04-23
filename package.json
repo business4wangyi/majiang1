@@ -27,6 +27,7 @@
     "othello:interactive": "npx ts-node src/othello/run-commands.ts --interactive",
     "othello:alphazero-train": "node -r ./scripts/training/othello/tfjs-polyfill.js -r ts-node/register src/othello/strategy/trainers/alphazero-trainer.ts",
     "othello:alphazero-fast-train": "node -r ./scripts/training/othello/tfjs-polyfill.js -r ts-node/register src/othello/strategy/trainers/alphazero-trainer-fast.ts",
+    "othello:alphazero-schemec-doc-train": "ALPHAZERO_TRAINING_PROFILE=scheme-c-doc-v1 node -r ./scripts/training/othello/tfjs-polyfill.js -r ts-node/register src/othello/strategy/trainers/alphazero-trainer-fast.ts",
     "othello:alphazero-baseline-train": "ALPHAZERO_TRAINING_PROFILE=baseline-eval-v1 node -r ./scripts/training/othello/tfjs-polyfill.js -r ts-node/register src/othello/strategy/trainers/alphazero-trainer-fast.ts",
     "othello:alphazero-edax-smoke": "npx ts-node src/othello/strategy/integrations/edax-integration.ts",
     "othello:wthor-sample-pipeline": "npx ts-node src/othello/strategy/data/wthor-parser.ts",

@@ -288,7 +288,12 @@ export class AlphaZeroTrainingManager {
 
     if (lossVariance < 0.001) {
       console.log('📉 检测到损失停滞，降低学习率');
-      this.agentConfig.networkConfig.learningRate *= 0.9;
+      const networkConfig = this.agentConfig.networkConfig;
+      if (networkConfig) {
+        networkConfig.learningRate *= 0.9;
+      } else {
+        console.log('⚠️ 当前未提供 networkConfig，跳过学习率自适应调整');
+      }
     }
   }
 
