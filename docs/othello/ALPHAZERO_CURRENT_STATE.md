@@ -38,6 +38,25 @@ npm run -s othello:alphazero-fast-train
 2. 文档更新必须附：日期、命令、环境变量、日志路径、关键指标（random/greedy/heuristic/weighted）。
 3. 未复验（至少同种子重跑一次）的结果，不得写为“当前基线”。
 
+### 多 seed 复验与门禁（新增）
+
+- 批量复验命令：
+  - `npm run othello:alphazero-multiseed-run`
+- 汇总与门禁命令：
+  - `npm run othello:alphazero-multiseed-summary`
+  - `npm run othello:alphazero-multiseed-gate`
+- 默认输出目录：`/tmp/alphazero-exp-ss/multiseed`
+  - `manifest.tsv`：每个 seed 的执行状态与日志路径
+  - `summary.tsv`：按 seed 并排汇总（总耗时、random/greedy/heuristic/weighted）
+  - `gate-result.txt`：程序化门禁结论（PASS/FAIL）
+
+门禁默认规则（可通过环境变量覆盖）：
+- 样本数 `>= 3`（`MIN_SAMPLES`）
+- `weighted` 均值 `> 22.7`（`BASELINE_WEIGHTED`）
+- `heuristic` 均值 `> 6.7`（`BASELINE_HEURISTIC`）
+- `weighted` 标准差 `<= 6.0`（`MAX_STD_WEIGHTED`）
+- `heuristic` 标准差 `<= 8.0`（`MAX_STD_HEURISTIC`）
+
 ## 📊 当前基准配置（2025-12-12）
 
 ### 推荐配置

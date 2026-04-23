@@ -104,7 +104,10 @@
     "majiang:validate-2000": "node ultimate-validation-2000-games.js",
     "majiang:showcase": "node technical-achievement-showcase.js",
     "majiang:auto": "npx ts-node src/majiang/index.ts --auto",
-    "othello:alphazero-baseline-compare-summary": "bash scripts/training/othello/summarize-baseline-compare.sh"
+    "othello:alphazero-baseline-compare-summary": "bash scripts/training/othello/summarize-baseline-compare.sh",
+    "othello:alphazero-multiseed-run": "bash scripts/training/othello/run-multiseed-baseline.sh",
+    "othello:alphazero-multiseed-summary": "bash scripts/training/othello/summarize-multiseed-baseline.sh",
+    "othello:alphazero-multiseed-gate": "bash scripts/training/othello/run-multiseed-baseline.sh && bash scripts/training/othello/summarize-multiseed-baseline.sh"
   },
   "keywords": [
     "majiang",
