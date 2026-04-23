@@ -1,5 +1,43 @@
 # 🎯 AlphaZero训练当前状态总结
 
+## 🚨 当前生效基线（2026-04-23）
+
+> 本节覆盖旧“当前状态”描述。历史内容保留用于回溯，不代表当前成熟效果。
+
+### 当前推荐复现实验配置
+
+```bash
+ALPHAZERO_TRAINING_PROFILE=scheme-c-doc-v1 \
+ALPHAZERO_TOTAL_ITERATIONS=30 \
+ALPHAZERO_EVALUATION_MODE=all-baselines \
+ALPHAZERO_EVALUATION_GAMES=30 \
+ALPHAZERO_EVAL_SWAP_SIDES=true \
+ALPHAZERO_SEED=20260419 \
+npm run -s othello:alphazero-fast-train
+```
+
+### 当前可复现效果（HEAD，2026-04-23）
+
+- 日志：`/tmp/alphazero-exp-ss/schemec-docv1-aligned-30iter-20260422-rerun.log`
+- 总耗时：11.10 分钟（平均 0.37 分钟/迭代）
+- 迭代30评估：
+  - vs random：26.7%
+  - vs greedy：40.0%
+  - vs heuristic：6.7%
+  - 加权分：20.7%
+- 最佳模型：迭代20（加权分 22.7%）
+
+### 当前结论
+
+- 以 `all-baselines` 加权口径衡量，当前结果尚未达到历史文档中“稳定成熟”的描述水平。
+- 后续所有“更强”结论必须基于同口径复验，并同步更新本文件与 `performance/STABILITY_OPTIMIZATION_RESULTS.md`。
+
+### 更新纪律（强制）
+
+1. 每次实验若刷新最佳加权分，必须在文档顶部更新“当前可复现效果”。
+2. 文档更新必须附：日期、命令、环境变量、日志路径、关键指标（random/greedy/heuristic/weighted）。
+3. 未复验（至少同种子重跑一次）的结果，不得写为“当前基线”。
+
 ## 📊 当前基准配置（2025-12-12）
 
 ### 推荐配置
@@ -149,4 +187,3 @@
 - [优化空间分析](performance/OPTIMIZATION_SPACE_ANALYSIS.md)
 - [方案B实施报告](performance/SCHEME_B_IMPLEMENTATION.md)
 - [历史优化计划](performance/NEXT_OPTIMIZATION_PLAN.md)
-
