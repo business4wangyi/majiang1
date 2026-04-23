@@ -496,8 +496,10 @@ export class A3CTrainer {
 export async function runTraining(): Promise<void> {
   console.log('🚀 启动A3C训练...');
 
-  // 使用优化配置
-  const trainer = new A3CTrainer(DEFAULT_A3C_AGENT_CONFIG, OPTIMIZED_A3C_TRAINING_CONFIG);
+  const trainer = new A3CTrainer(
+    DEFAULT_A3C_AGENT_CONFIG,
+    buildA3CTrainingConfigFromEnv(OPTIMIZED_A3C_TRAINING_CONFIG)
+  );
 
   try {
     await trainer.startTraining();
@@ -513,12 +515,12 @@ export async function runTraining(): Promise<void> {
  * 运行优化的A3C训练（最小输出）
  */
 export async function runOptimizedTraining(): Promise<void> {
-  const config: A3CTrainingConfig = {
+  const config = buildA3CTrainingConfigFromEnv({
     ...OPTIMIZED_A3C_TRAINING_CONFIG,
     outputFormat: 'minimal',
     progressFrequency: 200,
     verbose: false
-  };
+  });
 
   const trainer = new A3CTrainer(DEFAULT_A3C_AGENT_CONFIG, config);
 
@@ -535,12 +537,12 @@ export async function runOptimizedTraining(): Promise<void> {
  * 运行结构化输出的A3C训练（MCP友好）
  */
 export async function runStructuredTraining(): Promise<void> {
-  const config: A3CTrainingConfig = {
+  const config = buildA3CTrainingConfigFromEnv({
     ...OPTIMIZED_A3C_TRAINING_CONFIG,
     outputFormat: 'structured',
     enableMCP: true,
     progressFrequency: 100
-  };
+  });
 
   const trainer = new A3CTrainer(DEFAULT_A3C_AGENT_CONFIG, config);
 
@@ -556,4 +558,18 @@ export async function runStructuredTraining(): Promise<void> {
 // 如果直接运行此文件
 if (require.main === module) {
   runTraining().catch(console.error);
+}
+
+function buildA3CTrainingConfigFromEnv(baseConfig: A3CTrainingConfig): A3CTrainingConfig {
+  return {
+    ...baseConfig,
+    totalEpisodes: Number(process.env.A3C_TOTAL_EPISODES) || baseConfig.totalEpisodes,
+    evaluationGames: Number(process.env.A3C_EVALUATION_GAMES) || baseConfig.evaluationGames,
+    progressFrequency: Number(process.env.A3C_PROGRESS_FREQUENCY) || baseConfig.progressFrequency,
+    evaluationFrequency: Number(process.env.A3C_EVALUATION_FREQUENCY) || baseConfig.evaluationFrequency,
+    saveFrequency: Number(process.env.A3C_SAVE_FREQUENCY) || baseConfig.saveFrequency,
+    maxGameSteps: Number(process.env.A3C_MAX_GAME_STEPS) || baseConfig.maxGameSteps,
+    batchSize: Number(process.env.A3C_BATCH_SIZE) || baseConfig.batchSize,
+    modelSavePath: process.env.A3C_MODEL_SAVE_PATH || baseConfig.modelSavePath
+  };
 }

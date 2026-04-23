@@ -1,0 +1,172 @@
+name: A3C Training
+
+'on':
+  schedule:
+    - cron: '30 2 * * *'
+
+  workflow_dispatch:
+    inputs:
+      training_type:
+        description: 'Training type'
+        required: true
+        default: 'fast'
+        type: choice
+        options:
+          - fast
+          - standard
+          - full
+      total_episodes:
+        description: 'Total episodes (optional, overrides default)'
+        required: false
+        type: string
+      evaluation_games:
+        description: 'Evaluation games (optional, overrides default)'
+        required: false
+        type: string
+      progress_frequency:
+        description: 'Progress frequency (optional, overrides default)'
+        required: false
+        type: string
+
+jobs:
+  train:
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run training
+        id: training
+        run: |
+          echo "🚀 开始A3C训练任务"
+          echo "训练类型: ${{ github.event.inputs.training_type || 'scheduled' }}"
+
+          if [ -n "${{ github.event.inputs.total_episodes }}" ]; then
+            export A3C_TOTAL_EPISODES="${{ github.event.inputs.total_episodes }}"
+            echo "自定义总训练轮数: ${{ github.event.inputs.total_episodes }}"
+          elif [ "${{ github.event.inputs.training_type }}" == "full" ]; then
+            export A3C_TOTAL_EPISODES=2000
+          elif [ "${{ github.event.inputs.training_type }}" == "standard" ]; then
+            export A3C_TOTAL_EPISODES=1000
+          else
+            export A3C_TOTAL_EPISODES=300
+          fi
+
+          if [ -n "${{ github.event.inputs.evaluation_games }}" ]; then
+            export A3C_EVALUATION_GAMES="${{ github.event.inputs.evaluation_games }}"
+            echo "自定义评估局数: ${{ github.event.inputs.evaluation_games }}"
+          elif [ "${{ github.event.inputs.training_type }}" == "full" ]; then
+            export A3C_EVALUATION_GAMES=20
+          elif [ "${{ github.event.inputs.training_type }}" == "standard" ]; then
+            export A3C_EVALUATION_GAMES=10
+          else
+            export A3C_EVALUATION_GAMES=6
+          fi
+
+          if [ -n "${{ github.event.inputs.progress_frequency }}" ]; then
+            export A3C_PROGRESS_FREQUENCY="${{ github.event.inputs.progress_frequency }}"
+            echo "自定义进度输出频率: ${{ github.event.inputs.progress_frequency }}"
+          elif [ "${{ github.event.inputs.training_type }}" == "full" ]; then
+            export A3C_PROGRESS_FREQUENCY=200
+          elif [ "${{ github.event.inputs.training_type }}" == "standard" ]; then
+            export A3C_PROGRESS_FREQUENCY=100
+          else
+            export A3C_PROGRESS_FREQUENCY=50
+          fi
+
+          if [ "${{ github.event.inputs.training_type }}" == "fast" ]; then
+            npm run othello:a3c-train-structured
+          elif [ "${{ github.event.inputs.training_type }}" == "standard" ]; then
+            npm run othello:a3c-train-structured
+          elif [ "${{ github.event.inputs.training_type }}" == "full" ]; then
+            npm run othello:a3c-train
+          else
+            npm run othello:a3c-train-structured
+          fi
+
+      - name: Generate AI-readable training report
+        if: always()
+        run: |
+          mkdir -p training-reports
+
+          cat > training-reports/training_report.json << EOF
+          {
+            "summary": {
+              "status": "${{ job.status }}",
+              "trainingType": "${{ github.event.inputs.training_type || 'scheduled' }}",
+              "totalEpisodes": "${{ github.event.inputs.total_episodes || '' }}",
+              "evaluationGames": "${{ github.event.inputs.evaluation_games || '' }}",
+              "progressFrequency": "${{ github.event.inputs.progress_frequency || '' }}"
+            },
+            "metadata": {
+              "run_id": ${{ github.run_id }},
+              "run_number": ${{ github.run_number }},
+              "workflow": "${{ github.workflow }}",
+              "triggered_by": "${{ github.event_name }}",
+              "timestamp": "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+            }
+          }
+          EOF
+
+          cat > training-reports/metadata.json << EOF
+          {
+            "run_id": ${{ github.run_id }},
+            "run_number": ${{ github.run_number }},
+            "workflow": "${{ github.workflow }}",
+            "triggered_by": "${{ github.event_name }}",
+            "training_type": "${{ github.event.inputs.training_type || 'scheduled' }}",
+            "commit_sha": "${{ github.sha }}",
+            "commit_message": "${{ github.event.head_commit.message }}",
+            "timestamp": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+            "repository": "${{ github.repository }}",
+            "workflow_url": "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          }
+          EOF
+
+          cat > training-reports/ai_summary.json << EOF
+          {
+            "training_status": "${{ job.status }}",
+            "run_id": ${{ github.run_id }},
+            "training_type": "${{ github.event.inputs.training_type || 'scheduled' }}",
+            "workflow_url": "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}",
+            "artifacts_available": true,
+            "timestamp": "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          }
+          EOF
+
+      - name: Upload training results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: a3c-training-results-${{ github.run_number }}-${{ github.sha }}
+          path: |
+            training-reports/**
+          retention-days: 30
+          if-no-files-found: warn
+
+      - name: Create training report
+        if: always()
+        run: |
+          echo "## 🎯 A3C训练报告" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 训练信息" >> $GITHUB_STEP_SUMMARY
+          echo "- **训练类型**: ${{ github.event.inputs.training_type || 'scheduled (定时)' }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **运行编号**: ${{ github.run_number }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **运行ID**: ${{ github.run_id }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **提交哈希**: ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **触发方式**: ${{ github.event_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **运行时间**: $(date -u +'%Y-%m-%d %H:%M:%S UTC')" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 训练结果" >> $GITHUB_STEP_SUMMARY
+          echo "训练结果（精简版，仅 JSON 报告）已保存到 Artifacts，请下载查看。" >> $GITHUB_STEP_SUMMARY
