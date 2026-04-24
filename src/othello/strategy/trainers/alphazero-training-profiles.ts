@@ -51,7 +51,7 @@ export function applyFastTrainingProfile(
   if (profileName === ALPHAZERO_SCHEME_C_DOC_PROFILE) {
     const nextConfig: Partial<FastTrainingConfig> = {
       ...config,
-      totalIterations: Number(env.ALPHAZERO_TOTAL_ITERATIONS) || 20,
+      totalIterations: Number(env.ALPHAZERO_TOTAL_ITERATIONS) || 30,
       selfPlayGames: Number(env.ALPHAZERO_SELFPLAY_GAMES) || 10,
       initialMCTSSimulations: Number(env.ALPHAZERO_INITIAL_MCTS) || Number(env.ALPHAZERO_MCTS) || 250,
       finalMCTSSimulations: Number(env.ALPHAZERO_FINAL_MCTS) || Number(env.ALPHAZERO_MCTS) || 250,
@@ -60,10 +60,10 @@ export function applyFastTrainingProfile(
       lateTrainingEpochs: Number(env.ALPHAZERO_LATE_EPOCHS) || 15,
       trainingEpochs: Number(env.ALPHAZERO_TRAINING_EPOCHS) || 12,
       evaluationFrequency: Number(env.ALPHAZERO_EVAL_FREQUENCY) || 10,
-      evaluationGames: Number(env.ALPHAZERO_EVALUATION_GAMES) || 20,
-      evaluationMode: env.ALPHAZERO_EVALUATION_MODE === 'all-baselines' ? 'all-baselines' : 'random-only',
-      evalSwapSides: env.ALPHAZERO_EVAL_SWAP_SIDES === 'true',
-      seed: env.ALPHAZERO_SEED !== undefined ? Number(env.ALPHAZERO_SEED) : undefined,
+      evaluationGames: Number(env.ALPHAZERO_EVALUATION_GAMES) || 30,
+      evaluationMode: env.ALPHAZERO_EVALUATION_MODE === 'random-only' ? 'random-only' : 'all-baselines',
+      evalSwapSides: env.ALPHAZERO_EVAL_SWAP_SIDES !== 'false',
+      seed: env.ALPHAZERO_SEED !== undefined ? Number(env.ALPHAZERO_SEED) : 20260419,
       saveFrequency: Number(env.ALPHAZERO_SAVE_FREQUENCY) || 10
     };
     if (!profileLogOnceFlags.has('fast-scheme-c-doc-v1')) {

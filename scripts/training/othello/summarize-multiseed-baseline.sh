@@ -11,8 +11,17 @@ if [[ ! -f "$MANIFEST" ]]; then
   exit 2
 fi
 
+for dep in python3 awk; do
+  if ! command -v "$dep" >/dev/null 2>&1; then
+    echo "[ERROR] 缺少依赖: $dep" >&2
+    exit 2
+  fi
+done
+
 tmp_rows="$(mktemp)"
+tmp_missing_metrics="$(mktemp)"
 trap 'rm -f "$tmp_rows"' EXIT
+trap 'rm -f "$tmp_rows" "$tmp_missing_metrics"' EXIT
 
 echo -e "seed\tstatus\telapsedMin\trandomRate\tgreedyRate\theuristicRate\tweightedScore" > "$OUT_SUMMARY"
 
@@ -66,6 +75,20 @@ PY
 
   echo -e "${seed}\t${status}\t${metrics}" >> "$OUT_SUMMARY"
 done < "$MANIFEST"
+
+awk -F '\t' 'NR>1 && $2=="ok" && ($7=="N/A" || $6=="N/A") {print $1}' "$OUT_SUMMARY" > "$tmp_missing_metrics"
+missing_metrics_count="$(wc -l < "$tmp_missing_metrics" | tr -d ' ')"
+
+if (( missing_metrics_count > 0 )); then
+  missing_list="$(paste -sd ',' "$tmp_missing_metrics")"
+  {
+    echo "结论: FAIL"
+    echo "原因: 以下 seed 状态为 ok 但缺少关键指标(weighted/heuristic): ${missing_list}"
+  } > "$GATE_REPORT"
+  cat "$OUT_SUMMARY"
+  cat "$GATE_REPORT"
+  exit 1
+fi
 
 awk -F '\t' 'NR>1 && $2=="ok" && $7!="N/A" && $6!="N/A" {print}' "$OUT_SUMMARY" > "$tmp_rows"
 
@@ -125,6 +148,7 @@ awk -v sd="$stdH" -v mx="$MAX_STD_HEURISTIC" 'BEGIN{exit !(sd <= mx)}' || { pass
   echo "heuristic mean/std: $meanH / $stdH"
   echo "baseline weighted: $BASELINE_WEIGHTED"
   echo "baseline heuristic: $BASELINE_HEURISTIC"
+  echo "manifest ok samples: $(awk -F '\t' 'NR>1 && $2=="ok" {n++} END{print n+0}' "$OUT_SUMMARY")"
   echo ""
   if [[ "$pass" == "yes" ]]; then
     echo "结论: PASS"
@@ -138,4 +162,3 @@ awk -v sd="$stdH" -v mx="$MAX_STD_HEURISTIC" 'BEGIN{exit !(sd <= mx)}' || { pass
 if [[ "$pass" != "yes" ]]; then
   exit 1
 fi
-

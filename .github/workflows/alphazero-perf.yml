@@ -1,14 +1,14 @@
-name: AlphaZero Performance CI
+name: AlphaZero Baseline Repro CI
 
 on:
   workflow_dispatch:
     inputs:
       iterations:
-        description: "总迭代数（默认5）"
+        description: "总迭代数（默认30，当前基线口径）"
         required: false
-        default: "5"
+        default: "30"
       selfplay_games:
-        description: "自我对弈局数（默认10，方案C文档口径）"
+        description: "自我对弈局数（默认10，当前基线口径）"
         required: false
         default: "10"
   push:
@@ -34,19 +34,29 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Run fast AlphaZero training (4核限制场景)
+      - name: Run fast AlphaZero baseline reproduction (4核限制场景)
         env:
           ALPHAZERO_TRAINING_PROFILE: scheme-c-doc-v1
-          ALPHAZERO_TOTAL_ITERATIONS: ${{ github.event.inputs.iterations || 5 }}
+          ALPHAZERO_TOTAL_ITERATIONS: ${{ github.event.inputs.iterations || 30 }}
           ALPHAZERO_SELFPLAY_GAMES: ${{ github.event.inputs.selfplay_games || 10 }}
           ALPHAZERO_PARALLEL_GAMES: 4
           ALPHAZERO_INITIAL_MCTS: 250  # 稳定性优化：MCTS 250次（平衡性能和效果，改善训练稳定性）
           ALPHAZERO_FINAL_MCTS: 250  # 稳定性优化：MCTS 250次（平衡性能和效果，改善训练稳定性）
           ALPHAZERO_DYNAMIC_MCTS: false  # 稳定性优化：禁用动态MCTS，固定250次
           ALPHAZERO_EVAL_FREQUENCY: 10
+          ALPHAZERO_EVALUATION_MODE: all-baselines
+          ALPHAZERO_EVALUATION_GAMES: 30
+          ALPHAZERO_EVAL_SWAP_SIDES: true
+          ALPHAZERO_SEED: 20260419
           ALPHAZERO_LATE_EPOCHS: 15
         run: |
           mkdir -p src/othello/models
+          echo "Baseline reproducibility env:"
+          echo "  ALPHAZERO_TRAINING_PROFILE=$ALPHAZERO_TRAINING_PROFILE"
+          echo "  ALPHAZERO_EVALUATION_MODE=$ALPHAZERO_EVALUATION_MODE"
+          echo "  ALPHAZERO_EVALUATION_GAMES=$ALPHAZERO_EVALUATION_GAMES"
+          echo "  ALPHAZERO_EVAL_SWAP_SIDES=$ALPHAZERO_EVAL_SWAP_SIDES"
+          echo "  ALPHAZERO_SEED=$ALPHAZERO_SEED"
           npm run othello:alphazero-fast-train 2>&1 | tee /tmp/alphazero-perf.log
 
       - name: Upload training log

@@ -15,6 +15,11 @@ if [[ ! -f "$MANIFEST" ]]; then
   echo -e "seed\tstatus\tlog_path" > "$MANIFEST"
 fi
 
+if ! command -v awk >/dev/null 2>&1; then
+  echo "[ERROR] 缺少依赖: awk" >&2
+  exit 2
+fi
+
 IFS=',' read -r -a SEED_LIST <<< "$SEEDS_CSV"
 if [[ "${#SEED_LIST[@]}" -eq 0 ]]; then
   echo "[ERROR] ALPHAZERO_SEEDS 为空" >&2
@@ -45,7 +50,8 @@ upsert_manifest_row() {
 }
 
 for seed in "${SEED_LIST[@]}"; do
-  seed="$(echo "$seed" | xargs)"
+  seed="${seed#"${seed%%[![:space:]]*}"}"
+  seed="${seed%"${seed##*[![:space:]]}"}"
   if [[ -z "$seed" ]]; then
     continue
   fi
