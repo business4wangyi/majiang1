@@ -3,6 +3,7 @@ import * as path from 'path';
 import { Game } from '../core/game';
 import { displayManager } from '../ui/display-manager';
 import { perfMonitor } from '../tools/performance-monitor';
+import { isMajiangFileLoggingEnabled } from '../runtime/runtime-context';
 
 /**
  * 日志系统 - 提供全面的日志记录功能
@@ -171,6 +172,11 @@ function flushLogBuffer(): void {
   if (logBuffer.length === 0) {
     return;
   }
+
+  if (!isMajiangFileLoggingEnabled()) {
+    logBuffer = [];
+    return;
+  }
   
   try {
     // 确保日志目录存在
@@ -224,6 +230,10 @@ function getGameStateLog(game: Game): string {
  * @param reason 保存原因
  */
 export function saveGameLogToFile(game: Game, reason: string): void {
+  if (!isMajiangFileLoggingEnabled()) {
+    return;
+  }
+
   try {
     // 确保日志目录存在
     if (!fs.existsSync(CONFIG.logDir)) {
@@ -294,6 +304,10 @@ process.on('unhandledRejection', (reason) => {
  * @param content 性能统计内容
  */
 export let savePerformanceLogToFile: (content: string) => void = function(content: string): void {
+  if (!isMajiangFileLoggingEnabled()) {
+    return;
+  }
+
   try {
     const perfLogDir = CONFIG.logDir;
     const perfLogFile = path.join(perfLogDir, getPerfLogFileName());

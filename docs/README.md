@@ -26,6 +26,8 @@
 - [井字棋实现](../src/tic-tac-toe/)
 - [奥赛罗实现](../src/othello/)
 - [麻将实现](../src/majiang/)
+- [麻将 UI 技术设计](majiang/UI_TECHNICAL_DESIGN.md)
+- [麻将 UI 当前实现与验收说明](majiang/UI_TECHNICAL_DESIGN.md#17-当前实现落点与状态)
 
 ### 🔬 研究者
 如果您对AI算法和性能优化感兴趣：
@@ -60,7 +62,8 @@ docs/                                    # 文档根目录
 │       ├── OPTIMIZATION_SPACE_ANALYSIS.md  # 优化空间分析
 │       └── SCHEME_B_IMPLEMENTATION.md  # 方案B实施报告
 └── majiang/                             # 麻将文档
-    └── FOLDER_STRUCTURE.md              # 目录结构
+    ├── FOLDER_STRUCTURE.md              # 目录结构
+    └── UI_TECHNICAL_DESIGN.md           # 麻将图形界面技术设计
 ```
 
 ### 内容范围定义
@@ -109,6 +112,8 @@ docs/                                    # 文档根目录
 ### 开发扩展
 - 🎲 [游戏实现](../src/)
 - 🧠 [AI策略算法](../src/)
+- 🀄 [麻将 CLI/Web 验证入口](majiang/UI_TECHNICAL_DESIGN.md#174-已补充的回归验证记录)
+- 🀄 [麻将 Web 无端口验收记录](majiang/UI_TECHNICAL_DESIGN.md#175-已补充的-web-无端口验收记录)
 
 ## 📞 获取帮助
 

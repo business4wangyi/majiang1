@@ -104,6 +104,10 @@
     "majiang:validate-2000": "node ultimate-validation-2000-games.js",
     "majiang:showcase": "node technical-achievement-showcase.js",
     "majiang:auto": "npx ts-node src/majiang/index.ts --auto",
+    "majiang:web": "npx ts-node src/majiang/web/server.ts",
+    "majiang:web-smoke": "npx ts-node scripts/demo/majiang-web-smoke.ts",
+    "majiang:smoke": "npx ts-node scripts/demo/majiang-cli-smoke.ts",
+    "majiang:verify": "/bin/zsh -lc 'npm run majiang:smoke && npm run majiang:web-smoke'",
     "othello:alphazero-baseline-compare-summary": "bash scripts/training/othello/summarize-baseline-compare.sh"
   },
   "keywords": [

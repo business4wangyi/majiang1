@@ -1,20 +1,15 @@
 import './tools/performance-injector';
-import { Game } from '../core/game';
-import { runAutoGameLoop, runInteractiveGameLoop } from '../ui/gameLoop';
-import { Style } from '../ui/display';
-import { InputState, askQuestion } from '../ui/input';
-import { errorLog, setLogLevel, LogLevel } from '../tools/logger';
-import { displayManager } from '../ui/display-manager';
-import { CountdownManager } from '../ui/countdown-manager';
-import { GameEventHandler } from '../ui/game-event-handler';
-import { PerformanceMonitor } from '../tools/performance-monitor';
+import { Game } from './core/game';
+import { runAutoGameLoop, runInteractiveGameLoop } from './ui/gameLoop';
+import { Style } from './ui/display';
+import { InputState, askQuestion } from './ui/input';
+import { errorLog, setLogLevel, LogLevel } from './tools/logger';
+import { displayManager } from './ui/display-manager';
+import { CountdownManager } from './ui/countdown-manager';
+import { GameEventHandler } from './ui/game-event-handler';
+import { PerformanceMonitor } from './tools/performance-monitor';
 import { AUTO_PLAY_ROUNDS } from './config/config';
-
-// 自动打牌模式标志（导出以在其他模块中使用）
-export let AUTO_PLAY_MODE = false; // 默认关闭自动打牌模式
-
-// 调试模式开关（导出以在其他模块中使用）
-export let DEBUG_MODE = false; // 默认关闭调试模式
+import { AUTO_PLAY_MODE, DEBUG_MODE, setAutoPlayMode, setDebugMode } from './runtime/game-flags';
 
 // 程序启动时记录全局启动时间
 PerformanceMonitor.markProgramStart();
@@ -40,7 +35,7 @@ async function startGame() {
     CountdownManager.clearCountdownDisplay();
 
     // 解析用户选择
-    AUTO_PLAY_MODE = autoModeInput.toLowerCase() === 'y';
+    setAutoPlayMode(autoModeInput.toLowerCase() === 'y');
     
     // 显示用户选择的结果
     if (AUTO_PLAY_MODE) {
@@ -64,7 +59,7 @@ async function startGame() {
     CountdownManager.clearCountdownDisplay();
     
     // 解析用户选择
-    DEBUG_MODE = debugModeInput.toLowerCase() === 'd';
+    setDebugMode(debugModeInput.toLowerCase() === 'd');
     
     // 显示用户选择的结果
     // 根据调试模式设置日志级别

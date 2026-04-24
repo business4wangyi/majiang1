@@ -3,8 +3,9 @@ import { Player, PlayerType } from '../../core/player';
 import { Tile, TileType } from '../../core/tile';
 import { displayManager } from '../../ui/display-manager';
 import { GameEventHandler } from '../../ui/game-event-handler';
-import { AUTO_PLAY_MODE } from '../../../index';
+import { AUTO_PLAY_MODE } from '../../runtime/game-flags';
 import { WinConditions } from '../../core/win-conditions/win-conditions-main';
+import { handleMajiangFatal } from '../../runtime/runtime-context';
 
 export class AIPlayer extends Player {
   private static idCounter = 1;
@@ -118,13 +119,13 @@ export class AIPlayer extends Player {
     if (!this.needsToDiscard()) {
       errorLog(`AI玩家 ${this.name} 不需要出牌，手牌数量：${this.handTiles.length}`);
       errorLog('游戏错误检查原因')
-      process.exit(0)
+      handleMajiangFatal(`AI玩家 ${this.name} 不需要出牌`, 1);
     }
     debugLog(`AI玩家 ${this.name} 正在思考出牌...`);
     if (this.handTiles.length === 0) {
       errorLog(`AI玩家 ${this.name} 不需要出牌，手牌数量：${this.handTiles.length}`);
       errorLog('游戏错误检查原因')
-      process.exit(0)
+      handleMajiangFatal(`AI玩家 ${this.name} 没有手牌可出`, 1);
     }
     // 新增日志：出牌前输出手牌、明牌、总数、canHu判定
     debugLog(`[AI日志] 玩家: ${this.name}，操作: 出牌前，手牌: ${this.handTiles.map(t=>t.toString()).join(' ')}，明牌: ${(this.revealedSets||[]).map(set=>set.tiles.map(t=>t.toString()).join(',')).join('|')}，总数: ${this.handTiles.length + (this.revealedSets||[]).reduce((sum,set)=>sum+set.tiles.length,0)}`);
@@ -152,7 +153,7 @@ export class AIPlayer extends Player {
         } else {
           debugLog(`AI玩家 ${this.name} 随机出牌失败`);
           errorLog('游戏错误检查原因')
-          process.exit(0)
+          handleMajiangFatal(`AI玩家 ${this.name} 随机出牌失败`, 1);
         }
       }
       
@@ -179,7 +180,7 @@ export class AIPlayer extends Player {
         
         debugLog(`AI玩家 ${this.name} 随机出牌失败`);
         errorLog('游戏错误检查原因')
-        process.exit(0)
+        handleMajiangFatal(`AI玩家 ${this.name} 没有可用的牌对象`, 1);
       }
       
       debugLog(`AI玩家 ${this.name} 决定打出第${discardIndex + 1}张牌: ${tileToDiscard.toString()}`);
@@ -217,7 +218,7 @@ export class AIPlayer extends Player {
       }
       
       errorLog('游戏错误检查原因')
-      process.exit(0)
+      handleMajiangFatal(`AI玩家 ${this.name} 出牌失败且恢复失败`, 1);
     }
   }
 
@@ -252,7 +253,7 @@ export class AIPlayer extends Player {
             if (this.handTiles.length > this.getExpectedHandSize() + 1) {
               displayManager.displayPlayerHand(this)
               errorLog(`退出游戏排查问题`);
-              process.exit(0);
+              handleMajiangFatal(`AI玩家 ${this.name} 手牌数量异常`, 1);
             }
             return lowestValueTile.index;
           } else {

@@ -3,7 +3,7 @@ import { TileSet } from '../core/rule-types';
 import { Style } from '../ui/display';
 import { debugLog, errorLog } from '../tools/logger';
 import { WinConditions } from './win-conditions/win-conditions-main';
-import { exit } from 'process';
+import { handleMajiangFatal } from '../runtime/runtime-context';
 
 // 玩家状态
 export enum PlayerState {
@@ -65,7 +65,7 @@ export class Player {
     // 验证操作后手牌数量
     if (this.handTiles.length !== beforeCount + 1) {
       errorLog(`警告: 摸牌后手牌数量异常，预期: ${beforeCount + 1}，实际: ${this.handTiles.length}`);
-      exit(0);
+      handleMajiangFatal(`摸牌后手牌数量异常: ${this.name}`, 1);
     }
     
     this.sortHand();
@@ -112,13 +112,13 @@ export class Player {
     if (this.handTiles.length === 0) {
       errorLog(`错误: 玩家${this.name}没有手牌可出`);
       errorLog(`游戏错误，排查原因`);
-      process.exit(0)
+      handleMajiangFatal(`玩家${this.name}没有手牌可出`, 1);
     }
 
     // 验证索引是否有效（加强验证和错误处理）
     if (tileIndex === undefined || tileIndex === null) {
       errorLog(`严重错误: 出牌索引为undefined或null`);
-      process.exit(0);
+      handleMajiangFatal(`玩家${this.name}出牌索引无效`, 1);
     }
     
     // 索引范围检查与修正（对所有玩家类型都进行修正）
@@ -135,13 +135,13 @@ export class Player {
     // 再次验证索引有效
     if (tileIndex < 0 || tileIndex >= this.handTiles.length) {
       errorLog(`严重错误: 索引修正后仍然无效: ${tileIndex}`);
-      process.exit(1);
+      handleMajiangFatal(`玩家${this.name}出牌索引修正后仍无效`, 1);
     }
 
         // 确保选择的牌有效
     if (!this.handTiles[tileIndex]) {
       errorLog(`错误: 索引${tileIndex}处的牌无效`);
-      process.exit(0);
+      handleMajiangFatal(`玩家${this.name}选择的牌无效`, 1);
     }
     
     try {
@@ -174,7 +174,7 @@ export class Player {
       errorLog(`退出游戏排查问题`);
       // 不再使用任何非标准的备用方法，而是直接返回失败
       debugLog(`出牌失败，玩家状态可能不一致`);
-      process.exit(0)
+      handleMajiangFatal(`玩家${this.name}出牌过程发生错误`, 1);
     }
   }
 

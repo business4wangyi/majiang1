@@ -1,18 +1,45 @@
 import { Game, GameState } from '../core/game';
 import { displayManager } from '../ui/display-manager';
-import { askConfirmation, askQuestion, askMultipleChoice, InputState, getNextDiscardIndex } from '../ui/input';
 import { Player, PlayerState, PlayerType } from '../core/player';
 import { debugLog, errorLog, infoLog } from '../tools/logger';
 import { Tile, TileType } from '../core/tile';
 import { TileManager } from '../core/tile-manager';
-import { WinConditions } from './win-conditions/win-conditions-main';
+import { WinConditions } from '../core/win-conditions/win-conditions-main';
 import { GangType, PlayerAction } from '../core/rule-types';
 import { RuleEngine } from '../core/rule-engine';
 import { AIPlayer } from '../strategy/agents/ai-player';
-import { DEBUG_MODE, AUTO_PLAY_MODE } from './index';
-import { AUTO_PLAY_ROUNDS } from './config/config';
-import { ScoreCalculator } from './score-calculator';
-import { runAutoGameLoop, runInteractiveGameLoop } from '../ui/gameLoop';
+import { DEBUG_MODE, AUTO_PLAY_MODE } from '../runtime/game-flags';
+import { AUTO_PLAY_ROUNDS } from '../config/config';
+import { ScoreCalculator } from '../core/score-calculator';
+
+async function askQuestionCli(prompt: string, timeout?: number, defaultValue?: string): Promise<string> {
+  const inputModule = await import('../ui/input');
+  return inputModule.askQuestion(prompt, timeout, defaultValue);
+}
+
+async function askConfirmationCli(prompt: string, defaultYes?: boolean, timeout?: number): Promise<boolean> {
+  const inputModule = await import('../ui/input');
+  return inputModule.askConfirmation(prompt, defaultYes, timeout);
+}
+
+async function askMultipleChoiceCli(prompt: string, options: string[]): Promise<number> {
+  const inputModule = await import('../ui/input');
+  return inputModule.askMultipleChoice(prompt, options);
+}
+
+async function getNextDiscardIndexCli(
+  handTilesLength: number,
+  callback?: (index: number) => void,
+  timeout?: number
+): Promise<number> {
+  const inputModule = await import('../ui/input');
+  return inputModule.getNextDiscardIndex(handTilesLength, callback, timeout);
+}
+
+async function setInputWaitingStateCli(value: boolean): Promise<void> {
+  const inputModule = await import('../ui/input');
+  inputModule.InputState.isWaitingForUserInput = value;
+}
 
 /**
  * 游戏事件处理器类
@@ -506,7 +533,7 @@ export class GameEventHandler {
       return true;
     }
     // 询问用户是否开始新局（仅人工模式）
-    return await askConfirmation("牌山已空，是否开始新局？", true, 10000);
+    return await askConfirmationCli("牌山已空，是否开始新局？", true, 10000);
   }
   
   /**
@@ -822,7 +849,7 @@ export class GameEventHandler {
       });
 
       // 等待玩家输入
-      const choice = parseInt(await askQuestion("请输入选择的组合编号："));
+      const choice = parseInt(await askQuestionCli("请输入选择的组合编号："));
       if (isNaN(choice) || choice < 1 || choice > possibleCombinations.length) {
         displayManager.printError("无效的选择");
         return false;
@@ -1063,7 +1090,7 @@ export class GameEventHandler {
         }
       });
       
-      const selectedIndex = await askMultipleChoice("请选择操作:", options);
+      const selectedIndex = await askMultipleChoiceCli("请选择操作:", options);
       selectedAction = possibleActions[selectedIndex];
     }
     
@@ -1185,7 +1212,7 @@ export class GameEventHandler {
     displayManager.printWarning('请输入您要打出的牌的序号:');
     
     // 获取用户输入的索引
-    getNextDiscardIndex(player.handTiles.length, async (tileIndex) => {
+    await getNextDiscardIndexCli(player.handTiles.length, async (tileIndex) => {
       if (tileIndex !== -1) {
         const discardedTile = this.currentPlayerDiscard(tileIndex);
 
@@ -1234,7 +1261,7 @@ export class GameEventHandler {
         hasHu = true;
       } else {
         displayManager.printWarning(`${huPlayer.name}，您可以胡 ${discardedTile.toString()}`);
-        const want = await askQuestion("是否胡牌？(y/n)");
+        const want = await askQuestionCli("是否胡牌？(y/n)");
         if (want.toLowerCase() === 'y') {
           debugLog(`人类玩家 ${huPlayer.name} 选择胡牌`);
           this.handlePlayerHu(huPlayer, discardedTile);
@@ -1270,7 +1297,7 @@ export class GameEventHandler {
       } else {
         // 人类玩家选择是否杠牌
         displayManager.printWarning(`${gangPlayer.name}，您可以杠 ${discardedTile.toString()}`);
-        const want = await askQuestion("是否杠牌？(y/n)");
+        const want = await askQuestionCli("是否杠牌？(y/n)");
         if (want.toLowerCase() === 'y') {
           debugLog(`人类玩家 ${gangPlayer.name} 选择杠牌`);
           const gangSuccess = await this.handleGang(gangPlayer, discardedTile);
@@ -1302,7 +1329,7 @@ export class GameEventHandler {
       } else {
         // 人类玩家选择是否碰牌
         displayManager.printWarning(`${pengPlayer.name}，您可以碰 ${discardedTile.toString()}`);
-        const want = await askQuestion("是否碰牌？(y/n)");
+        const want = await askQuestionCli("是否碰牌？(y/n)");
         if (want.toLowerCase() === 'y') {
           debugLog(`人类玩家 ${pengPlayer.name} 选择碰牌`);
           const pengSuccess = await this.handlePeng(pengPlayer, discardedTile);
@@ -1332,7 +1359,7 @@ export class GameEventHandler {
       } else {
         // 人类玩家选择是否吃牌
         displayManager.printWarning(`${nextPlayer.name}，您可以吃 ${discardedTile.toString()}`);
-        const want = await askQuestion("是否吃牌？(y/n)");
+        const want = await askQuestionCli("是否吃牌？(y/n)");
         if (want.toLowerCase() === 'y') {
           debugLog(`人类玩家 ${nextPlayer.name} 选择吃牌`);
           const chiSuccess = await this.handleChi(nextPlayer, discardedTile);
@@ -1479,11 +1506,11 @@ export class GameEventHandler {
         return GameEndResult.AUTO_PLAY_COMPLETED;
       }
     } else {
-      const startNewGame = await askQuestion("是否开始新一局游戏？(y/n)");
+      const startNewGame = await askQuestionCli("是否开始新一局游戏？(y/n)");
       debugLog(`[调试] handleGameEnd: 用户选择${startNewGame}`);
       if (startNewGame.toLowerCase() === 'y') {
         this.game.reset();
-        InputState.isWaitingForUserInput = false;
+        await setInputWaitingStateCli(false);
         this.startGame();
         debugLog('[调试] handleGameEnd: 用户选择新一局，已重置游戏');
         return GameEndResult.RESTART_AUTO_GAME;

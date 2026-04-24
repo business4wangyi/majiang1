@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>麻将首版 UI</title>
+  <link rel="stylesheet" href="/majiang-web/styles.css" />
+</head>
+<body>
+  <div class="page-shell">
+    <section id="lobby" class="panel lobby-panel">
+      <div class="hero">
+        <p class="eyebrow">Majiang MVP</p>
+        <h1>麻将 Web 牌桌</h1>
+        <p class="subtitle">首版只保留本地单机核心流程：1 人 + 3 AI。</p>
+      </div>
+      <div class="lobby-actions">
+        <label class="mode-card">
+          <span class="mode-title">当前模式</span>
+          <span class="mode-value">手动模式（1 人 + 3 AI）</span>
+        </label>
+        <button id="start-btn" class="primary-btn">开始新对局</button>
+      </div>
+    </section>
+
+    <section id="table" class="table-screen hidden">
+      <header class="table-header panel">
+        <div>
+          <p class="eyebrow">桌面状态</p>
+          <h2>麻将牌桌</h2>
+        </div>
+        <div class="meta-grid">
+          <div><span>当前阶段</span><strong id="game-state">-</strong></div>
+          <div><span>剩余牌数</span><strong id="remaining-tiles">-</strong></div>
+          <div><span>当前提示</span><strong id="current-prompt">-</strong></div>
+        </div>
+      </header>
+
+      <main class="table-layout">
+        <section class="opponent-row">
+          <div id="seat-top" class="seat panel"></div>
+        </section>
+
+        <section class="middle-row">
+          <div id="seat-left" class="seat panel side-seat"></div>
+          <div class="desk panel">
+            <div class="desk-summary">
+              <h3>中央牌桌</h3>
+              <p>最后弃牌：<span id="last-discarded">无</span></p>
+            </div>
+            <div id="discard-pools" class="discard-pools"></div>
+          </div>
+          <div id="seat-right" class="seat panel side-seat"></div>
+        </section>
+
+        <section class="opponent-row">
+          <div id="seat-bottom" class="seat panel player-seat"></div>
+        </section>
+      </main>
+    </section>
+  </div>
+
+  <div id="result-modal" class="modal hidden">
+    <div class="modal-card">
+      <p class="eyebrow">Result</p>
+      <h3 id="result-title">对局结束</h3>
+      <p id="result-score">-</p>
+      <div class="modal-actions">
+        <button id="restart-btn" class="primary-btn">再来一局</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/majiang-web/app.js"></script>
+</body>
+</html>

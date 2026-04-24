@@ -5,6 +5,7 @@ import { GameState } from '../core/game';
 import { Game } from '../core/game';
 import { infoLog, warnLog, errorLog } from '../tools/logger';
 import { TileSet } from '../core/rule-types';
+import { isMajiangOutputSilent } from '../runtime/runtime-context';
 
 /**
  * DisplayManager类 - 负责处理所有UI相关的打印功能
@@ -39,7 +40,9 @@ export class DisplayManager {
    * @param logToFile 是否同时记录到日志文件
    */
   public print(message: string, logToFile: boolean = true): void {
-    console.log(message);
+    if (!isMajiangOutputSilent()) {
+      console.log(message);
+    }
     if (logToFile) {
       infoLog(message);
     }
@@ -52,7 +55,9 @@ export class DisplayManager {
    * @param logToFile 是否同时记录到日志文件
    */
   public printColored(message: string, style: string, logToFile: boolean = true): void {
-    console.log(`${style}${message}${Style.RESET}`);
+    if (!isMajiangOutputSilent()) {
+      console.log(`${style}${message}${Style.RESET}`);
+    }
     if (logToFile) {
       infoLog(message);
     }
@@ -65,9 +70,11 @@ export class DisplayManager {
    */
   public printTitle(title: string, logToFile: boolean = true): void {
     const separator = '='.repeat(title.length + 4);
-    console.log(`\n${Style.BOLD}${separator}${Style.RESET}`);
-    console.log(`${Style.BOLD}= ${title} =${Style.RESET}`);
-    console.log(`${Style.BOLD}${separator}${Style.RESET}\n`);
+    if (!isMajiangOutputSilent()) {
+      console.log(`\n${Style.BOLD}${separator}${Style.RESET}`);
+      console.log(`${Style.BOLD}= ${title} =${Style.RESET}`);
+      console.log(`${Style.BOLD}${separator}${Style.RESET}\n`);
+    }
     
     if (logToFile) {
       infoLog(`=== ${title} ===`);
@@ -97,7 +104,9 @@ export class DisplayManager {
    * @param logToFile 是否同时记录到日志文件
    */
   public printPrompt(message: string, logToFile: boolean = true): void {
-    console.log(`${Style.CYAN}> ${message}${Style.RESET}`);
+    if (!isMajiangOutputSilent()) {
+      console.log(`${Style.CYAN}> ${message}${Style.RESET}`);
+    }
     if (logToFile) {
       infoLog(`提示: ${message}`);
     }
@@ -123,7 +132,9 @@ export class DisplayManager {
    * @param logToFile 是否记录到日志文件
    */
   public printError(message: string, logToFile: boolean = true): void {
-    console.log(`${Style.RED}错误: ${message}${Style.RESET}`);
+    if (!isMajiangOutputSilent()) {
+      console.log(`${Style.RED}错误: ${message}${Style.RESET}`);
+    }
     if (logToFile) {
       errorLog(message);
     }
@@ -135,7 +146,9 @@ export class DisplayManager {
    * @param logToFile 是否记录到日志文件
    */
   public printWarning(message: string, logToFile: boolean = true): void {
-    console.log(`${Style.YELLOW}警告: ${message}${Style.RESET}`);
+    if (!isMajiangOutputSilent()) {
+      console.log(`${Style.YELLOW}警告: ${message}${Style.RESET}`);
+    }
     if (logToFile) {
       warnLog(message);
     }
@@ -147,7 +160,9 @@ export class DisplayManager {
    * @param logToFile 是否记录到日志文件
    */
   public printSuccess(message: string, logToFile: boolean = true): void {
-    console.log(`${Style.GREEN}✓ ${message}${Style.RESET}`);
+    if (!isMajiangOutputSilent()) {
+      console.log(`${Style.GREEN}✓ ${message}${Style.RESET}`);
+    }
     if (logToFile) {
       infoLog(message);
     }
@@ -159,7 +174,9 @@ export class DisplayManager {
    * @param logToFile 是否记录到日志文件
    */
   public displayImportantEvent(message: string, logToFile: boolean = true): void {
-    console.log(`${Style.BOLD}${Style.YELLOW}>>> ${message} <<<${Style.RESET}`);
+    if (!isMajiangOutputSilent()) {
+      console.log(`${Style.BOLD}${Style.YELLOW}>>> ${message} <<<${Style.RESET}`);
+    }
     if (logToFile) {
       infoLog(`[重要事件] ${message}`);
     }
@@ -185,12 +202,14 @@ export class DisplayManager {
     if (this.turnLogs.length === 0) {
       return;
     }
-    
-    console.log(`\n${Style.BOLD}==== 回合记录 =====${Style.RESET}`);
-    this.turnLogs.forEach((logEntry, index) => {
-      console.log(`${index + 1}. ${logEntry}`);
-    });
-    console.log(`${Style.BOLD}=================\n${Style.RESET}`);
+
+    if (!isMajiangOutputSilent()) {
+      console.log(`\n${Style.BOLD}==== 回合记录 =====${Style.RESET}`);
+      this.turnLogs.forEach((logEntry, index) => {
+        console.log(`${index + 1}. ${logEntry}`);
+      });
+      console.log(`${Style.BOLD}=================\n${Style.RESET}`);
+    }
   }
   
   /**
