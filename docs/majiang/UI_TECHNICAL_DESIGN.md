@@ -610,17 +610,17 @@
   - MVP 页面已收敛为 `Lobby`、`Table`、`ResultModal`
   - 当前实现仍复用 `src/majiang/core/`、`src/majiang/strategy/` 与 `GameEventHandler`，未新增平行规则引擎
 
-### 17.2 当前未完成项
+### 17.2 当前状态与剩余项
 
-以下内容仍未完成，属于后续继续处理范围：
+以下内容为当前代码状态下的完成情况与后续范围边界：
 
-- Web 端到端闭环验收已在当前代码状态下复核
+- Web 端到端闭环验收已在当前代码状态下复核完成
   - 当前环境曾出现 `listen EPERM`，这属于运行环境限制，不直接等同于代码缺陷
   - 当前 `src/majiang/web/server.ts` 已关闭 Web 路径文件日志，避免监听失败时额外混入 `logs/majiang` 权限噪音
   - 当前 `src/majiang/application/game-session.ts` 已关闭 Web session 的底层麻将 console/file 日志输出，本轮确认 `majiang:web-smoke` 输出不再夹带底层麻将流程日志
   - `Lobby -> Table -> 人类出牌 -> AI 自动推进 -> 再次回到人类回合` 已有真实浏览器快照支撑
   - 本轮已通过 Codex 内置浏览器重新确认 `ResultModal`、 “再来一局”与麻将页面控制台错误/警告为 0
-- 首版 UI 交互体验仍偏工程化
+- 首版 UI 交互体验仍偏工程化，但不阻塞 MVP 交付
   - 当前已满足 MVP 主流程，但牌桌视觉、错误态提示、交互细节仍有后续打磨空间
   - 这些属于增强项，不影响“首版可玩”结论
 - 文档与实现的同步维护需要继续跟进
@@ -792,3 +792,45 @@
   - 当存在待响应动作时，头部“当前提示”优先显示 `请选择动作：...`，避免只显示当前 AI 行动造成提示不一致
 - `src/majiang/web/public/app.js`
   - 出牌/响应动作后若本局已经结束，不再用普通成功文案覆盖结果态状态横幅
+
+### 17.9 依赖安装后构建与影响判断
+
+本轮已按用户授权执行 `npm install`，用于补齐本地 `node_modules` 中缺失的类型依赖。
+
+实际结果：
+
+- `package.json` 与 `package-lock.json` 无变化
+- `node_modules/@types` 已补齐 `mocha`、`chai` 等依赖
+- `npm run majiang:verify` 通过
+- Codex 内置浏览器功能验收通过：
+  - `Lobby -> Table`
+  - 点击人类手牌后可推进出牌链路
+  - 麻将页面控制台错误/警告为 0
+- `npm run build` 仍未通过
+
+`npm run build` 当前失败已经不再是 `@types/mocha` / `@types/chai` 缺失导致，而是暴露了仓库既有全量 TypeScript 编译债务，主要集中在：
+
+- `src/ai-assistant/`
+  - 引用不存在或当前路径不匹配的 `tic-tac-toe` 模块
+- `src/majiang/strategy/ai-alphazero/`
+  - 引用已不存在或未对齐当前 `Player` 实现的接口，例如 `getHandTiles`、`getRevealedSets`、`getStatus`
+  - 若干训练/演示文件引用缺失的 `./index`
+- `src/othello/`
+  - 测试与工具文件引用不存在或已漂移的 strategy/network 模块
+  - 存在与当前 `OthelloGame` API 不一致的调用
+
+影响判断：
+
+- 对本次麻将 Web UI MVP 交付没有直接阻断
+  - 首版 Web UI 运行路径是 `src/majiang/web/server.ts`、`src/majiang/web/app.ts`、`src/majiang/application/game-session.ts`、`src/majiang/application/game-state-mapper.ts`、`src/majiang/core/`、`src/majiang/strategy/agents/ai-player.ts` 与静态页面资源
+  - 该路径已通过 `npm run majiang:verify` 与真实浏览器验收确认
+- 对仓库级“全量 build 绿灯”有阻断
+  - 如果后续交付门禁要求 `npm run build` 必须通过，需要单独排期治理这些历史 TS 债务
+  - 不建议把这些跨模块历史债务混入麻将首版 UI MVP 返工，否则会扩大范围并偏离 `FOLDER_STRUCTURE.md` 中“避免重写 core / 保持逻辑分层”的原则
+
+当前交付口径：
+
+- 麻将 Web UI MVP 需求已完成并可运行验证
+- CLI 手动/自动 smoke 已通过，当前 UI 增量未破坏 CLI 基本入口
+- 规则引擎未重写，仍复用现有 `core` / `strategy` 能力
+- 全仓 `npm run build` 仍存在历史债务，不应计为本次 UI MVP 功能未完成，但应作为后续仓库质量治理事项单独跟踪
