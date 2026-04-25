@@ -25,6 +25,10 @@ body {
     linear-gradient(180deg, #0e2119 0%, #08130f 100%);
 }
 
+button {
+  font: inherit;
+}
+
 .page-shell {
   max-width: 1400px;
   margin: 0 auto;
@@ -206,6 +210,7 @@ body {
 .desk {
   padding: 18px;
   background: rgba(247, 239, 216, 0.95);
+  overflow: hidden;
 }
 
 .seat.current {
@@ -244,6 +249,13 @@ body {
   gap: 8px;
 }
 
+.discard-strip,
+.revealed-strip {
+  max-height: 116px;
+  overflow: auto;
+  scrollbar-width: thin;
+}
+
 .player-seat .tile-strip {
   padding: 4px 2px 8px;
 }
@@ -256,6 +268,7 @@ body {
   border: 1px solid rgba(45, 36, 25, 0.12);
   min-width: 44px;
   text-align: center;
+  line-height: 1.2;
 }
 
 .tile.back {
@@ -274,6 +287,10 @@ body {
 
 .desk-summary h3 {
   margin: 0 0 8px;
+}
+
+.desk-summary p {
+  margin: 0 0 14px;
 }
 
 .discard-pools {
@@ -378,5 +395,47 @@ body.is-busy .tile.selectable {
 
   .player-seat .tile {
     flex: 0 0 auto;
+  }
+}
+
+@media (max-width: 640px) {
+  .hero h1 {
+    font-size: 38px;
+  }
+
+  .subtitle {
+    font-size: 16px;
+  }
+
+  .mode-card,
+  .primary-btn {
+    width: 100%;
+  }
+
+  .table-header,
+  .seat,
+  .desk,
+  .footer-panel {
+    border-radius: 18px;
+  }
+
+  .table-header {
+    padding: 18px;
+  }
+
+  .seat,
+  .desk {
+    padding: 14px;
+  }
+
+  .tile,
+  .chip {
+    min-width: 40px;
+    padding: 9px 10px;
+  }
+
+  .discard-strip,
+  .revealed-strip {
+    max-height: 92px;
   }
 }
