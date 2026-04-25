@@ -9,6 +9,13 @@ export interface MajiangWebResponse {
 }
 
 const sessions = new Map<string, MajiangGameSession>();
+const SUPPORTED_SESSION_MODE = 'manual';
+const KNOWN_SESSION_MODES = [SUPPORTED_SESSION_MODE, 'auto-demo'];
+
+type MajiangSessionMode = typeof KNOWN_SESSION_MODES[number];
+type ModeResolution =
+  | { ok: true; mode: MajiangSessionMode }
+  | { ok: false; error: string };
 
 function json(statusCode: number, payload: unknown): MajiangWebResponse {
   return {
@@ -31,6 +38,16 @@ function createSession(): { sessionId: string; session: MajiangGameSession } {
   const session = new MajiangGameSession();
   sessions.set(sessionId, session);
   return { sessionId, session };
+}
+
+function resolveSessionMode(mode: unknown): ModeResolution {
+  const sessionMode = typeof mode === 'string' && mode.trim() ? mode : SUPPORTED_SESSION_MODE;
+
+  if (!KNOWN_SESSION_MODES.includes(sessionMode as MajiangSessionMode)) {
+    return { ok: false, error: 'mode 必须是 manual 或 auto-demo' };
+  }
+
+  return { ok: true, mode: sessionMode as MajiangSessionMode };
 }
 
 function getSessionOrThrow(sessionId: string | undefined): MajiangGameSession {
@@ -56,8 +73,17 @@ export function resolveMajiangApiRequest(
   }
 
   if (method === 'POST' && pathname === '/api/majiang/session') {
+    const modeResult = resolveSessionMode(body.mode);
+    if (!modeResult.ok) {
+      return json(400, { error: modeResult.error });
+    }
+
+    if (modeResult.mode !== SUPPORTED_SESSION_MODE) {
+      return json(400, { error: '自动演示模式暂未开放，请选择手动模式' });
+    }
+
     const { sessionId, session } = createSession();
-    return json(200, { sessionId, state: session.getState() });
+    return json(200, { sessionId, mode: modeResult.mode, state: session.getState() });
   }
 
   const sessionMatch = pathname.match(/^\/api\/majiang\/session\/([^/]+)$/);

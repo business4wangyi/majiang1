@@ -83,12 +83,39 @@ button {
   align-items: center;
 }
 
+.mode-picker {
+  display: grid;
+  gap: 12px;
+  padding: 0;
+  margin: 0;
+  border: 0;
+}
+
+.mode-picker legend {
+  margin-bottom: 6px;
+  font-size: 13px;
+  color: rgba(45, 36, 25, 0.6);
+}
+
 .mode-card {
+  display: flex;
+  gap: 12px;
+  align-items: center;
   padding: 18px 22px;
   border-radius: 18px;
   background: rgba(255, 255, 255, 0.72);
   border: 1px solid rgba(45, 36, 25, 0.08);
   min-width: 280px;
+}
+
+.mode-card input {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--accent);
+}
+
+.mode-card.disabled {
+  opacity: 0.62;
 }
 
 .mode-title {

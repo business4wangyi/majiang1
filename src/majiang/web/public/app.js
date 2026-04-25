@@ -16,9 +16,14 @@ setStatus('准备开始一局新的本地麻将对局。');
 
 startBtn.addEventListener('click', async () => {
   try {
+    const mode = getSelectedMode();
     setPending(true, '正在创建对局...');
     const payload = await requestJson('/api/majiang/session', {
-      method: 'POST'
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ mode })
     });
     currentSessionId = payload.sessionId;
     renderState(payload.state);
@@ -50,6 +55,11 @@ restartBtn.addEventListener('click', async () => {
     setPending(false);
   }
 });
+
+function getSelectedMode() {
+  const selected = document.querySelector('input[name="game-mode"]:checked');
+  return selected ? selected.value : 'manual';
+}
 
 function renderState(state) {
   currentState = state;

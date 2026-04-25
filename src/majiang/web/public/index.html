@@ -16,10 +16,23 @@
         <p class="subtitle">首版只保留本地单机核心流程：1 人 + 3 AI。</p>
       </div>
       <div class="lobby-actions">
-        <label class="mode-card">
-          <span class="mode-title">当前模式</span>
-          <span class="mode-value">手动模式（1 人 + 3 AI）</span>
-        </label>
+        <fieldset class="mode-picker" aria-label="选择对局模式" data-testid="mode-picker">
+          <legend>选择模式</legend>
+          <label class="mode-card">
+            <input type="radio" name="game-mode" value="manual" checked data-testid="mode-manual" />
+            <span>
+              <span class="mode-title">手动模式</span>
+              <span class="mode-value">1 人 + 3 AI，可开始</span>
+            </span>
+          </label>
+          <label class="mode-card disabled">
+            <input type="radio" name="game-mode" value="auto-demo" disabled data-testid="mode-auto-demo" />
+            <span>
+              <span class="mode-title">自动演示模式</span>
+              <span class="mode-value">暂未开放，待 session tick 方案明确</span>
+            </span>
+          </label>
+        </fieldset>
         <button id="start-btn" class="primary-btn" data-testid="start-game">开始新对局</button>
       </div>
     </section>

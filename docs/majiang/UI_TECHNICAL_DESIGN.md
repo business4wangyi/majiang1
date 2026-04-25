@@ -608,6 +608,8 @@
 - Phase 2:
   - 仓内 Web 宿主已落地在 `src/majiang/web/server.ts`
   - MVP 页面已收敛为 `Lobby`、`Table`、`ResultModal`
+  - `Lobby` 已提供真实模式选择控件：`manual` 可用，`auto-demo` 显示为暂未开放
+  - `src/majiang/web/app.ts` 已显式接收并校验建局 `mode`，当前只允许 `manual`
   - 当前实现仍复用 `src/majiang/core/`、`src/majiang/strategy/` 与 `GameEventHandler`，未新增平行规则引擎
 
 ### 17.2 当前状态与剩余项
@@ -774,6 +776,11 @@
 本轮补充验收结果：
 
 - 在 `http://127.0.0.1:4011/majiang-web` 继续真实浏览器验收
+- `Lobby` 已补齐真实模式选择：
+  - 可选择项包含“手动模式（1 人 + 3 AI）”
+  - “自动演示模式”作为已识别但暂未开放的禁用选项展示
+  - 建局请求会提交 `mode: "manual"`
+  - Web API 对 `mode: "auto-demo"` 明确返回暂未开放，而不是静默忽略
 - 通过页面交互循环推进到 `ResultModal`
   - 结果弹层展示赢家，例如“西家(AI) 获胜”
   - 结果细节展示“结算类型：胡牌”

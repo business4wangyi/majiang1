@@ -15,10 +15,17 @@ function main(): void {
   assert(health?.statusCode === 200, 'health 路由未返回 200');
   assert(parseJsonBody(health!).ok === true, 'health 路由未返回 ok=true');
 
-  const create = resolveMajiangApiRequest('POST', '/api/majiang/session', {});
+  const unsupportedMode = resolveMajiangApiRequest('POST', '/api/majiang/session', { mode: 'auto-demo' });
+  assert(unsupportedMode?.statusCode === 400, 'auto-demo 模式应被识别并返回未开放');
+
+  const invalidMode = resolveMajiangApiRequest('POST', '/api/majiang/session', { mode: 'invalid' });
+  assert(invalidMode?.statusCode === 400, '非法模式应返回 400');
+
+  const create = resolveMajiangApiRequest('POST', '/api/majiang/session', { mode: 'manual' });
   assert(create?.statusCode === 200, 'create session 未返回 200');
   const createdPayload = parseJsonBody(create!);
   assert(typeof createdPayload.sessionId === 'string' && createdPayload.sessionId.length > 0, 'sessionId 缺失');
+  assert(createdPayload.mode === 'manual', '建局结果未返回 manual 模式');
   assert(Array.isArray(createdPayload.state.seats) && createdPayload.state.seats.length === 4, '建局后座位数不正确');
   assert(createdPayload.state.availableActions.includes('DISCARD'), '建局后人类未进入可出牌状态');
 
@@ -46,6 +53,8 @@ function main(): void {
     ok: true,
     checks: [
       'health',
+      'reject-auto-demo-mode',
+      'reject-invalid-mode',
       'create-session',
       'get-session',
       'discard',
