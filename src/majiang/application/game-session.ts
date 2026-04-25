@@ -16,7 +16,8 @@ export class MajiangGameSession {
     updateMajiangRuntimeOptions({
       silentOutput: true,
       fatalMode: 'throw',
-      fileLoggingEnabled: false
+      fileLoggingEnabled: false,
+      consoleLoggingEnabled: false
     });
 
     this.game = new Game();

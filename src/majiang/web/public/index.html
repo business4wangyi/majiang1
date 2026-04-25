@@ -4,11 +4,12 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>麻将首版 UI</title>
+  <link rel="icon" href="/majiang-web/favicon.ico" sizes="any" />
   <link rel="stylesheet" href="/majiang-web/styles.css" />
 </head>
 <body>
   <div class="page-shell">
-    <section id="lobby" class="panel lobby-panel">
+    <section id="lobby" class="panel lobby-panel" data-testid="majiang-lobby">
       <div class="hero">
         <p class="eyebrow">Majiang MVP</p>
         <h1>麻将 Web 牌桌</h1>
@@ -19,18 +20,23 @@
           <span class="mode-title">当前模式</span>
           <span class="mode-value">手动模式（1 人 + 3 AI）</span>
         </label>
-        <button id="start-btn" class="primary-btn">开始新对局</button>
+        <button id="start-btn" class="primary-btn" data-testid="start-game">开始新对局</button>
       </div>
     </section>
 
-    <section id="table" class="table-screen hidden">
+    <section id="table" class="table-screen hidden" data-testid="majiang-table">
       <header class="table-header panel">
         <div>
           <p class="eyebrow">桌面状态</p>
           <h2>麻将牌桌</h2>
+          <p id="status-banner" class="status-banner hidden" role="status" aria-live="polite" data-testid="status-banner"></p>
         </div>
         <div class="meta-grid">
           <div><span>当前阶段</span><strong id="game-state">-</strong></div>
+          <div><span>当前行动</span><strong id="current-player">-</strong></div>
+          <div><span>庄家</span><strong id="banker-player">-</strong></div>
+          <div><span>圈数</span><strong id="wind-round">-</strong></div>
+          <div><span>摸牌次数</span><strong id="draw-count">-</strong></div>
           <div><span>剩余牌数</span><strong id="remaining-tiles">-</strong></div>
           <div><span>当前提示</span><strong id="current-prompt">-</strong></div>
         </div>
@@ -38,11 +44,11 @@
 
       <main class="table-layout">
         <section class="opponent-row">
-          <div id="seat-top" class="seat panel"></div>
+          <div id="seat-top" class="seat panel" data-testid="seat-top"></div>
         </section>
 
         <section class="middle-row">
-          <div id="seat-left" class="seat panel side-seat"></div>
+          <div id="seat-left" class="seat panel side-seat" data-testid="seat-left"></div>
           <div class="desk panel">
             <div class="desk-summary">
               <h3>中央牌桌</h3>
@@ -50,23 +56,29 @@
             </div>
             <div id="discard-pools" class="discard-pools"></div>
           </div>
-          <div id="seat-right" class="seat panel side-seat"></div>
+          <div id="seat-right" class="seat panel side-seat" data-testid="seat-right"></div>
         </section>
 
         <section class="opponent-row">
-          <div id="seat-bottom" class="seat panel player-seat"></div>
+          <div id="seat-bottom" class="seat panel player-seat" data-testid="seat-human"></div>
         </section>
       </main>
+
+      <section class="panel footer-panel">
+        <p class="eyebrow">操作说明</p>
+        <p id="table-hint" class="table-hint" data-testid="table-hint">点击“开始新对局”后，轮到你时可直接点击手牌出牌；若出现吃/碰/杠/胡/过按钮，则表示当前需要你对上一张弃牌做响应。</p>
+      </section>
     </section>
   </div>
 
-  <div id="result-modal" class="modal hidden">
+  <div id="result-modal" class="modal hidden" data-testid="result-modal">
     <div class="modal-card">
       <p class="eyebrow">Result</p>
       <h3 id="result-title">对局结束</h3>
+      <p id="result-detail" class="result-detail">-</p>
       <p id="result-score">-</p>
       <div class="modal-actions">
-        <button id="restart-btn" class="primary-btn">再来一局</button>
+        <button id="restart-btn" class="primary-btn" data-testid="restart-game">再来一局</button>
       </div>
     </div>
   </div>

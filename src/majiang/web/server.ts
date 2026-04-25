@@ -44,7 +44,8 @@ function serveStaticFile(res: ServerResponse, filePath: string): void {
   const typeMap: Record<string, string> = {
     '.html': 'text/html; charset=utf-8',
     '.css': 'text/css; charset=utf-8',
-    '.js': 'application/javascript; charset=utf-8'
+    '.js': 'application/javascript; charset=utf-8',
+    '.ico': 'image/x-icon'
   };
   const contentType = typeMap[ext] || 'application/octet-stream';
   const content = fs.readFileSync(filePath);

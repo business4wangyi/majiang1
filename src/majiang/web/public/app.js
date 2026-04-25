@@ -4,20 +4,32 @@ const startBtn = document.getElementById('start-btn');
 const restartBtn = document.getElementById('restart-btn');
 const resultModal = document.getElementById('result-modal');
 const resultTitle = document.getElementById('result-title');
+const resultDetail = document.getElementById('result-detail');
 const resultScore = document.getElementById('result-score');
+const statusBanner = document.getElementById('status-banner');
 
 let currentSessionId = null;
 let currentState = null;
+let currentRequestCount = 0;
+
+setStatus('准备开始一局新的本地麻将对局。');
 
 startBtn.addEventListener('click', async () => {
-  const response = await fetch('/api/majiang/session', {
-    method: 'POST'
-  });
-  const payload = await response.json();
-  currentSessionId = payload.sessionId;
-  renderState(payload.state);
-  lobby.classList.add('hidden');
-  table.classList.remove('hidden');
+  try {
+    setPending(true, '正在创建对局...');
+    const payload = await requestJson('/api/majiang/session', {
+      method: 'POST'
+    });
+    currentSessionId = payload.sessionId;
+    renderState(payload.state);
+    lobby.classList.add('hidden');
+    table.classList.remove('hidden');
+    setStatus('对局已开始，等待你的第一步操作。');
+  } catch (error) {
+    setStatus(error.message || '创建对局失败', true);
+  } finally {
+    setPending(false);
+  }
 });
 
 restartBtn.addEventListener('click', async () => {
@@ -25,16 +37,27 @@ restartBtn.addEventListener('click', async () => {
     return;
   }
 
-  const response = await fetch(`/api/majiang/session/${currentSessionId}/restart`, {
-    method: 'POST'
-  });
-  const payload = await response.json();
-  renderState(payload.state);
+  try {
+    setPending(true, '正在重新开始对局...');
+    const payload = await requestJson(`/api/majiang/session/${currentSessionId}/restart`, {
+      method: 'POST'
+    });
+    renderState(payload.state);
+    setStatus('已重新开始新一局。');
+  } catch (error) {
+    setStatus(error.message || '重新开始失败', true);
+  } finally {
+    setPending(false);
+  }
 });
 
 function renderState(state) {
   currentState = state;
   document.getElementById('game-state').textContent = state.gameState;
+  document.getElementById('current-player').textContent = state.seats[state.currentPlayerIndex]?.name || '-';
+  document.getElementById('banker-player').textContent = state.seats[state.bankerIndex]?.name || '-';
+  document.getElementById('wind-round').textContent = String(state.windRound);
+  document.getElementById('draw-count').textContent = String(state.drawCount);
   document.getElementById('remaining-tiles').textContent = String(state.remainingTiles);
   document.getElementById('current-prompt').textContent = state.currentPrompt;
   document.getElementById('last-discarded').textContent = state.lastDiscardedTile || '无';
@@ -51,13 +74,17 @@ function renderState(state) {
 
   renderDiscardPools(state.seats);
   renderActionButtons(state);
+  renderTableHint(state, bottomSeat);
 
   if (state.result.isEnded) {
     resultTitle.textContent = state.result.winnerName ? `${state.result.winnerName} 获胜` : '本局结束';
+    resultDetail.textContent = state.result.winTypeLabel ? `结算类型：${state.result.winTypeLabel}` : '本局未记录到胡牌类型。';
     resultScore.textContent = state.result.scoreSummary;
     resultModal.classList.remove('hidden');
+    setStatus('本局已经结束，可以查看结果并再次开始。');
   } else {
     resultModal.classList.add('hidden');
+    resultDetail.textContent = '-';
   }
 }
 
@@ -75,7 +102,9 @@ function renderActionButtons(state) {
 
   const actionStrip = document.createElement('div');
   actionStrip.className = 'action-strip';
-  actionStrip.innerHTML = actions.map(action => `<button class="primary-btn" data-action="${action}">${action}</button>`).join('');
+  actionStrip.innerHTML = actions
+    .map(action => `<button class="primary-btn" data-action="${action}" data-testid="response-action">${action}</button>`)
+    .join('');
   humanSeat.appendChild(actionStrip);
   actionStrip.querySelectorAll('[data-action]').forEach(button => {
     button.addEventListener('click', async () => {
@@ -83,20 +112,25 @@ function renderActionButtons(state) {
         return;
       }
 
-      const response = await fetch(`/api/majiang/session/${currentSessionId}/respond`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ action: button.getAttribute('data-action') })
-      });
-      const payload = await response.json();
-      if (!response.ok) {
-        alert(payload.error || '响应动作失败');
-        return;
+      try {
+        const action = button.getAttribute('data-action');
+        setPending(true, `正在提交动作 ${action}...`);
+        const payload = await requestJson(`/api/majiang/session/${currentSessionId}/respond`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ action })
+        });
+        renderState(payload.state);
+        if (!payload.state.result.isEnded) {
+          setStatus(`已提交动作 ${action}。`);
+        }
+      } catch (error) {
+        setStatus(error.message || '响应动作失败', true);
+      } finally {
+        setPending(false);
       }
-
-      renderState(payload.state);
     });
   });
 }
@@ -121,7 +155,7 @@ function renderSeat(container, seat, isHuman) {
     }
 
     const label = isHuman ? tile : '牌背';
-    const clickAttr = isActionable ? `data-index="${index}"` : '';
+    const clickAttr = isActionable ? `data-index="${index}" data-testid="human-tile"` : '';
     return `<button class="${classes.join(' ')}" ${clickAttr}>${label}</button>`;
   }).join('');
 
@@ -131,6 +165,7 @@ function renderSeat(container, seat, isHuman) {
       <h3>${seat.name}</h3>
       <span class="seat-status">${seat.state} · ${seat.handCount} 张</span>
     </div>
+    ${isHuman ? `<p class="drawn-tile">最近摸牌：${seat.lastDrawnTile || '暂无'}</p>` : ''}
     <div class="tile-strip">${tiles || '<span class="chip">无手牌</span>'}</div>
     <p class="eyebrow">明牌</p>
     <div class="revealed-strip">${revealed}</div>
@@ -146,20 +181,24 @@ function renderSeat(container, seat, isHuman) {
           return;
         }
 
-        const response = await fetch(`/api/majiang/session/${currentSessionId}/discard`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({ tileIndex })
-        });
-        const payload = await response.json();
-        if (!response.ok) {
-          alert(payload.error || '出牌失败');
-          return;
+        try {
+          setPending(true, `正在打出第 ${tileIndex + 1} 张手牌...`);
+          const payload = await requestJson(`/api/majiang/session/${currentSessionId}/discard`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ tileIndex })
+          });
+          renderState(payload.state);
+          if (!payload.state.result.isEnded) {
+            setStatus('出牌成功，AI 正在继续推进回合。');
+          }
+        } catch (error) {
+          setStatus(error.message || '出牌失败', true);
+        } finally {
+          setPending(false);
         }
-
-        renderState(payload.state);
       });
     });
   }
@@ -177,4 +216,59 @@ function renderDiscardPools(seats) {
       </div>
     </div>
   `).join('');
+}
+
+function renderTableHint(state, humanSeat) {
+  const hintEl = document.getElementById('table-hint');
+  if (state.result.isEnded) {
+    hintEl.textContent = '对局已结束，可查看结算结果并点击“再来一局”继续。';
+    return;
+  }
+
+  if (state.availableActions.includes('DISCARD') && humanSeat.isCurrentPlayer) {
+    hintEl.textContent = '当前轮到你出牌，请点击下方任意一张手牌。';
+    return;
+  }
+
+  const responseActions = state.availableActions.filter(action => action !== 'DISCARD');
+  if (responseActions.length) {
+    hintEl.textContent = `你可以对上一张弃牌执行：${responseActions.join(' / ')}。`;
+    return;
+  }
+
+  hintEl.textContent = `${state.currentPrompt} 当前无需你的直接操作。`;
+}
+
+async function requestJson(url, options) {
+  const response = await fetch(url, options);
+  const payload = await response.json();
+  if (!response.ok) {
+    throw new Error(payload.error || '请求失败');
+  }
+  return payload;
+}
+
+function setPending(pending, message = '') {
+  if (pending) {
+    currentRequestCount += 1;
+  } else {
+    currentRequestCount = Math.max(0, currentRequestCount - 1);
+  }
+
+  const isBusy = currentRequestCount > 0;
+  startBtn.disabled = isBusy;
+  restartBtn.disabled = isBusy;
+  document.body.classList.toggle('is-busy', isBusy);
+
+  if (isBusy && message) {
+    setStatus(message);
+  }
+}
+
+function setStatus(message, isError = false) {
+  statusBanner.textContent = message;
+  statusBanner.classList.remove('hidden', 'error');
+  if (isError) {
+    statusBanner.classList.add('error');
+  }
 }

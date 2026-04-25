@@ -189,6 +189,9 @@ env/
 logs/
 *.log
 
+# 浏览器验收本地产物
+.playwright-cli/
+
 # 临时文件
 temp/
 tmp/

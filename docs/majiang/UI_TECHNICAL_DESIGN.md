@@ -600,7 +600,7 @@
   - 已把 Web 会话路径从 CLI 顶层输入链路中隔离出来
   - `src/majiang/ui/game-event-handler.ts` 不再顶层依赖 `src/majiang/ui/input.ts`
   - `src/majiang/ui/game-event-handler.ts` 不再顶层依赖 `src/majiang/ui/gameLoop.ts`
-  - `src/majiang/runtime/runtime-context.ts` 已用于收口静默输出、fatal 处理与 Web 路径文件日志关闭
+  - `src/majiang/runtime/runtime-context.ts` 已用于收口静默输出、fatal 处理、Web 路径文件日志关闭与 Web 会话 console 日志静默
 - Phase 1:
   - `src/majiang/application/game-session.ts` 已提供单局 session 驱动
   - `src/majiang/application/game-state-mapper.ts` 已基于 `Game` / `Player` 输出首版页面最小状态
@@ -614,10 +614,12 @@
 
 以下内容仍未完成，属于后续继续处理范围：
 
-- Web 端到端启动验证受当前环境限制
+- Web 端到端闭环验收已在当前代码状态下复核
   - 当前环境曾出现 `listen EPERM`，这属于运行环境限制，不直接等同于代码缺陷
   - 当前 `src/majiang/web/server.ts` 已关闭 Web 路径文件日志，避免监听失败时额外混入 `logs/majiang` 权限噪音
-  - 需要在可监听本地端口的环境中补充实际页面启动验证
+  - 当前 `src/majiang/application/game-session.ts` 已关闭 Web session 的底层麻将 console/file 日志输出，本轮确认 `majiang:web-smoke` 输出不再夹带底层麻将流程日志
+  - `Lobby -> Table -> 人类出牌 -> AI 自动推进 -> 再次回到人类回合` 已有真实浏览器快照支撑
+  - 本轮已通过 Codex 内置浏览器重新确认 `ResultModal`、 “再来一局”与麻将页面控制台错误/警告为 0
 - 首版 UI 交互体验仍偏工程化
   - 当前已满足 MVP 主流程，但牌桌视觉、错误态提示、交互细节仍有后续打磨空间
   - 这些属于增强项，不影响“首版可玩”结论
@@ -628,9 +630,8 @@
 
 为避免范围膨胀，后续建议继续按以下顺序推进：
 
-1. 先在允许监听端口的环境完成 Web 页面实际启动验证
-2. 再补充页面级交互验收记录
-3. 最后再评估是否进入非 MVP 的体验增强项
+1. 先保持 `npm run majiang:web-smoke`、`npm run majiang:smoke`、`npm run majiang:verify` 作为后续回归门禁
+2. 再评估是否进入非 MVP 的体验增强项
 
 ### 17.4 已补充的回归验证记录
 
@@ -661,3 +662,133 @@
   - 新增脚本 `npm run majiang:web-smoke`
 
 这组校验不能替代真实浏览器访问，但可以在当前端口受限环境中验证 Web 宿主的核心 API 和静态入口主路径仍然可用。
+
+### 17.6 已补充的页面交互收敛项
+
+在不扩大 MVP 范围的前提下，当前页面还补充了以下交互收敛项：
+
+- `src/majiang/web/public/index.html`
+  - 追加状态横幅、桌面提示文案、最小结果细节字段
+- `src/majiang/web/public/app.js`
+  - 为开始对局、出牌、响应动作、再来一局增加统一请求错误处理
+  - 增加进行中状态，避免连续重复点击
+  - 将当前行动玩家、庄家、圈数、摸牌次数展示到页面头部
+  - 将“最近摸牌”“当前该做什么”以页面文案显式给出
+- `src/majiang/web/public/styles.css`
+  - 增加状态横幅、忙碌态、结果文案与移动端信息栅格适配
+
+这些改动属于首版 MVP 内的交互清晰化，不新增 `RuleDrawer`、`DebugPanel`、时间线或动画等非 MVP 内容。
+
+### 17.7 页面级交互验收矩阵
+
+以下验收矩阵已在可监听端口环境中通过真实浏览器主流程验证；无端口 smoke 仍作为保底回归链路。
+
+#### 17.7.1 Lobby
+
+- 验收项：页面初始只展示 `Lobby`
+  - 预期结果：显示“手动模式（1 人 + 3 AI）”与“开始新对局”按钮
+  - 当前支撑：`src/majiang/web/public/index.html`
+- 验收项：点击“开始新对局”
+  - 预期结果：按钮进入忙碌态，状态横幅显示“正在创建对局...”，随后切换到 `Table`
+  - 当前支撑：`src/majiang/web/public/app.js` 中 `startBtn` 处理逻辑
+
+#### 17.7.2 Table
+
+- 验收项：进入牌桌后显示四家布局
+  - 预期结果：上/左/右为 AI，底部为人类玩家；中央展示最后弃牌与四家弃牌区
+  - 当前支撑：`src/majiang/web/public/index.html`、`src/majiang/web/public/app.js`
+- 验收项：头部显示最小对局状态
+  - 预期结果：可见当前阶段、当前行动、庄家、圈数、摸牌次数、剩余牌数、当前提示
+  - 当前支撑：`src/majiang/web/public/index.html`、`src/majiang/web/public/app.js`
+- 验收项：轮到人类出牌时点击手牌
+  - 预期结果：状态横幅显示提交中，成功后显示“出牌成功，AI 正在继续推进回合。”
+  - 当前支撑：`src/majiang/web/public/app.js` 中 `discard` 逻辑
+- 验收项：出现响应动作时点击 `吃/碰/杠/胡/过`
+  - 预期结果：动作按钮提交成功后刷新牌桌，状态横幅显示已提交的动作
+  - 当前支撑：`src/majiang/web/public/app.js` 中 `respond` 逻辑
+- 验收项：请求进行中禁止重复点击
+  - 预期结果：开始按钮、再来一局按钮禁用；手牌按钮不可重复触发
+  - 当前支撑：`src/majiang/web/public/app.js` 中 `setPending()` 与 `body.is-busy`
+- 验收项：当前无须人类操作时显示明确提示
+  - 预期结果：底部提示区给出“当前无需你的直接操作”或 AI 推进相关文案
+  - 当前支撑：`src/majiang/web/public/app.js` 中 `renderTableHint()`
+
+#### 17.7.3 ResultModal
+
+- 验收项：对局结束后展示结果弹层
+  - 预期结果：显示赢家标题、最小结算类型文本、分数摘要、“再来一局”按钮
+  - 当前支撑：`src/majiang/web/public/index.html`、`src/majiang/web/public/app.js`
+- 验收项：点击“再来一局”
+  - 预期结果：重新开始对局并返回可玩状态，状态横幅提示“已重新开始新一局。”
+  - 当前支撑：`src/majiang/web/public/app.js` 中 `restart` 逻辑
+
+#### 17.7.4 建议执行方式
+
+- 在可监听端口环境执行：
+  - `npm run majiang:web`
+- 在真实浏览器访问：
+  - `http://127.0.0.1:4010/majiang-web`
+- 在当前受限环境继续保底执行：
+  - `npm run majiang:web-smoke`
+  - `npm run majiang:verify`
+
+### 17.8 已完成的真实页面验收记录
+
+在可监听端口环境中，已完成以下真实浏览器验收：
+
+- 访问 `http://127.0.0.1:4010/majiang-web`
+- 确认 `Lobby` 初始展示正常
+- 点击“开始新对局”后成功进入 `Table`
+- 确认头部状态区已显示：
+  - 当前阶段
+  - 当前行动
+  - 庄家
+  - 圈数
+  - 摸牌次数
+  - 剩余牌数
+  - 当前提示
+- 确认 `Table` 已展示：
+  - 四家布局
+  - AI 牌背
+  - 中央牌桌
+  - 弃牌区
+  - 人类手牌可点击
+- 已真实点击一张人类手牌，成功跑通：
+  - 人类出牌
+  - 状态横幅提示“出牌成功，AI 正在继续推进回合。”
+  - AI 自动推进
+  - 页面再次回到人类回合
+
+本轮已补充 `favicon.ico` 静态资源，并通过 Codex 内置浏览器确认麻将页面控制台错误/警告为 0。
+
+验收产物：
+
+- `.playwright-cli/page-2026-04-25T09-34-06-999Z.png`
+- `.playwright-cli/page-2026-04-25T09-50-39-902Z.png`
+- `.playwright-cli/page-2026-04-25T09-46-16-761Z.yml`
+- `.playwright-cli/page-2026-04-25T09-50-01-956Z.yml`
+- `.playwright-cli/page-2026-04-25T12-25-51-851Z.yml`
+- `.playwright-cli/page-2026-04-25T12-28-14-901Z.yml`
+- `.playwright-cli/page-2026-04-25T12-28-40-458Z.png`
+
+本轮补充验收结果：
+
+- 在 `http://127.0.0.1:4011/majiang-web` 继续真实浏览器验收
+- 通过页面交互循环推进到 `ResultModal`
+  - 结果弹层展示赢家，例如“西家(AI) 获胜”
+  - 结果细节展示“结算类型：胡牌”
+  - 页面状态进入 `ENDED`
+  - 头部提示展示赢家已胡牌、当前对局结束
+  - 状态横幅展示“本局已经结束，可以查看结果并再次开始。”
+- 点击“再来一局”后确认：
+  - `ResultModal` 关闭
+  - 页面恢复到 `PLAYING`
+  - 状态横幅展示“已重新开始新一局。”
+  - 人类玩家手牌恢复为可点击出牌状态
+
+本轮顺手修复的页面验收问题：
+
+- `src/majiang/application/game-state-mapper.ts`
+  - 当存在待响应动作时，头部“当前提示”优先显示 `请选择动作：...`，避免只显示当前 AI 行动造成提示不一致
+- `src/majiang/web/public/app.js`
+  - 出牌/响应动作后若本局已经结束，不再用普通成功文案覆盖结果态状态横幅

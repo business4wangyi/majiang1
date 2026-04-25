@@ -61,13 +61,13 @@ function buildPrompt(game: Game, humanPlayer: Player, humanPlayerIndex: number):
     return winner ? `${winner.name} 已胡牌，当前对局结束` : '当前对局已结束';
   }
 
+  if (game.pendingAction?.allowedActions.length) {
+    return `请选择动作：${game.pendingAction.allowedActions.join(' / ')}`;
+  }
+
   if (game.currentPlayerIndex === humanPlayerIndex) {
     if (humanPlayer.needsToDiscard()) {
       return '请选择一张手牌打出';
-    }
-
-    if (game.pendingAction?.allowedActions.length) {
-      return `请选择动作：${game.pendingAction.allowedActions.join(' / ')}`;
     }
 
     return '等待你的动作';

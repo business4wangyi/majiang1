@@ -3,7 +3,10 @@ import * as path from 'path';
 import { Game } from '../core/game';
 import { displayManager } from '../ui/display-manager';
 import { perfMonitor } from '../tools/performance-monitor';
-import { isMajiangFileLoggingEnabled } from '../runtime/runtime-context';
+import {
+  isMajiangConsoleLoggingEnabled,
+  isMajiangFileLoggingEnabled
+} from '../runtime/runtime-context';
 
 /**
  * 日志系统 - 提供全面的日志记录功能
@@ -95,8 +98,10 @@ export function log(level: LogLevel, message: string, includeTimestamp: boolean 
   const timestamp = includeTimestamp ? `${new Date().toLocaleString('zh-CN', { hour12: false })} ` : '';
   const logMessage = `${timestamp}${prefix} ${message}`;
   
-  // 控制台输出（根据级别）
-  console.log(logMessage);
+  // Web 会话可关闭控制台输出，CLI 默认保持原有日志行为。
+  if (isMajiangConsoleLoggingEnabled()) {
+    console.log(logMessage);
+  }
   
   // 添加到日志缓冲区
   logBuffer.push(logMessage);
@@ -263,7 +268,9 @@ export function saveGameLogToFile(game: Game, reason: string): void {
     
     // 写入文件
     fs.writeFileSync(logPath, gameLog);
-    console.log(`${CONFIG.debugPrefix} 游戏日志已保存到: ${logPath}`);
+    if (isMajiangConsoleLoggingEnabled()) {
+      console.log(`${CONFIG.debugPrefix} 游戏日志已保存到: ${logPath}`);
+    }
     
     // 清空缓冲区
     logBuffer = [];

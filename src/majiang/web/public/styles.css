@@ -110,8 +110,25 @@ body {
   cursor: pointer;
 }
 
+.primary-btn,
+.tile {
+  min-height: 44px;
+}
+
 .primary-btn:hover {
   transform: translateY(-1px);
+}
+
+.primary-btn:focus-visible,
+.tile:focus-visible {
+  outline: 3px solid rgba(255, 233, 175, 0.95);
+  outline-offset: 3px;
+}
+
+.primary-btn:disabled {
+  cursor: wait;
+  opacity: 0.55;
+  transform: none;
 }
 
 .table-screen {
@@ -131,10 +148,25 @@ body {
   margin: 0;
 }
 
+.status-banner {
+  margin: 12px 0 0;
+  padding: 10px 14px;
+  border-radius: 14px;
+  background: rgba(20, 70, 50, 0.1);
+  color: #1d523e;
+  font-size: 14px;
+}
+
+.status-banner.error {
+  background: rgba(166, 42, 42, 0.12);
+  color: #8a2323;
+}
+
 .meta-grid {
   display: grid;
   gap: 12px;
   min-width: 320px;
+  grid-template-columns: repeat(2, minmax(140px, 1fr));
 }
 
 .meta-grid div {
@@ -197,6 +229,12 @@ body {
   color: rgba(45, 36, 25, 0.65);
 }
 
+.drawn-tile {
+  margin: 0 0 12px;
+  font-size: 14px;
+  color: rgba(45, 36, 25, 0.72);
+}
+
 .tile-strip,
 .discard-strip,
 .revealed-strip,
@@ -204,6 +242,10 @@ body {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
+}
+
+.player-seat .tile-strip {
+  padding: 4px 2px 8px;
 }
 
 .tile,
@@ -256,6 +298,16 @@ body {
   font-size: 13px;
 }
 
+.footer-panel {
+  padding: 18px 20px;
+}
+
+.table-hint {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.7;
+}
+
 .modal {
   position: fixed;
   inset: 0;
@@ -277,8 +329,17 @@ body {
   margin: 0 0 10px;
 }
 
+.result-detail {
+  margin: 0 0 10px;
+  color: rgba(45, 36, 25, 0.7);
+}
+
 .modal-actions {
   margin-top: 20px;
+}
+
+body.is-busy .tile.selectable {
+  pointer-events: none;
 }
 
 @media (max-width: 980px) {
@@ -289,5 +350,33 @@ body {
   .table-header {
     grid-template-columns: 1fr;
     display: grid;
+  }
+
+  .meta-grid {
+    min-width: 0;
+    grid-template-columns: 1fr;
+  }
+
+  .page-shell {
+    padding: 12px;
+  }
+
+  .lobby-panel {
+    min-height: calc(100vh - 24px);
+    padding: 28px;
+  }
+
+  .table-layout {
+    padding: 12px;
+  }
+
+  .player-seat .tile-strip {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: thin;
+  }
+
+  .player-seat .tile {
+    flex: 0 0 auto;
   }
 }
