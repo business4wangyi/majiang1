@@ -1,8 +1,8 @@
 # 麻将 UI 技术设计文档
 
-> 最后更新: 2026-04-24
-> 文档状态: 审核通过，部分完成
-> 适用范围: `codex/majiang-ui` 分支中的麻将图形界面首版设计
+> 最后更新: 2026-04-26
+> 文档状态: 麻将 Web UI 子系统正式发布通过
+> 适用范围: `codex/majiang-ui` 分支中的麻将 Web UI 子系统发布说明，不代表全仓正式发布
 
 ## 1. 文档目标
 
@@ -582,15 +582,28 @@
 
 ## 17. 当前实现落点与状态
 
-截至本次首版实现，仓内 Web 宿主采用以下最小落点：
+截至本次发布收口，本文档的正式发布口径是“麻将 Web UI 子系统发布”，不是整个仓库发布。
+
+发布范围包含：
 
 - Web 服务入口：`src/majiang/web/server.ts`
 - 静态页面：`src/majiang/web/public/`
 - 会话适配层：`src/majiang/application/game-session.ts`
 - 状态映射层：`src/majiang/application/game-state-mapper.ts`
 - 运行时边界控制：`src/majiang/runtime/runtime-context.ts`
+- CLI 共存 smoke：`scripts/demo/majiang-cli-smoke.ts`
+- Web API / 静态入口 smoke：`scripts/demo/majiang-web-smoke.ts`
+- 发布范围 TypeScript 检查：`tsconfig.majiang-web-release.json`
 
-这些文件用于承接 Phase 0 / 1 / 2 的最小实现，不改变本文档前文对范围和风险的约束。
+不纳入本次正式发布范围：
+
+- 全仓 `npm run build` 绿灯
+- `src/ai-assistant/`
+- `src/othello/`
+- `src/majiang/strategy/ai-alphazero/`
+- 非 MVP 页面与能力，例如 `RuleDrawer`、`DebugPanel`、时间线、动画、自动演示模式开放
+
+这些边界用于避免把麻将 Web UI 子系统发布误读为整个仓库发布。
 
 ### 17.1 已完成项
 
@@ -612,9 +625,9 @@
   - `src/majiang/web/app.ts` 已显式接收并校验建局 `mode`，当前只允许 `manual`
   - 当前实现仍复用 `src/majiang/core/`、`src/majiang/strategy/` 与 `GameEventHandler`，未新增平行规则引擎
 
-### 17.2 当前状态与剩余项
+### 17.2 正式发布状态与边界
 
-以下内容为当前代码状态下的完成情况与后续范围边界：
+以下内容为当前代码状态下的正式发布结论：
 
 - Web 端到端闭环验收已在当前代码状态下复核完成
   - 当前环境曾出现 `listen EPERM`，这属于运行环境限制，不直接等同于代码缺陷
@@ -622,18 +635,21 @@
   - 当前 `src/majiang/application/game-session.ts` 已关闭 Web session 的底层麻将 console/file 日志输出，本轮确认 `majiang:web-smoke` 输出不再夹带底层麻将流程日志
   - `Lobby -> Table -> 人类出牌 -> AI 自动推进 -> 再次回到人类回合` 已有真实浏览器快照支撑
   - 本轮已通过 Codex 内置浏览器重新确认 `ResultModal`、 “再来一局”与麻将页面控制台错误/警告为 0
-- 首版 UI 交互体验仍偏工程化，但不阻塞 MVP 交付
-  - 当前已满足 MVP 主流程，但牌桌视觉、错误态提示、交互细节仍有后续打磨空间
-  - 这些属于增强项，不影响“首版可玩”结论
-- 文档与实现的同步维护需要继续跟进
-  - 后续若继续扩展 Web UI 或补 CLI 回归机制，需要同步回写本文档的阶段状态与风险结论
+- 发布范围内的构建/验证门禁已固化为 `npm run majiang:release-check`
+  - `npm run majiang:web-typecheck` 使用 `tsconfig.majiang-web-release.json` 检查麻将 Web UI 发布路径
+  - `npm run majiang:verify` 顺序执行 CLI smoke 与 Web smoke
+- 全仓 `npm run build` 当前仍失败
+  - 失败集中在本次发布范围外的历史模块，例如 `src/ai-assistant/`、`src/majiang/strategy/ai-alphazero/`、`src/othello/`
+  - 因此不能宣称“整个仓库正式发布”
+  - 本次正式发布结论仅限麻将 Web UI 子系统
 
-### 17.3 后续建议顺序
+### 17.3 后续非发布阻塞事项
 
-为避免范围膨胀，后续建议继续按以下顺序推进：
+以下事项不阻塞本次麻将 Web UI 子系统正式发布，但若后续进入对应范围，需要单独立项：
 
-1. 先保持 `npm run majiang:web-smoke`、`npm run majiang:smoke`、`npm run majiang:verify` 作为后续回归门禁
-2. 再评估是否进入非 MVP 的体验增强项
+- 全仓 TypeScript 编译债务治理，使 `npm run build` 通过
+- 非 MVP 体验增强，例如牌桌视觉、动画、调试面板、规则抽屉
+- 自动演示模式的 Web session tick 方案与开放
 
 ### 17.4 已补充的回归验证记录
 
@@ -800,19 +816,62 @@
 - `src/majiang/web/public/app.js`
   - 出牌/响应动作后若本局已经结束，不再用普通成功文案覆盖结果态状态横幅
 
-### 17.9 依赖安装后构建与影响判断
+### 17.9 发布构建与验证门禁
 
-本轮已按用户授权执行 `npm install`，用于补齐本地 `node_modules` 中缺失的类型依赖。
+本次正式发布采用方案 B：不把全仓历史 TypeScript 债务纳入麻将 Web UI 子系统发布门禁，而是显式定义独立发布范围与对应门禁。
 
-实际结果：
+发布门禁：
+
+- `npm run majiang:release-check`
+
+该脚本顺序执行：
+
+- `npm run majiang:web-typecheck`
+  - 基于 `tsconfig.majiang-web-release.json`
+  - 覆盖 `src/majiang/web/server.ts`
+  - 覆盖 `src/majiang/web/app.ts`
+  - 覆盖 `src/majiang/application/game-session.ts`
+  - 覆盖 `src/majiang/application/game-state-mapper.ts`
+  - 覆盖 `scripts/demo/majiang-cli-smoke.ts`
+  - 覆盖 `scripts/demo/majiang-web-smoke.ts`
+  - TypeScript 会继续检查这些入口真实导入到的麻将 `core/`、`ui/`、`strategy/agents/ai-player.ts`、`GameEventHandler` 等发布路径
+- `npm run majiang:verify`
+  - 顺序执行 `npm run majiang:smoke`
+  - 顺序执行 `npm run majiang:web-smoke`
+
+截至 2026-04-26 的实际执行结果：
+
+- `npm run majiang:release-check` 通过
+- `npm run majiang:web-typecheck` 通过
+- `npm run majiang:smoke` 通过
+  - 覆盖 CLI 手动模式起局
+  - 覆盖 CLI 自动模式单局推进
+- `npm run majiang:web-smoke` 通过
+  - 覆盖 `health`
+  - 覆盖 `manual` 建局
+  - 覆盖 `auto-demo` 被识别但返回暂未开放
+  - 覆盖非法模式返回 400
+  - 覆盖 `get-session`
+  - 覆盖 `discard`
+  - 覆盖 `restart`
+  - 覆盖 `index.html`
+  - 覆盖 `app.js`
+  - 覆盖 `styles.css`
+  - 覆盖 `favicon.ico`
+- Python Playwright 真实页面验收通过
+  - 启动 `npm run majiang:web` 于 `http://127.0.0.1:4012/majiang-web`
+  - 确认 `manual` 模式默认选中
+  - 确认 `auto-demo` 模式禁用
+  - 点击“开始新对局”后进入 `Table`
+  - 点击一张人类手牌后页面仍保持 `PLAYING`
+  - 页面控制台错误/警告为 0
+
+全仓构建现状：
+
+- 已按用户授权执行过 `npm install`，用于补齐本地 `node_modules` 中缺失的类型依赖
 
 - `package.json` 与 `package-lock.json` 无变化
 - `node_modules/@types` 已补齐 `mocha`、`chai` 等依赖
-- `npm run majiang:verify` 通过
-- Codex 内置浏览器功能验收通过：
-  - `Lobby -> Table`
-  - 点击人类手牌后可推进出牌链路
-  - 麻将页面控制台错误/警告为 0
 - `npm run build` 仍未通过
 
 `npm run build` 当前失败已经不再是 `@types/mocha` / `@types/chai` 缺失导致，而是暴露了仓库既有全量 TypeScript 编译债务，主要集中在：
@@ -828,16 +887,49 @@
 
 影响判断：
 
-- 对本次麻将 Web UI MVP 交付没有直接阻断
-  - 首版 Web UI 运行路径是 `src/majiang/web/server.ts`、`src/majiang/web/app.ts`、`src/majiang/application/game-session.ts`、`src/majiang/application/game-state-mapper.ts`、`src/majiang/core/`、`src/majiang/strategy/agents/ai-player.ts` 与静态页面资源
-  - 该路径已通过 `npm run majiang:verify` 与真实浏览器验收确认
-- 对仓库级“全量 build 绿灯”有阻断
-  - 如果后续交付门禁要求 `npm run build` 必须通过，需要单独排期治理这些历史 TS 债务
-  - 不建议把这些跨模块历史债务混入麻将首版 UI MVP 返工，否则会扩大范围并偏离 `FOLDER_STRUCTURE.md` 中“避免重写 core / 保持逻辑分层”的原则
+- 对“麻将 Web UI 子系统正式发布”没有直接阻断
+  - 本次发布路径已由 `npm run majiang:release-check` 验证通过
+  - Web UI 仍复用现有 `core/`、`strategy/agents/ai-player.ts`、`GameEventHandler`
+  - 未新增平行麻将规则引擎
+- 对“整个仓库正式发布”有阻断
+  - 如果发布口径改为全仓正式发布，必须先治理这些历史 TS 债务并让 `npm run build` 通过
 
-当前交付口径：
+当前发布口径：
 
-- 麻将 Web UI MVP 需求已完成并可运行验证
+- 麻将 Web UI 子系统正式发布通过
+- 该结论不代表整个仓库正式发布
 - CLI 手动/自动 smoke 已通过，当前 UI 增量未破坏 CLI 基本入口
 - 规则引擎未重写，仍复用现有 `core` / `strategy` 能力
-- 全仓 `npm run build` 仍存在历史债务，不应计为本次 UI MVP 功能未完成，但应作为后续仓库质量治理事项单独跟踪
+- 全仓 `npm run build` 仍存在历史债务，作为后续仓库级质量治理事项单独跟踪
+
+### 17.10 正式发布验收清单
+
+本清单用于审核智能体判断“麻将 Web UI 子系统是否达到正式发布标准”。
+
+- 发布边界
+  - 结论：通过
+  - 证据：本文档第 17 节明确发布范围为麻将 Web UI 子系统，不代表整个仓库正式发布
+- Web 启动方式
+  - 结论：通过
+  - 证据：`npm run majiang:web` 启动 `src/majiang/web/server.ts`，默认访问 `http://127.0.0.1:4010/majiang-web`
+- Web 主流程可用
+  - 结论：通过
+  - 证据：真实浏览器已验证 `Lobby -> Table -> 人类出牌 -> AI 推进 -> 再次回到人类回合`
+- `Lobby -> Table -> ResultModal -> 再来一局` 闭环
+  - 结论：通过
+  - 证据：真实浏览器已推进到 `ResultModal`，点击“再来一局”后回到 `PLAYING`
+- CLI 不回归
+  - 结论：通过
+  - 证据：`npm run majiang:smoke` 通过，覆盖 CLI 手动模式起局与 CLI 自动模式推进
+- 规则引擎未重写
+  - 结论：通过
+  - 证据：Web 会话仍经 `src/majiang/application/game-session.ts` 复用 `src/majiang/core/`、`src/majiang/strategy/agents/ai-player.ts`、`GameEventHandler`
+- 静态资源主路径可访问
+  - 结论：通过
+  - 证据：`npm run majiang:web-smoke` 覆盖 `index.html`、`app.js`、`styles.css`、`favicon.ico`
+- 页面控制台无错误
+  - 结论：通过
+  - 证据：Codex 内置浏览器真实页面验收确认麻将页面控制台错误/警告为 0
+- 构建/验证门禁
+  - 结论：通过麻将 Web UI 子系统发布门禁；不通过全仓发布门禁
+  - 证据：`npm run majiang:release-check` 通过；`npm run build` 仍因发布范围外历史 TS 债务失败

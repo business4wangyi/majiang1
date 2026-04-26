@@ -18,10 +18,10 @@
 - **统一架构**：与井字棋AI助手保持一致的TypeScript架构
 
 ### 🀄 麻将游戏
-- **经典规则**：支持广东麻将规则
-- **AI对手**：智能AI玩家
-- **完整功能**：吃碰杠胡等完整操作
-- **命令行界面**：简洁高效的游戏体验
+- **Web UI 子系统正式发布**：提供仓内 Web 页面入口，支持 `Lobby`、`Table`、`ResultModal`
+- **本地单机流程**：支持 1 人 + 3 AI 的本地麻将对局
+- **经典规则复用**：复用现有 `src/majiang/core/` 与 AI 策略能力，不新增平行规则引擎
+- **CLI 共存**：保留原有命令行手动模式与自动模式
 
 ## 🚀 快速开始
 
@@ -51,13 +51,48 @@ npm run othello:alphazero-train
 npm run othello:alphazero-fast-train
 ```
 
-### 🀄 麻将游戏
+### 🀄 麻将 Web UI（正式交付入口）
+本仓库当前正式发布口径是“麻将 Web UI 子系统发布”，不是整个仓库发布。
+
+```bash
+# 启动麻将 Web UI
+npm run majiang:web
+```
+
+启动后访问：
+
+```text
+http://127.0.0.1:4010/majiang-web
+```
+
+发布范围：
+
+- `Lobby`：选择手动模式并开始新对局；自动演示模式显示为暂未开放
+- `Table`：展示四家牌桌、本人手牌、弃牌区、明牌区、当前轮转与可行动作
+- `ResultModal`：展示最小结算信息并支持“再来一局”
+
+发布检查：
+
+```bash
+# 麻将 Web UI 子系统正式发布门禁
+npm run majiang:release-check
+```
+
+该命令会执行发布范围 TypeScript 检查、CLI smoke 与 Web smoke。当前全仓 `npm run build` 仍存在历史 TypeScript 编译债务，主要位于本次发布范围外的 `src/ai-assistant/`、`src/majiang/strategy/ai-alphazero/`、`src/othello/`，因此不能把本结论理解为整个仓库正式发布。
+
+### 🀄 麻将 CLI
 ```bash
 # 正常模式
 npm start
 
 # 测试模式
 npm start -- --test
+
+# 当前源码 CLI 手动模式
+npm run majiang:ai
+
+# 当前源码 CLI 自动模式
+npm run majiang:auto
 ```
 
 ## 📚 文档导航
@@ -117,8 +152,11 @@ npm start -- --test
 # 安装依赖
 npm install
 
-# 编译TypeScript
+# 编译TypeScript（全仓，当前存在历史债务）
 npm run build
+
+# 麻将 Web UI 子系统发布检查
+npm run majiang:release-check
 
 # 运行测试
 npm test

@@ -49,6 +49,12 @@ function main(): void {
   const appJs = resolveStaticPage('/majiang-web/app.js');
   assert(appJs?.statusCode === 200 && String(appJs.body) === 'app.js', 'app.js 静态路由未命中');
 
+  const styles = resolveStaticPage('/majiang-web/styles.css');
+  assert(styles?.statusCode === 200 && String(styles.body) === 'styles.css', 'styles.css 静态路由未命中');
+
+  const favicon = resolveStaticPage('/majiang-web/favicon.ico');
+  assert(favicon?.statusCode === 200 && String(favicon.body) === 'favicon.ico', 'favicon.ico 静态路由未命中');
+
   console.log(JSON.stringify({
     ok: true,
     checks: [
@@ -60,7 +66,9 @@ function main(): void {
       'discard',
       'restart',
       'static-index',
-      'static-app-js'
+      'static-app-js',
+      'static-styles-css',
+      'static-favicon'
     ]
   }, null, 2));
 }

@@ -1,0 +1,15 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": true
+  },
+  "files": [
+    "src/majiang/web/server.ts",
+    "src/majiang/web/app.ts",
+    "src/majiang/application/game-session.ts",
+    "src/majiang/application/game-state-mapper.ts",
+    "scripts/demo/majiang-cli-smoke.ts",
+    "scripts/demo/majiang-web-smoke.ts"
+  ],
+  "include": []
+}
