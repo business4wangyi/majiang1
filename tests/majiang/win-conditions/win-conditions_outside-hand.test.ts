@@ -1,7 +1,7 @@
 import { expect } from 'chai';
-import { Tile, TileType } from '../../src/majiang/tile';
-import { OutsideHandDetector } from '../../src/majiang/win-conditions/win-conditions_outside-hand';
-import { TileSet } from '../../src/majiang/rule-types';
+import { Tile, TileType } from '../../../src/majiang/core/tile';
+import { OutsideHandDetector } from '../../../src/majiang/core/win-conditions/win-conditions_outside-hand';
+import { TileSet } from '../../../src/majiang/core/rule-types';
 
 describe('OutsideHandDetector', () => {
   let detector: OutsideHandDetector;

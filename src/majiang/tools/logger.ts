@@ -22,14 +22,14 @@ export enum LogLevel {
 export const CONFIG = {
   // 当前日志级别 - 可以通过setLogLevel函数修改
   currentLogLevel: LogLevel.INFO,
-  
+
   // 日志文件相关配置
   logDir: path.join(process.cwd(), 'logs', 'majiang'),
   logFilePrefix: 'game-log-',
-  
+
   // 缓冲区大小
   maxLogBuffer: 1000,
-  
+
   // 日志前缀
   debugPrefix: ''
 };
@@ -86,20 +86,21 @@ export function log(level: LogLevel, message: string, includeTimestamp: boolean 
   // 如果日志级别低于当前设置，则不记录
   // 打印level和CONFIG.currentLogLevel
 
-  if (level < CONFIG.currentLogLevel) {
+  if (level < CONFIG.currentLogLevel || CONFIG.currentLogLevel === LogLevel.NONE) {
     return;
   }
-  
+
   const prefix = LOG_STYLES[level] || '';
   const timestamp = includeTimestamp ? `${new Date().toLocaleString('zh-CN', { hour12: false })} ` : '';
   const logMessage = `${timestamp}${prefix} ${message}`;
-  
-  // 控制台输出（根据级别）
-  console.log(logMessage);
-  
+
+  if (level >= LogLevel.WARNING) {
+    console.log(logMessage);
+  }
+
   // 添加到日志缓冲区
   logBuffer.push(logMessage);
-  
+
   // 如果缓冲区过大，写入文件并清空
   if (logBuffer.length >= CONFIG.maxLogBuffer) {
     flushLogBuffer();
@@ -137,7 +138,7 @@ export function warnLog(message: string): void {
  */
 export function errorLog(message: string, error?: Error): void {
   let logMessage = message;
-  
+
   // 如果提供了错误对象，添加错误信息和堆栈
   if (error) {
     logMessage += `\n错误: ${error.message}`;
@@ -145,7 +146,7 @@ export function errorLog(message: string, error?: Error): void {
       logMessage += `\n堆栈: ${error.stack}`;
     }
   }
-  
+
   log(LogLevel.ERROR, logMessage);
 }
 
@@ -171,18 +172,18 @@ function flushLogBuffer(): void {
   if (logBuffer.length === 0) {
     return;
   }
-  
+
   try {
     // 确保日志目录存在
     if (!fs.existsSync(CONFIG.logDir)) {
       fs.mkdirSync(CONFIG.logDir, { recursive: true });
     }
-    
+
     // 写入日志文件前，去除所有颜色控制符
     const logPath = path.join(CONFIG.logDir, currentLogFile);
     const plainLog = logBuffer.map(removeAnsiColors).join('\n') + '\n';
     fs.appendFileSync(logPath, plainLog);
-    
+
     // 清空缓冲区
     logBuffer = [];
   } catch (error) {
@@ -197,24 +198,24 @@ function flushLogBuffer(): void {
  */
 function getGameStateLog(game: Game): string {
   const allPlayers = game.getAllPlayers();
-  
+
   let log = `\n=== 游戏状态 ===\n`;
   log += `当前玩家: ${game.currentPlayerIndex}\n`;
   log += `游戏状态: ${game.state}\n`;
   log += `剩余牌数: ${game.getRemainingTiles()}\n`;
   log += `摸牌次数: ${game.drawCount}\n`;
-  
+
   if (game.lastDiscardedTile) {
     log += `上次打出的牌: ${game.lastDiscardedTile.toString()}\n`;
   }
-  
+
   log += `\n=== 玩家信息 ===\n`;
   allPlayers.forEach((player, index) => {
     log += `玩家 ${index}: ${player.name}, 状态: ${player.state}, 手牌: ${player.handTiles.length}张\n`;
     log += `手牌: ${player.handTiles.map(t => t.toString()).join(' ')}\n`;
     log += `弃牌: ${player.discardedTiles.map(t => t.toString()).join(' ')}\n\n`;
   });
-  
+
   return log;
 }
 
@@ -229,32 +230,32 @@ export function saveGameLogToFile(game: Game, reason: string): void {
     if (!fs.existsSync(CONFIG.logDir)) {
       fs.mkdirSync(CONFIG.logDir, { recursive: true });
     }
-    
+
     // 创建日志文件名（包含日期和原因）
     const timestamp = new Date().toISOString().replace(/:/g, '-');
     const errorLogFile = `game-${reason.replace(/\s+/g, '-').toLowerCase()}-${timestamp}.log`;
     const logPath = path.join(CONFIG.logDir, errorLogFile);
-    
+
     // 收集游戏状态信息
     let gameLog = `${CONFIG.debugPrefix} 日志原因: ${reason}\n`;
     gameLog += `${CONFIG.debugPrefix} 记录时间: ${new Date().toISOString()}\n`;
     gameLog += getGameStateLog(game);
-    
+
     // 添加回合记录（从DisplayManager获取）
     gameLog += `\n=== 回合记录 ===\n`;
     const turnLogs = displayManager.getTurnLogs();
     turnLogs.forEach((logEntry, index) => {
       gameLog += `${CONFIG.debugPrefix} ${index + 1}. ${logEntry}\n`;
     });
-    
+
     // 添加当前缓冲区中的所有日志
     gameLog += `\n=== 详细日志 ===\n`;
     gameLog += logBuffer.join('\n');
-    
+
     // 写入文件
     fs.writeFileSync(logPath, gameLog);
     console.log(`${CONFIG.debugPrefix} 游戏日志已保存到: ${logPath}`);
-    
+
     // 清空缓冲区
     logBuffer = [];
   } catch (error) {
@@ -304,4 +305,4 @@ export let savePerformanceLogToFile: (content: string) => void = function(conten
   } catch (error) {
     errorLog(`无法写入性能日志文件: ${error instanceof Error ? error.message : String(error)}`);
   }
-}; 
+};

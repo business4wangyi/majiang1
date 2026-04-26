@@ -8,7 +8,7 @@
     "start": "node dist/majiang/index.js",
     "build": "tsc",
     "dev": "ts-node src/majiang/index.ts",
-    "test": "mocha -r ts-node/register tests/**/*.test.ts",
+    "test": "node scripts/test/run-mocha-cjs.js",
     "test:watch": "mocha -r ts-node/register --watch tests/**/*.test.ts",
     "tic-tac-toe": "ts-node src/tic-tac-toe/demo.ts",
     "ai:tic-tac-toe:test": "ts-node src/ai/test-tic-tac-toe-ai.ts",

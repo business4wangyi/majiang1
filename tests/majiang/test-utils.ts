@@ -1,6 +1,6 @@
-import { Player, PlayerType } from '../src/majiang/player';
-import { Tile } from '../src/majiang/tile';
-import { TileSet } from '../src/majiang/rule-types';
+import { Player, PlayerType } from '../../src/majiang/core/player';
+import { Tile } from '../../src/majiang/core/tile';
+import { TileSet } from '../../src/majiang/core/rule-types';
 
 /**
  * 创建测试用玩家

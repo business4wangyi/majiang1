@@ -1,8 +1,8 @@
 import { expect } from 'chai';
-import { ScoreCalculator } from '../src/majiang/score-calculator';
-import { Player, PlayerType } from '../src/majiang/player';
-import { Tile, TileType } from '../src/majiang/tile';
-import { HuType, GangType, TileSet } from '../src/majiang/rule-types';
+import { ScoreCalculator } from '../../src/majiang/core/score-calculator';
+import { Player, PlayerType } from '../../src/majiang/core/player';
+import { Tile, TileType } from '../../src/majiang/core/tile';
+import { HuType, GangType, TileSet } from '../../src/majiang/core/rule-types';
 
 describe('ScoreCalculator', () => {
   describe('calculateBaseScore', () => {

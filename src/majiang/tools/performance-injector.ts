@@ -1,8 +1,8 @@
 import { perfMonitor } from '../tools/performance-monitor';
 import { GameEventHandler } from '../ui/game-event-handler';
 import { AIPlayer } from '../strategy/agents/ai-player';
-import { AUTO_PLAY_MODE } from './index';
-import { AUTO_PLAY_ROUNDS } from './config/config';
+import { AUTO_PLAY_MODE } from '../config/runtime-state';
+import { AUTO_PLAY_ROUNDS } from '../config/config';
 import { debugLog } from '../tools/logger';
 
 // 0. 注入 GameEventHandler.startGame，自动开启新一局统计
@@ -107,5 +107,5 @@ GameEventHandler.prototype.handleGameEnd = async function(...args: any[]) {
   return await origHandleGameEnd.apply(this, args);
 };
 
-// 删除自动调用 startGame 和 handleGameEnd 的 monkey patch 
-// ... existing code ... 
+// 删除自动调用 startGame 和 handleGameEnd 的 monkey patch
+// ... existing code ...

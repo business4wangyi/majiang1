@@ -1,8 +1,8 @@
-import { Tile, TileType } from '../../src/majiang/tile';
-import { TileSet, TileSetType } from '../../src/majiang/rule-types';
-import { EightFlowersDetector } from '../../src/majiang/win-conditions/win-conditions_eight-flowers';
+import { Tile, TileType } from '../../../src/majiang/core/tile';
+import { TileSet, TileSetType } from '../../../src/majiang/core/rule-types';
+import { EightFlowersDetector } from '../../../src/majiang/core/win-conditions/win-conditions_eight-flowers';
 import { expect } from 'chai';
-import { Player, PlayerType } from '../../src/majiang/player';
+import { Player, PlayerType } from '../../../src/majiang/core/player';
 
 // 创建测试用牌
 function createTiles(type: TileType, values: number[], startId = 1): Tile[] {

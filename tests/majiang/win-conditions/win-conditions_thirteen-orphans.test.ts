@@ -1,7 +1,7 @@
 import { expect } from 'chai';
-import { ThirteenOrphansDetector } from '../../src/majiang/win-conditions/win-conditions_thirteen-orphans';
-import { Tile, TileType, FengValue, JianValue } from '../../src/majiang/tile';
-import { TileSet } from '../../src/majiang/rule-types';
+import { ThirteenOrphansDetector } from '../../../src/majiang/core/win-conditions/win-conditions_thirteen-orphans';
+import { Tile, TileType, FengValue, JianValue } from '../../../src/majiang/core/tile';
+import { TileSet } from '../../../src/majiang/core/rule-types';
 
 // 辅助函数
 function createPung(type: TileType, value: number, startId = 1): TileSet {

@@ -1,6 +1,6 @@
 import { expect } from 'chai';
-import { Tile, TileType } from '../../src/majiang/tile';
-import { PureShiftedPungsDetector } from '../../src/majiang/win-conditions/win-conditions_pure-shifted-pungs';
+import { Tile, TileType } from '../../../src/majiang/core/tile';
+import { PureShiftedPungsDetector } from '../../../src/majiang/core/win-conditions/win-conditions_pure-shifted-pungs';
 
 describe('PureShiftedPungsDetector Fix Test', () => {
   const detector = new PureShiftedPungsDetector();

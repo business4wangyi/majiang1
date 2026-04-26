@@ -1,6 +1,6 @@
-import { Tile, TileType } from '../../src/majiang/tile';
-import { TileSet } from '../../src/majiang/rule-types';
-import { SevenConnectedPairsDetector } from '../../src/majiang/win-conditions/win-conditions_seven-connected-pairs';
+import { Tile, TileType } from '../../../src/majiang/core/tile';
+import { TileSet } from '../../../src/majiang/core/rule-types';
+import { SevenConnectedPairsDetector } from '../../../src/majiang/core/win-conditions/win-conditions_seven-connected-pairs';
 import { expect } from 'chai';
 
 // 创建测试用牌

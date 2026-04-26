@@ -5,13 +5,13 @@ import { Player, PlayerState, PlayerType } from '../core/player';
 import { debugLog, errorLog, infoLog } from '../tools/logger';
 import { Tile, TileType } from '../core/tile';
 import { TileManager } from '../core/tile-manager';
-import { WinConditions } from './win-conditions/win-conditions-main';
+import { WinConditions } from '../core/win-conditions/win-conditions-main';
 import { GangType, PlayerAction } from '../core/rule-types';
 import { RuleEngine } from '../core/rule-engine';
 import { AIPlayer } from '../strategy/agents/ai-player';
-import { DEBUG_MODE, AUTO_PLAY_MODE } from './index';
-import { AUTO_PLAY_ROUNDS } from './config/config';
-import { ScoreCalculator } from './score-calculator';
+import { DEBUG_MODE, AUTO_PLAY_MODE } from '../config/runtime-state';
+import { AUTO_PLAY_ROUNDS } from '../config/config';
+import { ScoreCalculator } from '../core/score-calculator';
 import { runAutoGameLoop, runInteractiveGameLoop } from '../ui/gameLoop';
 
 /**
@@ -25,6 +25,7 @@ export class GameEventHandler {
   constructor(
     game: Game,
     tileManager: TileManager,
+    _players?: Player[],
   ) {
     this.game = game;
     this.tileManager = tileManager;

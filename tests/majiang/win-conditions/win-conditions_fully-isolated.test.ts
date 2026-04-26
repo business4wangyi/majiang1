@@ -1,6 +1,6 @@
-import { Tile, TileType } from '../../src/majiang/tile';
-import { TileSet } from '../../src/majiang/rule-types';
-import { FullyIsolatedDetector } from '../../src/majiang/win-conditions/win-conditions_fully-isolated';
+import { Tile, TileType } from '../../../src/majiang/core/tile';
+import { TileSet } from '../../../src/majiang/core/rule-types';
+import { FullyIsolatedDetector } from '../../../src/majiang/core/win-conditions/win-conditions_fully-isolated';
 import { expect } from 'chai';
 
 // 创建测试用牌

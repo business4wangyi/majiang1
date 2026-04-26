@@ -1,7 +1,7 @@
 import { expect } from 'chai';
-import { AllTerminalsDetector } from '../../src/majiang/win-conditions/win-conditions_all-terminals';
-import { Tile, TileType } from '../../src/majiang/tile';
-import { TileSet, TileSetType } from '../../src/majiang/rule-types';
+import { AllTerminalsDetector } from '../../../src/majiang/core/win-conditions/win-conditions_all-terminals';
+import { Tile, TileType } from '../../../src/majiang/core/tile';
+import { TileSet, TileSetType } from '../../../src/majiang/core/rule-types';
 
 // 创建测试用牌
 function createTiles(type: TileType, values: number[], startId = 1): Tile[] {

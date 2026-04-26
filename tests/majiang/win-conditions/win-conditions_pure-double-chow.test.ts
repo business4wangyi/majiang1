@@ -1,8 +1,8 @@
 import { expect } from 'chai';
-import { PureDoubleChowDetector } from '../../src/majiang/win-conditions/win-conditions_pure-double-chow';
-import { TileType, Tile } from '../../src/majiang/tile';
-import { TileSet, HuType } from '../../src/majiang/rule-types';
-import { Player, PlayerType } from '../../src/majiang/player';
+import { PureDoubleChowDetector } from '../../../src/majiang/core/win-conditions/win-conditions_pure-double-chow';
+import { TileType, Tile } from '../../../src/majiang/core/tile';
+import { TileSet, HuType } from '../../../src/majiang/core/rule-types';
+import { Player, PlayerType } from '../../../src/majiang/core/player';
 
 /**
  * 辅助函数：创建指定花色和点数的牌组

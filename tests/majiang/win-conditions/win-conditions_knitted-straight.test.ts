@@ -1,6 +1,6 @@
-import { Tile, TileType } from '../../src/majiang/tile';
-import { TileSet, TileSetType, TileSetSource } from '../../src/majiang/rule-types';
-import { KnittedStraightDetector } from '../../src/majiang/win-conditions/win-conditions_knitted-straight';
+import { Tile, TileType } from '../../../src/majiang/core/tile';
+import { TileSet, TileSetType, TileSetSource } from '../../../src/majiang/core/rule-types';
+import { KnittedStraightDetector } from '../../../src/majiang/core/win-conditions/win-conditions_knitted-straight';
 import { expect } from 'chai';
 
 // 创建测试用牌

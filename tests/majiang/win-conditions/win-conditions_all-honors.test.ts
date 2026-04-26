@@ -1,6 +1,6 @@
-import { Tile, TileType } from '../../src/majiang/tile';
-import { TileSet } from '../../src/majiang/rule-types';
-import { AllHonorsDetector } from '../../src/majiang/win-conditions/win-conditions_all-honors';
+import { Tile, TileType } from '../../../src/majiang/core/tile';
+import { TileSet } from '../../../src/majiang/core/rule-types';
+import { AllHonorsDetector } from '../../../src/majiang/core/win-conditions/win-conditions_all-honors';
 import { expect } from 'chai';
 
 // 创建测试用牌

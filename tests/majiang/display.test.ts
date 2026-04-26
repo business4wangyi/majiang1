@@ -9,10 +9,10 @@ import {
   groupTilesByType, 
   createProgressBar,
   formatTileSet
-} from '../src/majiang/display';
-import { Player, PlayerState, PlayerType } from '../src/majiang/player';
-import { Tile, TileType } from '../src/majiang/tile';
-import { TileSet } from '../src/majiang/rule-types';
+} from '../../src/majiang/ui/display';
+import { Player, PlayerState, PlayerType } from '../../src/majiang/core/player';
+import { Tile, TileType } from '../../src/majiang/core/tile';
+import { TileSet } from '../../src/majiang/core/rule-types';
 
 describe('Display模块', () => {
   // 存根控制台输出

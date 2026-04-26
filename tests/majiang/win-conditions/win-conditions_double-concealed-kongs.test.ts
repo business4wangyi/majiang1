@@ -1,6 +1,6 @@
-import { Tile, TileType } from '../../src/majiang/tile';
-import { TileSet, TileSetType } from '../../src/majiang/rule-types';
-import { DoubleConcealedKongsDetector } from '../../src/majiang/win-conditions/win-conditions_double-concealed-kongs';
+import { Tile, TileType } from '../../../src/majiang/core/tile';
+import { TileSet, TileSetType } from '../../../src/majiang/core/rule-types';
+import { DoubleConcealedKongsDetector } from '../../../src/majiang/core/win-conditions/win-conditions_double-concealed-kongs';
 import { expect } from 'chai';
 
 // 创建测试用牌

@@ -9,11 +9,11 @@ import {
 import {
   askQuestion, InputState
 } from '../ui/input';
-import { DEBUG_MODE, AUTO_PLAY_MODE } from './index';
+import { DEBUG_MODE, AUTO_PLAY_MODE } from '../config/runtime-state';
 import { displayManager } from '../ui/display-manager';
 import { GameEventHandler } from '../ui/game-event-handler';
 import { TileManager } from '../core/tile-manager';
-import { AUTO_PLAY_ROUNDS } from './config/config';
+import { AUTO_PLAY_ROUNDS } from '../config/config';
 
 // 游戏循环检查间隔（毫秒）
 const GAME_LOOP_INTERVAL = 100;

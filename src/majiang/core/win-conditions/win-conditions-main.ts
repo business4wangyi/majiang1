@@ -12,6 +12,223 @@ import './index'; // 这会自动注册所有检测器
  * 负责协调和使用所有独立的胡牌检测器
  */
 export class WinConditions {
+  private static detectHuType(
+    huType: HuType,
+    handTiles: Tile[],
+    revealedSets: TileSet[] = [],
+    player: Player | null = null,
+    gameState: {
+      isLastTile?: boolean,
+      isDrawn?: boolean,
+      isAfterKong?: boolean,
+      isRobbingKong?: boolean
+    } = {},
+    extraOptions: {
+      flowers?: Tile[]
+    } = {}
+  ): boolean {
+    const detector = WinConditionRegistry.getAllDetectors()
+      .find(candidate => candidate.getHuType() === huType);
+    return detector?.detect(handTiles, revealedSets, player, gameState, extraOptions) ?? false;
+  }
+
+  private static detectHuTypeByPlayer(
+    huType: HuType,
+    player: Player,
+    extraOptions: {
+      flowers?: Tile[]
+    } = {}
+  ): boolean {
+    return this.detectHuType(huType, player.handTiles, player.revealedSets, player, {}, extraOptions);
+  }
+
+  static isQingYiSe(handTiles: Tile[], revealedSets: TileSet[] = []): boolean {
+    return this.detectHuType(HuType.QING_YI_SE, handTiles, revealedSets);
+  }
+
+  static isHalfFlush(handTiles: Tile[], revealedSets: TileSet[] = []): boolean {
+    return this.detectHuType(HuType.HALF_FLUSH, handTiles, revealedSets);
+  }
+
+  static isPengPengHu(handTiles: Tile[], revealedSets: TileSet[] = []): boolean {
+    return this.detectHuType(HuType.PENG_PENG_HU, handTiles, revealedSets);
+  }
+
+  static isBigFourWinds(handTiles: Tile[], revealedSets: TileSet[] = []): boolean {
+    return this.detectHuType(HuType.BIG_FOUR_WINDS, handTiles, revealedSets);
+  }
+
+  static isSmallFourWinds(handTiles: Tile[], revealedSets: TileSet[] = []): boolean {
+    return this.detectHuType(HuType.SMALL_FOUR_WINDS, handTiles, revealedSets);
+  }
+
+  static isBigThreeDragons(handTiles: Tile[], revealedSets: TileSet[] = []): boolean {
+    return this.detectHuType(HuType.BIG_THREE_DRAGONS, handTiles, revealedSets);
+  }
+
+  static isSmallThreeDragons(handTiles: Tile[], revealedSets: TileSet[] = []): boolean {
+    return this.detectHuType(HuType.SMALL_THREE_DRAGONS, handTiles, revealedSets);
+  }
+
+  static isAllHonors(handTiles: Tile[], revealedSets: TileSet[] = []): boolean {
+    return this.detectHuType(HuType.ALL_HONORS, handTiles, revealedSets);
+  }
+
+  static isAllGreen(handTiles: Tile[], revealedSets: TileSet[] = []): boolean {
+    return this.detectHuType(HuType.ALL_GREEN, handTiles, revealedSets);
+  }
+
+  static isOutsideHand(handTiles: Tile[], revealedSets: TileSet[] = []): boolean {
+    return this.detectHuType(HuType.OUTSIDE_HAND, handTiles, revealedSets);
+  }
+
+  static isFourKongs(handTiles: Tile[], revealedSets: TileSet[] = []): boolean {
+    return this.detectHuType(HuType.FOUR_KONGS, handTiles, revealedSets);
+  }
+
+  static isFourConcealedPungs(handTiles: Tile[], revealedSets: TileSet[] = []): boolean {
+    return this.detectHuType(HuType.FOUR_CONCEALED_PUNGS, handTiles, revealedSets);
+  }
+
+  static isAllTerminals(handTiles: Tile[], revealedSets: TileSet[] = []): boolean {
+    return this.detectHuType(HuType.ALL_TERMINALS, handTiles, revealedSets);
+  }
+
+  static isMixedTerminals(handTiles: Tile[], revealedSets: TileSet[] = []): boolean {
+    return this.detectHuType(HuType.MIXED_TERMINALS, handTiles, revealedSets);
+  }
+
+  static isPureStraight(handTiles: Tile[], revealedSets: TileSet[] = []): boolean {
+    return this.detectHuType(HuType.PURE_STRAIGHT, handTiles, revealedSets);
+  }
+
+  static isSevenStars(handTiles: Tile[], revealedSets: TileSet[] = []): boolean {
+    return this.detectHuType(HuType.SEVEN_STARS, handTiles, revealedSets);
+  }
+
+  static isSevenConnectedPairs(handTiles: Tile[], revealedSets: TileSet[] = []): boolean {
+    return this.detectHuType(HuType.SEVEN_CONNECTED_PAIRS, handTiles, revealedSets);
+  }
+
+  static isAllFives(handTiles: Tile[], revealedSets: TileSet[] = []): boolean {
+    const baseWin = this.detectHuType(HuType.PING_HU, handTiles, revealedSets) ||
+      this.detectHuType(HuType.PENG_PENG_HU, handTiles, revealedSets) ||
+      this.detectHuType(HuType.SEVEN_PAIRS, handTiles, revealedSets);
+    return baseWin && this.detectHuType(HuType.ALL_FIVES, handTiles, revealedSets);
+  }
+
+  static isAllHighNumbers(handTiles: Tile[], revealedSets: TileSet[] = []): boolean {
+    return this.detectHuType(HuType.ALL_HIGH_NUMBERS, handTiles, revealedSets);
+  }
+
+  static isAllLowNumbers(handTiles: Tile[], revealedSets: TileSet[] = []): boolean {
+    return this.detectHuType(HuType.ALL_LOW_NUMBERS, handTiles, revealedSets);
+  }
+
+  static isAllEvenPungs(handTiles: Tile[], revealedSets: TileSet[] = []): boolean {
+    return this.detectHuType(HuType.ALL_EVEN_PUNGS, handTiles, revealedSets);
+  }
+
+  static isThreeKongs(handTiles: Tile[], revealedSets: TileSet[] = []): boolean {
+    return this.detectHuType(HuType.THREE_KONGS, handTiles, revealedSets);
+  }
+
+  static isDoubleConcealed(handTiles: Tile[], revealedSets: TileSet[] = []): boolean {
+    return this.detectHuType(HuType.DOUBLE_CONCEALED_KONGS, handTiles, revealedSets);
+  }
+
+  static isAllTypes(handTiles: Tile[], revealedSets: TileSet[] = []): boolean {
+    return this.detectHuType(HuType.ALL_TYPES, handTiles, revealedSets);
+  }
+
+  static isPureSameChow(handTiles: Tile[], revealedSets: TileSet[] = []): boolean {
+    return this.detectHuType(HuType.PURE_SAME_CHOW, handTiles, revealedSets);
+  }
+
+  static isPureShiftedPungs(handTiles: Tile[], revealedSets: TileSet[] = []): boolean {
+    return this.detectHuType(HuType.PURE_SHIFTED_PUNGS, handTiles, revealedSets);
+  }
+
+  static isPureShiftedChows(handTiles: Tile[], revealedSets: TileSet[] = []): boolean {
+    return this.detectHuType(HuType.PURE_SHIFTED_CHOWS, handTiles, revealedSets);
+  }
+
+  static isThreeSimilarSequences(handTiles: Tile[], revealedSets: TileSet[] = []): boolean {
+    return this.detectHuType(HuType.THREE_SIMILAR_SEQUENCES, handTiles, revealedSets);
+  }
+
+  static isThreeSimilarPungs(handTiles: Tile[], revealedSets: TileSet[] = []): boolean {
+    return this.detectHuType(HuType.THREE_SIMILAR_PUNGS, handTiles, revealedSets);
+  }
+
+  static isFullyIsolated(handTiles: Tile[], revealedSets: TileSet[] = []): boolean {
+    return this.detectHuType(HuType.FULLY_ISOLATED, handTiles, revealedSets);
+  }
+
+  static isReversibleTiles(handTiles: Tile[], revealedSets: TileSet[] = []): boolean {
+    return this.detectHuType(HuType.REVERSIBLE_TILES, handTiles, revealedSets);
+  }
+
+  static isFourOfAKind(handTiles: Tile[], revealedSets: TileSet[] = []): boolean {
+    return this.detectHuType(HuType.FOUR_OF_A_KIND, handTiles, revealedSets);
+  }
+
+  static isTwoDragonPungs(handTiles: Tile[], revealedSets: TileSet[] = []): boolean {
+    return this.detectHuType(HuType.TWO_DRAGON_PUNGS, handTiles, revealedSets);
+  }
+
+  static isTwoIdenticalPungs(handTiles: Tile[], revealedSets: TileSet[] = []): boolean {
+    return this.detectHuType(HuType.TWO_IDENTICAL_PUNGS, handTiles, revealedSets);
+  }
+
+  static isTwoConcealedPungs(handTiles: Tile[], revealedSets: TileSet[] = []): boolean {
+    return this.detectHuType(HuType.TWO_CONCEALED_PUNGS, handTiles, revealedSets);
+  }
+
+  static isKnittedStraight(handTiles: Tile[], revealedSets: TileSet[] = []): boolean {
+    return this.detectHuType(HuType.KNITTED_STRAIGHT, handTiles, revealedSets);
+  }
+
+  static isKongFlower(gameState: { isAfterKong?: boolean } = {}): boolean {
+    return gameState.isAfterKong === true;
+  }
+
+  static isLastTile(gameState: { isLastTile?: boolean } = {}): boolean {
+    return gameState.isLastTile === true;
+  }
+
+  static isRobbingKong(gameState: { isRobbingKong?: boolean } = {}): boolean {
+    return gameState.isRobbingKong === true;
+  }
+
+  static isEightFlowers(player: Player, flowers: Tile[] = []): boolean {
+    return this.detectHuTypeByPlayer(HuType.EIGHT_FLOWERS, player, { flowers });
+  }
+
+  static isFourFlowers(player: Player, flowers: Tile[] = []): boolean {
+    return this.detectHuTypeByPlayer(HuType.FOUR_FLOWERS, player, { flowers });
+  }
+
+  static isOneVoidedSuit(handTiles: Tile[], revealedSets: TileSet[] = []): boolean {
+    return this.detectHuType(HuType.ONE_VOIDED_SUIT, handTiles, revealedSets);
+  }
+
+  static isMixedStraight(handTiles: Tile[], revealedSets: TileSet[] = []): boolean {
+    return this.detectHuType(HuType.MIXED_STRAIGHT, handTiles, revealedSets);
+  }
+
+  static isConcealedHand(handTiles: Tile[], revealedSets: TileSet[] = []): boolean {
+    return this.detectHuType(HuType.CONCEALED_HAND, handTiles, revealedSets);
+  }
+
+  static isPureDoubleChow(handTiles: Tile[], revealedSets: TileSet[] = []): boolean {
+    return this.detectHuType(HuType.PURE_DOUBLE_CHOW, handTiles, revealedSets);
+  }
+
+  static isPureTerminalChow(handTiles: Tile[], revealedSets: TileSet[] = []): boolean {
+    return this.detectHuType(HuType.PURE_TERMINAL_CHOW, handTiles, revealedSets);
+  }
+
   /**
    * 检测玩家是否可以胡牌
    * @param player 玩家
@@ -22,7 +239,7 @@ export class WinConditions {
    * @returns 胡牌检测结果
    */
   static canHu(
-    player: Player, 
+    player: Player,
     targetTile: Tile | null = null,
     gameState: {
       isLastTile?: boolean,
@@ -34,8 +251,8 @@ export class WinConditions {
       flowers?: Tile[]
     } = {},
     excludeDetectors: Function[] = []
-  ): { 
-    canHu: boolean, 
+  ): {
+    canHu: boolean,
     huType: HuType,
     description?: string
   } {
@@ -50,7 +267,7 @@ export class WinConditions {
     // 方案二：不再自动分析调用栈，递归排除由 detectAll 统一传递
     let handTiles = [...player.handTiles];
     const revealedSets = player.revealedSets || [];
-    
+
     // 如果有目标牌，将其添加到手牌中进行检测
     if (targetTile) {
       handTiles.push(targetTile);
@@ -131,7 +348,7 @@ export class WinConditions {
       excludeDetectors,
       true // 只检测基础胡牌检测器
     );
-    
+
     // 如果没有匹配的基础检测器，返回不能胡牌
     if (matchedDetectors.length === 0) {
       return {
@@ -140,11 +357,11 @@ export class WinConditions {
         description: "不能和牌"
       };
     }
-    
+
     // 根据分数排序，选择分数最高的胡牌类型
     matchedDetectors.sort((a, b) => b.getScore() - a.getScore());
     const bestDetector = matchedDetectors[0];
-    
+
     const result = {
       canHu: true,
       huType: bestDetector.getHuType(),
@@ -154,7 +371,7 @@ export class WinConditions {
     debugLog && debugLog(`[canHu-详细] 判定结果: canHu=${result.canHu}, huType=${result.huType}, 描述=${result.description}`);
     return result;
   }
-  
+
   /**
    * 检查明牌组合是否合法
    */
@@ -193,11 +410,11 @@ export class WinConditions {
         return detector.getDescription();
       }
     }
-    
+
     // 如果没有找到，返回默认描述
     return '未知胡牌类型';
   }
-  
+
   /**
    * 计算胡牌分数
    * @param player 玩家
@@ -206,7 +423,7 @@ export class WinConditions {
    * @returns 胡牌分数和详情
    */
   static calculateScore(
-    player: Player, 
+    player: Player,
     gameState: {
       isLastTile?: boolean,
       isDrawn?: boolean,
@@ -216,7 +433,7 @@ export class WinConditions {
     extraOptions: {
       flowers?: Tile[]
     } = {}
-  ): { 
+  ): {
     huType: HuType,
     score: number,
     description: string,
@@ -235,7 +452,7 @@ export class WinConditions {
     // 检测胡牌类型
     const huResult = this.canHu(player, null, gameState, extraOptions);
     debugLog && debugLog('[calculateScore] canHu结果 ' + JSON.stringify(huResult));
-    
+
     if (!huResult.canHu) {
       return {
         huType: HuType.NOT_HU,
@@ -247,7 +464,7 @@ export class WinConditions {
         }
       };
     }
-    
+
     // 找到对应的检测器
     let detector = null;
     for (const d of WinConditionRegistry.getAllDetectors()) {
@@ -256,7 +473,7 @@ export class WinConditions {
         break;
       }
     }
-    
+
     if (!detector) {
       // 增加警告输出，便于调试
       console.warn && console.warn('[WinConditions] 未找到对应的胡牌检测器，huType=', huResult.huType);
@@ -271,10 +488,10 @@ export class WinConditions {
         }
       };
     }
-    
+
     // 计算基础分数
     const baseScore = detector.getScore();
-    
+
     // 计算额外分数（例如自摸、杠上开花等）
     const additionalScores: Array<{name: string, score: number}> = [];
     // 自摸加分
@@ -303,7 +520,7 @@ export class WinConditions {
     }
     // 计算总分
     const totalScore = baseScore + additionalScores.reduce((sum, item) => sum + item.score, 0);
-    
+
     debugLog && debugLog('[calculateScore] 计算结果 ' + JSON.stringify({
       huType: huResult.huType,
       score: totalScore,
@@ -323,4 +540,4 @@ export class WinConditions {
       }
     };
   }
-} 
+}

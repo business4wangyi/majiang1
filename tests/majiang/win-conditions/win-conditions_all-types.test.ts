@@ -1,7 +1,7 @@
 import { expect } from 'chai';
-import { Tile, TileType } from '../../src/majiang/tile';
-import { TileSet, TileSetType } from '../../src/majiang/rule-types';
-import { AllTypesDetector } from '../../src/majiang/win-conditions/win-conditions_all-types';
+import { Tile, TileType } from '../../../src/majiang/core/tile';
+import { TileSet, TileSetType } from '../../../src/majiang/core/rule-types';
+import { AllTypesDetector } from '../../../src/majiang/core/win-conditions/win-conditions_all-types';
 
 describe('五门齐规则测试', () => {
   let detector: AllTypesDetector;
