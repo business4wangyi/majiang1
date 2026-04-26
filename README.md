@@ -18,7 +18,7 @@
 - **统一架构**：与井字棋AI助手保持一致的TypeScript架构
 
 ### 🀄 麻将游戏
-- **Web UI 子系统正式发布**：提供仓内 Web 页面入口，支持 `Lobby`、`Table`、`ResultModal`
+- **Web UI MVP 正式发布**：提供仓内 Web 页面入口，支持 `Lobby`、`Table`、`ResultModal`
 - **本地单机流程**：支持 1 人 + 3 AI 的本地麻将对局
 - **经典规则复用**：复用现有 `src/majiang/core/` 与 AI 策略能力，不新增平行规则引擎
 - **CLI 共存**：保留原有命令行手动模式与自动模式
@@ -52,7 +52,7 @@ npm run othello:alphazero-fast-train
 ```
 
 ### 🀄 麻将 Web UI（正式交付入口）
-本仓库当前正式发布口径是“麻将 Web UI 子系统发布”，不是整个仓库发布。
+本仓库当前采用方案 A：麻将首版 Web UI MVP 正式发布门禁包含全仓 `npm run build` 与麻将专项验证。
 
 ```bash
 # 启动麻将 Web UI
@@ -74,11 +74,11 @@ http://127.0.0.1:4010/majiang-web
 发布检查：
 
 ```bash
-# 麻将 Web UI 子系统正式发布门禁
+# 麻将 Web UI MVP 正式发布门禁
 npm run majiang:release-check
 ```
 
-该命令会执行发布范围 TypeScript 检查、CLI smoke 与 Web smoke。当前全仓 `npm run build` 仍存在历史 TypeScript 编译债务，主要位于本次发布范围外的 `src/ai-assistant/`、`src/majiang/strategy/ai-alphazero/`、`src/othello/`，因此不能把本结论理解为整个仓库正式发布。
+该命令会顺序执行全仓 TypeScript 构建、麻将 Web UI 专项 TypeScript 检查、CLI smoke 与 Web smoke，用于确认 Web 主路径、CLI 共存和构建门禁均满足正式发布要求。
 
 ### 🀄 麻将 CLI
 ```bash
@@ -152,10 +152,10 @@ npm run majiang:auto
 # 安装依赖
 npm install
 
-# 编译TypeScript（全仓，当前存在历史债务）
+# 编译TypeScript（全仓）
 npm run build
 
-# 麻将 Web UI 子系统发布检查
+# 麻将 Web UI MVP 正式发布检查
 npm run majiang:release-check
 
 # 运行测试

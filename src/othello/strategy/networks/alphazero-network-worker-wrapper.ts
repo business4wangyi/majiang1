@@ -56,16 +56,8 @@ export class AlphaZeroNetworkWorkerWrapper implements IAlphaZeroNetwork {
       execArgv: ['-r', 'ts-node/register'] // 在Worker进程中启用ts-node
     });
     
-    // Worker退出时清理临时文件
-    const cleanup = () => {
-      try {
-        if (fs.existsSync(tmpFile)) {
-          fs.unlinkSync(tmpFile);
-        }
-      } catch (e) {
-        // 忽略清理错误
-      }
-    };
+    // 当前实现直接加载 TypeScript worker 文件，不再创建临时文件。
+    const cleanup = () => {};
     
     this.worker.on('exit', cleanup);
     
@@ -317,4 +309,3 @@ export class AlphaZeroNetworkWorkerWrapper implements IAlphaZeroNetwork {
     return 0;
   }
 }
-

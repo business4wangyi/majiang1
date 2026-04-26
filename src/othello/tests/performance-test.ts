@@ -2,11 +2,11 @@
 
 import * as tf from '@tensorflow/tfjs-node';
 import { OthelloGame } from '../core/game';
-import { RandomStrategy } from './strategy/random-strategy';
-import { GreedyStrategy } from './strategy/greedy-strategy';
-import { HeuristicStrategy } from './strategy/heuristic-strategy';
-import { AlphaZeroStrategy } from './strategy/alphazero-strategy';
-import { AlphaZeroNetwork } from './strategy/alphazero-network';
+import { RandomOthelloAgent } from '../strategy/agents/random-agent';
+import { GreedyOthelloAgent } from '../strategy/agents/greedy-agent';
+import { HeuristicOthelloAgent } from '../strategy/agents/heuristic-agent';
+import { AlphaZeroOthelloAgent } from '../strategy/agents/alphazero-agent';
+import { AlphaZeroNetwork } from '../strategy/networks/alphazero-network';
 
 async function loadModel(modelPath: string): Promise<tf.LayersModel> {
     try {
@@ -29,12 +29,22 @@ async function testModelVsStrategy(
     console.log(`\n🎯 测试 AlphaZero vs ${strategyName} (${games}局)`);
     
     const network = new AlphaZeroNetwork();
-    network.model = model;
+    (network as any).model = model;
     
-    const alphaZero = new AlphaZeroStrategy(network, {
-        simulations: 300,
-        explorationWeight: 1.0,
-        temperature: 0.1
+    const alphaZero = new AlphaZeroOthelloAgent({
+        name: 'AlphaZero-PerformanceTest',
+        isTraining: false,
+        trainingTemperature: 1.0,
+        inferenceTemperature: 0.1,
+        verbose: false,
+        customNetwork: network,
+        mctsConfig: {
+            numSimulations: 300,
+            cPuct: 1.0,
+            dirichletAlpha: 0.3,
+            noiseWeight: 0.25,
+            temperature: 0.1
+        }
     });
     
     let wins = 0;
@@ -45,25 +55,25 @@ async function testModelVsStrategy(
         
         // AlphaZero执黑，对手执白
         while (!game.isGameOver()) {
-            if (game.getCurrentPlayer() === 1) {
+            if (game.getCurrentPlayer() === 'B') {
                 // AlphaZero回合
-                const move = await alphaZero.getMove(game);
+                const move = alphaZero.chooseAction(game.getBoard(), game.getCurrentPlayer());
                 if (move) {
-                    game.makeMove(move.row, move.col);
+                    game.playAction(move);
                 }
             } else {
                 // 对手回合
-                const move = strategy.getMove(game);
+                const move = strategy.chooseAction(game.getBoard(), game.getCurrentPlayer());
                 if (move) {
-                    game.makeMove(move.row, move.col);
+                    game.playAction(move);
                 }
             }
         }
         
-        const result = game.getGameResult();
-        if (result.winner === 1) {
+        const result = game.getResult();
+        if (result?.winner === 'B') {
             wins++;
-        } else if (result.winner === 0) {
+        } else if (result?.winner === 'Draw') {
             draws++;
         }
         
@@ -85,7 +95,7 @@ async function testModelVsStrategy(
 
 async function runModelPerformanceTest() {
     console.log('🚀 AlphaZero模型性能测试');
-    console.log('=' * 50);
+    console.log('='.repeat(50));
     
     // 模型路径
     const modelPath = '/Users/felixfan/Desktop/AIUse/majiang1/src/othello/training-output/dc-mcp-real-ultra/model-iteration-14';
@@ -101,7 +111,7 @@ async function runModelPerformanceTest() {
         results['随机策略'] = await testModelVsStrategy(
             model, 
             '随机策略', 
-            new RandomStrategy(), 
+            new RandomOthelloAgent(),
             30
         );
         
@@ -109,7 +119,7 @@ async function runModelPerformanceTest() {
         results['贪心策略'] = await testModelVsStrategy(
             model, 
             '贪心策略', 
-            new GreedyStrategy(), 
+            new GreedyOthelloAgent(),
             30
         );
         
@@ -117,13 +127,13 @@ async function runModelPerformanceTest() {
         results['启发式策略'] = await testModelVsStrategy(
             model, 
             '启发式策略', 
-            new HeuristicStrategy(), 
+            new HeuristicOthelloAgent(),
             30
         );
         
         // 输出总结
         console.log('\n📊 第14轮模型性能总结');
-        console.log('=' * 40);
+        console.log('='.repeat(40));
         for (const [strategy, winRate] of Object.entries(results)) {
             const status = winRate >= 50 ? '✅' : winRate >= 30 ? '⚠️' : '❌';
             console.log(`${status} vs ${strategy}: ${winRate.toFixed(1)}%`);

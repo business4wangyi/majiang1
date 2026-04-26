@@ -38,13 +38,13 @@ export class QLearningAgent implements Agent {
   }
 
   // 训练一局
-  trainEpisode(opponent: Agent) {
+  trainEpisode(opponent: Agent, startingPlayer: Player = 'X') {
     let board = [
       [null, null, null],
       [null, null, null],
       [null, null, null]
     ] as Board;
-    let currentPlayer: Player = 'X';
+    let currentPlayer: Player = startingPlayer;
     let history: {key: string, actionIdx: number}[] = [];
     let actions: Action[] = [];
     while (true) {
@@ -100,4 +100,4 @@ export class QLearningAgent implements Agent {
   public setAlpha(alpha: number) {
     this.alpha = alpha;
   }
-} 
+}

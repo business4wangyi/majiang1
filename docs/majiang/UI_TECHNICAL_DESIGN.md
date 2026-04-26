@@ -1,8 +1,8 @@
 # 麻将 UI 技术设计文档
 
 > 最后更新: 2026-04-26
-> 文档状态: 麻将 Web UI 子系统正式发布通过
-> 适用范围: `codex/majiang-ui` 分支中的麻将 Web UI 子系统发布说明，不代表全仓正式发布
+> 文档状态: 麻将首版 Web UI MVP 正式发布通过
+> 适用范围: `codex/majiang-ui` 分支中的麻将 Web UI MVP 正式发布说明；正式发布门禁包含全仓 `npm run build` 与麻将专项验证
 
 ## 1. 文档目标
 
@@ -582,7 +582,7 @@
 
 ## 17. 当前实现落点与状态
 
-截至本次发布收口，本文档的正式发布口径是“麻将 Web UI 子系统发布”，不是整个仓库发布。
+截至本次发布收口，本文档的正式发布口径采用方案 A：麻将首版 Web UI MVP 正式发布，发布门禁包含全仓 `npm run build` 与麻将专项验证。
 
 发布范围包含：
 
@@ -593,17 +593,14 @@
 - 运行时边界控制：`src/majiang/runtime/runtime-context.ts`
 - CLI 共存 smoke：`scripts/demo/majiang-cli-smoke.ts`
 - Web API / 静态入口 smoke：`scripts/demo/majiang-web-smoke.ts`
-- 发布范围 TypeScript 检查：`tsconfig.majiang-web-release.json`
+- 麻将 Web UI 专项 TypeScript 检查：`tsconfig.majiang-web-release.json`
+- 全仓 TypeScript 构建：`npm run build`
 
-不纳入本次正式发布范围：
+不纳入本次 MVP 发布范围：
 
-- 全仓 `npm run build` 绿灯
-- `src/ai-assistant/`
-- `src/othello/`
-- `src/majiang/strategy/ai-alphazero/`
 - 非 MVP 页面与能力，例如 `RuleDrawer`、`DebugPanel`、时间线、动画、自动演示模式开放
 
-这些边界用于避免把麻将 Web UI 子系统发布误读为整个仓库发布。
+这些边界用于避免把正式发布误读为非 MVP 体验增强已完成；全仓 TypeScript 编译本轮已作为发布门禁处理并通过。
 
 ### 17.1 已完成项
 
@@ -635,19 +632,20 @@
   - 当前 `src/majiang/application/game-session.ts` 已关闭 Web session 的底层麻将 console/file 日志输出，本轮确认 `majiang:web-smoke` 输出不再夹带底层麻将流程日志
   - `Lobby -> Table -> 人类出牌 -> AI 自动推进 -> 再次回到人类回合` 已有真实浏览器快照支撑
   - 本轮已通过 Codex 内置浏览器重新确认 `ResultModal`、 “再来一局”与麻将页面控制台错误/警告为 0
-- 发布范围内的构建/验证门禁已固化为 `npm run majiang:release-check`
+- 正式发布构建/验证门禁已固化为 `npm run majiang:release-check`
+  - `npm run build` 已纳入发布门禁，并确认通过
   - `npm run majiang:web-typecheck` 使用 `tsconfig.majiang-web-release.json` 检查麻将 Web UI 发布路径
   - `npm run majiang:verify` 顺序执行 CLI smoke 与 Web smoke
-- 全仓 `npm run build` 当前仍失败
-  - 失败集中在本次发布范围外的历史模块，例如 `src/ai-assistant/`、`src/majiang/strategy/ai-alphazero/`、`src/othello/`
-  - 因此不能宣称“整个仓库正式发布”
-  - 本次正式发布结论仅限麻将 Web UI 子系统
+- 为满足方案 A，已最小修复全仓 TypeScript 编译债务
+  - `src/tic-tac-toe/` 补充历史导入路径兼容导出
+  - `src/majiang/strategy/ai-alphazero/` 补齐当前编译所需导出与初始化字段
+  - `src/othello/` 修复已漂移的测试/工具导入与 API 调用
+  - 这些修复属于构建兼容性收口，不改变麻将 Web UI/CLI 主流程语义，也不重写麻将规则引擎
 
 ### 17.3 后续非发布阻塞事项
 
-以下事项不阻塞本次麻将 Web UI 子系统正式发布，但若后续进入对应范围，需要单独立项：
+以下事项不阻塞本次麻将首版 Web UI MVP 正式发布，但若后续进入对应范围，需要单独立项：
 
-- 全仓 TypeScript 编译债务治理，使 `npm run build` 通过
 - 非 MVP 体验增强，例如牌桌视觉、动画、调试面板、规则抽屉
 - 自动演示模式的 Web session tick 方案与开放
 
@@ -818,7 +816,7 @@
 
 ### 17.9 发布构建与验证门禁
 
-本次正式发布采用方案 B：不把全仓历史 TypeScript 债务纳入麻将 Web UI 子系统发布门禁，而是显式定义独立发布范围与对应门禁。
+本次正式发布采用方案 A：全仓 `npm run build` 必须通过，并与麻将 Web UI 专项检查、CLI/Web smoke 共同构成正式发布门禁。
 
 发布门禁：
 
@@ -826,6 +824,10 @@
 
 该脚本顺序执行：
 
+- `npm run build`
+  - 基于仓库默认 `tsconfig.json`
+  - 覆盖全仓 TypeScript 编译
+  - 本轮已修复阻断构建的历史导入/API 漂移问题
 - `npm run majiang:web-typecheck`
   - 基于 `tsconfig.majiang-web-release.json`
   - 覆盖 `src/majiang/web/server.ts`
@@ -841,6 +843,7 @@
 
 截至 2026-04-26 的实际执行结果：
 
+- `npm run build` 通过
 - `npm run majiang:release-check` 通过
 - `npm run majiang:web-typecheck` 通过
 - `npm run majiang:smoke` 通过
@@ -868,47 +871,37 @@
 
 全仓构建现状：
 
-- 已按用户授权执行过 `npm install`，用于补齐本地 `node_modules` 中缺失的类型依赖
-
-- `package.json` 与 `package-lock.json` 无变化
-- `node_modules/@types` 已补齐 `mocha`、`chai` 等依赖
-- `npm run build` 仍未通过
-
-`npm run build` 当前失败已经不再是 `@types/mocha` / `@types/chai` 缺失导致，而是暴露了仓库既有全量 TypeScript 编译债务，主要集中在：
-
-- `src/ai-assistant/`
-  - 引用不存在或当前路径不匹配的 `tic-tac-toe` 模块
-- `src/majiang/strategy/ai-alphazero/`
-  - 引用已不存在或未对齐当前 `Player` 实现的接口，例如 `getHandTiles`、`getRevealedSets`、`getStatus`
-  - 若干训练/演示文件引用缺失的 `./index`
-- `src/othello/`
-  - 测试与工具文件引用不存在或已漂移的 strategy/network 模块
-  - 存在与当前 `OthelloGame` API 不一致的调用
+- 已按用户授权执行过 `npm install`，用于补齐本地依赖
+- `npm run build` 已通过
+- 为让全仓构建恢复绿灯，本轮只做兼容性修复：
+  - `src/tic-tac-toe/` 增加历史路径 re-export
+  - `src/majiang/core/player.ts` 增加历史训练/分析模块需要的只读访问器
+  - `src/majiang/strategy/ai-alphazero/` 修复缺失入口与初始化字段
+  - `src/othello/` 修复已漂移的测试/工具引用
+- 这些修复不改变麻将规则语义，不新增平行麻将规则引擎，不扩展 Web UI 非 MVP 能力
 
 影响判断：
 
-- 对“麻将 Web UI 子系统正式发布”没有直接阻断
-  - 本次发布路径已由 `npm run majiang:release-check` 验证通过
+- 对“麻将首版 Web UI MVP 正式发布”没有构建阻断
+  - `npm run majiang:release-check` 已包含并通过 `npm run build`
   - Web UI 仍复用现有 `core/`、`strategy/agents/ai-player.ts`、`GameEventHandler`
   - 未新增平行麻将规则引擎
-- 对“整个仓库正式发布”有阻断
-  - 如果发布口径改为全仓正式发布，必须先治理这些历史 TS 债务并让 `npm run build` 通过
 
 当前发布口径：
 
-- 麻将 Web UI 子系统正式发布通过
-- 该结论不代表整个仓库正式发布
+- 麻将首版 Web UI MVP 正式发布通过
+- 采用方案 A，不使用方案 B
+- 全仓 `npm run build` 已通过并纳入发布门禁
 - CLI 手动/自动 smoke 已通过，当前 UI 增量未破坏 CLI 基本入口
 - 规则引擎未重写，仍复用现有 `core` / `strategy` 能力
-- 全仓 `npm run build` 仍存在历史债务，作为后续仓库级质量治理事项单独跟踪
 
 ### 17.10 正式发布验收清单
 
-本清单用于审核智能体判断“麻将 Web UI 子系统是否达到正式发布标准”。
+本清单用于审核智能体判断“麻将首版 Web UI MVP 是否达到正式发布标准”。
 
 - 发布边界
   - 结论：通过
-  - 证据：本文档第 17 节明确发布范围为麻将 Web UI 子系统，不代表整个仓库正式发布
+  - 证据：本文档第 17 节明确采用方案 A；正式发布门禁包含全仓 `npm run build` 与麻将专项验证
 - Web 启动方式
   - 结论：通过
   - 证据：`npm run majiang:web` 启动 `src/majiang/web/server.ts`，默认访问 `http://127.0.0.1:4010/majiang-web`
@@ -931,5 +924,5 @@
   - 结论：通过
   - 证据：Codex 内置浏览器真实页面验收确认麻将页面控制台错误/警告为 0
 - 构建/验证门禁
-  - 结论：通过麻将 Web UI 子系统发布门禁；不通过全仓发布门禁
-  - 证据：`npm run majiang:release-check` 通过；`npm run build` 仍因发布范围外历史 TS 债务失败
+  - 结论：通过
+  - 证据：`npm run build` 通过；`npm run majiang:release-check` 通过，且该脚本已顺序包含 `npm run build`、`npm run majiang:web-typecheck`、`npm run majiang:verify`

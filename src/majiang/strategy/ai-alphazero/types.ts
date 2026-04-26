@@ -132,49 +132,6 @@ export function createPlayerAdapter(player: Player): PlayerAdapter {
 }
 
 /**
- * 扩展Player类，添加适配器方法
- */
-declare module '../player' {
-  interface Player {
-    getName(): string;
-    getHandTiles(): Tile[];
-    getRevealedSets(): TileSet[];
-    getDiscardedTiles(): Tile[];
-    getStatus(): 'WAITING' | 'ACTING' | 'FINISHED' | 'WON';
-  }
-}
-
-// 为Player类添加方法实现
-if (typeof Player !== 'undefined') {
-  Player.prototype.getName = function() {
-    return this.name;
-  };
-
-  Player.prototype.getHandTiles = function() {
-    return this.handTiles || [];
-  };
-
-  Player.prototype.getRevealedSets = function() {
-    return this.revealedSets || [];
-  };
-
-  Player.prototype.getDiscardedTiles = function() {
-    return this.discardedTiles || [];
-  };
-
-  Player.prototype.getStatus = function() {
-    const state = this.state;
-    switch (state) {
-      case 0: return 'WAITING';
-      case 1: return 'ACTING';
-      case 2: return 'FINISHED';
-      case 3: return 'WON';
-      default: return 'WAITING';
-    }
-  };
-}
-
-/**
  * 游戏动作类型
  */
 export type ActionType = 'DISCARD' | 'CHI' | 'PENG' | 'GANG' | 'HU' | 'PASS';

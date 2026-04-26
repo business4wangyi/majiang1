@@ -10,10 +10,10 @@
  * - 实用性阈值指导
  */
 
-import { AlphaZeroAgentConfig } from './strategy/alphazero-agent';
-import { AlphaZeroNetworkConfig } from './strategy/alphazero-network';
-import { MCTSConfig } from './strategy/alphazero-mcts';
-import { AlphaZeroTrainingConfig } from './strategy/alphazero-trainer';
+import { AlphaZeroAgentConfig } from '../strategy/agents/alphazero-agent';
+import { AlphaZeroNetworkConfig } from '../strategy/networks/alphazero-network';
+import { MCTSConfig } from '../strategy/mcts/alphazero-mcts';
+import { AlphaZeroTrainingConfig } from '../strategy/trainers/alphazero-trainer';
 
 /**
  * 配置性能等级枚举

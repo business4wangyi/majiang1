@@ -31,8 +31,10 @@ export interface TrainingBatch {
 
 export class MajiangAlphaZeroNetwork {
   private config: MajiangNetworkConfig;
-  private model: tf.LayersModel;
-  private optimizer: tf.Optimizer;
+  private model!: tf.LayersModel;
+  private optimizer!: tf.Optimizer;
+  private weights: Map<string, Float32Array> = new Map();
+  private biases: Map<string, Float32Array> = new Map();
   private isTraining: boolean;
 
   constructor(config?: Partial<MajiangNetworkConfig>) {
@@ -51,6 +53,10 @@ export class MajiangAlphaZeroNetwork {
     this.isTraining = false;
     this.initializeNetwork();
     this.initializeOptimizer();
+  }
+
+  private initializeOptimizer(): void {
+    this.optimizer = tf.train.adam(this.config.learningRate);
   }
   
   /**

@@ -109,7 +109,7 @@
     "majiang:smoke": "npx ts-node scripts/demo/majiang-cli-smoke.ts",
     "majiang:verify": "/bin/zsh -lc 'npm run majiang:smoke && npm run majiang:web-smoke'",
     "majiang:web-typecheck": "tsc -p tsconfig.majiang-web-release.json",
-    "majiang:release-check": "/bin/zsh -lc 'npm run majiang:web-typecheck && npm run majiang:verify'",
+    "majiang:release-check": "/bin/zsh -lc 'npm run build && npm run majiang:web-typecheck && npm run majiang:verify'",
     "othello:alphazero-baseline-compare-summary": "bash scripts/training/othello/summarize-baseline-compare.sh"
   },
   "keywords": [

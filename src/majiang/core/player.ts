@@ -49,6 +49,37 @@ export class Player {
     public type: PlayerType
   ) {}
 
+  // 兼容历史训练/分析模块的只读访问器，避免这些模块直接依赖字段名。
+  getName(): string {
+    return this.name;
+  }
+
+  getHandTiles(): Tile[] {
+    return this.handTiles;
+  }
+
+  getRevealedSets(): TileSet[] {
+    return this.revealedSets;
+  }
+
+  getDiscardedTiles(): Tile[] {
+    return this.discardedTiles;
+  }
+
+  getStatus(): 'WAITING' | 'ACTING' | 'FINISHED' | 'WON' {
+    switch (this.state) {
+      case PlayerState.ACTING:
+        return 'ACTING';
+      case PlayerState.FINISHED:
+        return 'FINISHED';
+      case PlayerState.WON:
+        return 'WON';
+      case PlayerState.WAITING:
+      default:
+        return 'WAITING';
+    }
+  }
+
   // 添加一张牌到手牌
   drawTile(tile: Tile): void {
     if (!tile) {
