@@ -188,6 +188,7 @@ env/
 # 日志文件
 logs/
 *.log
+.agents/automation-memory/
 
 # 临时文件
 temp/

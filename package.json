@@ -9,6 +9,7 @@
     "build": "tsc",
     "dev": "ts-node src/majiang/index.ts",
     "test": "node scripts/test/run-mocha-cjs.js",
+    "regression:daily": "node scripts/test/daily-regression-report.js",
     "test:watch": "mocha -r ts-node/register --watch tests/**/*.test.ts",
     "tic-tac-toe": "ts-node src/tic-tac-toe/demo.ts",
     "ai:tic-tac-toe:test": "ts-node src/ai/test-tic-tac-toe-ai.ts",

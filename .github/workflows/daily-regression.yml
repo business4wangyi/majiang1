@@ -23,5 +23,43 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Run Mocha regression tests
-        run: npm test
+      - name: Restore regression baseline
+        uses: actions/cache/restore@v4
+        with:
+          path: .agents/automation-memory/daily-regression
+          key: daily-regression-${{ runner.os }}-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: |
+            daily-regression-${{ runner.os }}-
+
+      - name: Run daily regression
+        id: regression
+        run: |
+          set +e
+          npm run regression:daily
+          exit_code=$?
+          echo "exit_code=${exit_code}" >> "$GITHUB_OUTPUT"
+          exit 0
+
+      - name: Publish regression summary
+        if: always()
+        run: cat logs/daily-regression-report.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload regression report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: daily-regression-report
+          path: |
+            logs/daily-regression-report.md
+            .agents/automation-memory/daily-regression/latest.json
+
+      - name: Save regression baseline
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: .agents/automation-memory/daily-regression
+          key: daily-regression-${{ runner.os }}-${{ github.run_id }}-${{ github.run_attempt }}
+
+      - name: Fail on regression errors
+        if: always()
+        run: exit "${{ steps.regression.outputs.exit_code }}"
