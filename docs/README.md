@@ -26,6 +26,7 @@
 - [井字棋实现](../src/tic-tac-toe/)
 - [奥赛罗实现](../src/othello/)
 - [麻将实现](../src/majiang/)
+- [麻将 Web UI 产品交互设计](majiang/WEB_UI_PRODUCT_INTERACTION_DESIGN.md)
 
 ### 🔬 研究者
 如果您对AI算法和性能优化感兴趣：
@@ -60,7 +61,8 @@ docs/                                    # 文档根目录
 │       ├── OPTIMIZATION_SPACE_ANALYSIS.md  # 优化空间分析
 │       └── SCHEME_B_IMPLEMENTATION.md  # 方案B实施报告
 └── majiang/                             # 麻将文档
-    └── FOLDER_STRUCTURE.md              # 目录结构
+    ├── FOLDER_STRUCTURE.md              # 目录结构
+    └── WEB_UI_PRODUCT_INTERACTION_DESIGN.md # Web UI 产品交互设计补充
 ```
 
 ### 内容范围定义
