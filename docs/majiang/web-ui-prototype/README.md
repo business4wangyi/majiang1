@@ -8,9 +8,13 @@
 ## 本轮 P0 收敛重点
 
 - 动作区按 phase 收敛显示，降低“按钮台”风险。
+- 动作区新增“阶段摘要 + 更多动作”机制：默认只保留主路径，次要动作按需展开。
+- 不可用动作说明默认折叠，避免与主操作抢视觉。
 - 诊断入口默认折叠，避免首屏调试化。
 - 中心区改为“主提示优先，细节按需展开”。
 - 侧栏改为 Tab（事件流 / 分数变化），降低信息噪声。
+- 移动端增加“动作说明抽屉”，减少底部拥挤并保持手牌优先。
+- 最近动作增加短暂高亮衰减，提升瞬时局势可读性。
 
 ## 验收矩阵（步骤 + 预期 DOM/状态变化）
 
@@ -22,6 +26,14 @@
 2. 结束态禁止继续操作：
 - 步骤：执行 `window.showMajiangResultExample("tsumo")`。
 - 预期：`model.phase === ended` 后所有手牌按钮与动作按钮不可点击；`#interactionFeedback` 显示“本局已结束，请查看结算/复盘”。
+
+3. 响应阶段主路径优先展示：
+- 步骤：执行 `window.updateMajiangTableViewModel(window.majiangNextModelExample)`。
+- 预期：`#actionStageSummary` 显示“响应阶段”提示；动作区默认只突出主响应动作 + `过`；点击 `#toggleMoreActionsBtn` 后展开次要动作。
+
+4. 不可用说明折叠与移动端抽屉：
+- 步骤：观察桌面点击 `#toggleDisabledReasonBtn`；移动端宽度下点击 `#openActionExplainDrawerBtn`。
+- 预期：桌面默认隐藏不可用说明面板，按需展开；移动端通过抽屉查看“可用/不可用动作说明”，不挤压手牌区。
 
 ### 第8章 复盘
 1. 关键节点与四家摘要：
@@ -65,5 +77,7 @@ window.showMajiangResultExample("abort")
 
 - 第3章：`#lobbyPage/#tablePage/#resultModal` + `createGame()/renderResult()`。
 - 第7章：`#primaryFocusHint/#latestActionMain/#latestActionSub/#responseCountdown/#availableActionReasons`。
+- 第7章（动作区降噪补充）：`#actionStageSummary/#toggleMoreActionsBtn + appState.showMoreActions`。
+- 第7章（信息层级补充）：`#toggleDisabledReasonBtn/#disabledReasonPanel/#actionExplainDrawer`。
 - 第9章：`view-model-adapter.js createTableViewModelFromSnapshot()`，`app.js getCurrentViewModel()`。
 - 第13/14/15：四方桌面、中心公共区、phase 动作收敛、诊断弱化入口、边界保护均可在现有 DOM 与交互中复核。

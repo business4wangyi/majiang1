@@ -21,17 +21,33 @@
 - `index.html data-phase-scope` + `app.js renderActionBar()`
 - 结果：`response_window` 仅显示响应动作；`player_turn` 仅显示出牌动作；其他动作按阶段隐藏。
 
-6. 诊断入口默认折叠（弱化调试感）
+6. 主路径优先 + 次要动作折叠（进一步降噪）
+- `index.html #actionStageSummary/#toggleMoreActionsBtn` + `app.js appState.showMoreActions/renderActionBar()`
+- 结果：默认优先呈现主路径动作（响应阶段：主响应 + 过；出牌阶段：出牌/确认/取消），次要动作通过“更多动作”展开。
+
+7. 不可用说明默认折叠（进一步信息减法）
+- `index.html #toggleDisabledReasonBtn/#disabledReasonPanel` + `app.js appState.disabledReasonExpanded/rerender()`
+- 结果：默认不占据主视图空间，仅在用户主动查看原因时展开。
+
+8. 诊断入口默认折叠（弱化调试感）
 - `index.html #toggleDiagnosticsBtn/#diagnosticsContent` + `app.js rerender()/bindEvents()`
 - 结果：默认只显示“展开诊断内容”按钮，避免诊断内容首屏抢占。
 
-7. 中心主提示层优先（降低信息过载）
+9. 中心主提示层优先（降低信息过载）
 - `index.html #primaryFocusHint/#secondaryContext` + `app.js renderStatus()`
 - 结果：先展示一条关键提示，局势细节按需展开。
 
-8. 侧栏分栏降噪（事件流/分数变化 Tab）
+10. 侧栏分栏降噪（事件流/分数变化 Tab）
 - `index.html tab 结构` + `app.js renderSidePanelTabs()`
 - 结果：同屏噪声下降，保留可追踪链路。
+
+11. 移动端动作说明抽屉（保留手牌主视觉）
+- `index.html #actionExplainDrawer` + `styles.css @media(max-width:820px)` + `app.js appState.actionExplainDrawerOpen`
+- 结果：移动端说明信息进入抽屉，不再和手牌区竞争垂向空间。
+
+12. 最近动作高亮衰减（增强瞬时可读性）
+- `styles.css .latest-action.recent-hit/@keyframes recentHitPulse` + `app.js appState.lastLatestActionKey/renderStatus()`
+- 结果：最近动作变化时短暂强化提示，帮助用户快速锁定“谁刚打了什么牌”。
 
 ## 复核矩阵（步骤 + 预期）
 
@@ -66,6 +82,22 @@
 - Phase 动作收敛
   - 步骤：分别切到 `response_window` 与 `player_turn`
   - 预期：动作按钮仅显示当前阶段相关集合，不出现同屏拥挤的按钮台
+
+- 主路径优先 + 更多动作
+  - 步骤：在 `response_window` 下观察动作区，再点击“更多动作”
+  - 预期：默认只突出主路径和“过”；展开后才显示次要动作，收起后恢复低噪声布局
+
+- 不可用说明折叠
+  - 步骤：观察默认态并点击“为什么不能做？”
+  - 预期：默认不展示不可用说明；点击后展开并可收起
+
+- 移动端说明抽屉
+  - 步骤：切换到窄屏，点击“动作说明”
+  - 预期：抽屉展示可用/不可用说明，主页面手牌与主操作区保持可见
+
+- 最近动作高亮衰减
+  - 步骤：注入新的 `latestEvent`
+  - 预期：`#latestActionMain` 出现短暂高亮脉冲，随后恢复常态
 
 - 诊断折叠默认
   - 步骤：刷新后观察侧栏，再点击“展开诊断内容”
