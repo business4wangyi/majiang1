@@ -7,6 +7,7 @@ on:
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+  REGRESSION_DYNAMIC_SKIP: "1"
 
 jobs:
   regression:

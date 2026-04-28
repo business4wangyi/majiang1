@@ -4,5 +4,13 @@
     "askedAt": "2026-04-26",
     "scope": "project",
     "source": "user-confirmed"
+  },
+  "codexAutomation": {
+    "dailyRegressionTriage": {
+      "id": "majiang-daily-regression-triage",
+      "name": "Majiang Daily Regression Triage",
+      "schedule": "daily 09:30 Asia/Shanghai",
+      "source": "created"
+    }
   }
 }

@@ -12,6 +12,7 @@ const memoryDir = path.resolve(
   process.env.REGRESSION_MEMORY_DIR || '.agents/automation-memory/daily-regression',
 );
 const memoryPath = path.join(memoryDir, 'latest.json');
+const dynamicSkipEnabled = (process.env.REGRESSION_DYNAMIC_SKIP || '1') !== '0';
 
 const candidates = [
   {
@@ -201,6 +202,56 @@ function determineConclusion(results) {
   return 'FAIL';
 }
 
+function getHeadSha() {
+  try {
+    const git = spawn('git', ['rev-parse', 'HEAD'], {
+      cwd: rootDir,
+      shell: false,
+      env: {
+        ...process.env,
+      },
+    });
+
+    return new Promise((resolve) => {
+      let out = '';
+      git.stdout.on('data', (chunk) => {
+        out += chunk.toString();
+      });
+      git.on('close', (code) => {
+        resolve(code === 0 ? out.trim() : '');
+      });
+      git.on('error', () => resolve(''));
+    });
+  } catch (_) {
+    return Promise.resolve('');
+  }
+}
+
+function isWorktreeClean() {
+  try {
+    const git = spawn('git', ['status', '--porcelain'], {
+      cwd: rootDir,
+      shell: false,
+      env: {
+        ...process.env,
+      },
+    });
+
+    return new Promise((resolve) => {
+      let out = '';
+      git.stdout.on('data', (chunk) => {
+        out += chunk.toString();
+      });
+      git.on('close', (code) => {
+        resolve(code === 0 && out.trim() === '');
+      });
+      git.on('error', () => resolve(false));
+    });
+  } catch (_) {
+    return Promise.resolve(false);
+  }
+}
+
 function buildReport(results, previous) {
   const statsByCommand = new Map(results.map((result) => [result.command, parseStats(result)]));
   const failures = results.map(summarizeFailure).filter(Boolean);
@@ -337,6 +388,60 @@ function buildReport(results, previous) {
 
 async function main() {
   const previous = readJson(memoryPath);
+  const headSha = await getHeadSha();
+  const worktreeClean = await isWorktreeClean();
+
+  const canSkip =
+    dynamicSkipEnabled &&
+    !!previous &&
+    !previous.readError &&
+    previous.conclusion === 'PASS' &&
+    !!previous.headSha &&
+    !!headSha &&
+    previous.headSha === headSha &&
+    worktreeClean;
+
+  if (canSkip) {
+    const generatedAt = new Date().toISOString();
+    const skipMarkdown = [
+      '# Daily Regression Report',
+      '',
+      `生成时间：${generatedAt}`,
+      `工作目录：${rootDir}`,
+      '',
+      '### 1. 回归结论',
+      '',
+      'PASS',
+      '',
+      '### 2. 执行说明',
+      '',
+      '- 无新提交，沿用上次 PASS 基线跳过执行（动态感知跳过已生效）。',
+      `- 当前 HEAD: ${headSha}`,
+      `- 上次 HEAD: ${previous.headSha}`,
+      '- 工作区状态: 干净',
+      '',
+    ].join('\n');
+    ensureDir(reportPath);
+    fs.writeFileSync(reportPath, skipMarkdown);
+
+    const skipMemory = {
+      generatedAt,
+      conclusion: 'PASS',
+      headSha,
+      worktreeClean: true,
+      skipped: true,
+      skipReason: 'NO_NEW_COMMIT_AND_PREVIOUS_PASS',
+      commands: [],
+      failures: [],
+    };
+    fs.mkdirSync(memoryDir, { recursive: true });
+    fs.writeFileSync(memoryPath, JSON.stringify(skipMemory, null, 2));
+    console.log(`\nDaily regression skipped by dynamic sensing. Report written to ${path.relative(rootDir, reportPath)}`);
+    console.log(`Daily regression memory written to ${path.relative(rootDir, memoryPath)}`);
+    process.exitCode = 0;
+    return;
+  }
+
   const results = [];
 
   for (const item of commands) {
@@ -351,7 +456,19 @@ async function main() {
 
   try {
     fs.mkdirSync(memoryDir, { recursive: true });
-    fs.writeFileSync(memoryPath, JSON.stringify(report.memory, null, 2));
+    fs.writeFileSync(
+      memoryPath,
+      JSON.stringify(
+        {
+          ...report.memory,
+          headSha,
+          worktreeClean,
+          skipped: false,
+        },
+        null,
+        2,
+      ),
+    );
     console.log(`Daily regression memory written to ${path.relative(rootDir, memoryPath)}`);
   } catch (error) {
     console.warn(`Daily regression memory was not written: ${error.message}`);
