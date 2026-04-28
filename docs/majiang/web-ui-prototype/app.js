@@ -16,6 +16,11 @@ const appState = {
   contextExpanded: false,
   diagnosticsExpanded: false,
   sideTab: "events",
+  showMoreActions: false,
+  lastActionScope: "none",
+  disabledReasonExpanded: false,
+  actionExplainDrawerOpen: false,
+  lastLatestActionKey: "",
 };
 
 function nowTag() {
@@ -121,7 +126,15 @@ function renderStatus(model) {
 
   const latestMain = `${model.latestEvent.actor} ${model.latestEvent.verb} ${model.latestEvent.tile}`.trim();
   const latestSub = `${model.latestEvent.target}：${model.latestEvent.responseHint}`;
-  document.getElementById("latestActionMain").textContent = latestMain;
+  const latestActionMainNode = document.getElementById("latestActionMain");
+  latestActionMainNode.textContent = latestMain;
+  const latestActionKey = `${model.latestEvent.actor}|${model.latestEvent.verb}|${model.latestEvent.tile}|${model.latestEvent.target}`;
+  if (appState.lastLatestActionKey && latestActionKey !== appState.lastLatestActionKey) {
+    latestActionMainNode.classList.remove("recent-hit");
+    void latestActionMainNode.offsetWidth;
+    latestActionMainNode.classList.add("recent-hit");
+  }
+  appState.lastLatestActionKey = latestActionKey;
   document.getElementById("latestActionSub").textContent = latestSub;
   const primaryFocus = document.getElementById("primaryFocusHint");
   if (model.phase === "response_window") {
@@ -248,11 +261,37 @@ function renderActionBar(model) {
   const sortedActions = [...model.availableActions].sort((a, b) => ACTION_ORDER.indexOf(a.id) - ACTION_ORDER.indexOf(b.id));
   const actionMap = new Map(sortedActions.map((a) => [a.id, a]));
   const availableReasonList = document.getElementById("availableActionReasons");
+  const actionStageSummary = document.getElementById("actionStageSummary");
+  const toggleMoreBtn = document.getElementById("toggleMoreActionsBtn");
   const disabledReasons = [];
   availableReasonList.innerHTML = "";
 
   const lockAllActions = model.phase === "ended" || appState.phase === "table_loading";
   const scope = model.phase === "response_window" ? "response" : model.phase === "player_turn" ? "turn" : "none";
+  if (scope !== appState.lastActionScope) {
+    appState.showMoreActions = false;
+    appState.lastActionScope = scope;
+  }
+
+  let primaryResponseActionId = null;
+  if (scope === "response") {
+    const availableResponseActions = sortedActions.filter((action) => ["hu", "gang", "peng", "chi"].includes(action.id) && action.available);
+    const taggedPrimaryAction = availableResponseActions.find((action) => action.isPrimaryPath);
+    primaryResponseActionId = (taggedPrimaryAction && taggedPrimaryAction.id) || (availableResponseActions[0] && availableResponseActions[0].id) || null;
+  }
+
+  const shouldShowByPriority = (actionId) => {
+    if (scope === "none") return false;
+    if (appState.showMoreActions) return true;
+    if (scope === "response") {
+      if (actionId === "pass") return true;
+      return actionId === primaryResponseActionId;
+    }
+    if (scope === "turn") return ["discard", "confirm", "cancel"].includes(actionId);
+    return true;
+  };
+
+  let hasSecondaryActions = false;
   document.getElementById("availableActionTitle").textContent = scope === "response" ? "当前可响应动作说明：" : scope === "turn" ? "当前可出牌动作说明：" : "当前可用动作说明：";
   document.querySelectorAll("[data-action-id]").forEach((btn) => {
     const actionId = btn.getAttribute("data-action-id");
@@ -262,6 +301,14 @@ function renderActionBar(model) {
     const phaseScope = (btn.getAttribute("data-phase-scope") || "").split(",");
     const hiddenByPhase = scope === "none" || !phaseScope.includes(scope);
     if (hiddenByPhase) {
+      btn.classList.add("hidden-by-phase");
+      btn.disabled = true;
+      return;
+    }
+
+    const shouldShow = shouldShowByPriority(actionId);
+    if (!shouldShow) {
+      hasSecondaryActions = true;
       btn.classList.add("hidden-by-phase");
       btn.disabled = true;
       return;
@@ -286,6 +333,19 @@ function renderActionBar(model) {
     }
   });
 
+  if (scope === "response") {
+    actionStageSummary.textContent = "响应阶段：优先主响应与“过”，其余动作可展开查看。";
+  } else if (scope === "turn") {
+    actionStageSummary.textContent = "出牌阶段：先选牌，再执行出牌/确认。";
+  } else {
+    actionStageSummary.textContent = "当前不可操作：请等待系统推进到可行动阶段。";
+  }
+
+  const canShowMoreToggle = scope !== "none" && hasSecondaryActions;
+  toggleMoreBtn.classList.toggle("hidden-by-phase", !canShowMoreToggle);
+  toggleMoreBtn.disabled = appState.submitting || lockAllActions;
+  toggleMoreBtn.textContent = appState.showMoreActions ? "收起次要动作" : "更多动作";
+
   if (!availableReasonList.childElementCount) {
     const li = document.createElement("li");
     li.textContent = "当前无可响应动作";
@@ -293,7 +353,13 @@ function renderActionBar(model) {
   }
 
   const phaseHint = scope === "response" ? "当前为响应阶段，仅显示响应动作。" : scope === "turn" ? "当前为出牌阶段，仅显示出牌动作。" : "当前不可操作。";
-  document.getElementById("disabledActionReason").textContent = `${phaseHint} ${disabledReasons.join("；") || "当前无禁用动作"}`;
+  const disabledReasonText = `${phaseHint} ${disabledReasons.join("；") || "当前无禁用动作"}`;
+  document.getElementById("disabledActionReason").textContent = disabledReasonText;
+  document.getElementById("mobileDisabledActionReason").textContent = disabledReasonText;
+  document.getElementById("actionExplainStageText").textContent = actionStageSummary.textContent;
+  document.getElementById("mobileAvailableActionTitle").textContent = document.getElementById("availableActionTitle").textContent;
+  const mobileList = document.getElementById("mobileAvailableActionReasons");
+  mobileList.innerHTML = availableReasonList.innerHTML;
   document.getElementById("actionReason").textContent = appState.selectedTileIndex === null ? model.latestEvent.responseHint : `已选中：${model.selfHand[appState.selectedTileIndex]}`;
 }
 
@@ -404,6 +470,9 @@ function rerender() {
   document.getElementById("scoresPanelBody").classList.toggle("hidden", appState.sideTab !== "scores");
   document.getElementById("tabEvents").classList.toggle("is-active", appState.sideTab === "events");
   document.getElementById("tabScores").classList.toggle("is-active", appState.sideTab === "scores");
+  document.getElementById("disabledReasonPanel").classList.toggle("hidden", !appState.disabledReasonExpanded);
+  document.getElementById("toggleDisabledReasonBtn").textContent = appState.disabledReasonExpanded ? "收起不可用说明" : "为什么不能做？";
+  document.getElementById("actionExplainDrawer").classList.toggle("hidden", !appState.actionExplainDrawerOpen);
 }
 
 function withTableUpdate(nextSnapshotPartial) {
@@ -624,6 +693,28 @@ function bindEvents() {
   });
   document.getElementById("tabScores").addEventListener("click", () => {
     appState.sideTab = "scores";
+    rerender();
+  });
+  document.getElementById("toggleMoreActionsBtn").addEventListener("click", () => {
+    if (appState.submitting || appState.phase === "table_loading") return;
+    appState.showMoreActions = !appState.showMoreActions;
+    rerender();
+  });
+  document.getElementById("toggleDisabledReasonBtn").addEventListener("click", () => {
+    appState.disabledReasonExpanded = !appState.disabledReasonExpanded;
+    rerender();
+  });
+  document.getElementById("openActionExplainDrawerBtn").addEventListener("click", () => {
+    appState.actionExplainDrawerOpen = true;
+    rerender();
+  });
+  document.getElementById("closeActionExplainDrawerBtn").addEventListener("click", () => {
+    appState.actionExplainDrawerOpen = false;
+    rerender();
+  });
+  document.getElementById("actionExplainDrawer").addEventListener("click", (event) => {
+    if (event.target.id !== "actionExplainDrawer") return;
+    appState.actionExplainDrawerOpen = false;
     rerender();
   });
 

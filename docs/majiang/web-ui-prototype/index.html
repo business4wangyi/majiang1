@@ -156,6 +156,7 @@
       </section>
 
       <section class="action-bar">
+        <div id="actionStageSummary" class="action-stage-summary"></div>
         <button type="button" class="action-btn" data-action-id="hu" data-phase-scope="response,turn">胡</button>
         <button type="button" class="action-btn" data-action-id="gang" data-phase-scope="response,turn">杠</button>
         <button type="button" class="action-btn" data-action-id="peng" data-phase-scope="response">碰</button>
@@ -164,6 +165,7 @@
         <button type="button" class="action-btn" data-action-id="discard" data-phase-scope="turn">出牌</button>
         <button type="button" class="action-btn" data-action-id="confirm" data-phase-scope="turn">确认</button>
         <button type="button" class="action-btn" data-action-id="cancel" data-phase-scope="turn">取消</button>
+        <button id="toggleMoreActionsBtn" type="button" class="action-btn action-secondary" data-phase-scope="response,turn">更多动作</button>
         <button id="openResult" type="button" class="action-btn action-secondary">查看结算</button>
       </section>
 
@@ -172,10 +174,26 @@
         <ul id="availableActionReasons" class="action-reason-list"></ul>
       </section>
 
-      <section class="action-reason-panel"><strong>不可用动作说明：</strong><span id="disabledActionReason"></span></section>
+      <div class="action-reason-toggle-row">
+        <button id="toggleDisabledReasonBtn" type="button" class="ghost-inline-btn">为什么不能做？</button>
+        <button id="openActionExplainDrawerBtn" type="button" class="ghost-inline-btn">动作说明</button>
+      </div>
+
+      <section id="disabledReasonPanel" class="action-reason-panel hidden"><strong>不可用动作说明：</strong><span id="disabledActionReason"></span></section>
       <section id="inlineError" class="inline-error hidden"></section>
       <section id="interactionFeedback" class="interaction-feedback interaction-feedback--normal"><span id="feedbackText">等待你选择动作</span></section>
     </section>
+
+    <div id="actionExplainDrawer" class="action-explain-drawer hidden" role="dialog" aria-modal="true" aria-label="动作说明">
+      <div class="action-explain-sheet">
+        <h3>动作说明</h3>
+        <p id="actionExplainStageText" class="action-explain-stage"></p>
+        <strong id="mobileAvailableActionTitle">当前可响应动作说明：</strong>
+        <ul id="mobileAvailableActionReasons" class="action-reason-list"></ul>
+        <p class="mobile-disabled-reason"><strong>不可用动作说明：</strong><span id="mobileDisabledActionReason"></span></p>
+        <button id="closeActionExplainDrawerBtn" type="button" class="action-btn action-secondary">关闭</button>
+      </div>
+    </div>
 
     <div id="resultModal" class="modal hidden" role="dialog" aria-modal="true" aria-label="结算结果">
       <div class="modal-content">

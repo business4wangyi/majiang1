@@ -83,6 +83,7 @@ body {
 .primary-focus-hint { margin: 4px 0 0; color: #ffe3a7; font-weight: 700; font-size: 15px; }
 .secondary-context { margin-top: 6px; border-top: 1px dashed rgba(130, 169, 146, 0.32); padding-top: 6px; }
 .latest-action { margin: 4px 0 0; color: #ffe3a7; font-weight: 700; }
+.latest-action.recent-hit { animation: recentHitPulse 1.4s ease-out; }
 .latest-action-sub { margin: 2px 0 0; color: #f0f6f2; font-size: 13px; }
 .response-countdown { margin: 2px 0 0; font-size: 12px; color: #d7e9ff; }
 .response-countdown.warning { color: #ffd6a0; }
@@ -141,6 +142,15 @@ body {
 .tile { border-radius: 6px; background: #fcf9ee; border: 1px solid #d3cfbf; color: #111; text-align: center; padding: 10px 2px; font-weight: 700; cursor: pointer; }
 .tile.selected { transform: translateY(-8px); border-color: var(--warning); box-shadow: 0 0 0 2px rgba(245, 165, 36, 0.35); }
 .action-bar { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; }
+.action-stage-summary {
+  grid-column: 1 / -1;
+  border-radius: 10px;
+  border: 1px solid rgba(130, 169, 146, 0.28);
+  background: rgba(9, 17, 13, 0.88);
+  color: #d7e9ff;
+  font-size: 13px;
+  padding: 8px 10px;
+}
 .action-btn { border: 1px solid rgba(154, 182, 168, 0.35); border-radius: 10px; background: #1a2d24; color: var(--text); min-height: 44px; font-weight: 700; cursor: pointer; }
 .action-btn.hidden-by-phase { display: none; }
 .action-primary { background: linear-gradient(180deg, #f6c965, #d89f33); color: #14120e; border-color: #f6c965; }
@@ -149,6 +159,9 @@ body {
 .action-secondary { border-style: dashed; color: var(--muted); }
 .action-pass { background: #263930; }
 .action-disabled { opacity: 0.42; cursor: not-allowed; }
+.action-reason-toggle-row { display: flex; gap: 8px; align-items: center; }
+.action-reason-toggle-row .ghost-inline-btn { margin-top: 0; }
+#openActionExplainDrawerBtn { display: none; }
 .action-reason-panel, .action-reason-list-panel, .inline-error { border-radius: 10px; border: 1px solid rgba(130, 169, 146, 0.28); background: rgba(9, 17, 13, 0.88); padding: 8px 10px; color: #d5e8dd; font-size: 13px; }
 .action-reason-list { margin: 6px 0 0; padding-left: 18px; display: grid; gap: 4px; color: #ecf6f0; }
 .inline-error { border-color: rgba(221, 75, 57, 0.6); color: #ffd5cf; }
@@ -165,6 +178,18 @@ th, td { border-bottom: 1px solid rgba(154, 182, 168, 0.24); padding: 8px; text-
 .replay-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .replay-detail { margin: 0; max-height: 280px; overflow: auto; }
 
+.action-explain-drawer { position: fixed; inset: 0; z-index: 35; background: rgba(3, 8, 6, 0.72); display: grid; place-items: end center; }
+.action-explain-sheet { width: min(680px, 100%); border-radius: 14px 14px 0 0; border: 1px solid rgba(130, 169, 146, 0.3); background: #102016; padding: 12px; display: grid; gap: 8px; }
+.action-explain-sheet h3 { margin: 0; }
+.action-explain-stage { margin: 0; color: #d7e9ff; font-size: 13px; }
+.mobile-disabled-reason { margin: 0; font-size: 13px; }
+
+@keyframes recentHitPulse {
+  0% { box-shadow: 0 0 0 0 rgba(245, 165, 36, 0.5); }
+  45% { box-shadow: 0 0 0 8px rgba(245, 165, 36, 0.05); }
+  100% { box-shadow: 0 0 0 0 rgba(245, 165, 36, 0); }
+}
+
 @media (max-width: 1100px) {
   .table-layout { grid-template-columns: 1fr; }
   .table-zone { min-height: 560px; }
@@ -178,7 +203,14 @@ th, td { border-bottom: 1px solid rgba(154, 182, 168, 0.24); padding: 8px; text-
   .seat { width: 172px; }
   .hand-tiles { grid-template-columns: repeat(7, minmax(0, 1fr)); }
   .action-bar { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .action-reason-list-panel, .action-reason-panel { display: none; }
+  .action-reason-toggle-row { justify-content: space-between; }
+  #openActionExplainDrawerBtn { display: inline-flex; align-items: center; justify-content: center; }
   .side-panel { grid-template-columns: 1fr; }
   .modal-actions { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .replay-layout { grid-template-columns: 1fr; }
+}
+
+@media (min-width: 821px) {
+  #openActionExplainDrawerBtn, #actionExplainDrawer { display: none !important; }
 }
