@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>麻将 Web UI 原型</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="page">
+      <header class="topbar">
+        <div class="status-block">
+          <span class="label">当前局势</span>
+          <span id="turnHint" class="value">轮到你出牌</span>
+        </div>
+        <div class="status-block">
+          <span class="label">牌山余量</span>
+          <span id="wallCount" class="value">56</span>
+        </div>
+        <div class="status-block">
+          <span class="label">圈风 / 局数</span>
+          <span id="roundInfo" class="value">东一局</span>
+        </div>
+      </header>
+
+      <main class="table-layout">
+        <section class="table-zone">
+          <article id="seat-north" class="seat seat-north">
+            <div class="seat-header">
+              <span class="name">AI-北</span>
+              <span class="score">96</span>
+            </div>
+            <div class="seat-meta">手牌 13 · 副露 1</div>
+            <div class="meld-zone">
+              <span class="meld-tag">碰</span>
+              <span class="tile-mini">六万</span>
+              <span class="tile-mini">六万</span>
+              <span class="tile-mini">六万</span>
+            </div>
+          </article>
+
+          <article id="seat-west" class="seat seat-west">
+            <div class="seat-header">
+              <span class="name">AI-西</span>
+              <span class="score">88</span>
+            </div>
+            <div class="seat-meta">手牌 12 · 副露 0</div>
+          </article>
+
+          <section class="table-center">
+            <div class="latest-action-wrap">
+              <span class="label">最近动作</span>
+              <p id="latestAction" class="latest-action">AI-北 打出 三万，你可碰或过</p>
+            </div>
+            <div class="river-board">
+              <div class="river-title">牌河</div>
+              <div class="river-grid-wrap">
+                <div>
+                  <div class="river-label">北家</div>
+                  <div id="river-north" class="river-grid"></div>
+                </div>
+                <div>
+                  <div class="river-label">西家</div>
+                  <div id="river-west" class="river-grid"></div>
+                </div>
+                <div>
+                  <div class="river-label">东家</div>
+                  <div id="river-east" class="river-grid"></div>
+                </div>
+                <div>
+                  <div class="river-label">你</div>
+                  <div id="river-south" class="river-grid"></div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <article id="seat-east" class="seat seat-east">
+            <div class="seat-header">
+              <span class="name">AI-东</span>
+              <span class="score">104</span>
+            </div>
+            <div class="seat-meta">手牌 13 · 副露 2</div>
+            <div class="meld-zone">
+              <span class="meld-tag">吃</span>
+              <span class="tile-mini">三条</span>
+              <span class="tile-mini">四条</span>
+              <span class="tile-mini">五条</span>
+            </div>
+            <div class="meld-zone">
+              <span class="meld-tag">杠</span>
+              <span class="tile-mini">东</span>
+              <span class="tile-mini">东</span>
+              <span class="tile-mini">东</span>
+              <span class="tile-mini">东</span>
+            </div>
+          </article>
+
+          <article id="seat-south" class="seat seat-south">
+            <div class="seat-header">
+              <span class="name">你</span>
+              <span class="score">112</span>
+            </div>
+            <div class="seat-meta">手牌 14 · 副露 0</div>
+          </article>
+        </section>
+
+        <aside class="side-panel">
+          <section class="panel score-delta-panel">
+            <h2>过程分数变化</h2>
+            <ul id="scoreDeltaTimeline"></ul>
+          </section>
+          <section class="panel event-panel">
+            <h2>事件流</h2>
+            <ul id="eventTimeline"></ul>
+          </section>
+          <section class="panel diagnostics-panel">
+            <h2>诊断入口</h2>
+            <button type="button" class="ghost-btn">查看状态快照</button>
+            <button type="button" class="ghost-btn">复制日志片段</button>
+          </section>
+        </aside>
+      </main>
+
+      <section class="hand-panel">
+        <div class="hand-head">
+          <span>你的手牌</span>
+          <span id="actionReason" class="action-reason">可碰：你已有两张三万</span>
+        </div>
+        <div id="handTiles" class="hand-tiles"></div>
+      </section>
+
+      <section class="action-bar">
+        <button type="button" class="action-btn" data-action-id="hu">胡</button>
+        <button type="button" class="action-btn" data-action-id="gang">杠</button>
+        <button type="button" class="action-btn" data-action-id="peng">碰</button>
+        <button type="button" class="action-btn" data-action-id="chi">吃</button>
+        <button type="button" class="action-btn action-pass" data-action-id="pass">过</button>
+        <button id="openResult" type="button" class="action-btn action-secondary">查看结算</button>
+      </section>
+      <section id="interactionFeedback" class="interaction-feedback interaction-feedback--normal">
+        <span id="feedbackText">等待你选择动作</span>
+      </section>
+    </div>
+
+    <div id="resultModal" class="modal hidden" role="dialog" aria-modal="true" aria-label="结算结果">
+      <div class="modal-content">
+        <h2 id="resultTitle">你自摸胡牌</h2>
+        <p id="resultReason">胡牌原因：平胡 + 自摸，触发牌：三万</p>
+        <table>
+          <thead>
+            <tr>
+              <th>玩家</th>
+              <th>本局变化</th>
+              <th>总分</th>
+              <th>说明</th>
+            </tr>
+          </thead>
+          <tbody id="resultTableBody"></tbody>
+        </table>
+        <div class="modal-actions">
+          <button type="button" class="action-btn action-primary">再来一局</button>
+          <button type="button" class="action-btn">回到大厅</button>
+          <button id="closeResult" type="button" class="action-btn action-secondary">关闭</button>
+        </div>
+      </div>
+    </div>
+
+    <script src="./app.js"></script>
+  </body>
+</html>
