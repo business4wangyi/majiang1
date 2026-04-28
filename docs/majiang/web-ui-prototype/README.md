@@ -1,65 +1,69 @@
-# 麻将 Web UI 原型自检说明
+# 麻将 Web UI 原型说明（复核增强版）
 
-## 使用方式
+## 范围与边界
 
-直接在浏览器打开 `index.html` 即可查看原型。
+- 仅改 `docs/majiang/web-ui-prototype/` 表现层、适配层、交互编排。
+- 未改 `src/majiang/core/`、`src/majiang/strategy/`、CLI 路径。
 
-## 与 `13.3` 的对照
+## 本轮 P0 收敛重点
 
-1. 明确四方牌桌结构
-   - `index.html` 中 `seat-north/west/east/south` + `table-center`。
-2. 底部固定手牌区与贴近操作区
-   - `hand-panel` 在底部，`action-bar` 紧跟其下。
-3. 中央最近动作提示与牌河
-   - `latest-action-wrap` + `river-board`。
-4. 当前行动玩家高亮
-   - `app.js` 基于 `currentPlayerId` 给座位加 `is-active`。
-5. ResultModal 胜负原因与分数变化
-   - `resultModal` 展示 `resultReason` 与 `scoreChanges` 表格。
+- 动作区按 phase 收敛显示，降低“按钮台”风险。
+- 诊断入口默认折叠，避免首屏调试化。
+- 中心区改为“主提示优先，细节按需展开”。
+- 侧栏改为 Tab（事件流 / 分数变化），降低信息噪声。
 
-## 与 `14` 的逐项对照（首轮）
+## 验收矩阵（步骤 + 预期 DOM/状态变化）
 
-### 14.1 结构清单
+### 第6章 状态机
+1. 创建链路：点击“开始对局”
+- 预期：`creating_game -> table_loading -> table`。
+- DOM：`#tableLoadingPanel` 在 `table_loading` 可见；`.topbar/.table-layout/.hand-panel/.action-bar` 隐藏。
 
-- [x] 手牌固定底部
-- [x] 四家围桌分布
-- [x] 中央公共区承载最近动作 + 牌河
-- [x] 操作区贴近手牌
-- [x] 诊断入口存在且次级
+2. 结束态禁止继续操作：
+- 步骤：执行 `window.showMajiangResultExample("tsumo")`。
+- 预期：`model.phase === ended` 后所有手牌按钮与动作按钮不可点击；`#interactionFeedback` 显示“本局已结束，请查看结算/复盘”。
 
-### 14.2 局势理解清单
+### 第8章 复盘
+1. 关键节点与四家摘要：
+- 步骤：执行 `window.updateMajiangTableViewModel(window.majiangNextModelExample)`，打开复盘后逐个点击 key 节点。
+- 预期：`#replayStateDetail` 每个 key 节点都包含 `north/west/east/south` 四家摘要（可含 `system.error` 附加字段但不可替代四家）。
 
-- [x] 当前行动玩家可视高亮
-- [x] 最近动作可读
-- [x] 当前可操作原因文案存在
-- [x] 过程分数变化可追踪（侧栏 `过程分数变化`）
-- [x] 结算分数变化可复盘（ResultModal）
+### 第10章 错误恢复
+1. 可点击失败动作（稳定复核）：
+- 步骤：
+```js
+window.updateMajiangTableViewModel(window.majiangWinningModelExample)
+window.setMajiangActionHandler(window.majiangActionHandlerExample)
+```
+点击“过”。
+- 预期：出现 toast（自动消失）+ `#inlineError` 保留；下一次成功动作后 `#inlineError` 清除。
 
-### 14.3 交互清单
+2. 全局同步错误：
+- 步骤：执行 `window.triggerMajiangGlobalSyncErrorExample()`。
+- 预期：`#globalSyncError` 显示；点击“查看诊断”后 `#diagnosticsOutput` 含 `diagnosticContext`；点击“重试同步”后错误条消失。
 
-- [x] 手牌选中态
-- [x] 响应按钮顺序稳定
-- [x] `过` 固定在末位
-- [x] submitting 态反馈（操作区状态条 + 可用按钮禁用）
-- [x] error 态反馈（操作区内联错误文案）
-- [x] ResultModal 可开关
+### 第11章 场景闭环
+1. LobbyError：
+- 步骤：
+```js
+window.setMajiangGameCreationHandler(window.majiangGameCreationFailureExample)
+```
+回 Lobby 点击“开始对局”。
+- 预期：进入 `lobby_error`，按钮为“重试创建”，显示错误提示和诊断输出。
 
-### 14.4 视觉清单
+2. 多结果结算：
+- 步骤：
+```js
+window.showMajiangResultExample("tsumo")
+window.showMajiangResultExample("ron")
+window.showMajiangResultExample("draw")
+window.showMajiangResultExample("abort")
+```
+- 预期：ResultModal 表格字段完整（玩家/本局变化/总分/角色/原因）；`abort` 显示异常上下文与诊断线索。
 
-- [x] 首屏以牌桌为主
-- [x] 牌河采用栅格
-- [x] 当前行动与最近动作层级可区分
-- [x] 颜色与文本双重表达
-- [x] 副露区有分组可视边界，不与手牌混淆
+## 其他章节映射（3/7/9/13/14/15）
 
-### 14.5 边界清单
-
-- [x] 前端无规则重写，仅 mock 视图模型渲染
-- [x] 未改动 CLI 路径
-- [x] 未改动核心规则层
-
-## 已知限制
-
-- 当前为静态原型，未接入真实 `MajiangTableViewModel`。
-- 诊断按钮仅占位，未接真实日志/状态快照。
-- 事件流、牌河、分数变化均为 mock 数据，仅用于验证布局与交互心智。
+- 第3章：`#lobbyPage/#tablePage/#resultModal` + `createGame()/renderResult()`。
+- 第7章：`#primaryFocusHint/#latestActionMain/#latestActionSub/#responseCountdown/#availableActionReasons`。
+- 第9章：`view-model-adapter.js createTableViewModelFromSnapshot()`，`app.js getCurrentViewModel()`。
+- 第13/14/15：四方桌面、中心公共区、phase 动作收敛、诊断弱化入口、边界保护均可在现有 DOM 与交互中复核。

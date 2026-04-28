@@ -1,88 +1,76 @@
-# 麻将 Web UI 实施蓝图（首轮）
+# 麻将 Web UI 实施蓝图（P0 收敛版）
 
-> 目标：把 `docs/majiang/WEB_UI_PRODUCT_INTERACTION_DESIGN.md` 转成可直接编码的最小实现任务，优先满足 `13.3` 最小正例目标，并逐项对照 `14` 审核清单。
-> 范围：仅包含 Web UI 展示与交互编排，不改动 `src/majiang/core/`、`src/majiang/strategy/`、CLI 路径和既有规则语义。
+## 本轮修复点
 
-## 1. 当前差距结论
+1. Ended / TableLoading 禁止操作
+- `app.js renderActionBar()/renderHand()/submitAction()/renderFeedback()`
+- 结果：`phase === ended` 或 `appState.phase === table_loading` 时，动作与手牌均不可操作。
 
-当前仓库没有可直接承载麻将 Web 页面的前端工程文件（无麻将 Web 页面、无牌桌组件、无 ResultModal 前端实现）。  
-因此首轮落地采用“最小可运行原型 + 明确任务拆分”的方式，先把产品界面结构固化，再接入真实状态数据。
+2. Replay 四家摘要补齐
+- `app.js majiangNextModelExample.replay.timeline`
+- 结果：所有 key 节点均含 `north/west/east/south` 摘要。
 
-## 2. 首轮最小落地范围
+3. 错误恢复步骤与可点击动作对齐
+- 以 `majiangWinningModelExample + majiangActionHandlerExample` 后点击“过”作为稳定失败复核。
 
-### 2.1 文件范围
+4. 全局同步错误直接触发入口
+- 新增 `window.triggerMajiangGlobalSyncErrorExample()` 与 `window.majiangSyncFailureActionHandlerExample`。
+- 结果：可稳定显示 `#globalSyncError` 并验证重试/诊断。
 
-- `docs/majiang/web-ui-prototype/index.html`
-- `docs/majiang/web-ui-prototype/styles.css`
-- `docs/majiang/web-ui-prototype/app.js`
+5. 按 phase 收敛动作区（消除按钮台风险）
+- `index.html data-phase-scope` + `app.js renderActionBar()`
+- 结果：`response_window` 仅显示响应动作；`player_turn` 仅显示出牌动作；其他动作按阶段隐藏。
 
-### 2.2 目标
+6. 诊断入口默认折叠（弱化调试感）
+- `index.html #toggleDiagnosticsBtn/#diagnosticsContent` + `app.js rerender()/bindEvents()`
+- 结果：默认只显示“展开诊断内容”按钮，避免诊断内容首屏抢占。
 
-只做“表现与交互编排”原型：
+7. 中心主提示层优先（降低信息过载）
+- `index.html #primaryFocusHint/#secondaryContext` + `app.js renderStatus()`
+- 结果：先展示一条关键提示，局势细节按需展开。
 
-- 四方牌桌布局
-- 底部固定手牌区和贴近手牌的操作区
-- 中央最近动作提示与牌河
-- 当前行动玩家高亮
-- ResultModal 胜负原因与分数变化说明
+8. 侧栏分栏降噪（事件流/分数变化 Tab）
+- `index.html tab 结构` + `app.js renderSidePanelTabs()`
+- 结果：同屏噪声下降，保留可追踪链路。
 
-不做：
+## 复核矩阵（步骤 + 预期）
 
-- 前端重写胡牌/吃碰杠规则
-- 与 CLI 输入输出耦合
-- 真实后端请求与状态同步
+- `creating_game -> table_loading -> table`
+  - 步骤：Lobby 点击开始
+  - 预期：`#tableLoadingPanel` 独占显示，加载完成后恢复真实桌面
 
-## 3. `13.3` 对照矩阵
+- `lobby_error`
+  - 步骤：设置 `window.setMajiangGameCreationHandler(window.majiangGameCreationFailureExample)` 后开始对局
+  - 预期：错误提示 + 重试按钮 + 诊断输出
 
-| `13.3` 最小正例项 | 首轮落地方式 |
-| --- | --- |
-| 明确四方牌桌结构 | `index.html` 中固定 `north/west/east/south` 四家座位 + 中央桌面 |
-| 底部固定手牌区 + 贴近操作区 | `south` 座位下方独立 `hand-panel` + `action-bar` |
-| 中央或近中央最近动作 + 牌河 | `table-center` 放 `latest-action`，并渲染四家弃牌河栅格 |
-| 当前行动玩家高亮 | `app.js` 按 `currentPlayerId` 给座位添加 `is-active` |
-| ResultModal 胜负原因与分数变化 | `result-modal` 显示 `resultSummary` 和 `scoreChanges` 表格 |
+- `hu` 成功结算（ron/tsumo）
+  - 步骤：注入 `majiangWinningModelExample`，点击“胡”
+  - 预期：ResultModal 打开并进入结束态禁用
 
-## 4. `14` 编码前审核清单映射
+- `pass` 失败恢复
+  - 步骤：注册 `majiangActionHandlerExample` 后点击“过”
+  - 预期：toast 自动消失，`#inlineError` 保留
 
-### 4.1 结构清单
+- `tsumo/ron/draw/abort` 全覆盖
+  - 步骤：执行 `showMajiangResultExample(...)`
+  - 预期：表格字段完整，`abort` 含错误上下文
 
-- [x] 底部大区为自己手牌
-- [x] 三家围桌分布，非列表
-- [x] 中央公共区承载牌河与最近动作
-- [x] 操作区贴近手牌
-- [x] 诊断入口存在但弱化为次级按钮
+- Replay 四家摘要
+  - 步骤：打开复盘点击每个 key 节点
+  - 预期：`#replayStateDetail` 展示四家摘要
 
-### 4.2 局势理解清单
+- Global Sync Error
+  - 步骤：执行 `triggerMajiangGlobalSyncErrorExample()`
+  - 预期：错误条显示；诊断可见 `diagnosticContext`；重试可清除错误条
 
-- [x] 当前行动玩家高亮
-- [x] 最近弃牌来源可视（按座位分区）
-- [x] 可用动作与原因文案在操作区显示
-- [x] 过程分数变化（事件流）+ 结算分数变化（ResultModal）
+- Phase 动作收敛
+  - 步骤：分别切到 `response_window` 与 `player_turn`
+  - 预期：动作按钮仅显示当前阶段相关集合，不出现同屏拥挤的按钮台
 
-### 4.3 交互清单
+- 诊断折叠默认
+  - 步骤：刷新后观察侧栏，再点击“展开诊断内容”
+  - 预期：默认折叠；点击后显示 `openSnapshot/copyLogs/diagnosticsOutput`
 
-- [x] 选牌态（可切换）
-- [x] 操作按钮顺序稳定（胡 > 杠 > 碰 > 吃 > 过）
-- [x] `过` 固定在末位
-- [x] 提交中/失败态通过状态条占位（原型态）
-
-### 4.4 视觉清单
-
-- [x] 第一眼为桌面主视图
-- [x] 牌河栅格化
-- [x] 当前行动与最近动作层级分明
-- [x] 色彩语义不作为唯一信号（同时有文字标签）
-- [x] 副露区按组展示，并与手牌/牌河区分
-
-### 4.5 边界清单
-
-- [x] 前端不做规则判定，仅消费视图模型
-- [x] CLI 路径未改动
-- [x] 核心层未改动
-
-## 5. 后续接入任务（下一阶段）
-
-1. 将 `app.js` 中 mock `viewModel` 替换为真实 `MajiangTableViewModel` 适配输出。
-2. 把 action 触发改为调用统一 action dispatcher（不在组件里写规则判断）。
-3. 将诊断面板挂载到真实日志/状态快照源。
-4. 接入测试：最少增加一组“结构快照 + 关键状态渲染”前端测试（若后续引入前端测试框架）。
+- 中心主提示层
+  - 步骤：在 `response_window/waiting_ai/player_turn/ended` 间切换
+  - 预期：`#primaryFocusHint` 随阶段变化，`#secondaryContext` 仅按需展开
