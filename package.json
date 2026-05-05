@@ -9,6 +9,7 @@
     "build": "tsc",
     "dev": "ts-node src/majiang/index.ts",
     "test": "node scripts/test/run-mocha-cjs.js",
+    "majiang:web:acceptance": "node scripts/test/majiang-webui-acceptance.js",
     "regression:daily": "node scripts/test/daily-regression-report.js",
     "test:watch": "mocha -r ts-node/register --watch tests/**/*.test.ts",
     "tic-tac-toe": "ts-node src/tic-tac-toe/demo.ts",
@@ -126,6 +127,7 @@
     "express": "^5.1.0"
   },
   "devDependencies": {
+    "@playwright/cli": "^0.1.11",
     "@types/chai": "^5.2.1",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.3",

@@ -386,6 +386,103 @@ function buildReport(results, previous) {
   };
 }
 
+function buildSkipReport(previous, headSha) {
+  const generatedAt = new Date().toISOString();
+  const previousConclusion = previous && !previous.readError ? previous.conclusion || '未直接提供' : '未直接提供';
+  const previousHeadSha = previous && !previous.readError ? previous.headSha || '未直接提供' : '未直接提供';
+
+  const lines = [
+    '# Daily Regression Report',
+    '',
+    `生成时间：${generatedAt}`,
+    `工作目录：${rootDir}`,
+    '',
+    '## 候选测试命令盘点',
+    '',
+    markdownTable(
+      ['命令', '覆盖价值', '稳定性', '成本', '依赖风险', '推荐优先级', '纳入状态'],
+      candidates.map((candidate) => [
+        `\`${candidate.command}\``,
+        candidate.coverageValue,
+        candidate.stability,
+        candidate.cost,
+        candidate.dependencyRisk,
+        candidate.priority,
+        candidate.included ? `纳入：${candidate.reason}` : `暂不纳入：${candidate.reason}`,
+      ]),
+    ),
+    '',
+    '## 最终纳入的每日回归命令集合',
+    '',
+    markdownTable(
+      ['命令', '测试范围', '纳入理由'],
+      candidates
+        .filter((candidate) => candidate.included)
+        .map((candidate) => [`\`${candidate.command}\``, candidate.scope, candidate.reason]),
+    ),
+    '',
+    '### 1. 回归结论',
+    '',
+    'PASS',
+    '',
+    '### 2. 测试执行清单',
+    '',
+    markdownTable(
+      ['测试命令', '测试范围', '总耗时', '退出码'],
+      commands.map((command) => [
+        `\`${command.command}\``,
+        command.scope,
+        '0ms（动态跳过）',
+        '未执行（沿用上次 PASS 基线）',
+      ]),
+    ),
+    '',
+    '### 3. 结果汇总表',
+    '',
+    markdownTable(
+      ['执行项', '总用例数', '通过数', '失败数', '跳过数', '通过率', '补充结果'],
+      commands.map((command) => [
+        `\`${command.command}\``,
+        '未直接提供',
+        '未直接提供',
+        '未直接提供',
+        '未直接提供',
+        '未直接提供',
+        '无新提交，沿用上次 PASS 基线跳过执行；本次未重新产出测试统计。',
+      ]),
+    ),
+    '',
+    '### 4. 失败清单',
+    '',
+    '无',
+    '',
+    '### 5. 可执行排查步骤',
+    '',
+    '无，本次无需处理。',
+    '',
+    '### 6. 修复优先级建议',
+    '',
+    '无，本次无需处理。',
+    '',
+    '### 7. 趋势观察',
+    '',
+    `- 趋势基线：上次结论：${previousConclusion}`,
+    '- 新增失败项：无',
+    '- 已恢复项：无',
+    '- 持续失败项：无',
+    '- 跳过说明：无新提交，沿用上次 PASS 基线跳过执行。',
+    `- 当前 HEAD: ${headSha}`,
+    `- 上次 HEAD: ${previousHeadSha}`,
+    '- 工作区状态: 干净',
+    '',
+  ];
+
+  return {
+    markdown: lines.join('\n'),
+    generatedAt,
+  };
+}
+
 async function main() {
   const previous = readJson(memoryPath);
   const headSha = await getHeadSha();
@@ -402,30 +499,12 @@ async function main() {
     worktreeClean;
 
   if (canSkip) {
-    const generatedAt = new Date().toISOString();
-    const skipMarkdown = [
-      '# Daily Regression Report',
-      '',
-      `生成时间：${generatedAt}`,
-      `工作目录：${rootDir}`,
-      '',
-      '### 1. 回归结论',
-      '',
-      'PASS',
-      '',
-      '### 2. 执行说明',
-      '',
-      '- 无新提交，沿用上次 PASS 基线跳过执行（动态感知跳过已生效）。',
-      `- 当前 HEAD: ${headSha}`,
-      `- 上次 HEAD: ${previous.headSha}`,
-      '- 工作区状态: 干净',
-      '',
-    ].join('\n');
+    const skipReport = buildSkipReport(previous, headSha);
     ensureDir(reportPath);
-    fs.writeFileSync(reportPath, skipMarkdown);
+    fs.writeFileSync(reportPath, skipReport.markdown);
 
     const skipMemory = {
-      generatedAt,
+      generatedAt: skipReport.generatedAt,
       conclusion: 'PASS',
       headSha,
       worktreeClean: true,

@@ -1,10 +1,18 @@
 (function initMajiangViewModelAdapter(global) {
   const ACTION_ORDER = ["hu", "gang", "peng", "chi", "pass", "discard", "confirm", "cancel"];
+  const PHASE_ACTION_SCOPE = {
+    response_window: ["hu", "gang", "peng", "chi", "pass"],
+    player_turn: ["discard", "confirm", "cancel"],
+    waiting_ai: [],
+    ended: [],
+    table_loading: [],
+  };
 
   function normalizeSeat(seat) {
     return {
       id: seat.id,
       name: seat.name || seat.id,
+      windLabel: seat.windLabel || "",
       score: Number.isFinite(seat.score) ? seat.score : 0,
       handCount: Number.isFinite(seat.handCount) ? seat.handCount : 0,
       meldGroups: Array.isArray(seat.meldGroups) ? seat.meldGroups : [],
@@ -25,13 +33,45 @@
   function createTableViewModelFromSnapshot(snapshot) {
     const source = snapshot || {};
     const seats = (source.seats || []).map(normalizeSeat);
-    const actions = (source.availableActions || []).map(normalizeAction).sort((a, b) => ACTION_ORDER.indexOf(a.id) - ACTION_ORDER.indexOf(b.id));
+    const rawActions = (source.availableActions || []).map(normalizeAction).sort((a, b) => ACTION_ORDER.indexOf(a.id) - ACTION_ORDER.indexOf(b.id));
     const responseContext = source.responseContext || {};
     const eventTimeline = Array.isArray(source.eventTimeline) ? source.eventTimeline : [];
 
+    const phase = source.phase || "table_loading";
+    const scopedActionIds = PHASE_ACTION_SCOPE[phase] || [];
+    const actions = rawActions.filter((action) => scopedActionIds.includes(action.id));
+    const scopedActionMap = new Map(actions.map((action) => [action.id, action]));
+    scopedActionIds.forEach((id) => {
+      if (scopedActionMap.has(id)) return;
+      actions.push({
+        id,
+        label: id,
+        available: false,
+        reasonText: "当前阶段不可操作",
+        isPrimaryPath: false,
+      });
+    });
+
+    const modelError = source.globalError || null;
+    const recoverable = Boolean(
+      source.recoverable ||
+        (source.inlineError && source.inlineError.recoverable) ||
+        (modelError && modelError.recoverable)
+    );
+    const retryAction =
+      source.retryAction ||
+      (source.inlineError && source.inlineError.retryAction) ||
+      (modelError && modelError.retryAction) ||
+      null;
+    const diagnosticContext =
+      source.diagnosticContext ||
+      (source.inlineError && source.inlineError.diagnosticContext) ||
+      (modelError && modelError.diagnosticContext) ||
+      null;
+
     return {
       gameId: source.gameId || "demo-round-001",
-      phase: source.phase || "table_loading",
+      phase,
       currentPlayerId: source.currentPlayerId || "south",
       wallCount: Number.isFinite(source.wallCount) ? source.wallCount : 0,
       roundInfo: source.roundInfo || "东一局",
@@ -52,7 +92,11 @@
       resultSummary: source.resultSummary || null,
       diagnostics: source.diagnostics || {},
       replay: source.replay || { timeline: [] },
-      globalError: source.globalError || null,
+      globalError: modelError,
+      submitting: Boolean(source.submitting),
+      recoverable,
+      retryAction,
+      diagnosticContext,
     };
   }
 
@@ -76,10 +120,10 @@
       roundInfo: "东一局",
       turnHint: "AI-北 刚打出 三万，你可碰或过",
       seats: [
-        { id: "north", name: "AI-北", score: 96, handCount: 13, meldGroups: [{ type: "peng", tiles: ["六万", "六万", "六万"] }], latestAction: "打出 三万" },
-        { id: "west", name: "AI-西", score: 88, handCount: 12, meldGroups: [], latestAction: "等待中" },
-        { id: "east", name: "AI-东", score: 104, handCount: 13, meldGroups: [{ type: "chi", tiles: ["三条", "四条", "五条"] }], latestAction: "等待中" },
-        { id: "south", name: "你", score: 112, handCount: 14, meldGroups: [], latestAction: "可响应" },
+        { id: "north", name: "AI-北", windLabel: "北位", score: 96, handCount: 13, meldGroups: [{ type: "peng", tiles: ["六万", "六万", "六万"] }], latestAction: "打出 三万" },
+        { id: "west", name: "AI-西", windLabel: "西位", score: 88, handCount: 12, meldGroups: [], latestAction: "等待中" },
+        { id: "east", name: "AI-东", windLabel: "东位", score: 104, handCount: 13, meldGroups: [{ type: "chi", tiles: ["三条", "四条", "五条"] }], latestAction: "等待中" },
+        { id: "south", name: "你", windLabel: "南位", score: 112, handCount: 14, meldGroups: [], latestAction: "可响应" },
       ],
       selfHand: ["一万", "二万", "三万", "三万", "四万", "五万", "六筒", "六筒", "七筒", "八条", "九条", "东", "红中", "白板"],
       discardRiver: {
@@ -96,6 +140,9 @@
         { id: "peng", label: "碰", available: true, reasonText: "你已有两张三万", isPrimaryPath: true },
         { id: "chi", label: "吃", available: false, reasonText: "本次不是上家弃牌，不能吃" },
         { id: "pass", label: "过", available: true, reasonText: "放弃本次响应" },
+        { id: "discard", label: "出牌", available: true, reasonText: "请选择一张手牌后出牌" },
+        { id: "confirm", label: "确认", available: true, reasonText: "确认当前出牌选择" },
+        { id: "cancel", label: "取消", available: true, reasonText: "取消当前选择" },
       ],
       eventTimeline: [
         { id: "e1", text: "AI-北 打出 三万（可被响应）", scoreDelta: "", marker: "first_response", seats: "你可碰" },
@@ -105,6 +152,10 @@
       diagnostics: { message: "系统已就绪" },
       replay: { timeline: [] },
       globalError: null,
+      submitting: false,
+      recoverable: false,
+      retryAction: null,
+      diagnosticContext: null,
     };
   }
 
@@ -163,6 +214,7 @@
 
   global.MajiangViewModelAdapter = {
     ACTION_ORDER,
+    PHASE_ACTION_SCOPE,
     createTableViewModelFromSnapshot,
     createDefaultLobbyState,
     createDefaultTableSnapshot,

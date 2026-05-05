@@ -4,10 +4,11 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>麻将 Web UI 原型</title>
+    <link rel="icon" href="data:," />
     <link rel="stylesheet" href="./styles.css" />
   </head>
   <body>
-    <div id="globalSyncError" class="global-error hidden">
+    <div id="globalSyncError" class="global-error hidden" role="alert" aria-live="assertive" aria-atomic="true">
       <span id="globalSyncErrorText"></span>
       <div class="global-error-actions">
         <button id="globalRetryBtn" type="button">重试同步</button>
@@ -15,7 +16,8 @@
       </div>
     </div>
 
-    <div id="toast" class="toast hidden"></div>
+    <div id="toast" class="toast hidden" role="status" aria-live="polite" aria-atomic="true"></div>
+    <div id="screenReaderAnnouncements" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></div>
 
     <section id="lobbyPage" class="page lobby-page">
       <h1>麻将对局大厅</h1>
@@ -45,7 +47,7 @@
       </div>
     </section>
 
-    <section id="tablePage" class="page table-page hidden">
+    <section id="tablePage" class="page table-page hidden" aria-busy="false">
       <div id="tableLoadingPanel" class="table-loading-panel hidden">
         <h2>牌桌加载中...</h2>
         <p>正在同步对局状态，请稍候。</p>
@@ -68,13 +70,21 @@
       <main class="table-layout">
         <section class="table-zone">
           <article id="seat-north" class="seat seat-north">
-            <div class="seat-header"><span class="name">AI-北</span><span class="score">96</span></div>
+            <div class="seat-header">
+              <div class="seat-identity"><span class="seat-wind">北位</span><span class="name">AI-北</span></div>
+              <span class="score">96</span>
+            </div>
             <div class="seat-meta">手牌 13 · 副露 1</div>
+            <div class="seat-latest-action">等待中</div>
             <div class="meld-list"></div>
           </article>
           <article id="seat-west" class="seat seat-west">
-            <div class="seat-header"><span class="name">AI-西</span><span class="score">88</span></div>
+            <div class="seat-header">
+              <div class="seat-identity"><span class="seat-wind">西位</span><span class="name">AI-西</span></div>
+              <span class="score">88</span>
+            </div>
             <div class="seat-meta">手牌 12 · 副露 0</div>
+            <div class="seat-latest-action">等待中</div>
             <div class="meld-list"></div>
           </article>
 
@@ -90,11 +100,20 @@
               </div>
             </div>
             <div class="latest-action-wrap">
+              <div class="stage-keyline">
+                <span id="stageActor" class="stage-actor">AI-北</span>
+                <span id="stageVerb" class="stage-verb">打出</span>
+                <span id="responseTargetTile" class="tile-face tile-face--target">三万</span>
+                <span id="stageToYou" class="stage-to-you">→ 你可响应</span>
+                <span id="stagePriorityTag" class="stage-priority-tag">主路径：碰</span>
+              </div>
               <span class="label">当前关键提示</span>
               <p id="primaryFocusHint" class="primary-focus-hint"></p>
+              <p id="stageMainPath" class="stage-main-path">主路径：等待状态同步。</p>
               <div id="secondaryContext" class="secondary-context hidden">
                 <p id="latestActionMain" class="latest-action"></p>
                 <p id="latestActionSub" class="latest-action-sub"></p>
+                <p id="responseLinkHint" class="response-link-hint"></p>
                 <p id="responseCountdown" class="response-countdown"></p>
               </div>
               <button id="toggleContextBtn" type="button" class="ghost-inline-btn">展开局势细节</button>
@@ -111,19 +130,33 @@
           </section>
 
           <article id="seat-east" class="seat seat-east">
-            <div class="seat-header"><span class="name">AI-东</span><span class="score">104</span></div>
+            <div class="seat-header">
+              <div class="seat-identity"><span class="seat-wind">东位</span><span class="name">AI-东</span></div>
+              <span class="score">104</span>
+            </div>
             <div class="seat-meta">手牌 13 · 副露 2</div>
+            <div class="seat-latest-action">等待中</div>
             <div class="meld-list"></div>
           </article>
           <article id="seat-south" class="seat seat-south">
-            <div class="seat-header"><span class="name">你</span><span class="score">112</span></div>
+            <div class="seat-header">
+              <div class="seat-identity"><span class="seat-wind">南位</span><span class="name">你</span></div>
+              <span class="score">112</span>
+            </div>
             <div class="seat-meta">手牌 14 · 副露 0</div>
+            <div class="seat-latest-action">可响应</div>
             <div class="meld-list"></div>
           </article>
         </section>
 
-        <aside class="side-panel">
-          <section class="panel timeline-panel">
+        <aside id="sidePanel" class="side-panel side-panel--collapsed">
+          <div class="side-panel-head">
+            <span class="side-panel-title">事件与诊断</span>
+            <button id="toggleSidePanelBtn" type="button" class="ghost-inline-btn">展开</button>
+          </div>
+          <p id="sidePanelPeek" class="side-panel-peek">默认收起，避免抢占牌桌主视觉。</p>
+          <div id="sidePanelBody" class="hidden">
+            <section class="panel timeline-panel">
             <div class="timeline-tabs">
               <button id="tabEvents" type="button" class="timeline-tab is-active">事件流</button>
               <button id="tabScores" type="button" class="timeline-tab">分数变化</button>
@@ -137,31 +170,32 @@
               <p id="scoreBridge" class="score-bridge"></p>
               <ul id="scoreDeltaTimeline"></ul>
             </section>
-          </section>
-          <section class="panel diagnostics-panel">
-            <h2>诊断入口</h2>
-            <button id="toggleDiagnosticsBtn" type="button" class="ghost-btn">展开诊断内容</button>
-            <div id="diagnosticsContent" class="hidden">
-              <button id="openSnapshot" type="button" class="ghost-btn">查看状态快照</button>
-              <button id="copyLogs" type="button" class="ghost-btn">复制日志片段</button>
-              <pre id="diagnosticsOutput" class="diagnostics-output">等待诊断操作...</pre>
-            </div>
-          </section>
+            </section>
+            <section class="panel diagnostics-panel">
+              <h2>诊断入口</h2>
+              <button id="toggleDiagnosticsBtn" type="button" class="ghost-btn">展开诊断内容</button>
+              <div id="diagnosticsContent" class="hidden">
+                <button id="openSnapshot" type="button" class="ghost-btn">查看状态快照</button>
+                <button id="copyLogs" type="button" class="ghost-btn">复制日志片段</button>
+                <pre id="diagnosticsOutput" class="diagnostics-output">等待诊断操作...</pre>
+              </div>
+            </section>
+          </div>
         </aside>
       </main>
 
       <section class="hand-panel">
         <div class="hand-head"><span>你的手牌</span><span id="actionReason" class="action-reason"></span></div>
-        <div id="handTiles" class="hand-tiles"></div>
+        <div id="handTiles" class="hand-tiles" role="group" aria-label="手牌区，可用左右方向键选择"></div>
       </section>
 
-      <section class="action-bar">
+      <section class="action-bar" role="group" aria-label="动作栏，可用数字键1到9执行可见动作">
         <div id="actionStageSummary" class="action-stage-summary"></div>
-        <button type="button" class="action-btn" data-action-id="hu" data-phase-scope="response,turn">胡</button>
-        <button type="button" class="action-btn" data-action-id="gang" data-phase-scope="response,turn">杠</button>
+        <button type="button" class="action-btn" data-action-id="hu" data-phase-scope="response">胡</button>
+        <button type="button" class="action-btn" data-action-id="gang" data-phase-scope="response">杠</button>
         <button type="button" class="action-btn" data-action-id="peng" data-phase-scope="response">碰</button>
         <button type="button" class="action-btn" data-action-id="chi" data-phase-scope="response">吃</button>
-        <button type="button" class="action-btn action-pass" data-action-id="pass" data-phase-scope="response,turn">过</button>
+        <button type="button" class="action-btn action-pass" data-action-id="pass" data-phase-scope="response">过</button>
         <button type="button" class="action-btn" data-action-id="discard" data-phase-scope="turn">出牌</button>
         <button type="button" class="action-btn" data-action-id="confirm" data-phase-scope="turn">确认</button>
         <button type="button" class="action-btn" data-action-id="cancel" data-phase-scope="turn">取消</button>
@@ -180,12 +214,12 @@
       </div>
 
       <section id="disabledReasonPanel" class="action-reason-panel hidden"><strong>不可用动作说明：</strong><span id="disabledActionReason"></span></section>
-      <section id="inlineError" class="inline-error hidden"></section>
-      <section id="interactionFeedback" class="interaction-feedback interaction-feedback--normal"><span id="feedbackText">等待你选择动作</span></section>
+      <section id="inlineError" class="inline-error hidden" role="alert" aria-live="assertive" aria-atomic="true"></section>
+      <section id="interactionFeedback" class="interaction-feedback interaction-feedback--normal" role="status" aria-live="polite" aria-atomic="true"><span id="feedbackText">等待你选择动作</span></section>
     </section>
 
     <div id="actionExplainDrawer" class="action-explain-drawer hidden" role="dialog" aria-modal="true" aria-label="动作说明">
-      <div class="action-explain-sheet">
+      <div class="action-explain-sheet" tabindex="-1">
         <h3>动作说明</h3>
         <p id="actionExplainStageText" class="action-explain-stage"></p>
         <strong id="mobileAvailableActionTitle">当前可响应动作说明：</strong>
@@ -196,7 +230,13 @@
     </div>
 
     <div id="resultModal" class="modal hidden" role="dialog" aria-modal="true" aria-label="结算结果">
-      <div class="modal-content">
+      <div class="modal-content" tabindex="-1">
+        <div id="resultHero" class="result-hero">
+          <span id="resultTypeBadge" class="result-type-badge">自摸</span>
+          <p id="resultHeadline" class="result-headline">你自摸胡牌</p>
+          <p id="resultSubline" class="result-subline">赢家：你 · 支付方：其余三家</p>
+          <div id="resultRoleChips" class="result-role-chips"></div>
+        </div>
         <h2 id="resultTitle">结算</h2>
         <p id="resultReason"></p>
         <table>
@@ -214,7 +254,7 @@
     </div>
 
     <div id="replayModal" class="modal hidden" role="dialog" aria-modal="true" aria-label="复盘时间线">
-      <div class="modal-content">
+      <div class="modal-content" tabindex="-1">
         <h2>复盘时间线（只读）</h2>
         <div class="replay-layout">
           <ul id="replayTimeline" class="replay-timeline"></ul>
