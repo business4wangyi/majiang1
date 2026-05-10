@@ -5,6 +5,43 @@
 - 仅改 `docs/majiang/web-ui-prototype/` 表现层、适配层、交互编排。
 - 未改 `src/majiang/core/`、`src/majiang/strategy/`、CLI 路径。
 
+> **当前状态**：冲顶进行中（B1/B2/B3 已解除）  
+> **阻塞项**：无
+> **顶级判定口径**：必须同时引用 `13.1 + 13.6 + 14.7 + 13.3/13.4 双否决项复核`，不得仅写单侧否决项。
+
+## 冲顶阻塞项（Blocking）
+
+- **B1：外部样本未齐**  
+  未解除前禁止宣称最顶级通过。
+- **B2：样本对照未回填**  
+  未形成“样本卡 -> 差距 -> 验收证据”闭环前，不得进入顶级结论。
+- **B3：否决项复核未完成**  
+  `13.3 + 13.4` 任一未闭环即阻塞，不能用单侧否决项替代双侧复核。
+
+### 阻塞项解除条件表
+
+| 编号 | 解除条件 | 责任角色 | 证据路径 |
+| --- | --- | --- | --- |
+| B1 | 外部样本卡已齐备，且每个样本具备来源链接、样本类型、时间点/版本与证据形态 | 研究 | `研究 agent 参考样本卡` / 外部来源链接 |
+| B2 | 参考样本卡已回填到设计差距，并逐条绑定可验收证据 | 设计 | `docs/majiang/WEB_UI_PRODUCT_INTERACTION_DESIGN.md` / `差距项 -> 验收证据` 段落 |
+| B3 | `13.3` 与 `13.4` 均完成复核且无未闭环否决项 | 编码 | `docs/majiang/WEB_UI_PRODUCT_INTERACTION_DESIGN.md#13.3`、`#13.4` / `docs/majiang/WEB_UI_IMPLEMENTATION_BLUEPRINT.md#14.7` |
+
+### 0.1 双否决项复核记录模板（B3）
+
+| 复核项 | 目标章节 | 复核结论 | 证据路径 |
+| --- | --- | --- | --- |
+| 13.3 阶段A设计否决项 | `docs/majiang/WEB_UI_PRODUCT_INTERACTION_DESIGN.md#13.3` | 待复核 / 通过 / 不通过 | 设计冻结稿、Figma/Pencil/线框图、差距回填矩阵 |
+| 13.4 阶段B实现否决项 | `docs/majiang/WEB_UI_PRODUCT_INTERACTION_DESIGN.md#13.4` | 待复核 / 通过 / 不通过 | 桌面/移动截图、关键交互录屏、DOM/状态校验 |
+| 顶级判定口径 | `docs/majiang/WEB_UI_PRODUCT_INTERACTION_DESIGN.md#13.2`、`#15.3` / `docs/majiang/WEB_UI_IMPLEMENTATION_BLUEPRINT.md#14.7` | 待复核 / 通过 / 不通过 | `13.1 + 13.6 + 14.7 + 13.3/13.4 双否决项复核` 同时满足 |
+
+### 0.2 双否决项复核留档（2026-05-08）
+
+| 复核项 | 复核结论 | 证据路径 |
+| --- | --- | --- |
+| 13.3 阶段A设计否决项 | 通过 | `docs/majiang/WEB_UI_PRODUCT_INTERACTION_DESIGN.md#1.4.2`、设计冻结稿、差距回填矩阵 |
+| 13.4 阶段B实现否决项 | 通过 | `.tmp/acceptance/final-evidence/desktop-1280x900.png`、`.tmp/acceptance/final-evidence/mobile-390x844.png`、`.tmp/acceptance/final-evidence/result-tsumo.png` |
+| 顶级判定口径 | 通过 | `13.1 + 13.6 + 14.7 + 13.3/13.4 双否决项复核` |
+
 ## 阶段B证据产物（当前实现）
 
 - 桌面首屏截图：
@@ -176,9 +213,11 @@ window.runMajiangDemoFlow()
 - 仅当以下条件同时满足，才可宣称“最顶级麻将 UI”：
   - 已通过阶段A设计冻结验收；
   - 满足 `13.1 + 13.6`（基线）；
-  - `13.3`（阶段A）与 `13.4`（阶段B）否决项全部未命中；
+  - `13.3`（阶段A）与 `13.4`（阶段B）双否决项复核全部未命中；
   - `14.7` 顶级档专项清单全部通过；
+  - 顶级判定必须同时引用 `13.1 + 13.6 + 14.7 + 13.3/13.4 双否决项复核`，不得仅写单侧否决项。
   - 本 README 的 `1~4` 收官验收全部通过。
+- 无外部样本对照证据时，仅可写“冲顶进行中”或“冲顶暂定”。
 
 ### 6) 可访问性专项复核（14.3/10）
 - 打开 `ResultModal / Replay / 动作说明抽屉` 后按 `Esc`，应关闭当前浮层并回到触发按钮焦点。

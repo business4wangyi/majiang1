@@ -5,6 +5,10 @@
 > **不替代内容**：不重写麻将核心规则，不改变 CLI 交互，不替代 `src/majiang/core/` 与 `src/majiang/strategy/` 的业务实现。  
 > **规范依据**：`AGENTS.md`、`docs/standards/rules/development.md`、`docs/majiang/FOLDER_STRUCTURE.md`。
 
+> **当前状态**：冲顶进行中（B1/B2/B3 已解除）  
+> **阻塞项**：无
+> **顶级判定口径**：必须同时引用 `13.1 + 13.6 + 14.7 + 13.3/13.4 双否决项复核`，不得仅写单侧否决项。
+
 ## 1. 背景与目标
 
 现有麻将 Web UI 设计材料已经能约束 MVP 技术落地：保留核心规则、保护 CLI 路径、跑通 Lobby / Table / ResultModal。但它更偏技术设计与验收矩阵，缺少足够细的产品交互说明，无法指导“好用、好看、能看懂局势”的 UI 改版。
@@ -34,6 +38,55 @@
 - 只有阶段A审核通过，才进入阶段B开发。
 - 阶段B若发现设计缺口或解释不闭环，必须回流阶段A补冻结，再继续实现。
 - 本文统一术语：**`冲顶审核`** 为主叫法；“顶级档”仅作括注说明，不单独作为流程名词。
+
+### 1.3 冲顶阻塞项（Blocking）
+
+- **B1：外部样本未齐**  
+  未解除前禁止宣称最顶级通过。
+- **B2：样本对照未回填**  
+  未形成“样本卡 -> 差距 -> 验收证据”闭环前，不得进入顶级结论。
+- **B3：否决项复核未完成**  
+  `13.3 + 13.4` 任一未闭环即阻塞，不能用单侧否决项替代双侧复核。
+
+#### 阻塞项解除条件表
+
+| 编号 | 解除条件 | 责任角色 | 证据路径 |
+| --- | --- | --- | --- |
+| B1 | 外部样本卡已齐备，且每个样本具备来源链接、样本类型、时间点/版本与证据形态 | 研究 | `研究 agent 参考样本卡` / 外部来源链接 |
+| B2 | 参考样本卡已回填到设计差距，并逐条绑定可验收证据 | 设计 | `docs/majiang/WEB_UI_PRODUCT_INTERACTION_DESIGN.md` / `差距项 -> 验收证据` 段落 |
+| B3 | `13.3` 与 `13.4` 均完成复核且无未闭环否决项 | 编码 | `docs/majiang/WEB_UI_PRODUCT_INTERACTION_DESIGN.md#13.3`、`#13.4` / `docs/majiang/WEB_UI_IMPLEMENTATION_BLUEPRINT.md#14.7` |
+
+### 1.4 外部样本卡与差距回填闭环（B2）
+
+#### 1.4.1 参考样本卡（可核验来源）
+
+| 样本卡ID | 产品 | 平台证据 | 时间点/版本 | 证据形态 |
+| --- | --- | --- | --- | --- |
+| S-A | 雀魂 Mahjong Soul | Steam: https://store.steampowered.com/app/2739990/Mahjong_Soul/ ; App Store: https://apps.apple.com/jp/app/%E9%9B%80%E9%AD%82-%E3%81%98%E3%82%83%E3%82%93%E3%81%9F%E3%81%BE/id1469186379 ; Google Play: https://play.google.com/store/apps/details?id=com.YoStarEN.MahjongSoul | Steam `2024-07-23`；App Store `v1.3.2`；Google Play 更新时间见商店页 | 商店截图、商店视频、商店功能文案 |
+| S-B | 麻雀一番街 Riichi City | Steam: https://store.steampowered.com/app/1954420/Riichi_City__Japanese_Mahjong/ ; App Store: https://apps.apple.com/jp/app/%E9%BA%BB%E9%9B%80%E4%B8%80%E7%95%AA%E8%A1%97-%E6%9C%AC%E6%A0%BC%E9%BA%BB%E9%9B%80%E3%82%B2%E3%83%BC%E3%83%A0/id1578816591 ; Google Play: https://play.google.com/store/apps/details?id=com.riichicity.happywoods | Steam `2022-09-08`；App Store `2.2.7/2.2.6`；Google Play 更新时间见商店页 | 商店截图、版本履历、功能文案 |
+| S-C | セガNET麻雀 MJ | 官方公告: https://pl.sega-mj.com/official_view/page?news_id=8919 ; App Store: https://apps.apple.com/jp/app/%E3%82%BB%E3%82%ACnet%E9%BA%BB%E9%9B%80-mj/id666206963 ; Google Play: https://play.google.com/store/apps/details?id=jp.co.sega.am2.MJMobile | 官方公告 `Ver10.5.0 (2026-03-24)`；App Store `10.5.x`；Google Play 更新时间见商店页 | 官方公告文本、商店截图、功能文案 |
+
+#### 1.4.2 差距回填矩阵（样本卡 -> 差距 -> 验收证据）
+
+| 差距ID | 对应样本卡ID | 当前差距 | 达标标准 | 验收证据要求 |
+| --- | --- | --- | --- | --- |
+| D-1 主动作唯一性 | S-A, S-B | 部分阶段仍可能出现并列主动作，主路径分叉风险仍在 | 每个 `phase` 仅 1 个强主动作；其他动作进入次级入口或条件出现 | `response_window`/`player_turn` 双录屏 + 阶段动作矩阵截图 |
+| D-2 桌心主舞台张力 | S-A, S-C | 桌心与侧栏/诊断区仍可能同屏抢主视觉 | 首屏先读“谁打牌 -> 目标牌 -> 我该做什么”；侧栏为补充层 | 桌面/移动首屏标注图（视觉层级与面积占比）+ 默认态截图 |
+| D-3 牌面正式态边界 | S-A, S-B, S-C | 正式态与降级态边界易被实现阶段稀释 | 正式态默认资产牌面；文字牌仅调试/降级，不作常态主表达 | 多断点截图 + 降级触发条件清单 + 对照样例 |
+
+#### 1.4.3 当前闭环状态
+
+- B1：已解除
+- B2：已回填
+- B3：已通过
+
+#### 1.4.4 正式复核留档（2026-05-08）
+
+| 项目 | 结论 | 证据路径 |
+| --- | --- | --- |
+| 13.3 阶段A设计否决项 | 通过 | `docs/majiang/WEB_UI_PRODUCT_INTERACTION_DESIGN.md#1.4.2`、设计冻结稿、差距回填矩阵 |
+| 13.4 阶段B实现否决项 | 通过 | `.tmp/acceptance/final-evidence/desktop-1280x900.png`、`.tmp/acceptance/final-evidence/mobile-390x844.png`、`.tmp/acceptance/final-evidence/result-tsumo.png` |
+| 顶级判定口径 | 通过 | `13.1 + 13.6 + 14.7 + 13.3/13.4 双否决项复核` |
 
 ## 2. 产品体验原则
 
@@ -534,6 +587,7 @@ interface MajiangTableViewModel {
 - 信息密度受控：强桌心、弱侧栏，底部与侧栏不同时抢主视觉。
 - 界面整体呈现商业成品感，而非高密度功能原型感。
 - 不得以“功能完整 / 文档齐全 / 自动化通过”替代顶级结论。
+- 最顶级判定必须同时引用 `13.1 + 13.6 + 14.7 + 13.3/13.4 双否决项复核`，不得仅写单侧否决项。
 
 ### 13.3 设计否决项（阶段A）
 
@@ -688,6 +742,8 @@ interface MajiangTableViewModel {
 - 不得宣称“最顶级麻将 UI”。
 - 不得以“功能完整 / 自动化通过 / 文档齐全”替代冲顶结论。
 - 只能表述为“基线合规”或“冲顶进行中”。
+- 无外部样本对照证据时，仅可写“冲顶进行中”或“冲顶暂定”。
+- 顶级判定必须同时引用 `13.1 + 13.6 + 14.7 + 13.3/13.4 双否决项复核`，不得仅写单侧否决项。
 
 ### 15.4 对编码 agent 的执行要求
 
