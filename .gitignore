@@ -193,6 +193,8 @@ logs/
 # 临时文件
 temp/
 tmp/
+.tmp/
+.playwright-cli/
 
 # 数据库文件
 db/sqlite/*.db
