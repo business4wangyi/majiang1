@@ -7,6 +7,7 @@
 - Git 提交流程约定：`docs/standards/rules/git-mcp-automation.md`
 - 进程执行工具优先级：`docs/standards/rules/desktop-commander-mcp-priority.md`
 - 测试与质量保障：`docs/standards/testing/quality.md`
+- 规则演进与需求映射：`docs/standards/rule-evolution.md`
 
 ## 使用约定
 - `AGENTS.md`、`.cursor/rules/*.mdc` 等 IDE 入口文件应优先引读本目录内容。
