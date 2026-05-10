@@ -13,6 +13,23 @@ const memoryDir = path.resolve(
 );
 const memoryPath = path.join(memoryDir, 'latest.json');
 const dynamicSkipEnabled = (process.env.REGRESSION_DYNAMIC_SKIP || '1') !== '0';
+const standardsGuardPath =
+  process.env.STANDARDS_GUARD_PATH ||
+  '/Users/felixfan/.codex/skills/project-standards-governance/scripts/standards_guard.sh';
+
+function hasStandardsPreconditions() {
+  const required = [
+    path.resolve(rootDir, 'AGENTS.md'),
+    path.resolve(rootDir, 'docs/standards/rules/development.md'),
+    path.resolve(rootDir, 'docs/standards/rules/git-mcp-automation.md'),
+  ];
+  const missing = required.filter((item) => !fs.existsSync(item));
+  return {
+    ok: missing.length === 0 && fs.existsSync(standardsGuardPath),
+    missing,
+    guardExists: fs.existsSync(standardsGuardPath),
+  };
+}
 
 const candidates = [
   {
@@ -46,6 +63,25 @@ const commands = candidates
     scope: candidate.scope,
     kind: candidate.command === 'npm test' ? 'test' : 'check',
   }));
+
+const standardsPreconditions = hasStandardsPreconditions();
+const standardsScanPlan = standardsPreconditions.ok
+  ? {
+      enabled: true,
+      command: `bash ${standardsGuardPath} scan`,
+      scope: 'project-standards-governance 规范债务扫描（scan）。',
+      skipReason: null,
+    }
+  : {
+      enabled: false,
+      command: `bash ${standardsGuardPath} scan`,
+      scope: 'project-standards-governance 规范债务扫描（scan）。',
+      skipReason: `缺失前置条件：${
+        !standardsPreconditions.guardExists
+          ? `脚本不存在（${standardsGuardPath}）`
+          : standardsPreconditions.missing.join(', ')
+      }`,
+    };
 
 function ensureDir(filePath) {
   fs.mkdirSync(path.dirname(filePath), { recursive: true });
@@ -367,6 +403,26 @@ function buildReport(results, previous) {
     `- 已恢复项：${trend.recovered.length ? trend.recovered.join(', ') : '无'}`,
     `- 持续失败项：${trend.persistent.length ? trend.persistent.join(', ') : '无'}`,
     '',
+    '### 8. 规范债务扫描状态',
+    '',
+    `- 扫描命令：\`${standardsScanPlan.command}\``,
+    standardsScanPlan.enabled
+      ? (() => {
+          const scanResult = results.find((result) => result.command === standardsScanPlan.command);
+          if (!scanResult) {
+            return '- 扫描结论：PARTIAL（证据不足，未找到 scan 执行结果）';
+          }
+          return `- 扫描结论：${scanResult.exitCode === 0 ? 'PASS' : 'FAIL'}（exit=${scanResult.exitCode}）`;
+        })()
+      : `- 扫描结论：PARTIAL（已跳过）`,
+    standardsScanPlan.enabled
+      ? '- 跳过说明：无'
+      : `- 跳过原因：${standardsScanPlan.skipReason}`,
+    standardsScanPlan.enabled
+      ? '- 补齐建议：无'
+      : '- 补齐建议：补齐 docs/standards 规则正文与 standards_guard.sh 后启用扫描',
+    `- 建议复检命令：\`${standardsScanPlan.command}\``,
+    '',
   ];
 
   return {
@@ -381,6 +437,26 @@ function buildReport(results, previous) {
         stats: statsByCommand.get(result.command),
       })),
       failures,
+      standardsScan: standardsScanPlan.enabled
+        ? (() => {
+            const scanResult = results.find((result) => result.command === standardsScanPlan.command);
+            return scanResult
+              ? {
+                  command: standardsScanPlan.command,
+                  exitCode: scanResult.exitCode,
+                  durationMs: scanResult.durationMs,
+                }
+              : {
+                  command: standardsScanPlan.command,
+                  skipped: false,
+                  note: '证据不足，未找到执行结果',
+                };
+          })()
+        : {
+            command: standardsScanPlan.command,
+            skipped: true,
+            reason: standardsScanPlan.skipReason,
+          },
     },
     conclusion,
   };
@@ -475,6 +551,14 @@ function buildSkipReport(previous, headSha) {
     `- 上次 HEAD: ${previousHeadSha}`,
     '- 工作区状态: 干净',
     '',
+    '### 8. 规范债务扫描状态',
+    '',
+    `- 扫描命令：\`${standardsScanPlan.command}\``,
+    '- 扫描结论：PASS（沿用上次 PASS 基线，本次动态跳过未重新执行）',
+    '- 跳过原因：动态跳过开启且无新提交',
+    '- 补齐建议：如需当天环境漂移探测，可手动执行扫描',
+    `- 建议复检命令：\`${standardsScanPlan.command}\``,
+    '',
   ];
 
   return {
@@ -525,6 +609,10 @@ async function main() {
 
   for (const item of commands) {
     results.push(await runCommand(item.command));
+  }
+
+  if (standardsScanPlan.enabled) {
+    results.push(await runCommand(standardsScanPlan.command));
   }
 
   const report = buildReport(results, previous);

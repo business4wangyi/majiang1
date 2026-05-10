@@ -59,6 +59,7 @@ npm run regression:daily
 - 由 `scripts/test/daily-regression-report.js` 生成 `logs/daily-regression-report.md`。
 - 默认纳入 `npm test`，暂不强制纳入 `npm run build`。
 - 若后续修复既有 TypeScript 编译问题，可将 `npm run build` 升级为每日回归硬门槛。
+- GitHub Actions 动态跳过基线文件统一使用 `.agents/automation-memory/daily-regression/latest.json`（由 `.github/workflows/daily-regression.yml` 缓存与上传），不要混用其他历史示例路径。
 
 ## 2. 测试目录与命名
 
