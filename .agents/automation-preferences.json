@@ -6,11 +6,28 @@
     "source": "user-confirmed"
   },
   "codexAutomation": {
+    "standardsGovernanceDaily": {
+      "id": "majiang-standards-governance-daily",
+      "name": "Majiang Standards Governance Daily",
+      "memoryPath": "logs/automation-memory/majiang-standards-governance-daily-memory.md",
+      "source": "project-local"
+    },
     "dailyRegressionTriage": {
-      "id": "majiang-daily-regression-triage",
+      "id": "majiang-daily-regression-triage-2",
       "name": "Majiang Daily Regression Triage",
+      "memoryPath": "logs/automation-memory/majiang-daily-regression-triage-memory.md",
       "schedule": "daily 09:30 Asia/Shanghai",
-      "source": "created"
+      "source": "recreated-via-codex-app",
+      "updatedAt": "2026-05-10"
+    },
+    "dailyRedundantFileGovernance": {
+      "id": "majiang-daily-redundant-file-governance",
+      "name": "Majiang Daily Redundant File Governance",
+      "memoryPath": "logs/automation-memory/majiang-daily-redundant-file-governance-memory.md",
+      "schedule": "daily 10:00 Asia/Shanghai",
+      "mode": "observation-only-no-delete",
+      "source": "created-via-codex-app",
+      "updatedAt": "2026-05-10"
     }
   }
 }
