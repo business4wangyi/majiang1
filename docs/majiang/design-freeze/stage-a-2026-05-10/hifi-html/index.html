@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Majiang Stage A HiFi Batch-3 Anchor Build</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #060b10;
+      --panel: #0f1b28;
+      --panel-2: #142436;
+      --ink: #edf4fd;
+      --sub: #9ab0c8;
+      --gold: #e0b864;
+      --gold-2: #bf8f3f;
+      --green: #55b67d;
+      --orange: #e09244;
+      --red: #cd4b41;
+      --felt-a: #0f5e48;
+      --felt-b: #0c4d3b;
+      --felt-c: #08392c;
+      --tile: #f6f2ea;
+      --tile-edge: #bfb39c;
+      --shadow: 0 16px 44px rgba(0,0,0,.52);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Noto Sans SC", sans-serif;
+      background:
+        radial-gradient(760px 380px at 6% -10%, #173a51 0%, transparent 62%),
+        radial-gradient(980px 520px at 105% 110%, #134535 0%, transparent 70%),
+        linear-gradient(180deg, #05090d, #08111a 45%, #05090d);
+      color: var(--ink);
+    }
+    .sec { padding: 28px 20px 48px; border-bottom: 1px solid #1a2d3c; }
+    h1,h2 { margin: 0 0 8px; }
+    .sub { color: var(--sub); margin-bottom: 16px; }
+    .grid { display: grid; gap: 18px; grid-template-columns: repeat(auto-fit,minmax(350px,1fr)); }
+    .panel { background: #0c151e; border: 1px solid #2a4458; border-radius: 16px; overflow: hidden; box-shadow: var(--shadow); }
+    .head { padding: 10px 12px; font-size: 12px; color: var(--sub); border-bottom: 1px solid #2a4458; display: flex; justify-content: space-between; }
+    .desktop { aspect-ratio: 16/10; padding: 12px; }
+    .mobile { width: 390px; max-width: 100%; margin: 0 auto; aspect-ratio: 390/844; padding: 10px; }
+    .hdr { height: 60px; border-radius: 12px; border: 1px solid #3d6079; background: linear-gradient(180deg,#17293a,#122232); display:flex; align-items:center; padding:0 12px; font-weight:700; }
+
+    .lobby-card { width:min(760px,92%); margin:68px auto 0; border-radius:20px; border:1px solid #3d6079; background:linear-gradient(180deg,#122335,#0f1d2b); padding:28px; box-shadow:var(--shadow); }
+    .lobby-card h3 { margin:0; font-size:38px; }
+    .meta { margin-top:8px; color:var(--sub); }
+    .row { margin-top:20px; display:flex; gap:10px; flex-wrap:wrap; }
+
+    .layout { margin-top:10px; display:grid; grid-template-columns: 1fr 260px; gap:10px; height: calc(100% - 70px); }
+    .layout.mobile { grid-template-columns:1fr; }
+    .main { display:grid; grid-template-rows: 1fr auto; gap:10px; }
+
+    .felt {
+      border-radius:26px;
+      border:1px solid #3a886f;
+      background:
+        radial-gradient(48% 62% at 50% 34%, rgba(228,186,100,.18) 0%, transparent 72%),
+        radial-gradient(100% 130% at 50% 50%, var(--felt-a) 0%, var(--felt-b) 56%, var(--felt-c) 100%);
+      box-shadow: inset 0 0 0 2px rgba(255,255,255,.05), inset 0 -26px 50px rgba(0,0,0,.28);
+      position:relative;
+      padding:12px;
+      overflow:hidden;
+    }
+
+    .seat { position:absolute; border:1px solid #486a83; border-radius:10px; background:rgba(9,21,31,.84); font-size:12px; padding:5px 8px; }
+    .seat.top { top:8px; left:50%; transform:translateX(-50%); }
+    .seat.left { left:8px; top:50%; transform:translateY(-50%); }
+    .seat.right { right:8px; top:50%; transform:translateY(-50%); }
+    .seat.you { bottom:8px; left:50%; transform:translateX(-50%); border-color: var(--gold); box-shadow:0 0 0 2px rgba(224,184,100,.2); }
+
+    .flow { width:min(360px,82%); margin:56px auto 0; border-radius:13px; border:1px solid #55748c; background:linear-gradient(180deg,rgba(8,20,29,.95),rgba(15,30,44,.93)); padding:12px 14px; box-shadow:0 10px 20px rgba(0,0,0,.35); }
+    .flow .a { font-size:18px; font-weight:800; color:var(--gold); }
+    .flow .b { margin-top:6px; font-size:14px; }
+    .flow .c { margin-top:4px; font-size:14px; font-weight:700; color:var(--orange); }
+
+    .river { margin:10px auto 0; max-width:420px; display:grid; grid-template-columns:repeat(8,1fr); gap:4px; }
+    .river i, .tile { display:block; border-radius:5px; background:var(--tile); border:1px solid var(--tile-edge); }
+    .river i { height:22px; }
+    .river i.hit { border-color:#df8f3f; box-shadow:0 0 0 2px rgba(223,143,63,.48), 0 0 10px rgba(223,143,63,.45); }
+
+    .hand { border-radius:13px; border:1px solid #3b5f78; background:linear-gradient(180deg,#122235,#0e1d2b); padding:10px; }
+    .tiles { display:grid; grid-template-columns: repeat(14,minmax(0,1fr)); gap:5px; margin-bottom:8px; }
+    .tile { height:58px; box-shadow: inset 0 -7px 10px rgba(0,0,0,.06); }
+    .tile.sel { transform: translateY(-8px); border-color: var(--gold-2); box-shadow:0 6px 12px rgba(0,0,0,.32); }
+
+    .acts { display:flex; gap:8px; flex-wrap:wrap; }
+    .btn { min-height:44px; min-width:92px; border-radius:10px; border:1px solid transparent; padding:0 15px; font-weight:800; }
+    .btn.main { background:linear-gradient(180deg,#e9c56f,#d7a54a); color:#201b12; }
+    .btn.warn { background:linear-gradient(180deg,#f0a055,#d77e31); color:#21160d; }
+    .btn.alt { background:#1b2f41; border-color:#4f6d85; color:#d7e5f6; }
+    .btn.err { background:linear-gradient(180deg,#d96055,#b5473d); color:#f8eceb; }
+    .btn.ok { background:linear-gradient(180deg,#6bc892,#4faa79); color:#0f241a; }
+
+    .side { border-radius:13px; border:1px solid #35566e; background:rgba(14,28,40,.72); padding:8px; }
+    .side .title { font-size:12px; color:#7f96ad; margin-bottom:7px; }
+    .log { height:38px; border-radius:8px; border:1px solid #395b74; background:rgba(34,54,72,.82); margin-bottom:6px; }
+
+    .result { width:min(800px,92%); margin:78px auto; border-radius:20px; border:1px solid #40657f; background:linear-gradient(180deg,#122336,#0f1d2b); padding:24px; box-shadow:var(--shadow); }
+    .result .type { font-size:34px; font-weight:800; }
+    .type.tsumo { color:var(--green); }
+    .type.ron { color:var(--orange); }
+    .type.draw { color:#bdd0e6; }
+    .type.abort { color:var(--red); }
+    .lines { margin-top:10px; line-height:1.7; color:var(--sub); }
+
+    .tag { position:absolute; top:8px; right:10px; border-radius:999px; border:1px solid #4c718b; background:#162b3d; color:#c7d9ec; font-size:12px; padding:4px 9px; }
+    .handle { width:110px; height:6px; border-radius:999px; background:#8098b1; margin:8px auto 0; }
+  </style>
+</head>
+<body>
+  <section class="sec">
+    <h1>Batch-3（S-C 主锚点）高保真原型</h1>
+    <div class="sub">依据 `competitor-assets` 的真实对局样本重绘：桌体关系、牌河秩序、目标牌高亮、结果页层级。</div>
+    <div class="grid">
+      <article class="panel"><div class="head"><span>Lobby Desktop Idle</span><span>1440x900</span></div><div class="desktop"><div class="hdr">东1局 · 固定配置（1人类+3AI）</div><div class="lobby-card"><h3>开始新对局</h3><div class="meta">阶段A冻结：只保留一个强主入口，降低分支决策成本。</div><div class="row"><button class="btn main">开始对局</button><button class="btn alt">最近对局</button></div></div></div></article>
+      <article class="panel"><div class="head"><span>Lobby Desktop Error</span><span>1440x900</span></div><div class="desktop"><div class="hdr">创建失败 · 配置已保留</div><div class="lobby-card"><h3 style="color:var(--red)">创建失败</h3><div class="meta">网络波动，请重试。当前配置不丢失。</div><div class="row"><button class="btn err">重试创建</button></div></div></div></article>
+      <article class="panel"><div class="head"><span>Lobby Mobile Creating</span><span>390x844</span></div><div class="mobile"><div class="hdr">创建中 · 初始化牌桌...</div><div class="lobby-card" style="width:100%;margin-top:22px;padding:22px;"><h3 style="font-size:30px;color:var(--gold)">创建中...</h3><div class="meta">正在准备座位、牌山和回合状态</div><div style="margin-top:16px;height:12px;border-radius:999px;background:#294a64;overflow:hidden;"><span style="display:block;width:70%;height:100%;background:linear-gradient(90deg,#efca74,#d48335)"></span></div></div></div></article>
+    </div>
+  </section>
+
+  <section class="sec">
+    <h2>Table 关键状态</h2>
+    <div class="sub">桌心第一视觉：目标牌 -> 可响应原因 -> 主动作。侧栏保持次级层级。</div>
+    <div class="grid">
+      <article class="panel"><div class="head"><span>Desktop WaitingAI</span><span>1440x900</span></div><div class="desktop"><div class="hdr">东1局2本场 · 牌山49 · 等待AI动作</div><div class="layout"><div class="main"><div class="felt"><div class="seat top">北家 24100</div><div class="seat left">西家 25800</div><div class="seat right">东家 25200</div><div class="seat you">你(南) 24900</div><div class="flow"><div class="a">目标牌：等待新弃牌</div><div class="b">当前：AI 思考中</div><div class="c" style="color:#b7c8da">主动作：等待</div></div><div class="river"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div></div><div class="hand"><div class="tiles"><span class="tile"></span><span class="tile"></span><span class="tile"></span><span class="tile"></span><span class="tile"></span><span class="tile"></span><span class="tile"></span><span class="tile"></span><span class="tile"></span><span class="tile"></span><span class="tile"></span><span class="tile"></span><span class="tile"></span><span class="tile"></span></div><div class="acts"><button class="btn alt">等待</button></div></div></div><aside class="side"><div class="title">复盘与诊断（弱化）</div><div class="log"></div><div class="log"></div><div class="log"></div></aside></div><span class="tag">强桌心/弱侧栏</span></div></article>
+
+      <article class="panel"><div class="head"><span>Desktop PlayerTurn</span><span>1440x900</span></div><div class="desktop"><div class="hdr">东1局2本场 · 牌山48 · 轮到你出牌</div><div class="layout"><div class="main"><div class="felt"><div class="seat top">北家 24100</div><div class="seat left">西家 25800</div><div class="seat right">东家 25200</div><div class="seat you">你(南) 24900</div><div class="flow"><div class="a">目标牌：5筒</div><div class="b">当前：我方回合，可直接打牌</div><div class="c">主动作：出牌</div></div><div class="river"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div></div><div class="hand"><div class="tiles"><span class="tile"></span><span class="tile"></span><span class="tile"></span><span class="tile sel"></span><span class="tile"></span><span class="tile"></span><span class="tile"></span><span class="tile"></span><span class="tile"></span><span class="tile"></span><span class="tile"></span><span class="tile"></span><span class="tile"></span><span class="tile"></span></div><div class="acts"><button class="btn main">出牌</button><button class="btn alt">更多</button></div></div></div><aside class="side"><div class="title">复盘与诊断（弱化）</div><div class="log"></div><div class="log"></div><div class="log"></div></aside></div></div></article>
+
+      <article class="panel"><div class="head"><span>Desktop ResponseWindow</span><span>1440x900</span></div><div class="desktop"><div class="hdr">东1局2本场 · 牌山47 · 你可响应</div><div class="layout"><div class="main"><div class="felt"><div class="seat top">北家 24100</div><div class="seat left">西家 25800</div><div class="seat right">东家 25200</div><div class="seat you">你(南) 24900</div><div class="flow"><div class="a">目标牌：5筒（东家打出）</div><div class="b">可响应：碰 / 过</div><div class="c">主动作：过（默认）</div></div><div class="river"><i></i><i></i><i></i><i></i><i></i><i class="hit"></i><i></i><i></i></div></div><div class="hand"><div class="tiles"><span class="tile"></span><span class="tile"></span><span class="tile sel"></span><span class="tile"></span><span class="tile"></span><span class="tile"></span><span class="tile"></span><span class="tile"></span><span class="tile"></span><span class="tile"></span><span class="tile"></span><span class="tile"></span><span class="tile"></span><span class="tile"></span></div><div class="acts"><button class="btn warn">过</button><button class="btn alt">碰</button><button class="btn alt">更多</button></div></div></div><aside class="side"><div class="title">复盘与诊断（弱化）</div><div class="log"></div><div class="log"></div><div class="log"></div></aside></div><span class="tag">默认主动作=过</span></div></article>
+
+      <article class="panel"><div class="head"><span>Mobile ActionError</span><span>390x844</span></div><div class="mobile"><div class="hdr">提交失败 · 已恢复可操作</div><div class="layout mobile"><div class="main"><div class="felt" style="min-height:286px;"><div class="flow" style="margin-top:74px;width:88%;"><div class="a">目标牌：5筒</div><div class="b">错误：状态冲突，请重试</div><div class="c" style="color:var(--red)">主动作：重试出牌</div></div></div><div class="hand"><div class="tiles" style="grid-template-columns:repeat(10,minmax(0,1fr));"><span class="tile" style="height:48px"></span><span class="tile sel" style="height:48px"></span><span class="tile" style="height:48px"></span><span class="tile" style="height:48px"></span><span class="tile" style="height:48px"></span><span class="tile" style="height:48px"></span><span class="tile" style="height:48px"></span><span class="tile" style="height:48px"></span><span class="tile" style="height:48px"></span><span class="tile" style="height:48px"></span></div><div class="acts"><button class="btn err">重试出牌</button><button class="btn alt">更多</button></div></div></div></div><div class="handle"></div></div></article>
+
+      <article class="panel"><div class="head"><span>Desktop Ended</span><span>1440x900</span></div><div class="desktop"><div class="hdr">本局结束 · 进入结算</div><div class="layout"><div class="main"><div class="felt"><div class="seat top">北家 24100</div><div class="seat left">西家 25800</div><div class="seat right">东家 25200</div><div class="seat you">你(南) 24900</div><div class="flow"><div class="a">结果：南家 自摸</div><div class="b">等待打开结果弹窗</div><div class="c" style="color:#b7c8da">主动作：查看结果</div></div></div><div class="hand"><div class="acts"><button class="btn ok">查看结果</button></div></div></div><aside class="side"><div class="title">复盘与诊断（弱化）</div><div class="log"></div><div class="log"></div><div class="log"></div></aside></div></div></article>
+    </div>
+  </section>
+
+  <section class="sec">
+    <h2>ResultModal 四类型</h2>
+    <div class="sub">固定解释链：结果类型 -> 角色关系 -> 分数变化 -> 下一步入口。</div>
+    <div class="grid">
+      <article class="panel"><div class="head"><span>TSUMO</span><span>Desktop</span></div><div class="desktop"><div class="result"><div class="type tsumo">TSUMO 自摸</div><div class="lines">赢家：南家（你）<br>关系：东/西/北共同支付<br>原因：5筒触发，3番40符（核心层返回）<br>分数变化：东 -1000 / 南 +3000 / 西 -1000 / 北 -1000</div><div class="row"><button class="btn main">再来一局</button><button class="btn alt">回到大厅</button></div></div></div></article>
+      <article class="panel"><div class="head"><span>RON</span><span>Desktop</span></div><div class="desktop"><div class="result"><div class="type ron">RON 荣和</div><div class="lines">赢家：南家（你）<br>点炮者：东家（单独支付）<br>原因：东家打出 5筒，触发荣和<br>分数变化：东 -3900 / 南 +3900 / 西 0 / 北 0</div><div class="row"><button class="btn main">再来一局</button><button class="btn alt">查看复盘</button></div></div></div></article>
+      <article class="panel"><div class="head"><span>DRAW / ABORT</span><span>Desktop</span></div><div class="desktop"><div class="result" style="margin-bottom:14px;"><div class="type draw">DRAW 流局</div><div class="lines">无人胡牌，按规则进入流局结算。<br>分数变化：东 +0 / 南 +0 / 西 +0 / 北 +0</div></div><div class="result" style="margin-top:0;"><div class="type abort">ABORT 异常终止</div><div class="lines">系统异常导致中断，本局默认不计分。<br>建议：返回大厅后重开对局。</div></div></div></article>
+    </div>
+  </section>
+</body>
+</html>

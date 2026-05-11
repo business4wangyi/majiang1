@@ -17,6 +17,13 @@
 8. `08_SAMPLE_CARD_MAPPING.md`
 9. `09_STAGE_A_FREEZE_CONCLUSION.md`
 10. `10_EXTREME_BREAKPOINT_APPENDIX.md`
+11. `hifi-html/index.html`（Batch-1 免费高保真原型）
+12. `hifi-html/README.md`
+13. `12_COMPETITOR_HIFI_REFERENCE_BOARD.md`
+14. `annotated-reference/ANNOTATED_REFERENCE.html`
+15. `annotated-reference/ANNOTATED_SPEC.md`
+16. `annotated-reference/STATE_MAPPING_APPENDIX.md`
+17. `annotated-reference/IMPLEMENTATION_TASK_BREAKDOWN.md`
 
 ## 使用方式
 - 本目录仅作为阶段A设计冻结证据，不包含实现截图、DOM、运行态脚本结果。

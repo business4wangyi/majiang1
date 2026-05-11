@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Annotated Competitor Reference</title>
+  <style>
+    body{margin:0;padding:18px;background:#0a1118;color:#e7f0fa;font-family:Arial,sans-serif}
+    h1{margin:0 0 8px}.sub{color:#9cb1c7;margin-bottom:14px}
+    .blk{margin-bottom:20px;padding:14px;border:1px solid #2f465b;border-radius:12px;background:#121d28}
+    .canvas{position:relative;display:inline-block;max-width:100%}
+    .canvas img{display:block;max-width:100%;height:auto;border-radius:10px}
+    .mark{position:absolute;border:2px solid #ffd166;border-radius:8px;box-shadow:0 0 0 1px rgba(0,0,0,.3) inset}
+    .mark.b{border-color:#72d6ff}.mark.c{border-color:#ff8c6a}.mark.d{border-color:#98f5a6}.mark.e{border-color:#ff6b8a}.mark.f{border-color:#f6e58d}
+    .tag{position:absolute;left:0;top:-22px;background:#111b25;color:#fff;border:1px solid currentColor;padding:1px 6px;border-radius:999px;font-size:12px;font-weight:700}
+    .legend{margin-top:10px;line-height:1.6;color:#c4d4e7}
+    .legend code{background:#0f1720;padding:2px 6px;border-radius:4px}
+    .grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+    @media (max-width:1000px){.grid{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+  <h1>竞品图直接标注冻结页</h1>
+  <div class="sub">基于真实对局图直接标注：区域结构、比例关系、主链路与交互约束（阶段A快捷方案）。</div>
+
+  <div class="grid">
+    <section class="blk">
+      <h2>桌面基准（S-C）</h2>
+      <div class="canvas" style="width:960px;">
+        <img src="../competitor-assets/sega-mj/official-shot-003.jpg" alt="desktop-ref">
+        <div class="mark" style="left:16%;top:12%;width:68%;height:58%;"><span class="tag">A 桌心主舞台</span></div>
+        <div class="mark b" style="left:2.5%;top:24%;width:14%;height:45%;"><span class="tag">B 左座位区</span></div>
+        <div class="mark b" style="left:83.5%;top:24%;width:14%;height:45%;"><span class="tag">C 右座位区</span></div>
+        <div class="mark b" style="left:30%;top:72%;width:40%;height:15%;"><span class="tag">D 底部手牌区</span></div>
+        <div class="mark c" style="left:72%;top:10%;width:26%;height:78%;"><span class="tag">E 信息/日志侧区</span></div>
+        <div class="mark d" style="left:41%;top:37%;width:18%;height:14%;"><span class="tag">F 目标牌与主链路提示</span></div>
+        <div class="mark e" style="left:31%;top:88%;width:38%;height:10%;"><span class="tag">G 主动作区</span></div>
+      </div>
+      <div class="legend">
+        <div><code>A</code> 目标占比 58%-64%，是第一视觉锚点。</div>
+        <div><code>D+G</code> 必须近邻，避免“看底部点侧边”的跳视。</div>
+        <div><code>E</code> 默认弱化，对比度低于 A/F 至少一个层级。</div>
+        <div><code>F</code> 必须承载链路：谁打牌 -> 目标牌 -> 我可响应 -> 主动作。</div>
+      </div>
+    </section>
+
+    <section class="blk">
+      <h2>移动基准（S-A）</h2>
+      <div class="canvas" style="width:390px;">
+        <img src="../competitor-assets/mahjong-soul/ios-shot-3.jpg" alt="mobile-ref">
+        <div class="mark" style="left:6%;top:8%;width:88%;height:12%;"><span class="tag">M1 顶部局势摘要</span></div>
+        <div class="mark b" style="left:6%;top:22%;width:88%;height:35%;"><span class="tag">M2 中部桌心+牌河</span></div>
+        <div class="mark d" style="left:4%;top:61%;width:92%;height:21%;"><span class="tag">M3 手牌区（吸底）</span></div>
+        <div class="mark e" style="left:4%;top:84%;width:92%;height:10%;"><span class="tag">M4 主动作区</span></div>
+      </div>
+      <div class="legend">
+        <div><code>M3+M4</code> 形成单手闭环，点击热区 >= 44x44。</div>
+        <div><code>M2</code> 显示目标牌与响应关系，不依赖 hover。</div>
+        <div><code>M4</code> 默认单强主动作；ResponseWindow 默认“过”。</div>
+      </div>
+    </section>
+  </div>
+</body>
+</html>

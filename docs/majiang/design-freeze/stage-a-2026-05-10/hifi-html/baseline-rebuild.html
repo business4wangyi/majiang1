@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Baseline Rebuild v2 (Desktop Only)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg:#04090d; --line:#355067; --text:#ebf3fb; --sub:#93a8bf;
+      --felt1:#136046; --felt2:#0e4f3b; --felt3:#093827;
+      --gold:#e4ba67; --gold2:#c09040;
+      --tile:#f8f4ea; --tileEdge:#b9ad95; --tileInk:#27231c;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;background:radial-gradient(800px 300px at 5% -10%,#173852 0%,transparent 62%),linear-gradient(180deg,#04080c,#08111a 45%,#04080c);color:var(--text);font-family:"Noto Sans SC",sans-serif}
+    .wrap{padding:22px}
+    .title{font-size:28px;font-weight:800}
+    .sub{margin-top:6px;color:var(--sub);margin-bottom:16px}
+    .pair{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+    .card{border:1px solid var(--line);border-radius:14px;overflow:hidden;background:#0a141d;box-shadow:0 16px 40px rgba(0,0,0,.48)}
+    .head{padding:10px 12px;font-size:12px;color:var(--sub);display:flex;justify-content:space-between;border-bottom:1px solid var(--line);background:#112131}
+    img{display:block;width:100%;height:auto}
+
+    .desk{aspect-ratio:16/9;padding:10px;background:#09131b}
+    .hdr{
+      height:58px;border-radius:10px;border:1px solid #456884;
+      background:linear-gradient(180deg,#1a2d3f,#132333);
+      display:flex;align-items:center;justify-content:space-between;padding:0 12px;font-weight:700
+    }
+    .hdr .l{font-size:14px;letter-spacing:.2px}
+    .hdr .r{font-size:12px;color:#b8c9db}
+
+    .table{margin-top:10px;height:calc(100% - 68px);display:grid;grid-template-columns:1fr 230px;gap:10px}
+    .main{display:grid;grid-template-rows:1fr auto;gap:10px}
+
+    .felt{
+      border-radius:24px;position:relative;padding:12px;overflow:hidden;
+      border:1px solid #4a9a80;
+      background:
+        radial-gradient(52% 68% at 50% 34%, rgba(232,191,103,.22) 0%, transparent 72%),
+        radial-gradient(120% 150% at 50% 55%, var(--felt1) 0%, var(--felt2) 58%, var(--felt3) 100%);
+      box-shadow:
+        inset 0 0 0 2px rgba(255,255,255,.06),
+        inset 0 -28px 56px rgba(0,0,0,.38),
+        inset 0 24px 28px rgba(255,255,255,.03),
+        0 8px 20px rgba(0,0,0,.25);
+    }
+    .felt:before{
+      content:"";position:absolute;inset:6px;border-radius:20px;border:1px solid rgba(255,255,255,.09);pointer-events:none;
+      box-shadow: inset 0 0 0 1px rgba(0,0,0,.22);
+    }
+    .felt:after{
+      content:"";position:absolute;inset:-2px;border-radius:24px;pointer-events:none;
+      border:2px solid rgba(224,185,99,.14);
+    }
+
+    .seat{position:absolute;font-size:12px;border-radius:10px;padding:5px 8px;background:rgba(8,20,29,.86);border:1px solid #4e6d85;box-shadow:0 4px 10px rgba(0,0,0,.25)}
+    .top{top:8px;left:50%;transform:translateX(-50%)}
+    .left{left:8px;top:50%;transform:translateY(-50%)}
+    .right{right:8px;top:50%;transform:translateY(-50%)}
+    .you{bottom:8px;left:50%;transform:translateX(-50%);border-color:var(--gold);box-shadow:0 0 0 2px rgba(228,186,103,.2),0 4px 10px rgba(0,0,0,.25)}
+
+    .flow{
+      width:min(360px,82%);margin:54px auto 6px;border-radius:12px;padding:11px 13px;
+      border:1px solid #5f7b92;background:linear-gradient(180deg,rgba(7,18,27,.95),rgba(13,28,40,.92));
+      box-shadow:0 10px 20px rgba(0,0,0,.35)
+    }
+    .flow .a{font-size:18px;font-weight:800;color:var(--gold)}
+    .flow .b{font-size:13px;margin-top:5px}
+    .flow .c{font-size:13px;margin-top:4px;font-weight:700;color:#e39a4e}
+
+    .river{max-width:430px;margin:8px auto 0;display:grid;grid-template-columns:repeat(8,1fr);gap:4px}
+    .d{height:23px;border-radius:5px;background:var(--tile);border:1px solid var(--tileEdge);box-shadow:inset 0 -4px 6px rgba(0,0,0,.08)}
+    .d.hit{border-color:#df8f3f;box-shadow:0 0 0 2px rgba(223,143,63,.48),0 0 10px rgba(223,143,63,.45),inset 0 -4px 6px rgba(0,0,0,.08)}
+
+    .hand{border-radius:12px;border:1px solid #3c6179;background:linear-gradient(180deg,#132436,#0f1e2c);padding:10px}
+    .tiles{display:grid;grid-template-columns:repeat(14,minmax(0,1fr));gap:5px;margin-bottom:8px}
+    .t{
+      height:58px;border-radius:5px;
+      background:
+        linear-gradient(180deg,#fffdf7 0%, #f7f1e4 58%, #efe6d4 100%);
+      border:1px solid #b6a98d;
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,.9),
+        inset 0 -8px 10px rgba(0,0,0,.10),
+        0 2px 2px rgba(0,0,0,.12);
+      color:#221f18;font-size:17px;font-weight:800;display:flex;align-items:center;justify-content:center;
+      position:relative;
+    }
+    .t:before{
+      content:"";position:absolute;left:2px;right:2px;top:2px;height:8px;border-radius:3px;
+      background:linear-gradient(180deg,rgba(255,255,255,.7),rgba(255,255,255,0));
+      pointer-events:none;
+    }
+    .t.sel{transform:translateY(-8px);border-color:var(--gold2);box-shadow:0 6px 12px rgba(0,0,0,.32), inset 0 -6px 9px rgba(0,0,0,.08)}
+    .t.honor{color:#1f2530}
+    .t.dragon{color:#2a2a2a}
+    .t.dragon.r{color:#b2332f}
+    .t.dragon.g{color:#2f8a4c}
+
+
+    .acts{display:flex;gap:8px;flex-wrap:wrap}
+    .btn{min-height:42px;min-width:90px;border-radius:10px;border:1px solid transparent;padding:0 14px;font-weight:800}
+    .mainBtn{background:linear-gradient(180deg,#f0ce7a,#d9a64a);color:#201a12;box-shadow:inset 0 1px 0 rgba(255,255,255,.4),0 2px 6px rgba(0,0,0,.25)}
+    .warnBtn{background:linear-gradient(180deg,#f6af69,#de8435);color:#21170e;box-shadow:inset 0 1px 0 rgba(255,255,255,.35),0 2px 6px rgba(0,0,0,.24)}
+    .altBtn{background:#1b3042;border-color:#55738a;color:#d9e7f7}
+
+    .side{border-radius:12px;border:1px solid #35566f;background:rgba(12,24,35,.7);padding:8px}
+    .side .t1{font-size:12px;color:#7f96ad;margin-bottom:6px}
+    .log{height:36px;border-radius:8px;border:1px solid #395b74;background:rgba(31,52,70,.86);margin-bottom:6px}
+
+    .notes{margin-top:14px;border:1px solid var(--line);border-radius:12px;padding:12px;background:#101d29;line-height:1.6;color:#c8daec}
+    .k{color:#8eb0cd}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="title">桌面单图追平（v2）</div>
+    <div class="sub">只做桌面基准图：左侧原图（S-C），右侧追平重建稿。目标是优先缩小“产品代差”。</div>
+
+    <div class="pair">
+      <article class="card">
+        <div class="head"><span>基准原图（S-C 官方对局）</span><span>reference</span></div>
+        <img src="../competitor-assets/sega-mj/official-shot-003.jpg" alt="S-C desktop reference">
+      </article>
+
+      <article class="card">
+        <div class="head"><span>追平重建稿（Desktop v2）</span><span>rebuild</span></div>
+        <div class="desk">
+          <div class="hdr"><span class="l">東一局 / 牌山 47 / あなたの番</span><span class="r">可响应窗口</span></div>
+          <div class="table">
+            <div class="main">
+              <div class="felt">
+                <div class="seat top">北家 24100</div>
+                <div class="seat left">西家 25800</div>
+                <div class="seat right">东家 25200</div>
+                <div class="seat you">你(南) 24900</div>
+
+                <div class="flow">
+                  <div class="a">目标牌：5筒（东家打出）</div>
+                  <div class="b">可响应：碰 / 过</div>
+                  <div class="c">主动作：过（默认）</div>
+                </div>
+
+                <div class="river">
+                  <span class="d"></span><span class="d"></span><span class="d"></span><span class="d"></span><span class="d"></span><span class="d hit"></span><span class="d"></span><span class="d"></span>
+                  <span class="d"></span><span class="d"></span><span class="d"></span><span class="d"></span><span class="d"></span><span class="d"></span><span class="d"></span><span class="d"></span>
+                </div>
+              </div>
+
+              <div class="hand">
+                <div class="tiles">
+                  <span class="t">一</span><span class="t">二</span><span class="t sel">五</span><span class="t">七</span><span class="t">八</span><span class="t">九</span><span class="t honor">東</span>
+                  <span class="t honor">南</span><span class="t honor">西</span><span class="t honor">北</span><span class="t dragon">白</span><span class="t dragon g">發</span><span class="t dragon r">中</span><span class="t">五</span>
+                </div>
+                <div class="acts">
+                  <button class="btn warnBtn">过</button>
+                  <button class="btn altBtn">碰</button>
+                  <button class="btn altBtn">更多</button>
+                </div>
+              </div>
+            </div>
+
+            <aside class="side">
+              <div class="t1">事件 / 诊断（弱化）</div>
+              <div class="log"></div><div class="log"></div><div class="log"></div><div class="log"></div>
+            </aside>
+          </div>
+        </div>
+      </article>
+    </div>
+
+    <div class="notes">
+      <strong>本轮后仍需继续压缩的偏差：</strong><br>
+      <span class="k">1.</span> 真实牌面贴图仍未引入，仅做了字面牌近似。<br>
+      <span class="k">2.</span> 原图里更复杂的桌体装饰与 UI 金属边框尚未完全追平。<br>
+      <span class="k">3.</span> 下一轮将优先替换牌面资产与边框细节，再做移动端单图追平。
+    </div>
+  </div>
+</body>
+</html>
