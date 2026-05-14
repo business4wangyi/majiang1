@@ -1,0 +1,239 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ResponseWindow HiFi Mock V3</title>
+    <style>
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        background: radial-gradient(circle at 50% 20%, #1b2738 0%, #0d131c 55%, #070a0f 100%);
+        font-family: "PingFang SC", "Noto Sans SC", sans-serif;
+        color: #eaf2ff;
+      }
+
+      .frame {
+        width: 1460px;
+        height: 900px;
+        border-radius: 16px;
+        border: 1px solid rgba(140, 175, 205, 0.24);
+        overflow: hidden;
+        background: #0b121b;
+        box-shadow: 0 22px 64px rgba(0, 0, 0, 0.5);
+        display: grid;
+        grid-template-rows: 52px 1fr 150px 116px;
+      }
+
+      .hud {
+        background: linear-gradient(180deg, rgba(6, 13, 20, 0.96), rgba(10, 18, 28, 0.9));
+        display: grid;
+        grid-template-columns: 1.7fr 0.9fr 0.9fr;
+        gap: 10px;
+        padding: 8px 14px;
+      }
+      .hud-item {
+        border-radius: 7px;
+        border: 1px solid rgba(125, 169, 205, 0.28);
+        background: rgba(13, 31, 47, 0.55);
+        padding: 6px 10px;
+        display: grid;
+        align-content: center;
+      }
+      .hud-item .k { font-size: 12px; color: #89a8c2; }
+      .hud-item .v { font-size: 24px; font-weight: 700; line-height: 1.1; }
+
+      .stage {
+        position: relative;
+        background:
+          linear-gradient(180deg, rgba(8, 14, 22, 0.08), rgba(6, 11, 18, 0.46)),
+          url("../design-freeze/stage-a-2026-05-10/competitor-assets/sega-mj/official-shot-003.jpg") center/cover no-repeat;
+      }
+      .stage::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background:
+          radial-gradient(circle at 50% 62%, rgba(26, 52, 82, 0.08), transparent 52%),
+          linear-gradient(180deg, rgba(6, 12, 18, 0.14), rgba(4, 10, 16, 0.36));
+        pointer-events: none;
+      }
+
+      .response-float {
+        position: absolute;
+        left: 50%;
+        top: 42%;
+        transform: translate(-50%, -50%);
+        width: 636px;
+        border-radius: 12px;
+        border: 1px solid rgba(241, 199, 103, 0.94);
+        background: linear-gradient(180deg, rgba(10, 31, 50, 0.95), rgba(8, 22, 36, 0.94));
+        box-shadow: 0 16px 32px rgba(0, 0, 0, 0.42), 0 0 0 1px rgba(241, 199, 103, 0.24);
+        padding: 14px 16px 12px;
+        z-index: 3;
+      }
+      .line {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 11px;
+      }
+      .line strong { font-size: 41px; letter-spacing: 0.02em; }
+      .target {
+        width: 58px;
+        height: 78px;
+        border-radius: 8px;
+        border: 1px solid #c6b99a;
+        background: linear-gradient(180deg, #fffef8 0%, #eee4cf 100%);
+        box-shadow: inset 0 1px 0 rgba(255,255,255,0.84), inset 0 -10px 12px rgba(172,161,130,0.24), 0 5px 10px rgba(0,0,0,0.28);
+        display: grid;
+        align-items: center;
+        justify-items: center;
+        color: #36281f;
+      }
+      .target .r { font-size: 39px; font-weight: 700; line-height: 1; margin-top: 6px; }
+      .target .s { font-size: 19px; font-weight: 700; line-height: 1; margin-bottom: 8px; }
+      .timer {
+        width: 64px;
+        height: 64px;
+        border-radius: 50%;
+        border: 2px solid rgba(255, 226, 145, 0.9);
+        background: radial-gradient(circle at 35% 28%, #ffdc78 0%, #d44f2a 46%, #7a1d25 100%);
+        box-shadow: 0 0 0 3px rgba(116, 32, 21, 0.28), 0 10px 16px rgba(0,0,0,0.36);
+        display: grid;
+        place-items: center;
+        font-size: 24px;
+        font-weight: 800;
+      }
+      .hint {
+        margin-top: 10px;
+        text-align: center;
+        font-size: 31px;
+        font-weight: 700;
+        color: #f4fbff;
+      }
+      .hint span { color: #ffd785; }
+
+      .hand {
+        background: linear-gradient(180deg, rgba(8, 17, 27, 0.92), rgba(5, 12, 19, 0.95));
+        border-top: 1px solid rgba(131, 166, 199, 0.22);
+        display: grid;
+        align-content: center;
+        padding: 10px 16px 12px;
+      }
+      .tiles {
+        display: flex;
+        justify-content: center;
+        gap: 7px;
+      }
+      .tile {
+        width: 64px;
+        height: 88px;
+        border-radius: 8px;
+        border: 1px solid #c6b99a;
+        background: linear-gradient(180deg, #fffef8 0%, #eee4cf 100%);
+        box-shadow: inset 0 1px 0 rgba(255,255,255,0.84), inset 0 -10px 12px rgba(172,161,130,0.24), 0 4px 0 #b2a385, 0 8px 12px rgba(0,0,0,0.3);
+        color: #35271e;
+        display: grid;
+        align-items: center;
+        justify-items: center;
+      }
+      .tile.match {
+        transform: translateY(-8px);
+        box-shadow: 0 0 0 2px rgba(241, 199, 103, 0.65), inset 0 1px 0 rgba(255,255,255,0.84), inset 0 -10px 12px rgba(172,161,130,0.24), 0 10px 14px rgba(0,0,0,0.34);
+      }
+      .tile .r { font-size: 35px; font-weight: 700; line-height: 1; margin-top: 7px; }
+      .tile .s { font-size: 17px; font-weight: 700; line-height: 1; margin-bottom: 9px; }
+
+      .actions {
+        background: linear-gradient(180deg, rgba(7, 15, 22, 0.96), rgba(5, 10, 16, 0.98));
+        border-top: 1px solid rgba(120, 158, 189, 0.22);
+        padding: 10px 18px 12px;
+        display: grid;
+        align-content: center;
+        gap: 10px;
+      }
+      .summary {
+        justify-self: center;
+        min-width: 680px;
+        border-radius: 999px;
+        border: 1px solid rgba(241, 199, 103, 0.28);
+        background: rgba(7, 24, 37, 0.65);
+        color: #f3d98d;
+        text-align: center;
+        font-size: 21px;
+        font-weight: 700;
+        padding: 4px 16px 5px;
+      }
+      .row {
+        display: grid;
+        grid-template-columns: 290px 430px;
+        gap: 12px;
+        justify-content: center;
+      }
+      .btn {
+        min-height: 76px;
+        border-radius: 10px;
+        border: 2px solid rgba(241, 199, 103, 0.34);
+        background: rgba(12, 35, 52, 0.9);
+        color: #dcecf8;
+        font-size: 46px;
+        font-weight: 800;
+      }
+      .btn.main {
+        color: #211609;
+        border-color: #ffe29f;
+        background: linear-gradient(180deg, #ffd873 0%, #db9e31 100%);
+        box-shadow: inset 0 1px 0 rgba(255,255,255,0.4), inset 0 -8px 0 rgba(149, 74, 9, 0.22);
+      }
+    </style>
+  </head>
+  <body>
+    <main class="frame">
+      <section class="hud">
+        <div class="hud-item"><div class="k">当前局势</div><div class="v">AI-北 打出三万</div></div>
+        <div class="hud-item"><div class="k">牌山</div><div class="v">56</div></div>
+        <div class="hud-item"><div class="k">圈风 / 局数</div><div class="v">东一局</div></div>
+      </section>
+      <section class="stage">
+        <article class="response-float">
+          <div class="line">
+            <strong>AI-北 打出</strong>
+            <div class="target"><span class="r">三</span><span class="s">萬</span></div>
+            <strong>→ 你可响应</strong>
+            <div class="timer">6s</div>
+          </div>
+          <div class="hint"><span>三万</span> 可响应：你可碰，你已有两张三万，默认点过。</div>
+        </article>
+      </section>
+      <section class="hand">
+        <div class="tiles">
+          <div class="tile"><span class="r">一</span><span class="s">萬</span></div>
+          <div class="tile"><span class="r">二</span><span class="s">萬</span></div>
+          <div class="tile match"><span class="r">三</span><span class="s">萬</span></div>
+          <div class="tile match"><span class="r">三</span><span class="s">萬</span></div>
+          <div class="tile"><span class="r">四</span><span class="s">萬</span></div>
+          <div class="tile"><span class="r">五</span><span class="s">萬</span></div>
+          <div class="tile"><span class="r">六</span><span class="s">筒</span></div>
+          <div class="tile"><span class="r">六</span><span class="s">筒</span></div>
+          <div class="tile"><span class="r">七</span><span class="s">筒</span></div>
+          <div class="tile"><span class="r">八</span><span class="s">条</span></div>
+          <div class="tile"><span class="r">九</span><span class="s">条</span></div>
+          <div class="tile"><span class="r">东</span><span class="s">風</span></div>
+          <div class="tile"><span class="r">中</span><span class="s">龍</span></div>
+          <div class="tile"><span class="r">白</span><span class="s">龍</span></div>
+        </div>
+      </section>
+      <section class="actions">
+        <div class="summary">三万 · 你可碰：你已有两张三万 · 默认【过】</div>
+        <div class="row">
+          <button class="btn">碰</button>
+          <button class="btn main">过</button>
+        </div>
+      </section>
+    </main>
+  </body>
+</html>

@@ -76,7 +76,18 @@ function createTileAssetNode(label, className) {
   node.setAttribute("aria-hidden", "true");
   if (parsed.kind === "suit") {
     node.setAttribute("data-tile-suit", parsed.suit);
-    node.innerHTML = `<span class="tile-asset-rank">${parsed.rankText}</span><span class="tile-asset-suit">${parsed.suit}</span>`;
+    node.setAttribute("data-tile-rank", String(parsed.rankValue));
+    if (parsed.suit === "筒") {
+      const dots = Array.from({ length: parsed.rankValue }, () => '<span class="tile-dot"></span>').join("");
+      node.innerHTML = `<span class="tile-pattern tile-pattern--dots">${dots}</span><span class="tile-asset-suit">筒</span>`;
+      return node;
+    }
+    if (parsed.suit === "条") {
+      const bars = Array.from({ length: parsed.rankValue }, () => '<span class="tile-bamboo"></span>').join("");
+      node.innerHTML = `<span class="tile-pattern tile-pattern--bamboo">${bars}</span><span class="tile-asset-suit">条</span>`;
+      return node;
+    }
+    node.innerHTML = `<span class="tile-asset-rank">${parsed.rankText}</span><span class="tile-asset-suit">萬</span>`;
     return node;
   }
   if (parsed.kind === "wind" || parsed.kind === "dragon") {
@@ -101,6 +112,44 @@ function applyTileVisual(container, label, options = {}) {
   container.appendChild(text);
 }
 
+function getResponseActionLabel(model) {
+  const hint = String((model && model.latestEvent && model.latestEvent.responseHint) || "");
+  if (hint.includes("可胡")) return "胡";
+  if (hint.includes("可杠")) return "杠";
+  if (hint.includes("可碰")) return "碰";
+  if (hint.includes("可吃")) return "吃";
+  return "应";
+}
+
+function renderSeatActionSignal(node, seat, model) {
+  if (!node) return;
+  node.innerHTML = "";
+  const isResponse = model.phase === "response_window";
+  const isSource = isResponse && seat.id === model.responseContext.sourcePlayerId;
+  const isSelfOpportunity = isResponse && seat.id === "south";
+  const label = isSource ? "打" : isSelfOpportunity ? getResponseActionLabel(model) : "待";
+  const detail = isSource ? (model.responseContext.tile || model.latestEvent.tile || "") : "";
+
+  const chip = document.createElement("span");
+  chip.className = "seat-action-chip";
+  chip.textContent = label;
+  node.appendChild(chip);
+
+  if (detail) {
+    const tile = document.createElement("span");
+    tile.className = "seat-action-tile";
+    applyTileVisual(tile, detail, { assetClassName: "tile-asset tile-asset--micro" });
+    node.appendChild(tile);
+  }
+
+  const sr = document.createElement("span");
+  sr.className = "tile-text-sr";
+  sr.textContent = seat.latestAction || "等待中";
+  node.appendChild(sr);
+  node.classList.toggle("is-source-action", isSource);
+  node.classList.toggle("is-self-response", isSelfOpportunity);
+}
+
 function getPhasePrimaryActionId(model, actionMap) {
   if (!model) return null;
   if (model.phase === "player_turn") {
@@ -113,14 +162,19 @@ function getPhasePrimaryActionId(model, actionMap) {
     return "discard";
   }
   if (model.phase === "response_window") {
-    const priority = ["hu", "gang", "peng", "chi"];
-    for (const actionId of priority) {
-      const action = actionMap.get(actionId);
-      if (action && action.available) return actionId;
-    }
+    const pass = actionMap.get("pass");
+    if (pass && pass.available) return "pass";
     return "pass";
   }
   return null;
+}
+
+function getResponseSecondaryActionId(actionMap) {
+  const priority = ["hu", "gang", "peng", "chi"];
+  return priority.find((actionId) => {
+    const action = actionMap.get(actionId);
+    return action && action.available;
+  }) || null;
 }
 
 function showToast(message, type) {
@@ -295,19 +349,21 @@ function renderStatus(model) {
     latestActionMainNode.classList.add(isStrong ? "recent-hit-strong" : "recent-hit");
   }
   appState.lastLatestActionKey = latestActionKey;
-  document.getElementById("latestActionSub").textContent = latestSub;
+  document.getElementById("latestActionSub").textContent =
+    model.phase === "response_window" ? "响应窗口" : latestSub;
   document.getElementById("responseLinkHint").textContent =
-    model.phase === "response_window" ? `目标牌：${model.responseContext.tile || "未知"} · 来源：${model.responseContext.sourcePlayerId || "未知"}` : "";
+    model.phase === "response_window" ? `${model.responseContext.tile || "未知"} · ${model.responseContext.sourcePlayerId || "未知"}` : "";
   document.getElementById("stageActor").textContent = model.latestEvent.actor || "系统";
-  document.getElementById("stageVerb").textContent = model.latestEvent.verb || "等待";
+  document.getElementById("stageVerb").textContent = model.phase === "response_window" ? "打" : (model.latestEvent.verb || "等待");
   const targetTileNode = document.getElementById("responseTargetTile");
   applyTileVisual(targetTileNode, model.responseContext.tile || model.latestEvent.tile || "—", { assetClassName: "tile-asset tile-asset--target" });
-  document.getElementById("stageToYou").textContent = model.phase === "response_window" ? "→ 你可响应" : model.phase === "player_turn" ? "→ 轮到你行动" : "→ 关注局势";
+  document.getElementById("stageToYou").textContent = model.phase === "response_window" ? getResponseActionLabel(model) : model.phase === "player_turn" ? "你" : "待";
   const priorityTag = document.getElementById("stagePriorityTag");
   const stageMainPath = document.getElementById("stageMainPath");
   if (model.phase === "response_window") {
-    priorityTag.textContent = "主路径：主响应→过";
-    stageMainPath.textContent = "主路径：先看目标牌，再执行主响应；若放弃请点过。";
+    const secondsLeft = Number.isFinite(model.responseContext.remainingMs) ? Math.ceil(model.responseContext.remainingMs / 1000) : null;
+    priorityTag.textContent = secondsLeft === null ? "过" : `${secondsLeft}s`;
+    stageMainPath.textContent = "";
   } else if (model.phase === "player_turn") {
     priorityTag.textContent = "主路径：选牌→出牌";
     stageMainPath.textContent = appState.selectedTileIndex === null ? "主路径：先选一张手牌。" : "主路径：点主动作完成出牌。";
@@ -325,7 +381,7 @@ function renderStatus(model) {
   centerNode.classList.toggle("is-response-window", model.phase === "response_window");
   const primaryFocus = document.getElementById("primaryFocusHint");
   if (model.phase === "response_window") {
-    primaryFocus.textContent = `响应窗口：${model.latestEvent.responseHint || "请选择响应动作或过"}`;
+    primaryFocus.textContent = "";
   } else if (model.phase === "player_turn") {
     primaryFocus.textContent = "你的回合：先选牌，再执行出牌/确认";
   } else if (model.phase === "waiting_ai") {
@@ -341,7 +397,7 @@ function renderStatus(model) {
     countdown.textContent = "当前无响应倒计时";
     countdown.classList.remove("warning");
   } else {
-    countdown.textContent = `响应剩余 ${(model.responseContext.remainingMs / 1000).toFixed(1)}s`;
+    countdown.textContent = `${(model.responseContext.remainingMs / 1000).toFixed(1)}s`;
     countdown.classList.toggle("warning", model.responseContext.remainingMs <= 5000);
   }
 }
@@ -388,13 +444,28 @@ function renderSeats(model) {
   model.seats.forEach((seat) => {
     const target = document.getElementById(`seat-${seat.id}`);
     if (!target) return;
+    const isSelfSeat = seat.id === "south";
     target.querySelector(".name").textContent = seat.name;
     target.querySelector(".score").textContent = String(seat.score);
-    target.querySelector(".seat-meta").textContent = `手牌 ${seat.handCount} · 副露 ${seat.meldGroups.length}`;
+    const seatMeta = target.querySelector(".seat-meta");
+    seatMeta.textContent = "";
+    seatMeta.classList.add("hidden");
     const latestActionNode = target.querySelector(".seat-latest-action");
-    if (latestActionNode) latestActionNode.textContent = seat.latestAction || "等待中";
+    renderSeatActionSignal(latestActionNode, seat, model);
     const windChip = target.querySelector(".seat-wind");
     if (windChip && seat.windLabel) windChip.textContent = seat.windLabel;
+    target.querySelector(".seat-hand-back")?.remove();
+    if (seat.id !== "south") {
+      const backRow = document.createElement("div");
+      backRow.className = "seat-hand-back";
+      const visibleBacks = Math.max(4, Math.min(8, seat.handCount || 0));
+      for (let i = 0; i < visibleBacks; i += 1) {
+        const backTile = document.createElement("span");
+        backTile.className = "tile-back";
+        backRow.appendChild(backTile);
+      }
+      target.insertBefore(backRow, target.querySelector(".meld-list"));
+    }
     target.classList.toggle("is-active", seat.id === model.currentPlayerId);
     target.classList.toggle("is-opportunity", seat.id === "south" && model.phase === "response_window");
     target.classList.toggle("is-risk", seat.id === sourceSeatId && model.phase === "response_window");
@@ -416,12 +487,21 @@ function renderSeats(model) {
       });
       meldList.appendChild(node);
     });
+    if (isSelfSeat) {
+      meldList.classList.remove("hidden");
+    } else {
+      meldList.classList.toggle("hidden", seat.meldGroups.length === 0);
+    }
   });
 }
 
 function renderRiver(model) {
   ["north", "west", "east", "south"].forEach((seatId) => {
     const container = document.getElementById(`river-${seatId}`);
+    const lane = container.parentElement;
+    if (lane) {
+      lane.classList.add("river-lane", `river-lane--${seatId}`);
+    }
     container.innerHTML = "";
     (model.discardRiver[seatId] || []).forEach((tile, index) => {
       const node = document.createElement("span");
@@ -446,6 +526,7 @@ function renderHand(model) {
     const btn = document.createElement("button");
     btn.type = "button";
     btn.className = "tile";
+    if (model.phase === "response_window" && tile === model.responseContext.tile) btn.classList.add("tile--response-match");
     if (appState.selectedTileIndex === idx && model.phase === "response_window") btn.classList.add("tile--response-focus");
     if (appState.selectedTileIndex === idx) btn.classList.add("selected");
     applyTileVisual(btn, tile, { assetClassName: "tile-asset tile-asset--hand" });
@@ -478,19 +559,20 @@ function renderActionBar(model) {
   }
 
   const primaryActionId = getPhasePrimaryActionId(model, actionMap);
+  const responseSecondaryActionId = scope === "response" ? getResponseSecondaryActionId(actionMap) : null;
 
   const shouldShowByPriority = (actionId) => {
     if (scope === "none") return false;
     if (appState.showMoreActions) return true;
     if (scope === "response") {
-      return actionId === primaryActionId || actionId === "pass";
+      return actionId === primaryActionId || actionId === responseSecondaryActionId;
     }
     if (scope === "turn") return actionId === primaryActionId;
     return true;
   };
 
   let hasSecondaryActions = false;
-  document.getElementById("availableActionTitle").textContent = scope === "response" ? "当前可响应动作说明：" : scope === "turn" ? "当前可出牌动作说明：" : "当前可用动作说明：";
+  document.getElementById("availableActionTitle").textContent = scope === "response" ? "可响应：" : scope === "turn" ? "可操作：" : "当前动作：";
   document.querySelectorAll("[data-action-id]").forEach((btn) => {
     const actionId = btn.getAttribute("data-action-id");
     const action = actionMap.get(actionId) || { label: btn.textContent, available: false, reasonText: "当前不可用" };
@@ -531,17 +613,21 @@ function renderActionBar(model) {
       btn.setAttribute("data-primary", "true");
       if (!disabled) btn.classList.add("action-primary");
     }
+    if (scope === "response" && actionId === responseSecondaryActionId) {
+      btn.classList.add("action-secondary-choice");
+    }
 
     if (action.available && ["hu", "gang", "peng", "chi"].includes(actionId)) {
       const li = document.createElement("li");
-      li.textContent = `${action.label}：${action.reasonText}`;
+      li.textContent = action.label;
       availableReasonList.appendChild(li);
     }
   });
 
   if (scope === "response") {
     const primaryLabel = (actionMap.get(primaryActionId) && actionMap.get(primaryActionId).label) || "过";
-    actionStageSummary.textContent = `响应阶段：主动作【${primaryLabel}】；保留【过】；其余动作收进更多动作。`;
+    const secondaryLabel = responseSecondaryActionId ? (actionMap.get(responseSecondaryActionId)?.label || "") : "";
+    actionStageSummary.textContent = `${secondaryLabel || getResponseActionLabel(model)} · ${primaryLabel}`;
   } else if (scope === "turn") {
     const primaryLabel = (actionMap.get(primaryActionId) && actionMap.get(primaryActionId).label) || "出牌";
     actionStageSummary.textContent = `出牌阶段：主动作【${primaryLabel}】；确认/取消收进更多动作。`;
@@ -554,13 +640,16 @@ function renderActionBar(model) {
   toggleMoreBtn.disabled = model.submitting || lockAllActions;
   toggleMoreBtn.textContent = appState.showMoreActions ? "收起次要动作" : "更多动作";
 
+  const resultButton = document.getElementById("openResult");
+  resultButton.classList.toggle("hidden-by-phase", model.phase !== "ended");
+
   if (!availableReasonList.childElementCount) {
     const li = document.createElement("li");
-    li.textContent = scope === "response" ? "当前无可响应动作" : scope === "turn" ? "当前无额外动作说明" : "当前无可用动作";
+    li.textContent = scope === "response" ? "无" : scope === "turn" ? "无" : "无";
     availableReasonList.appendChild(li);
   }
 
-  const phaseHint = scope === "response" ? "当前为响应阶段，仅显示响应动作。" : scope === "turn" ? "当前为出牌阶段，仅显示出牌动作。" : "当前不可操作。";
+  const phaseHint = scope === "response" ? "响应阶段" : scope === "turn" ? "出牌阶段" : "不可操作";
   const disabledReasonText = `${phaseHint} ${disabledReasons.join("；") || "当前无禁用动作"}`;
   document.getElementById("disabledActionReason").textContent = disabledReasonText;
   document.getElementById("mobileDisabledActionReason").textContent = disabledReasonText;
@@ -568,7 +657,7 @@ function renderActionBar(model) {
   document.getElementById("mobileAvailableActionTitle").textContent = document.getElementById("availableActionTitle").textContent;
   const mobileList = document.getElementById("mobileAvailableActionReasons");
   mobileList.innerHTML = availableReasonList.innerHTML;
-  document.getElementById("actionReason").textContent = appState.selectedTileIndex === null ? model.latestEvent.responseHint : `已选中：${model.selfHand[appState.selectedTileIndex]}`;
+  document.getElementById("actionReason").textContent = appState.selectedTileIndex === null ? "等待操作" : `已选：${model.selfHand[appState.selectedTileIndex]}`;
 }
 
 function renderTimeline(model) {
@@ -710,6 +799,8 @@ function rerender() {
   renderLobby();
   if (appState.route !== "table") return;
   const model = getCurrentViewModel();
+  const tablePage = document.getElementById("tablePage");
+  tablePage.classList.toggle("is-response-window", model.phase === "response_window");
   setGlobalSyncError(model.globalError);
   setInlineError(appState.inlineError);
   renderStatus(model);
