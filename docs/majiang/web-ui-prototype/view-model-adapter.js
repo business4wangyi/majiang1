@@ -1,7 +1,7 @@
 (function initMajiangViewModelAdapter(global) {
-  const ACTION_ORDER = ["hu", "gang", "peng", "chi", "pass", "discard", "confirm", "cancel"];
+  const ACTION_ORDER = ["hu", "gang", "peng", "pass", "discard", "confirm", "cancel"];
   const PHASE_ACTION_SCOPE = {
-    response_window: ["hu", "gang", "peng", "chi", "pass"],
+    response_window: ["hu", "gang", "peng", "pass"],
     player_turn: ["discard", "confirm", "cancel"],
     waiting_ai: [],
     ended: [],
@@ -115,37 +115,36 @@
     return {
       gameId: "demo-round-001",
       phase: "response_window",
-      currentPlayerId: "north",
-      wallCount: 56,
-      roundInfo: "东一局",
-      turnHint: "AI-北 刚打出 三万，你可碰或过",
+      currentPlayerId: "south",
+      wallCount: 36,
+      roundInfo: "东风局",
+      turnHint: "右家打出三万，你可胡",
       seats: [
-        { id: "north", name: "AI-北", windLabel: "北位", score: 96, handCount: 13, meldGroups: [{ type: "peng", tiles: ["六万", "六万", "六万"] }], latestAction: "打出 三万" },
-        { id: "west", name: "AI-西", windLabel: "西位", score: 88, handCount: 12, meldGroups: [], latestAction: "等待中" },
-        { id: "east", name: "AI-东", windLabel: "东位", score: 104, handCount: 13, meldGroups: [{ type: "chi", tiles: ["三条", "四条", "五条"] }], latestAction: "等待中" },
-        { id: "south", name: "你", windLabel: "南位", score: 112, handCount: 14, meldGroups: [], latestAction: "可响应" },
+        { id: "north", name: "玩家3", windLabel: "北", score: 24200, handCount: 13, meldGroups: [], latestAction: "等待" },
+        { id: "west", name: "玩家2", windLabel: "西", score: 21800, handCount: 13, meldGroups: [], latestAction: "已出牌" },
+        { id: "east", name: "玩家4", windLabel: "东", score: 25600, handCount: 13, meldGroups: [], latestAction: "当前出牌" },
+        { id: "south", name: "玩家1", windLabel: "南", score: 28400, handCount: 14, meldGroups: [], latestAction: "可胡" },
       ],
-      selfHand: ["一万", "二万", "三万", "三万", "四万", "五万", "六筒", "六筒", "七筒", "八条", "九条", "东", "红中", "白板"],
+      selfHand: ["一万", "二万", "三万", "五万", "五万", "一筒", "二筒", "三筒", "一条", "二条", "三条", "四条", "发", "中"],
       discardRiver: {
-        north: ["三万", "九条", "二筒", "北", "五万", "八万"],
-        west: ["六万", "七万", "一筒", "白板", "三条", "六筒"],
-        east: ["九万", "四条", "二万", "发", "一条", "七筒"],
-        south: ["三筒", "四万", "东", "九筒", "五条", "二条"],
+        north: ["一万", "六万", "三万", "五万", "六万", "七万"],
+        west: ["九筒", "白", "三条", "八条", "七筒", "一万"],
+        east: ["二筒", "五筒", "三筒", "九筒", "六筒", "三万"],
+        south: ["八万", "东", "四条", "九条", "五条", "二条"],
       },
-      latestEvent: { actor: "AI-北", verb: "打出", tile: "三万", target: "你", responseHint: "你可碰：你已有两张三万" },
-      responseContext: { sourcePlayerId: "north", tile: "三万", highlightedRiverSeatId: "north", remainingMs: 6000 },
+      latestEvent: { actor: "玩家4", verb: "打出", tile: "三万", target: "你", responseHint: "右家打出三万，可胡" },
+      responseContext: { sourcePlayerId: "east", tile: "三万", highlightedRiverSeatId: "east", remainingMs: 6200 },
       availableActions: [
-        { id: "hu", label: "胡", available: false, reasonText: "当前牌型不满足可胡条件" },
-        { id: "gang", label: "杠", available: false, reasonText: "当前无可杠牌组" },
-        { id: "peng", label: "碰", available: true, reasonText: "你已有两张三万", isPrimaryPath: true },
-        { id: "chi", label: "吃", available: false, reasonText: "本次不是上家弃牌，不能吃" },
+        { id: "hu", label: "胡", available: true, reasonText: "右家打出三万，满足可胡条件", isPrimaryPath: true },
+        { id: "gang", label: "杠", available: true, reasonText: "可杠当前目标组" },
+        { id: "peng", label: "碰", available: true, reasonText: "你已有两张三万" },
         { id: "pass", label: "过", available: true, reasonText: "放弃本次响应" },
         { id: "discard", label: "出牌", available: true, reasonText: "请选择一张手牌后出牌" },
         { id: "confirm", label: "确认", available: true, reasonText: "确认当前出牌选择" },
         { id: "cancel", label: "取消", available: true, reasonText: "取消当前选择" },
       ],
       eventTimeline: [
-        { id: "e1", text: "AI-北 打出 三万（可被响应）", scoreDelta: "", marker: "first_response", seats: "你可碰" },
+        { id: "e1", text: "玩家4 打出 三万（你可胡）", scoreDelta: "", marker: "first_response", seats: "你可胡" },
       ],
       scoreDeltaTimeline: [{ text: "当前无分数变化", delta: "+0", trend: "up" }],
       resultSummary: null,
@@ -163,13 +162,13 @@
     if (type === "ron") {
       return {
         type,
-        title: "荣和结束",
-        reason: "AI-东 荣和 AI-北 打出的 五万",
+        title: "点炮胡",
+        reason: "你胡了玩家4打出的五万",
         rows: [
-          { player: "AI-东", delta: "+16", total: 120, role: "胡牌者", reason: "荣和" },
-          { player: "AI-北", delta: "-16", total: 80, role: "点炮者", reason: "放铳" },
-          { player: "AI-西", delta: "0", total: 90, role: "旁家", reason: "无支付" },
-          { player: "你", delta: "0", total: 112, role: "旁家", reason: "无支付" },
+          { player: "玩家1", delta: "+3900", total: 32300, role: "胡牌者", reason: "点炮胡" },
+          { player: "玩家4", delta: "-3900", total: 21700, role: "点炮方", reason: "放炮支付" },
+          { player: "玩家2", delta: "0", total: 21800, role: "旁家", reason: "无支付" },
+          { player: "玩家3", delta: "0", total: 24200, role: "旁家", reason: "无支付" },
         ],
       };
     }
@@ -177,12 +176,12 @@
       return {
         type,
         title: "流局",
-        reason: "牌山耗尽，按听牌罚则结算",
+        reason: "牌山耗尽，按流局规则结算",
         rows: [
-          { player: "你", delta: "+4", total: 116, role: "听牌", reason: "流局听牌奖励" },
-          { player: "AI-北", delta: "-2", total: 94, role: "未听牌", reason: "流局罚分" },
-          { player: "AI-西", delta: "-1", total: 87, role: "未听牌", reason: "流局罚分" },
-          { player: "AI-东", delta: "-1", total: 103, role: "未听牌", reason: "流局罚分" },
+          { player: "玩家1", delta: "0", total: 28400, role: "流局", reason: "未发生胡牌" },
+          { player: "玩家2", delta: "0", total: 21800, role: "流局", reason: "未发生胡牌" },
+          { player: "玩家3", delta: "0", total: 24200, role: "流局", reason: "未发生胡牌" },
+          { player: "玩家4", delta: "0", total: 25600, role: "流局", reason: "未发生胡牌" },
         ],
       };
     }
@@ -192,22 +191,22 @@
         title: "异常终止",
         reason: "状态同步失败，已中止本局",
         rows: [
-          { player: "你", delta: "0", total: 112, role: "中止", reason: "未结算" },
-          { player: "AI-北", delta: "0", total: 96, role: "中止", reason: "未结算" },
-          { player: "AI-西", delta: "0", total: 88, role: "中止", reason: "未结算" },
-          { player: "AI-东", delta: "0", total: 104, role: "中止", reason: "未结算" },
+          { player: "玩家1", delta: "0", total: 28400, role: "中止", reason: "未结算" },
+          { player: "玩家2", delta: "0", total: 21800, role: "中止", reason: "未结算" },
+          { player: "玩家3", delta: "0", total: 24200, role: "中止", reason: "未结算" },
+          { player: "玩家4", delta: "0", total: 25600, role: "中止", reason: "未结算" },
         ],
       };
     }
     return {
       type: "tsumo",
-      title: "自摸结束",
-      reason: "你自摸胡牌：平胡 + 自摸",
+      title: "自摸胡牌",
+      reason: "你自摸胡牌：平胡",
       rows: [
-        { player: "你", delta: "+24", total: 124, role: "胡牌者", reason: "自摸" },
-        { player: "AI-北", delta: "-8", total: 88, role: "支付方", reason: "自摸支付" },
-        { player: "AI-西", delta: "-8", total: 80, role: "支付方", reason: "自摸支付" },
-        { player: "AI-东", delta: "-8", total: 96, role: "支付方", reason: "自摸支付" },
+        { player: "玩家1", delta: "+2400", total: 30800, role: "胡牌者", reason: "自摸" },
+        { player: "玩家2", delta: "-800", total: 21000, role: "支付方", reason: "自摸支付" },
+        { player: "玩家3", delta: "-800", total: 23400, role: "支付方", reason: "自摸支付" },
+        { player: "玩家4", delta: "-800", total: 24800, role: "支付方", reason: "自摸支付" },
       ],
     };
   }

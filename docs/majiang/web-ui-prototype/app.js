@@ -1,4 +1,6 @@
 const { ACTION_ORDER, createTableViewModelFromSnapshot, createDefaultLobbyState, createDefaultTableSnapshot, createResultSummary } = window.MajiangViewModelAdapter;
+const IS_ACCEPTANCE_MODE = new URLSearchParams(window.location.search).get("acceptance") === "1";
+document.body.classList.toggle("acceptance-mode", IS_ACCEPTANCE_MODE);
 
 const appState = {
   lobby: createDefaultLobbyState(),
@@ -27,6 +29,7 @@ const appState = {
   lastAnnouncedText: "",
   lastPhaseForA11y: "",
   debugTextTiles: false,
+  pendingFocusTargetId: null,
 };
 
 function nowTag() {
@@ -117,8 +120,7 @@ function getResponseActionLabel(model) {
   if (hint.includes("可胡")) return "胡";
   if (hint.includes("可杠")) return "杠";
   if (hint.includes("可碰")) return "碰";
-  if (hint.includes("可吃")) return "吃";
-  return "应";
+  return "可";
 }
 
 function renderSeatActionSignal(node, seat, model) {
@@ -162,19 +164,22 @@ function getPhasePrimaryActionId(model, actionMap) {
     return "discard";
   }
   if (model.phase === "response_window") {
+    const hu = actionMap.get("hu");
+    if (hu && hu.available) return "hu";
     const pass = actionMap.get("pass");
     if (pass && pass.available) return "pass";
-    return "pass";
+    const peng = actionMap.get("peng");
+    if (peng && peng.available) return "peng";
+    const gang = actionMap.get("gang");
+    if (gang && gang.available) return "gang";
+    return "hu";
   }
   return null;
 }
 
-function getResponseSecondaryActionId(actionMap) {
-  const priority = ["hu", "gang", "peng", "chi"];
-  return priority.find((actionId) => {
-    const action = actionMap.get(actionId);
-    return action && action.available;
-  }) || null;
+function getResponseVisibleActionIds(actionMap) {
+  const order = ["hu", "peng", "gang", "pass"];
+  return order.filter((actionId) => actionMap.has(actionId));
 }
 
 function showToast(message, type) {
@@ -200,6 +205,7 @@ function closeOverlay(overlayId, focusTargetId) {
   overlay.classList.add("hidden");
   if (overlayId === "actionExplainDrawer") appState.actionExplainDrawerOpen = false;
   appState.suppressOverlayAutofocus = true;
+  if (focusTargetId) appState.pendingFocusTargetId = focusTargetId;
   if (focusTargetId) {
     const focusTarget = document.getElementById(focusTargetId);
     if (focusTarget) focusTarget.focus();
@@ -335,6 +341,7 @@ function renderStatus(model) {
   document.getElementById("roundInfo").textContent = model.roundInfo;
   document.getElementById("centerRoundInfo").textContent = model.roundInfo;
   document.getElementById("centerWallCount").textContent = String(model.wallCount);
+  document.getElementById("scoreCoreWall").textContent = String(model.wallCount);
 
   const latestMain = `${model.latestEvent.actor} ${model.latestEvent.verb} ${model.latestEvent.tile}`.trim();
   const latestSub = `${model.latestEvent.target}：${model.latestEvent.responseHint}`;
@@ -345,25 +352,25 @@ function renderStatus(model) {
     latestActionMainNode.classList.remove("recent-hit");
     latestActionMainNode.classList.remove("recent-hit-strong");
     void latestActionMainNode.offsetWidth;
-    const isStrong = ["胡", "荣和", "自摸", "杠", "碰"].some((keyword) => latestMain.includes(keyword) || String(model.latestEvent.responseHint || "").includes(keyword));
+    const isStrong = ["胡", "自摸", "杠", "碰"].some((keyword) => latestMain.includes(keyword) || String(model.latestEvent.responseHint || "").includes(keyword));
     latestActionMainNode.classList.add(isStrong ? "recent-hit-strong" : "recent-hit");
   }
   appState.lastLatestActionKey = latestActionKey;
   document.getElementById("latestActionSub").textContent =
     model.phase === "response_window" ? "响应窗口" : latestSub;
   document.getElementById("responseLinkHint").textContent =
-    model.phase === "response_window" ? `${model.responseContext.tile || "未知"} · ${model.responseContext.sourcePlayerId || "未知"}` : "";
+    model.phase === "response_window" ? `右家目标牌：${model.responseContext.tile || "未知"}，当前你可胡` : "";
   document.getElementById("stageActor").textContent = model.latestEvent.actor || "系统";
   document.getElementById("stageVerb").textContent = model.phase === "response_window" ? "打" : (model.latestEvent.verb || "等待");
   const targetTileNode = document.getElementById("responseTargetTile");
   applyTileVisual(targetTileNode, model.responseContext.tile || model.latestEvent.tile || "—", { assetClassName: "tile-asset tile-asset--target" });
-  document.getElementById("stageToYou").textContent = model.phase === "response_window" ? getResponseActionLabel(model) : model.phase === "player_turn" ? "你" : "待";
+  document.getElementById("stageToYou").textContent = model.phase === "response_window" ? "可胡" : model.phase === "player_turn" ? "你" : "待";
   const priorityTag = document.getElementById("stagePriorityTag");
   const stageMainPath = document.getElementById("stageMainPath");
   if (model.phase === "response_window") {
     const secondsLeft = Number.isFinite(model.responseContext.remainingMs) ? Math.ceil(model.responseContext.remainingMs / 1000) : null;
-    priorityTag.textContent = secondsLeft === null ? "过" : `${secondsLeft}s`;
-    stageMainPath.textContent = "";
+    priorityTag.textContent = "主动作：胡";
+    stageMainPath.textContent = `右家打出${model.responseContext.tile || "目标牌"}，可胡${secondsLeft === null ? "" : `（剩余 ${secondsLeft}s）`}`;
   } else if (model.phase === "player_turn") {
     priorityTag.textContent = "主路径：选牌→出牌";
     stageMainPath.textContent = appState.selectedTileIndex === null ? "主路径：先选一张手牌。" : "主路径：点主动作完成出牌。";
@@ -381,7 +388,7 @@ function renderStatus(model) {
   centerNode.classList.toggle("is-response-window", model.phase === "response_window");
   const primaryFocus = document.getElementById("primaryFocusHint");
   if (model.phase === "response_window") {
-    primaryFocus.textContent = "";
+    primaryFocus.textContent = `右家打出${model.responseContext.tile || model.latestEvent.tile || "目标牌"}，可胡`;
   } else if (model.phase === "player_turn") {
     primaryFocus.textContent = "你的回合：先选牌，再执行出牌/确认";
   } else if (model.phase === "waiting_ai") {
@@ -397,9 +404,22 @@ function renderStatus(model) {
     countdown.textContent = "当前无响应倒计时";
     countdown.classList.remove("warning");
   } else {
-    countdown.textContent = `${(model.responseContext.remainingMs / 1000).toFixed(1)}s`;
+    countdown.textContent = `响应倒计时 ${(model.responseContext.remainingMs / 1000).toFixed(1)}s`;
     countdown.classList.toggle("warning", model.responseContext.remainingMs <= 5000);
   }
+
+  const seatScoreMap = {
+    north: "scoreNorth",
+    east: "scoreEast",
+    south: "scoreSouth",
+    west: "scoreWest",
+  };
+  model.seats.forEach((seat) => {
+    const nodeId = seatScoreMap[seat.id];
+    if (!nodeId) return;
+    const node = document.getElementById(nodeId);
+    if (node) node.textContent = String(seat.score);
+  });
 }
 
 function renderFeedback(model) {
@@ -477,7 +497,7 @@ function renderSeats(model) {
       node.className = "meld-zone";
       const tag = document.createElement("span");
       tag.className = "meld-tag";
-      tag.textContent = group.type === "chi" ? "吃" : group.type === "peng" ? "碰" : "杠";
+      tag.textContent = group.type === "peng" ? "碰" : "杠";
       node.appendChild(tag);
       group.tiles.forEach((tile) => {
         const t = document.createElement("span");
@@ -559,14 +579,14 @@ function renderActionBar(model) {
   }
 
   const primaryActionId = getPhasePrimaryActionId(model, actionMap);
-  const responseSecondaryActionId = scope === "response" ? getResponseSecondaryActionId(actionMap) : null;
+  const responseVisibleActionIds = scope === "response" ? getResponseVisibleActionIds(actionMap) : [];
 
   const shouldShowByPriority = (actionId) => {
     if (scope === "none") return false;
-    if (appState.showMoreActions) return true;
     if (scope === "response") {
-      return actionId === primaryActionId || actionId === responseSecondaryActionId;
+      return responseVisibleActionIds.includes(actionId);
     }
+    if (appState.showMoreActions) return true;
     if (scope === "turn") return actionId === primaryActionId;
     return true;
   };
@@ -613,11 +633,11 @@ function renderActionBar(model) {
       btn.setAttribute("data-primary", "true");
       if (!disabled) btn.classList.add("action-primary");
     }
-    if (scope === "response" && actionId === responseSecondaryActionId) {
+    if (scope === "response" && actionId !== primaryActionId && actionId !== "pass") {
       btn.classList.add("action-secondary-choice");
     }
 
-    if (action.available && ["hu", "gang", "peng", "chi"].includes(actionId)) {
+    if (action.available && ["hu", "gang", "peng"].includes(actionId)) {
       const li = document.createElement("li");
       li.textContent = action.label;
       availableReasonList.appendChild(li);
@@ -625,9 +645,8 @@ function renderActionBar(model) {
   });
 
   if (scope === "response") {
-    const primaryLabel = (actionMap.get(primaryActionId) && actionMap.get(primaryActionId).label) || "过";
-    const secondaryLabel = responseSecondaryActionId ? (actionMap.get(responseSecondaryActionId)?.label || "") : "";
-    actionStageSummary.textContent = `${secondaryLabel || getResponseActionLabel(model)} · ${primaryLabel}`;
+    const targetTile = model.responseContext.tile || model.latestEvent.tile || "目标牌";
+    actionStageSummary.textContent = `右家打出${targetTile}，可胡。主动作【胡】；次动作【过】。`;
   } else if (scope === "turn") {
     const primaryLabel = (actionMap.get(primaryActionId) && actionMap.get(primaryActionId).label) || "出牌";
     actionStageSummary.textContent = `出牌阶段：主动作【${primaryLabel}】；确认/取消收进更多动作。`;
@@ -635,13 +654,13 @@ function renderActionBar(model) {
     actionStageSummary.textContent = "当前不可操作：请等待系统推进到可行动阶段。";
   }
 
-  const canShowMoreToggle = scope !== "none" && hasSecondaryActions;
+  const canShowMoreToggle = scope === "turn" && hasSecondaryActions;
   toggleMoreBtn.classList.toggle("hidden-by-phase", !canShowMoreToggle);
   toggleMoreBtn.disabled = model.submitting || lockAllActions;
   toggleMoreBtn.textContent = appState.showMoreActions ? "收起次要动作" : "更多动作";
 
   const resultButton = document.getElementById("openResult");
-  resultButton.classList.toggle("hidden-by-phase", model.phase !== "ended");
+  resultButton.classList.remove("hidden-by-phase");
 
   if (!availableReasonList.childElementCount) {
     const li = document.createElement("li");
@@ -720,11 +739,11 @@ function renderResult(model) {
   hero.classList.remove("is-tsumo", "is-ron", "is-draw", "is-abort");
   const typeClass = summary.type === "ron" ? "is-ron" : summary.type === "draw" ? "is-draw" : summary.type === "abort" ? "is-abort" : "is-tsumo";
   hero.classList.add(typeClass);
-  badge.textContent = summary.type === "ron" ? "荣和" : summary.type === "draw" ? "流局" : summary.type === "abort" ? "异常终止" : "自摸";
+  badge.textContent = summary.type === "ron" ? "点炮胡" : summary.type === "draw" ? "流局" : summary.type === "abort" ? "异常终止" : "自摸";
   headline.textContent = summary.title;
   const winnerRow = summary.rows[0];
   const payers = summary.rows.slice(1).filter((row) => row.delta.startsWith("-")).map((row) => row.player).join("、");
-  subline.textContent = summary.type === "draw" ? "本局以流局收束，结果与听牌 / 罚则相关。" : summary.type === "abort" ? "本局因状态异常提前终止，请查看诊断入口。" : `赢家：${winnerRow.player} · ${summary.type === "ron" ? `点炮者：${summary.rows.find((row) => row.role === "点炮者")?.player || "未知"}` : `支付方：${payers || "无"}`}`;
+  subline.textContent = summary.type === "draw" ? "本局以流局收束，未发生胡牌。" : summary.type === "abort" ? "本局因状态异常提前终止，请查看诊断入口。" : `赢家：${winnerRow.player} · ${summary.type === "ron" ? `放炮方：${summary.rows.find((row) => row.role === "点炮方")?.player || "未知"}` : `支付方：${payers || "无"}`}`;
   roleChips.innerHTML = "";
   if (summary.type === "abort") {
     const chip = document.createElement("span");
@@ -732,10 +751,9 @@ function renderResult(model) {
     chip.textContent = "异常终止";
     roleChips.appendChild(chip);
   } else if (summary.type === "draw") {
-    const ting = summary.rows.filter((row) => row.role === "听牌").map((row) => row.player).join("、");
     const chip = document.createElement("span");
     chip.className = "result-role-chip";
-    chip.textContent = `听牌方：${ting || "无"}`;
+    chip.textContent = "流局：无人胡牌";
     roleChips.appendChild(chip);
   } else {
     const winner = document.createElement("span");
@@ -743,10 +761,10 @@ function renderResult(model) {
     winner.textContent = `赢家：${winnerRow.player}`;
     roleChips.appendChild(winner);
     if (summary.type === "ron") {
-      const discarder = summary.rows.find((row) => row.role === "点炮者");
+      const discarder = summary.rows.find((row) => row.role === "点炮方");
       const chip = document.createElement("span");
       chip.className = "result-role-chip discarder";
-      chip.textContent = `点炮：${discarder ? discarder.player : "未知"}`;
+      chip.textContent = `放炮：${discarder ? discarder.player : "未知"}`;
       roleChips.appendChild(chip);
     } else {
       summary.rows.filter((row) => row.delta.startsWith("-")).forEach((row) => {
@@ -794,6 +812,64 @@ function renderReplay(model) {
   });
 }
 
+function renderResponseBeam(model) {
+  const beam = document.getElementById("responseBeam");
+  if (!beam) return;
+  if (model.phase !== "response_window") {
+    beam.classList.add("hidden");
+    return;
+  }
+  const targetTile = document.getElementById("responseTargetTile");
+  const huButton = document.querySelector('.action-bar [data-action-id="hu"]');
+  const tablePage = document.getElementById("tablePage");
+  if (!targetTile || !huButton || !tablePage || huButton.classList.contains("hidden-by-phase")) {
+    beam.classList.add("hidden");
+    return;
+  }
+
+  const from = targetTile.getBoundingClientRect();
+  const to = huButton.getBoundingClientRect();
+  const host = tablePage.getBoundingClientRect();
+
+  const x1 = from.left + from.width * 0.68 - host.left;
+  const y1 = from.top + from.height * 0.74 - host.top;
+  const x2 = to.left + to.width * 0.52 - host.left;
+  const y2 = to.top + to.height * 0.18 - host.top;
+  const dx = x2 - x1;
+  const dy = y2 - y1;
+  const len = Math.max(0, Math.hypot(dx, dy));
+  const angle = Math.atan2(dy, dx);
+
+  beam.style.left = `${x1}px`;
+  beam.style.top = `${y1}px`;
+  beam.style.width = `${len}px`;
+  beam.style.transform = `rotate(${angle}rad)`;
+  beam.classList.remove("hidden");
+}
+
+function renderResponseCallout(model) {
+  const callout = document.getElementById("responseCallout");
+  if (!callout) return;
+  if (model.phase !== "response_window") {
+    callout.classList.add("hidden");
+    return;
+  }
+  const tile = document.getElementById("responseTargetTile");
+  const tablePage = document.getElementById("tablePage");
+  if (!tile || !tablePage) {
+    callout.classList.add("hidden");
+    return;
+  }
+  const tileBox = tile.getBoundingClientRect();
+  const host = tablePage.getBoundingClientRect();
+  const calloutX = tileBox.left + tileBox.width + 12 - host.left;
+  const calloutY = tileBox.top + tileBox.height * 0.4 - host.top;
+  callout.style.left = `${calloutX}px`;
+  callout.style.top = `${calloutY}px`;
+  callout.textContent = `${model.latestEvent.actor || "右家"}打出`;
+  callout.classList.remove("hidden");
+}
+
 function rerender() {
   renderRoute();
   renderLobby();
@@ -813,6 +889,8 @@ function rerender() {
   renderDiagnostics(model);
   renderResult(model);
   renderReplay(model);
+  renderResponseBeam(model);
+  renderResponseCallout(model);
   const secondary = document.getElementById("secondaryContext");
   secondary.classList.toggle("hidden", !appState.contextExpanded);
   document.getElementById("toggleContextBtn").textContent = appState.contextExpanded ? "收起局势细节" : "展开局势细节";
@@ -849,6 +927,11 @@ function rerender() {
       document.querySelector("#actionExplainDrawer .action-explain-sheet").focus();
     }
   }
+  if (appState.pendingFocusTargetId) {
+    const node = document.getElementById(appState.pendingFocusTargetId);
+    if (node) node.focus();
+    appState.pendingFocusTargetId = null;
+  }
 }
 
 function withTableUpdate(nextSnapshotPartial) {
@@ -878,7 +961,7 @@ async function defaultGameCreationHandler() {
         if (["discard", "confirm", "cancel"].includes(action.id)) {
           return { ...action, available: true };
         }
-        if (["hu", "gang", "peng", "chi", "pass"].includes(action.id)) {
+        if (["hu", "gang", "peng", "pass"].includes(action.id)) {
           return { ...action, available: false };
         }
         return action;
@@ -949,10 +1032,6 @@ async function defaultActionHandler({ actionId, model }) {
     next.phase = "player_turn";
     next.turnHint = "杠后继续出牌";
     return { ok: true, nextModel: next };
-  }
-
-  if (actionId === "chi") {
-    return { ok: false, error: makeRecoverableError("当前不是上家弃牌，不能吃") };
   }
 
   if (actionId === "hu") {
@@ -1284,38 +1363,37 @@ window.setMajiangGameCreationHandler = function setMajiangGameCreationHandler(ha
 window.majiangNextModelExample = {
   ...createDefaultTableSnapshot(),
   phase: "response_window",
-  roundInfo: "东二局",
-  wallCount: 44,
-  latestEvent: { actor: "AI-东", verb: "打出", tile: "六筒", target: "你", responseHint: "你可碰：你已有两张六筒" },
-  responseContext: { sourcePlayerId: "east", tile: "六筒", highlightedRiverSeatId: "east", remainingMs: 4800 },
+  roundInfo: "东风局",
+  wallCount: 36,
+  latestEvent: { actor: "玩家4", verb: "打出", tile: "三万", target: "你", responseHint: "右家打出三万，可胡" },
+  responseContext: { sourcePlayerId: "east", tile: "三万", highlightedRiverSeatId: "east", remainingMs: 6200 },
   seats: [
-    { id: "north", name: "AI-北", score: 92, handCount: 12, meldGroups: [{ type: "chi", tiles: ["四万", "五万", "六万"] }], latestAction: "等待中" },
-    { id: "west", name: "AI-西", score: 90, handCount: 13, meldGroups: [], latestAction: "等待中" },
-    { id: "east", name: "AI-东", score: 106, handCount: 12, meldGroups: [{ type: "peng", tiles: ["六筒", "六筒", "六筒"] }], latestAction: "打出 六筒" },
-    { id: "south", name: "你", score: 112, handCount: 14, meldGroups: [{ type: "gang", tiles: ["东", "东", "东", "东"] }], latestAction: "可响应" },
+    { id: "north", name: "玩家3", windLabel: "北", score: 24200, handCount: 13, meldGroups: [], latestAction: "等待" },
+    { id: "west", name: "玩家2", windLabel: "西", score: 21800, handCount: 13, meldGroups: [], latestAction: "已出牌" },
+    { id: "east", name: "玩家4", windLabel: "东", score: 25600, handCount: 13, meldGroups: [], latestAction: "当前出牌" },
+    { id: "south", name: "玩家1", windLabel: "南", score: 28400, handCount: 14, meldGroups: [], latestAction: "可胡" },
   ],
   availableActions: [
-    { id: "hu", label: "胡", available: false, reasonText: "当前牌型不满足可胡条件" },
-    { id: "gang", label: "杠", available: false, reasonText: "当前无可杠牌组" },
-    { id: "peng", label: "碰", available: true, reasonText: "你已有两张六筒", isPrimaryPath: true },
-    { id: "chi", label: "吃", available: false, reasonText: "本次不是上家弃牌，不能吃" },
+    { id: "hu", label: "胡", available: true, reasonText: "右家打出三万，满足可胡条件", isPrimaryPath: true },
+    { id: "gang", label: "杠", available: true, reasonText: "可杠当前目标组" },
+    { id: "peng", label: "碰", available: true, reasonText: "你已有两张三万" },
     { id: "pass", label: "过", available: true, reasonText: "放弃本次响应" },
-    { id: "discard", label: "出牌", available: true, reasonText: "可出牌" },
-    { id: "confirm", label: "确认", available: true, reasonText: "确认当前选择" },
-    { id: "cancel", label: "取消", available: true, reasonText: "取消当前选择" },
+    { id: "discard", label: "出牌", available: false, reasonText: "当前为响应阶段，不能直接出牌" },
+    { id: "confirm", label: "确认", available: false, reasonText: "当前为响应阶段，无需确认出牌" },
+    { id: "cancel", label: "取消", available: false, reasonText: "当前为响应阶段，无需取消出牌" },
   ],
   replay: {
     timeline: [
       {
         id: "k1",
         ts: "T-12s",
-        text: "首次响应窗口开启",
+        text: "右家打出三万，触发响应窗口",
         marker: "first_response",
         seatSummary: {
-          north: { score: 92, handCount: 12, latestAction: "打出 六筒" },
-          west: { score: 90, handCount: 13, latestAction: "等待中" },
-          east: { score: 106, handCount: 12, latestAction: "可被响应" },
-          south: { score: 112, handCount: 14, latestAction: "可响应" },
+          north: { score: 24200, handCount: 13, latestAction: "等待" },
+          west: { score: 21800, handCount: 13, latestAction: "已出牌" },
+          east: { score: 25600, handCount: 13, latestAction: "当前出牌" },
+          south: { score: 28400, handCount: 14, latestAction: "可胡" },
         },
       },
       {
@@ -1324,10 +1402,10 @@ window.majiangNextModelExample = {
         text: "出现错误并恢复",
         marker: "error",
         seatSummary: {
-          north: { score: 92, handCount: 12, latestAction: "等待中" },
-          west: { score: 90, handCount: 13, latestAction: "等待中" },
-          east: { score: 106, handCount: 12, latestAction: "等待中" },
-          south: { score: 112, handCount: 14, latestAction: "重试中" },
+          north: { score: 24200, handCount: 13, latestAction: "等待" },
+          west: { score: 21800, handCount: 13, latestAction: "等待" },
+          east: { score: 25600, handCount: 13, latestAction: "等待" },
+          south: { score: 28400, handCount: 14, latestAction: "重试中" },
           system: { error: "recoverable" },
         },
       },
@@ -1337,10 +1415,10 @@ window.majiangNextModelExample = {
         text: "胡牌结算",
         marker: "hu",
         seatSummary: {
-          north: { score: 84, handCount: 12, latestAction: "支付" },
-          west: { score: 82, handCount: 13, latestAction: "支付" },
-          east: { score: 98, handCount: 12, latestAction: "支付" },
-          south: { score: 124, handCount: 13, latestAction: "胡牌" },
+          north: { score: 23400, handCount: 13, latestAction: "支付" },
+          west: { score: 21000, handCount: 13, latestAction: "支付" },
+          east: { score: 24800, handCount: 13, latestAction: "支付" },
+          south: { score: 30800, handCount: 13, latestAction: "胡牌" },
         },
       },
     ],
@@ -1349,16 +1427,15 @@ window.majiangNextModelExample = {
 
 window.majiangWinningModelExample = {
   ...window.majiangNextModelExample,
-  latestEvent: { actor: "AI-北", verb: "打出", tile: "五万", target: "你", responseHint: "可胡：满足平胡，预计 +16" },
+  latestEvent: { actor: "玩家4", verb: "打出", tile: "三万", target: "你", responseHint: "可胡：右家三万进张，满足平胡" },
   availableActions: [
     { id: "hu", label: "胡", available: true, reasonText: "满足平胡，可胡", isPrimaryPath: true },
-    { id: "gang", label: "杠", available: false, reasonText: "当前无可杠牌组" },
-    { id: "peng", label: "碰", available: true, reasonText: "你有两张五万" },
-    { id: "chi", label: "吃", available: false, reasonText: "本次不是上家弃牌，不能吃" },
+    { id: "gang", label: "杠", available: true, reasonText: "可杠当前目标组" },
+    { id: "peng", label: "碰", available: true, reasonText: "你有两张三万" },
     { id: "pass", label: "过", available: true, reasonText: "放弃响应" },
-    { id: "discard", label: "出牌", available: true, reasonText: "可出牌" },
-    { id: "confirm", label: "确认", available: true, reasonText: "确认选择" },
-    { id: "cancel", label: "取消", available: true, reasonText: "取消选择" },
+    { id: "discard", label: "出牌", available: false, reasonText: "当前为响应阶段，不能直接出牌" },
+    { id: "confirm", label: "确认", available: false, reasonText: "当前为响应阶段，无需确认出牌" },
+    { id: "cancel", label: "取消", available: false, reasonText: "当前为响应阶段，无需取消出牌" },
   ],
 };
 
@@ -1423,7 +1500,7 @@ window.majiangActionHandlerExample = async function majiangActionHandlerExample(
     const next = structuredClone(model);
     next.phase = "ended";
     next.resultSummary = createResultSummary("ron");
-    next.eventTimeline.unshift({ id: `ext-${Date.now()}`, ts: nowTag(), text: "外部 handler：荣和结算", marker: "hu", seatSummary: { east: { score: 120 } } });
+    next.eventTimeline.unshift({ id: `ext-${Date.now()}`, ts: nowTag(), text: "外部 handler：点炮胡结算", marker: "hu", seatSummary: { east: { score: 21700 } } });
     return { ok: true, nextModel: next, openResult: true };
   }
   if (actionId === "pass") {

@@ -26,8 +26,11 @@
       "memoryPath": "logs/automation-memory/majiang-daily-redundant-file-governance-memory.md",
       "schedule": "daily 10:00 Asia/Shanghai",
       "mode": "observation-only-no-delete",
+      "scanScope": "tracked-files-only",
+      "untrackedHandling": "appendix-observation-only",
+      "dirtyWorktreePolicy": "do-not-downgrade-main-conclusion-for-tracked-scope",
       "source": "created-via-codex-app",
-      "updatedAt": "2026-05-10"
+      "updatedAt": "2026-05-12"
     }
   }
 }
