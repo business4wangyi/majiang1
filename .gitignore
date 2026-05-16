@@ -187,6 +187,11 @@ env/
 
 # 日志文件
 logs/
+!logs/
+logs/*
+!logs/automation-memory/
+logs/automation-memory/*
+!logs/automation-memory/majiang-standards-governance-daily-memory.md
 *.log
 .agents/automation-memory/
 
