@@ -61,6 +61,14 @@ function getSelectedMode() {
   return selected ? selected.value : 'manual';
 }
 
+const WIND_LABELS = ['东', '南', '西', '北'];
+const AVATAR_MAP = {
+  '东家': '/majiang-web/assets/avatar-east.jpg',
+  '南家': '/majiang-web/assets/avatar-south.jpg',
+  '西家': '/majiang-web/assets/avatar-west.jpg',
+  '北家': '/majiang-web/assets/avatar-north.jpg'
+};
+
 function renderState(state) {
   currentState = state;
   document.getElementById('game-state').textContent = state.gameState;
@@ -70,7 +78,11 @@ function renderState(state) {
   document.getElementById('draw-count').textContent = String(state.drawCount);
   document.getElementById('remaining-tiles').textContent = String(state.remainingTiles);
   document.getElementById('current-prompt').textContent = state.currentPrompt;
-  document.getElementById('last-discarded').textContent = state.lastDiscardedTile || '无';
+
+  const centerWind = document.getElementById('center-wind');
+  const centerRound = document.getElementById('center-round');
+  if (centerWind) centerWind.textContent = WIND_LABELS[(state.windRound - 1) % 4] || '东';
+  if (centerRound) centerRound.textContent = String(state.windRound);
 
   const topSeat = state.seats[2];
   const leftSeat = state.seats[1];
@@ -145,6 +157,28 @@ function renderActionButtons(state) {
   });
 }
 
+function getTileBg(tile) {
+  if (tile.includes('万')) return '/majiang-web/assets/tile-wan.jpg';
+  if (tile.includes('筒')) return '/majiang-web/assets/tile-tong.jpg';
+  if (tile.includes('条')) return '/majiang-web/assets/tile-tiao.jpg';
+  return '/majiang-web/assets/tile-zhong.jpg';
+}
+
+function renderTileButton(tile, index, isHuman, isActionable) {
+  const classes = ['tile'];
+  if (!isHuman) classes.push('back');
+  if (isActionable) classes.push('selectable');
+
+  const clickAttr = isActionable ? `data-index="${index}" data-testid="human-tile"` : '';
+
+  if (!isHuman) {
+    return `<button class="${classes.join(' ')}" ${clickAttr}><span class="tile-back-face"></span></button>`;
+  }
+
+  const bg = getTileBg(tile);
+  return `<button class="${classes.join(' ')}" ${clickAttr} style="background-image:url('${bg}')"><span class="tile-label">${tile}</span></button>`;
+}
+
 function renderSeat(container, seat, isHuman) {
   const revealed = seat.revealedSets.length
     ? seat.revealedSets.map(set => `<span class="chip">${set.type}:${set.tiles.join(' ')}</span>`).join('')
@@ -156,23 +190,19 @@ function renderSeat(container, seat, isHuman) {
 
   const tiles = seat.concealedTiles.map((tile, index) => {
     const isActionable = isHuman && currentState && currentState.availableActions.includes('DISCARD') && seat.isCurrentPlayer;
-    const classes = ['tile'];
-    if (!isHuman) {
-      classes.push('back');
-    }
-    if (isActionable) {
-      classes.push('selectable');
-    }
-
-    const label = isHuman ? tile : '牌背';
-    const clickAttr = isActionable ? `data-index="${index}" data-testid="human-tile"` : '';
-    return `<button class="${classes.join(' ')}" ${clickAttr}>${label}</button>`;
+    return renderTileButton(tile, index, isHuman, isActionable);
   }).join('');
 
-  container.className = `seat panel${seat.isCurrentPlayer ? ' current' : ''}`;
+  const avatarSrc = AVATAR_MAP[seat.name] || '';
+  const avatarHtml = avatarSrc ? `<img class="seat-avatar" src="${avatarSrc}" alt="${seat.name}" />` : '';
+
+  container.className = `seat${seat.isCurrentPlayer ? ' current' : ''}`;
   container.innerHTML = `
     <div class="seat-header">
-      <h3>${seat.name}</h3>
+      <div style="display:flex;gap:10px;align-items:center;">
+        ${avatarHtml}
+        <h3>${seat.name}</h3>
+      </div>
       <span class="seat-status">${seat.state} · ${seat.handCount} 张</span>
     </div>
     ${isHuman ? `<p class="drawn-tile">最近摸牌：${seat.lastDrawnTile || '暂无'}</p>` : ''}

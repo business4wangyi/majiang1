@@ -38,49 +38,57 @@
     </section>
 
     <section id="table" class="table-screen hidden" data-testid="majiang-table">
-      <header class="table-header panel">
-        <div>
-          <p class="eyebrow">桌面状态</p>
-          <h2>麻将牌桌</h2>
-          <p id="status-banner" class="status-banner hidden" role="status" aria-live="polite" data-testid="status-banner"></p>
-        </div>
-        <div class="meta-grid">
-          <div><span>当前阶段</span><strong id="game-state">-</strong></div>
-          <div><span>当前行动</span><strong id="current-player">-</strong></div>
-          <div><span>庄家</span><strong id="banker-player">-</strong></div>
-          <div><span>圈数</span><strong id="wind-round">-</strong></div>
-          <div><span>摸牌次数</span><strong id="draw-count">-</strong></div>
-          <div><span>剩余牌数</span><strong id="remaining-tiles">-</strong></div>
-          <div><span>当前提示</span><strong id="current-prompt">-</strong></div>
-        </div>
-      </header>
+      <div class="table-stage">
+        <div class="table-stage-frame">
+          <div class="table-felt">
+            <header class="table-header">
+              <div>
+                <p class="eyebrow">桌面状态</p>
+                <h2>麻将牌桌</h2>
+                <p id="status-banner" class="status-banner hidden" role="status" aria-live="polite" data-testid="status-banner"></p>
+              </div>
+              <div class="meta-grid">
+                <div><span>当前阶段</span><strong id="game-state">-</strong></div>
+                <div><span>当前行动</span><strong id="current-player">-</strong></div>
+                <div><span>庄家</span><strong id="banker-player">-</strong></div>
+                <div><span>圈数</span><strong id="wind-round">-</strong></div>
+                <div><span>摸牌次数</span><strong id="draw-count">-</strong></div>
+                <div><span>剩余牌数</span><strong id="remaining-tiles">-</strong></div>
+                <div><span>当前提示</span><strong id="current-prompt">-</strong></div>
+              </div>
+            </header>
 
-      <main class="table-layout">
-        <section class="opponent-row">
-          <div id="seat-top" class="seat panel" data-testid="seat-top"></div>
-        </section>
+            <main class="table-layout">
+              <section class="opponent-row">
+                <div id="seat-top" class="seat" data-testid="seat-top"></div>
+              </section>
 
-        <section class="middle-row">
-          <div id="seat-left" class="seat panel side-seat" data-testid="seat-left"></div>
-          <div class="desk panel">
-            <div class="desk-summary">
-              <h3>中央牌桌</h3>
-              <p>最后弃牌：<span id="last-discarded">无</span></p>
-            </div>
-            <div id="discard-pools" class="discard-pools"></div>
+              <section class="middle-row">
+                <div id="seat-left" class="seat side-seat" data-testid="seat-left"></div>
+                <div class="desk">
+                  <div class="center-plate" aria-hidden="true">
+                    <div class="center-plate-inner">
+                      <span class="center-wind" id="center-wind">东</span>
+                      <span class="center-round" id="center-round">1</span>
+                    </div>
+                  </div>
+                  <div id="discard-pools" class="discard-pools"></div>
+                </div>
+                <div id="seat-right" class="seat side-seat" data-testid="seat-right"></div>
+              </section>
+
+              <section class="opponent-row">
+                <div id="seat-bottom" class="seat player-seat" data-testid="seat-human"></div>
+              </section>
+            </main>
+
+            <section class="footer-panel">
+              <p class="eyebrow">操作说明</p>
+              <p id="table-hint" class="table-hint" data-testid="table-hint">点击“开始新对局”后，轮到你时可直接点击手牌出牌；若出现吃/碰/杠/胡/过按钮，则表示当前需要你对上一张弃牌做响应。</p>
+            </section>
           </div>
-          <div id="seat-right" class="seat panel side-seat" data-testid="seat-right"></div>
-        </section>
-
-        <section class="opponent-row">
-          <div id="seat-bottom" class="seat panel player-seat" data-testid="seat-human"></div>
-        </section>
-      </main>
-
-      <section class="panel footer-panel">
-        <p class="eyebrow">操作说明</p>
-        <p id="table-hint" class="table-hint" data-testid="table-hint">点击“开始新对局”后，轮到你时可直接点击手牌出牌；若出现吃/碰/杠/胡/过按钮，则表示当前需要你对上一张弃牌做响应。</p>
-      </section>
+        </div>
+      </div>
     </section>
   </div>
 
