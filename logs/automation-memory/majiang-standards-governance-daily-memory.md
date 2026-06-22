@@ -117,3 +117,14 @@
 - 趋势：相对 2026-05-15 PASS，无新增债务、无恢复债务、无持续债务。
 - 记忆源决策：P0 可用且可写，作为唯一默认基线与写入目标；P1（运行时注入 Automation memory）仅作可选只读参考。
 - Run time (Asia/Shanghai): 2026-05-16 10:58:32 +0800 CST
+
+## Run 2026-05-17 09:36:41 +0800 CST
+- 结论：PASS（scan=0，fit=0）
+- 执行命令：
+  - `bash /Users/felixfan/.codex/skills/project-standards-governance/scripts/standards_guard.sh scan`（exit=0，耗时 2s）
+  - `bash /Users/felixfan/.codex/skills/project-standards-governance/scripts/standards_guard.sh fit`（exit=0，耗时 2s）
+- 工作目录：`/Users/felixfan/Desktop/AIUse/majiang1`
+- 主要证据：`logs/standards-governance-report.md`（最终内容为 fit 报告；scan 已成功执行）
+- 趋势：相对 2026-05-16 PASS，无新增债务、无恢复债务、无持续债务。
+- 记忆源决策：P0 可用且可写，作为唯一默认基线与写入目标；P1（运行时注入 Automation memory）不可用（当前会话 `CODEX_HOME` 为空，仅有用户消息中的路径提示），未降级写入。
+- Run time (Asia/Shanghai): 2026-05-17 09:36:41 +0800 CST

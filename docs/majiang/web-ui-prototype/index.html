@@ -67,8 +67,10 @@
         </div>
       </header>
 
-      <main class="table-layout">
-        <section class="table-zone">
+      <div class="table-stage">
+        <div class="table-stage-frame" aria-hidden="true"></div>
+        <main class="table-layout">
+          <section class="table-zone">
           <div class="table-wall table-wall-top" aria-hidden="true"></div>
           <div class="table-wall table-wall-left" aria-hidden="true"></div>
           <div class="table-wall table-wall-right" aria-hidden="true"></div>
@@ -174,9 +176,9 @@
             <div class="seat-latest-action">可胡</div>
             <div class="meld-list"></div>
           </article>
-        </section>
+          </section>
 
-        <aside id="sidePanel" class="side-panel side-panel--collapsed table-aux">
+          <aside id="sidePanel" class="side-panel side-panel--collapsed table-aux">
           <div class="side-panel-head">
             <span class="side-panel-title">事件与诊断</span>
             <button id="toggleSidePanelBtn" type="button" class="ghost-inline-btn">展开</button>
@@ -209,25 +211,28 @@
             </section>
           </div>
         </aside>
-      </main>
+        </main>
 
-      <section class="hand-panel">
-        <div class="hand-head"><span>你的手牌</span><span id="actionReason" class="action-reason"></span></div>
-        <div id="handTiles" class="hand-tiles" role="group" aria-label="手牌区，可用左右方向键选择"></div>
-      </section>
+        <section class="table-bottom-anchor">
+        <section class="action-bar" role="group" aria-label="动作栏，可用数字键1到9执行可见动作">
+          <div id="actionStageSummary" class="action-stage-summary"></div>
+          <button type="button" class="action-btn" data-action-id="hu" data-phase-scope="response">胡</button>
+          <button type="button" class="action-btn action-secondary-choice" data-action-id="peng" data-phase-scope="response">碰</button>
+          <button type="button" class="action-btn action-secondary-choice" data-action-id="gang" data-phase-scope="response">杠</button>
+          <button type="button" class="action-btn action-pass" data-action-id="pass" data-phase-scope="response">过</button>
+          <button type="button" class="action-btn" data-action-id="discard" data-phase-scope="turn">出牌</button>
+          <button type="button" class="action-btn" data-action-id="confirm" data-phase-scope="turn">确认</button>
+          <button type="button" class="action-btn" data-action-id="cancel" data-phase-scope="turn">取消</button>
+          <button id="toggleMoreActionsBtn" type="button" class="action-btn action-secondary" data-phase-scope="response,turn">更多动作</button>
+          <button id="openResult" type="button" class="action-btn action-secondary action-btn-aux">查看结算</button>
+        </section>
 
-      <section class="action-bar" role="group" aria-label="动作栏，可用数字键1到9执行可见动作">
-        <div id="actionStageSummary" class="action-stage-summary"></div>
-        <button type="button" class="action-btn" data-action-id="hu" data-phase-scope="response">胡</button>
-        <button type="button" class="action-btn action-secondary-choice" data-action-id="peng" data-phase-scope="response">碰</button>
-        <button type="button" class="action-btn action-secondary-choice" data-action-id="gang" data-phase-scope="response">杠</button>
-        <button type="button" class="action-btn action-pass" data-action-id="pass" data-phase-scope="response">过</button>
-        <button type="button" class="action-btn" data-action-id="discard" data-phase-scope="turn">出牌</button>
-        <button type="button" class="action-btn" data-action-id="confirm" data-phase-scope="turn">确认</button>
-        <button type="button" class="action-btn" data-action-id="cancel" data-phase-scope="turn">取消</button>
-        <button id="toggleMoreActionsBtn" type="button" class="action-btn action-secondary" data-phase-scope="response,turn">更多动作</button>
-        <button id="openResult" type="button" class="action-btn action-secondary action-btn-aux">查看结算</button>
-      </section>
+        <section class="hand-panel">
+          <div class="hand-head"><span>你的手牌</span><span id="actionReason" class="action-reason"></span></div>
+          <div id="handTiles" class="hand-tiles" role="group" aria-label="手牌区，可用左右方向键选择"></div>
+        </section>
+        </section>
+      </div>
       <div id="responseBeam" class="response-beam hidden" aria-hidden="true"><span class="response-beam-head"></span></div>
 
       <section class="action-reason-list-panel">
