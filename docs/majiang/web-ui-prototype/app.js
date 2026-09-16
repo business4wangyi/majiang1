@@ -126,30 +126,19 @@ function getResponseActionLabel(model) {
 function renderSeatActionSignal(node, seat, model) {
   if (!node) return;
   node.innerHTML = "";
+  node.classList.remove("is-source-action", "is-self-response", "hidden");
+  // 角区稀疏：默认不渲染多座位标签墙；仅南位响应窗口保留轻量「可胡」
   const isResponse = model.phase === "response_window";
-  const isSource = isResponse && seat.id === model.responseContext.sourcePlayerId;
   const isSelfOpportunity = isResponse && seat.id === "south";
-  const label = isSource ? "打" : isSelfOpportunity ? getResponseActionLabel(model) : "待";
-  const detail = isSource ? (model.responseContext.tile || model.latestEvent.tile || "") : "";
-
-  const chip = document.createElement("span");
-  chip.className = "seat-action-chip";
-  chip.textContent = label;
-  node.appendChild(chip);
-
-  if (detail) {
-    const tile = document.createElement("span");
-    tile.className = "seat-action-tile";
-    applyTileVisual(tile, detail, { assetClassName: "tile-asset tile-asset--micro" });
-    node.appendChild(tile);
+  if (!isSelfOpportunity) {
+    node.classList.add("hidden");
+    return;
   }
-
-  const sr = document.createElement("span");
-  sr.className = "tile-text-sr";
-  sr.textContent = seat.latestAction || "等待中";
-  node.appendChild(sr);
-  node.classList.toggle("is-source-action", isSource);
-  node.classList.toggle("is-self-response", isSelfOpportunity);
+  const badge = document.createElement("span");
+  badge.className = "seat-win-badge";
+  badge.textContent = getResponseActionLabel(model) === "胡" ? "可胡" : getResponseActionLabel(model);
+  node.appendChild(badge);
+  node.classList.add("is-self-response");
 }
 
 function getPhasePrimaryActionId(model, actionMap) {
@@ -813,61 +802,15 @@ function renderReplay(model) {
 }
 
 function renderResponseBeam(model) {
+  // R2：禁止大斜向箭头/光柱教学层；链路改由目标牌光效 + 中心盘右缘脉冲表达
   const beam = document.getElementById("responseBeam");
-  if (!beam) return;
-  if (model.phase !== "response_window") {
-    beam.classList.add("hidden");
-    return;
-  }
-  const targetTile = document.getElementById("responseTargetTile");
-  const huButton = document.querySelector('.action-bar [data-action-id="hu"]');
-  const tablePage = document.getElementById("tablePage");
-  if (!targetTile || !huButton || !tablePage || huButton.classList.contains("hidden-by-phase")) {
-    beam.classList.add("hidden");
-    return;
-  }
-
-  const from = targetTile.getBoundingClientRect();
-  const to = huButton.getBoundingClientRect();
-  const host = tablePage.getBoundingClientRect();
-
-  const x1 = from.left + from.width * 0.68 - host.left;
-  const y1 = from.top + from.height * 0.74 - host.top;
-  const x2 = to.left + to.width * 0.52 - host.left;
-  const y2 = to.top + to.height * 0.18 - host.top;
-  const dx = x2 - x1;
-  const dy = y2 - y1;
-  const len = Math.max(0, Math.hypot(dx, dy));
-  const angle = Math.atan2(dy, dx);
-
-  beam.style.left = `${x1}px`;
-  beam.style.top = `${y1}px`;
-  beam.style.width = `${len}px`;
-  beam.style.transform = `rotate(${angle}rad)`;
-  beam.classList.remove("hidden");
+  if (beam) beam.classList.add("hidden");
 }
 
 function renderResponseCallout(model) {
+  // R2：禁止「右家打出」气泡/说明条
   const callout = document.getElementById("responseCallout");
-  if (!callout) return;
-  if (model.phase !== "response_window") {
-    callout.classList.add("hidden");
-    return;
-  }
-  const tile = document.getElementById("responseTargetTile");
-  const tablePage = document.getElementById("tablePage");
-  if (!tile || !tablePage) {
-    callout.classList.add("hidden");
-    return;
-  }
-  const tileBox = tile.getBoundingClientRect();
-  const host = tablePage.getBoundingClientRect();
-  const calloutX = tileBox.left + tileBox.width + 12 - host.left;
-  const calloutY = tileBox.top + tileBox.height * 0.4 - host.top;
-  callout.style.left = `${calloutX}px`;
-  callout.style.top = `${calloutY}px`;
-  callout.textContent = `${model.latestEvent.actor || "右家"}打出`;
-  callout.classList.remove("hidden");
+  if (callout) callout.classList.add("hidden");
 }
 
 function rerender() {
