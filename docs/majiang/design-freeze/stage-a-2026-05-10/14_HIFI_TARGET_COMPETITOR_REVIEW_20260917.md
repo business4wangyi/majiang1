@@ -1,6 +1,7 @@
 # 麻将 UI 审核结论
 
-> 审核对象：`target-assets/guangdong-hifi-target-desktop-1440x900-review.png`  
+> **已被覆盖**：同日 R2 复审见 `15_HIFI_TARGET_COMPETITOR_REVIEW_20260917_R2.md`（基本符合 · 有条件通过）。本文件保留为打回原因与改稿单历史。  
+> 审核对象（当时）：现留档 `target-assets/guangdong-hifi-target-desktop-1440x900-review-rejected-20260917.png`  
 > 主参考：`competitor-assets/riichi-city/steam-shot-2.jpg`  
 > 日期：2026-09-17  
 > Skill：`majiang-ui-review`（档位 B · 冲顶审核）

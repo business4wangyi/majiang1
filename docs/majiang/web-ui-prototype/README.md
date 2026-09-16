@@ -5,11 +5,11 @@
 - 仅改 `docs/majiang/web-ui-prototype/` 表现层、适配层、交互编排。
 - 未改 `src/majiang/core/`、`src/majiang/strategy/`、CLI 路径。
 
-> **当前状态**：冲顶进行中 · 目标图待审（2026-09-17 竞品级复审：**打回**）  
-> **阻塞项**：广东高保真目标图未达竞品级效果图交付（见 `../design-freeze/stage-a-2026-05-10/14_HIFI_TARGET_COMPETITOR_REVIEW_20260917.md`）  
-> **权威闸门**：`../design-freeze/stage-a-2026-05-10/13_RIICHI_CITY_HIFI_TARGET_REDRAW_BRIEF.md`（覆盖下方 2026-05-08「顶级判定通过」旧留档）  
+> **当前状态**：冲顶进行中 · 目标图有条件通过（2026-09-17 R2：**基本符合**）· 进入视觉落地  
+> **阻塞项**：动作层实现须向竞品胶囊/印章条收敛（见 `../design-freeze/stage-a-2026-05-10/15_HIFI_TARGET_COMPETITOR_REVIEW_20260917_R2.md`）；移动端目标帧未审  
+> **权威闸门**：`../design-freeze/stage-a-2026-05-10/13_RIICHI_CITY_HIFI_TARGET_REDRAW_BRIEF.md` + `15_…R2`（覆盖 `14_…` 打回与下方 2026-05-08「顶级判定通过」旧留档）  
 > **顶级判定口径**：必须同时引用 `13.1 + 13.6 + 14.7 + 13.3/13.4 双否决项复核`，不得仅写单侧否决项；**不得**用功能/自动化通过替代视觉通过。  
-> **原型定位**：历史中间态 / 基线功能验收用，**不可作效果图交付**。
+> **原型定位**：历史中间态 / 基线功能验收用；视觉落地以 `target-assets/…-review.png`（v3）为锚，**不可**把旧原型当效果图交付。
 
 ## 冲顶阻塞项（Blocking）
 
@@ -38,13 +38,13 @@
 
 ### 0.2 双否决项复核留档（2026-05-08）
 
-> **历史留档，已被覆盖**：2026-09-17 竞品级目标图复审打回；不得再宣称顶级通过。功能自动化见 `.tmp/acceptance/majiang-webui-acceptance.json`（11/11）；`final-evidence/` 截图链缺失且验收脚本不生成该目录。
+> **历史留档，已被覆盖**：2026-09-17 `14_…` 打回 → 同日 R2 `15_…R2` 有条件通过；不得宣称无约束「最顶级已通过」。功能自动化见 `.tmp/acceptance/majiang-webui-acceptance.json`（11/11）；`final-evidence/` 截图链缺失且验收脚本不生成该目录。
 
 | 复核项 | 复核结论 | 证据路径 |
 | --- | --- | --- |
-| 13.3 阶段A设计否决项 | 历史：通过 → **冲顶重开后待目标图通过** | `docs/majiang/WEB_UI_PRODUCT_INTERACTION_DESIGN.md#1.4.2`、设计冻结稿 |
-| 13.4 阶段B实现否决项 | 历史：通过 → **基线功能可验，视觉未交付** | `.tmp/acceptance/majiang-webui-acceptance.json` |
-| 顶级判定口径 | **不通过（冲顶进行中）** | `../design-freeze/stage-a-2026-05-10/14_HIFI_TARGET_COMPETITOR_REVIEW_20260917.md` |
+| 13.3 阶段A设计否决项 | **桌面目标图有条件通过**（移动端帧未审） | `../design-freeze/stage-a-2026-05-10/15_HIFI_TARGET_COMPETITOR_REVIEW_20260917_R2.md` |
+| 13.4 阶段B实现否决项 | **基线功能可验；视觉落地进行中** | `.tmp/acceptance/majiang-webui-acceptance.json` |
+| 顶级判定口径 | **基本符合 · 有条件通过（冲顶落地中）** | `../design-freeze/stage-a-2026-05-10/15_HIFI_TARGET_COMPETITOR_REVIEW_20260917_R2.md` |
 
 ## 阶段B证据产物（当前实现）
 
