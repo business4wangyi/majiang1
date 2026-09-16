@@ -5,9 +5,11 @@
 - 仅改 `docs/majiang/web-ui-prototype/` 表现层、适配层、交互编排。
 - 未改 `src/majiang/core/`、`src/majiang/strategy/`、CLI 路径。
 
-> **当前状态**：冲顶进行中（B1/B2/B3 已解除）  
-> **阻塞项**：无
-> **顶级判定口径**：必须同时引用 `13.1 + 13.6 + 14.7 + 13.3/13.4 双否决项复核`，不得仅写单侧否决项。
+> **当前状态**：冲顶进行中 · 目标图待审（2026-09-17 竞品级复审：**打回**）  
+> **阻塞项**：广东高保真目标图未达竞品级效果图交付（见 `../design-freeze/stage-a-2026-05-10/14_HIFI_TARGET_COMPETITOR_REVIEW_20260917.md`）  
+> **权威闸门**：`../design-freeze/stage-a-2026-05-10/13_RIICHI_CITY_HIFI_TARGET_REDRAW_BRIEF.md`（覆盖下方 2026-05-08「顶级判定通过」旧留档）  
+> **顶级判定口径**：必须同时引用 `13.1 + 13.6 + 14.7 + 13.3/13.4 双否决项复核`，不得仅写单侧否决项；**不得**用功能/自动化通过替代视觉通过。  
+> **原型定位**：历史中间态 / 基线功能验收用，**不可作效果图交付**。
 
 ## 冲顶阻塞项（Blocking）
 
@@ -36,30 +38,36 @@
 
 ### 0.2 双否决项复核留档（2026-05-08）
 
+> **历史留档，已被覆盖**：2026-09-17 竞品级目标图复审打回；不得再宣称顶级通过。功能自动化见 `.tmp/acceptance/majiang-webui-acceptance.json`（11/11）；`final-evidence/` 截图链缺失且验收脚本不生成该目录。
+
 | 复核项 | 复核结论 | 证据路径 |
 | --- | --- | --- |
-| 13.3 阶段A设计否决项 | 通过 | `docs/majiang/WEB_UI_PRODUCT_INTERACTION_DESIGN.md#1.4.2`、设计冻结稿、差距回填矩阵 |
-| 13.4 阶段B实现否决项 | 通过 | `.tmp/acceptance/final-evidence/desktop-1280x900.png`、`.tmp/acceptance/final-evidence/mobile-390x844.png`、`.tmp/acceptance/final-evidence/result-tsumo.png` |
-| 顶级判定口径 | 通过 | `13.1 + 13.6 + 14.7 + 13.3/13.4 双否决项复核` |
+| 13.3 阶段A设计否决项 | 历史：通过 → **冲顶重开后待目标图通过** | `docs/majiang/WEB_UI_PRODUCT_INTERACTION_DESIGN.md#1.4.2`、设计冻结稿 |
+| 13.4 阶段B实现否决项 | 历史：通过 → **基线功能可验，视觉未交付** | `.tmp/acceptance/majiang-webui-acceptance.json` |
+| 顶级判定口径 | **不通过（冲顶进行中）** | `../design-freeze/stage-a-2026-05-10/14_HIFI_TARGET_COMPETITOR_REVIEW_20260917.md` |
 
 ## 阶段B证据产物（当前实现）
 
-- 桌面首屏截图：
+> **2026-09-17 核对**：仓库内无 `.tmp/acceptance/final-evidence/`；`npm run majiang:web:acceptance` 只写 JSON，不采集下列截图/录屏。下列路径为历史声称，**当前证据链断裂**。
+
+- 功能自动化结果（现存）：
+  - `.tmp/acceptance/majiang-webui-acceptance.json`（2026-09-17：11/11）
+- 桌面首屏截图（缺失）：
   - `.tmp/acceptance/final-evidence/desktop-1280x900.png`
-- 移动端截图：
+- 移动端截图（缺失）：
   - `.tmp/acceptance/final-evidence/mobile-375x812.png`
   - `.tmp/acceptance/final-evidence/mobile-390x844.png`
   - `.tmp/acceptance/final-evidence/mobile-414x896.png`
   - `.tmp/acceptance/final-evidence/mobile-768x1024.png`
-- 四类结果页截图：
+- 四类结果页截图（缺失）：
   - `.tmp/acceptance/final-evidence/result-tsumo.png`
   - `.tmp/acceptance/final-evidence/result-ron.png`
   - `.tmp/acceptance/final-evidence/result-draw.png`
   - `.tmp/acceptance/final-evidence/result-abort.png`
-- 关键交互链路录屏：
+- 关键交互链路录屏（缺失）：
   - `.tmp/acceptance/final-evidence/interaction-flow.webm`
 
-> 说明：以上证据来自当前原型实现的自动化采集，不等同于核心规则层回归测试。
+> 说明：以上截图/录屏路径为历史文档声称；不等同于核心规则层回归测试，亦**不可**单独支撑竞品级视觉通过。
 
 ## 文档定位与阶段职责
 

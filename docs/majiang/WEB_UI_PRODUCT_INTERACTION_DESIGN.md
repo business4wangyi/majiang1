@@ -5,9 +5,10 @@
 > **不替代内容**：不重写麻将核心规则，不改变 CLI 交互，不替代 `src/majiang/core/` 与 `src/majiang/strategy/` 的业务实现。  
 > **规范依据**：`AGENTS.md`、`docs/standards/rules/development.md`、`docs/majiang/FOLDER_STRUCTURE.md`。
 
-> **当前状态**：冲顶进行中（B1/B2/B3 已解除）  
-> **阻塞项**：无
-> **顶级判定口径**：必须同时引用 `13.1 + 13.6 + 14.7 + 13.3/13.4 双否决项复核`，不得仅写单侧否决项。
+> **当前状态**：冲顶进行中 · 目标图待审（2026-09-17 竞品级复审：**打回**）  
+> **阻塞项**：广东高保真目标图未达竞品级效果图交付（见 `design-freeze/stage-a-2026-05-10/14_HIFI_TARGET_COMPETITOR_REVIEW_20260917.md`）  
+> **权威闸门**：`design-freeze/stage-a-2026-05-10/13_RIICHI_CITY_HIFI_TARGET_REDRAW_BRIEF.md`（覆盖下方 2026-05-08「顶级判定通过」旧留档）  
+> **顶级判定口径**：必须同时引用 `13.1 + 13.6 + 14.7 + 13.3/13.4 双否决项复核`，不得仅写单侧否决项；**不得**用功能/自动化通过替代视觉通过。
 
 ## 1. 背景与目标
 
@@ -82,11 +83,14 @@
 
 #### 1.4.4 正式复核留档（2026-05-08）
 
+> **历史留档，已被覆盖**：2026-09-17 按 `13_RIICHI_CITY_HIFI_TARGET_REDRAW_BRIEF.md` 重开冲顶；竞品级目标图复审打回（`14_HIFI_TARGET_COMPETITOR_REVIEW_20260917.md`）。下表不得再当作「可交付编码」依据。  
+> **证据链说明**：`.tmp/acceptance/final-evidence/` 当前工作区不存在；`npm run majiang:web:acceptance` 仅产出 `.tmp/acceptance/majiang-webui-acceptance.json`（2026-09-17：11/11），**不**生成截图/录屏。
+
 | 项目 | 结论 | 证据路径 |
 | --- | --- | --- |
-| 13.3 阶段A设计否决项 | 通过 | `docs/majiang/WEB_UI_PRODUCT_INTERACTION_DESIGN.md#1.4.2`、设计冻结稿、差距回填矩阵 |
-| 13.4 阶段B实现否决项 | 通过 | `.tmp/acceptance/final-evidence/desktop-1280x900.png`、`.tmp/acceptance/final-evidence/mobile-390x844.png`、`.tmp/acceptance/final-evidence/result-tsumo.png` |
-| 顶级判定口径 | 通过 | `13.1 + 13.6 + 14.7 + 13.3/13.4 双否决项复核` |
+| 13.3 阶段A设计否决项 | 历史：通过 → **冲顶重开后待目标图通过** | `docs/majiang/WEB_UI_PRODUCT_INTERACTION_DESIGN.md#1.4.2`、设计冻结稿、差距回填矩阵 |
+| 13.4 阶段B实现否决项 | 历史：通过 → **基线功能可验，视觉未交付** | `.tmp/acceptance/majiang-webui-acceptance.json`（功能）；截图证据链缺失 |
+| 顶级判定口径 | **不通过（冲顶进行中）** | `14_HIFI_TARGET_COMPETITOR_REVIEW_20260917.md` |
 
 ## 2. 产品体验原则
 

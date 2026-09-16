@@ -14,7 +14,7 @@
 - 审核主图：`docs/majiang/design-freeze/stage-a-2026-05-10/target-assets/guangdong-hifi-target-desktop-1440x900-review.png`
 - 原始生成图：`docs/majiang/design-freeze/stage-a-2026-05-10/target-assets/guangdong-hifi-target-desktop-1440x900-2026-05-14.png`
 - 图像语境：中文广东麻将局内响应态
-- 当前状态：待审核 agent 按竞品级效果图标准复审；未通过前不得交给编码 agent。
+- 当前状态：2026-09-17 竞品级复审 **打回**；未通过前不得交给编码 agent。详见 `14_HIFI_TARGET_COMPETITOR_REVIEW_20260917.md`。
 
 ## 本轮结论
 
@@ -22,11 +22,19 @@
 
 本轮任务不是 3 条 CSS 微调，也不是继续压缩现有 Web 牌桌，而是阶段A重开后的高保真目标图重绘。目标图必须先与唯一主参考并排审核通过，再拆给编码 agent。
 
+## 复审结论（2026-09-17）
+
+- 审核对象：`target-assets/guangdong-hifi-target-desktop-1440x900-review.png` vs `competitor-assets/riichi-city/steam-shot-2.jpg`
+- 档位：冲顶审核（竞品级效果图交付）
+- 结论：**部分符合 · 打回**（骨架成立；说明型叠加层 + 动作层 Web 化阻止交付）
+- 交付状态：**不可**交给编码 agent
+- 改稿单：见 `14_HIFI_TARGET_COMPETITOR_REVIEW_20260917.md`（去教学箭头/气泡/说明条；动作层字效化；角区减负）
+
 ## 本轮复审结论（2026-05-14 23:30）
 
 - 审核对象：新增广东麻将中文目标图与本重绘简报。
 - 结论：已补齐 workspace 内可审核目标图路径，并将简报从日式立直语境收敛为广东麻将中文语境。
-- 交付状态：新目标图仍需审核 agent 复审；未通过前不得交给编码 agent。
+- 交付状态：新目标图仍需审核 agent 复审；未通过前不得交给编码 agent。（**已被 2026-09-17 打回结论覆盖**）
 - 核心收紧：本轮目标局势固定为“右家打出目标牌，我方可胡”，主动作固定为“胡”，次动作固定为“过”，可选弱层级动作仅允许“碰/杠”。不再保留“荣和”“立直”“听牌”等日式术语。
 
 ## 规范取舍
