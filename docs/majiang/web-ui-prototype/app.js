@@ -71,6 +71,69 @@ function parseTileLabel(label) {
   return { raw: value, kind: "fallback" };
 }
 
+/** 经典 3×3 印花格位（1=左上 … 9=右下），贴竞品图案主语言而非点数堆叠 */
+const TILE_FACE_CELLS = {
+  dots: {
+    1: [5],
+    2: [1, 9],
+    3: [1, 5, 9],
+    4: [1, 3, 7, 9],
+    5: [1, 3, 5, 7, 9],
+    6: [1, 3, 4, 6, 7, 9],
+    7: [1, 3, 4, 5, 6, 7, 9],
+    8: [1, 2, 3, 4, 6, 7, 8, 9],
+    9: [1, 2, 3, 4, 5, 6, 7, 8, 9],
+  },
+  bamboo: {
+    1: [5],
+    2: [2, 8],
+    3: [2, 5, 8],
+    4: [1, 3, 7, 9],
+    5: [1, 3, 5, 7, 9],
+    6: [1, 3, 4, 6, 7, 9],
+    7: [1, 3, 4, 5, 6, 7, 9],
+    8: [1, 2, 3, 4, 6, 7, 8, 9],
+    9: [1, 2, 3, 4, 5, 6, 7, 8, 9],
+  },
+};
+
+function tileFaceCellsHtml(kind, rank) {
+  const cells = (TILE_FACE_CELLS[kind] && TILE_FACE_CELLS[kind][rank]) || [];
+  const cls = kind === "dots" ? "tile-dot" : "tile-bamboo";
+  return cells
+    .map((cell) => {
+      const tone = kind === "dots" ? ` data-tone="${dotTone(rank, cell)}"` : "";
+      return `<span class="${cls}" data-cell="${cell}"${tone}></span>`;
+    })
+    .join("");
+}
+
+function dotTone(rank, cell) {
+  if (rank === 1) return "blue";
+  if (rank === 5 && cell === 5) return "red";
+  if (rank === 9) {
+    if (cell === 5) return "red";
+    if ([1, 3, 7, 9].includes(cell)) return "green";
+    return "blue";
+  }
+  if ([1, 3, 7, 9].includes(cell)) return "green";
+  if ([2, 4, 6, 8].includes(cell)) return "blue";
+  return "red";
+}
+
+// ponytail: 布局表是硬编码；?selfcheck=1 校验 1–9 点/条数与格位数一致，升级路径=抽到独立 fixture
+if (new URLSearchParams(window.location.search).has("selfcheck")) {
+  Object.entries(TILE_FACE_CELLS).forEach(([kind, map]) => {
+    for (let rank = 1; rank <= 9; rank += 1) {
+      const cells = map[rank];
+      if (!cells || cells.length !== rank) {
+        throw new Error(`tile-face selfcheck failed: ${kind}/${rank}`);
+      }
+    }
+  });
+  console.info("tile-face selfcheck ok");
+}
+
 function createTileAssetNode(label, className) {
   const parsed = parseTileLabel(label);
   const node = document.createElement("span");
@@ -81,13 +144,11 @@ function createTileAssetNode(label, className) {
     node.setAttribute("data-tile-suit", parsed.suit);
     node.setAttribute("data-tile-rank", String(parsed.rankValue));
     if (parsed.suit === "筒") {
-      const dots = Array.from({ length: parsed.rankValue }, () => '<span class="tile-dot"></span>').join("");
-      node.innerHTML = `<span class="tile-pattern tile-pattern--dots">${dots}</span><span class="tile-asset-suit">筒</span>`;
+      node.innerHTML = `<span class="tile-pattern tile-pattern--dots" data-rank="${parsed.rankValue}">${tileFaceCellsHtml("dots", parsed.rankValue)}</span>`;
       return node;
     }
     if (parsed.suit === "条") {
-      const bars = Array.from({ length: parsed.rankValue }, () => '<span class="tile-bamboo"></span>').join("");
-      node.innerHTML = `<span class="tile-pattern tile-pattern--bamboo">${bars}</span><span class="tile-asset-suit">条</span>`;
+      node.innerHTML = `<span class="tile-pattern tile-pattern--bamboo" data-rank="${parsed.rankValue}">${tileFaceCellsHtml("bamboo", parsed.rankValue)}</span>`;
       return node;
     }
     node.innerHTML = `<span class="tile-asset-rank">${parsed.rankText}</span><span class="tile-asset-suit">萬</span>`;
@@ -95,6 +156,10 @@ function createTileAssetNode(label, className) {
   }
   if (parsed.kind === "wind" || parsed.kind === "dragon") {
     node.setAttribute("data-tile-honor", parsed.honorShort);
+    if (parsed.honorShort === "白") {
+      node.innerHTML = `<span class="tile-asset-white" title="白板"></span>`;
+      return node;
+    }
     node.innerHTML = `<span class="tile-asset-honor">${parsed.honorDisplay}</span>`;
     return node;
   }
