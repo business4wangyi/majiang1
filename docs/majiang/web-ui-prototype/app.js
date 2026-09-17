@@ -730,7 +730,15 @@ function renderActionBar(model) {
   document.getElementById("mobileAvailableActionTitle").textContent = document.getElementById("availableActionTitle").textContent;
   const mobileList = document.getElementById("mobileAvailableActionReasons");
   mobileList.innerHTML = availableReasonList.innerHTML;
-  document.getElementById("actionReason").textContent = appState.selectedTileIndex === null ? "等待操作" : `已选：${model.selfHand[appState.selectedTileIndex]}`;
+  // 响应窗让胶囊动作条自解释；出牌阶段仅在已选牌时显示，避免「等待操作」类 Web 副文案抢视线
+  const actionReason = document.getElementById("actionReason");
+  if (model.phase === "response_window") {
+    actionReason.textContent = "";
+  } else if (appState.selectedTileIndex !== null) {
+    actionReason.textContent = `已选：${model.selfHand[appState.selectedTileIndex]}`;
+  } else {
+    actionReason.textContent = "";
+  }
 }
 
 function renderTimeline(model) {

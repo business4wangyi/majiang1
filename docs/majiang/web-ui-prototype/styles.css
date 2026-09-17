@@ -1154,38 +1154,54 @@ body {
   0%,
   100% {
     box-shadow:
-      0 0 0 3px rgba(255, 186, 64, 0.78),
-      0 0 16px rgba(255, 170, 40, 0.55),
-      0 0 28px rgba(255, 140, 20, 0.28),
+      0 0 0 4px rgba(255, 200, 80, 0.95),
+      0 0 22px rgba(255, 170, 40, 0.78),
+      0 0 44px rgba(255, 140, 20, 0.45),
       inset 0 -8px 10px rgba(160, 140, 100, 0.28),
       0 1px 0 #d8c9a6,
       0 2px 0 #c7b68f,
       0 3px 0 #b3a178,
       0 4px 0 #8f7f58,
-      0 10px 12px -2px rgba(0, 0, 0, 0.42);
+      0 14px 18px -2px rgba(0, 0, 0, 0.55);
   }
   50% {
     box-shadow:
-      0 0 0 4px rgba(255, 210, 120, 0.95),
-      0 0 22px rgba(255, 186, 64, 0.72),
-      0 0 40px rgba(255, 160, 40, 0.4),
+      0 0 0 5px rgba(255, 220, 140, 1),
+      0 0 30px rgba(255, 186, 64, 0.92),
+      0 0 56px rgba(255, 160, 40, 0.55),
       inset 0 -8px 10px rgba(160, 140, 100, 0.28),
       0 1px 0 #d8c9a6,
       0 2px 0 #c7b68f,
       0 3px 0 #b3a178,
       0 4px 0 #8f7f58,
-      0 12px 16px -2px rgba(0, 0, 0, 0.4);
+      0 16px 22px -2px rgba(0, 0, 0, 0.5);
   }
 }
 
 .tile-mini--response-target {
-  border-color: rgba(255, 210, 120, 0.98);
-  animation: targetTileGlow 1.6s ease-in-out infinite;
-  z-index: 2;
+  position: relative;
+  border-color: rgba(255, 220, 140, 1);
+  animation: targetTileGlow 1.35s ease-in-out infinite;
+  z-index: 6;
+  filter: brightness(1.1) saturate(1.12);
+}
+
+.tile-mini--response-target::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: -7px;
+  width: 130%;
+  height: 10px;
+  transform: translateX(-50%);
+  border-radius: 50%;
+  background: radial-gradient(ellipse, rgba(255, 186, 64, 0.55) 0%, transparent 72%);
+  pointer-events: none;
+  z-index: -1;
 }
 
 .river-lane--east .tile-mini--response-target {
-  transform: translateY(-2px) scale(1.12);
+  transform: translateY(-8px) scale(1.32);
 }
 
 .tile-asset--mini {
@@ -1740,7 +1756,14 @@ body {
 }
 
 .action-reason {
-  color: #ffe6b0;
+  color: rgba(255, 230, 176, 0.55);
+  font-weight: 600;
+  font-size: 10px;
+  letter-spacing: 0.02em;
+}
+
+.action-reason:empty {
+  display: none;
 }
 
 .hand-tiles {
@@ -1854,11 +1877,11 @@ body {
     0 24px 28px -8px rgba(0, 0, 0, 0.4);
 }
 
+/* 手牌同名仅弱提示，首眼留给牌河目标牌 */
 .tile.tile--response-match {
-  border-color: rgba(255, 184, 59, 0.9);
+  border-color: rgba(255, 184, 59, 0.42);
   box-shadow:
-    0 0 0 3px rgba(255, 184, 59, 0.68),
-    0 0 16px rgba(255, 184, 59, 0.52),
+    0 0 0 1px rgba(255, 184, 59, 0.28),
     inset 0 -12px 14px rgba(160, 140, 100, 0.3),
     0 1px 0 #d9caa8,
     0 2px 0 #c9ba95,
