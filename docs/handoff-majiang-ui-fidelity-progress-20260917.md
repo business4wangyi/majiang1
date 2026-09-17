@@ -41,7 +41,7 @@ flowchart TD
 | 去教学层 + 角区稀疏 | 关 beam/气泡/桌心说明条；角区仅头像+分数+南位轻量「可胡」；中心盘右缘脉冲 + 目标牌光效 | `e99d51a` · `web-ui-prototype/` |
 | 牌面/桌材质起步 | 手牌/牌河陶瓷分层厚度 + 桌面接触阴影；桌毡加深 + 桌面/牌河微透视加大；手牌行 `rotateX` | `8301fd6` · `styles.css` |
 | 牌面印花布局 | 筒/条改 3×3 经典格位；去套色「筒/条」字；筒点分色；白板框；陶瓷微纹；`?selfcheck=1` | `b5526db` · `web-ui-prototype/` |
-| 实现截图档位 B | **R2 改稿单 3 条关闭 · 整桌仍有条件** | `16_HIFI_IMPL_COMPETITOR_REVIEW_20260917.md` + `target-assets/impl-desktop-1440x900-20260917.png` |
+| 实现截图档位 B | **R2 改稿单 3 条关闭 · 整桌仍有条件** | `12023b5` · `16_HIFI_IMPL_COMPETITOR_REVIEW_20260917.md` + `target-assets/impl-desktop-1440x900-20260917.png` |
 
 ### 相对打回稿的收敛
 1. 说明型叠加层（大箭头/气泡/说明条）→ **目标图已移除**；实现层 beam/callout/`latest-action-wrap` 亦已退出主舞台。
@@ -88,9 +88,9 @@ flowchart TD
 - `docs/majiang/web-ui-prototype/`（动作层/弱高亮/厚度/印花已提交；整桌冲顶按需收敛）
 
 ## 工作区未提交改动（下一会话注意）
-- 本轮：`16_…IMPL` 审核结论 + 实现截图资产 + handoff 回填（提交后应清空）。
+- 无（本轮 `16_…IMPL` + 实现截图 + handoff 已提交 `12023b5`）。
 - `node_modules` / `.tmp` 勿提交（`.tmp/` 已 gitignore）。
-- 已提交历史：`b5526db` 印花；`8301fd6` 厚度；`e99d51a` 去教学层；`4027d4d` 动作层；闸门 `5e22a0f`；哈希回填 `3e880f9`。
+- 已提交历史：`12023b5` 实现验收；`b5526db` 印花；`8301fd6` 厚度；`e99d51a` 去教学层；`4027d4d` 动作层；闸门 `5e22a0f`；哈希回填 `3e880f9`。
 
 ## 建议下一会话动作
 1. **编码（按需）**：印花 sprite / 牌河目标牌首眼 / 弱化「等待操作」类 Web 副文案（见 `16_…IMPL` 改稿单）。
