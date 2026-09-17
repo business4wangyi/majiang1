@@ -5,11 +5,11 @@
 - 仅改 `docs/majiang/web-ui-prototype/` 表现层、适配层、交互编排。
 - 未改 `src/majiang/core/`、`src/majiang/strategy/`、CLI 路径。
 
-> **当前状态**：冲顶进行中 · 目标图有条件通过（2026-09-17 R2：**基本符合**）· 视觉落地已开工  
-> **阻塞项**：整桌贴目标图未完成；动作层已改为胶囊/印章条（见 `15_…R2` 改稿单第 1 条，待实现截图并排关验收）；移动端目标帧未审  
-> **权威闸门**：`../design-freeze/stage-a-2026-05-10/13_RIICHI_CITY_HIFI_TARGET_REDRAW_BRIEF.md` + `15_…R2`（覆盖 `14_…` 打回与下方 2026-05-08「顶级判定通过」旧留档）  
+> **当前状态**：冲顶进行中 · 目标图 R2 有条件通过 · 实现截图档位 B：**R2 改稿单已关**（`16_…IMPL`：**基本符合**；整桌仍未满分）  
+> **阻塞项**：整桌商业质感未满分（按需 sprite/牌河目标牌）；移动端帧未审  
+> **权威闸门**：`../design-freeze/stage-a-2026-05-10/13_RIICHI_CITY_HIFI_TARGET_REDRAW_BRIEF.md` + `15_…R2` + `16_…IMPL`（覆盖 `14_…` 打回与下方 2026-05-08「顶级判定通过」旧留档）  
 > **顶级判定口径**：必须同时引用 `13.1 + 13.6 + 14.7 + 13.3/13.4 双否决项复核`，不得仅写单侧否决项；**不得**用功能/自动化通过替代视觉通过。  
-> **原型定位**：视觉落地进行中；以 `target-assets/…-review.png`（v3）为桌面骨架锚；动作层禁止退回圆钮/深色 Web 工具条。
+> **原型定位**：R2 实现验收已关；以 `target-assets/…-review.png`（v3）为桌面骨架锚；动作层禁止退回圆钮/深色 Web 工具条。
 
 ## 冲顶阻塞项（Blocking）
 
@@ -43,8 +43,8 @@
 | 复核项 | 复核结论 | 证据路径 |
 | --- | --- | --- |
 | 13.3 阶段A设计否决项 | **桌面目标图有条件通过**（移动端帧未审） | `../design-freeze/stage-a-2026-05-10/15_HIFI_TARGET_COMPETITOR_REVIEW_20260917_R2.md` |
-| 13.4 阶段B实现否决项 | **基线功能可验；视觉落地进行中** | `.tmp/acceptance/majiang-webui-acceptance.json` |
-| 顶级判定口径 | **基本符合 · 有条件通过（冲顶落地中）** | `../design-freeze/stage-a-2026-05-10/15_HIFI_TARGET_COMPETITOR_REVIEW_20260917_R2.md` |
+| 13.4 阶段B实现否决项 | **基线功能可验；R2 视觉改稿单已关，整桌冲顶仍有条件** | `.tmp/acceptance/majiang-webui-acceptance.json` + `16_…IMPL` |
+| 顶级判定口径 | **基本符合 · 有条件通过（R2 实现验收关；整桌未满分）** | `../design-freeze/stage-a-2026-05-10/15_…R2.md` + `16_…IMPL` |
 
 ## 阶段B证据产物（当前实现）
 
@@ -52,7 +52,10 @@
 
 - 功能自动化结果（现存）：
   - `.tmp/acceptance/majiang-webui-acceptance.json`（2026-09-17：11/11）
-- 桌面首屏截图（缺失）：
+- 桌面首屏截图（实现冲顶证据，已入库）：
+  - `../design-freeze/stage-a-2026-05-10/target-assets/impl-desktop-1440x900-20260917.png`
+  - 审核结论：`../design-freeze/stage-a-2026-05-10/16_HIFI_IMPL_COMPETITOR_REVIEW_20260917.md`
+- 桌面首屏截图（历史路径，仍缺失于 `.tmp`）：
   - `.tmp/acceptance/final-evidence/desktop-1280x900.png`
 - 移动端截图（缺失）：
   - `.tmp/acceptance/final-evidence/mobile-375x812.png`
