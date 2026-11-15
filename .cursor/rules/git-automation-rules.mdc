@@ -1,13 +1,12 @@
 ---
-alwaysApply: true
+description: Git 自动化薄入口
+alwaysApply: false
 ---
-# Git MCP 自动化规则（入口引读）
 
-本文件为 Cursor 入口层，保持 `alwaysApply: true`，不承载完整规范正文。
+# Git MCP 自动化（入口引读）
 
-请读取共享正文：
+不承载正文。请读：
+- `docs/standards/rules/commit-policy.md`（E0）
 - `docs/standards/rules/git-mcp-automation.md`
-- `docs/standards/rules/development.md`
 
-冲突处理：
-- 若与其他 IDE 私有规则冲突，以仓库根 `AGENTS.md` 与 `docs/standards/` 为准。
+冲突以 `AGENTS.md` 与 `docs/standards/` 为准。

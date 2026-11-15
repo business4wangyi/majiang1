@@ -19,8 +19,9 @@
 - 迭代 1：补齐规则演进文档与映射矩阵。
 - 迭代 2：按每日扫描结果修复中高优先级债务。
 - 迭代 3：将高频问题沉淀为可执行检查项。
+- 迭代 4（2026-11-14）：定封顶 — 触发表 + delivery-flow + Web UI 脊骨（见 `docs/product/`）。
 
 ## 验证方式
-- 命令：`bash /Users/felixfan/.codex/skills/project-standards-governance/scripts/standards_guard.sh fit`
-- 命令：`bash /Users/felixfan/.codex/skills/project-standards-governance/scripts/standards_guard.sh scan`
-- 验收标准：`fit` 与 `scan` 退出码均为 `0`。
+- 命令：`bash ~/.claude/skills/project-standards-governance/scripts/standards_guard.sh fit`
+- 命令：`bash ~/.claude/skills/project-standards-governance/scripts/standards_guard.sh scan`
+- 验收标准：`fit` 与 `scan` 退出码均为 `0`；`docs/standards/rules/index.md` 与 `docs/product/delivery-flow.md` 存在且被 `AGENTS.md` 引用。

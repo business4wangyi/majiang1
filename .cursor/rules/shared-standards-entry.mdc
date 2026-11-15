@@ -1,13 +1,9 @@
 ---
-alwaysApply: true
+description: 兼容入口：转发到 00-standards-index
+alwaysApply: false
 ---
-# 共享规范引读（IDE 入口）
 
-本文件为 Cursor 入口层，不承载完整规范正文。
+# 共享规范引读（兼容）
 
-请优先读取以下共享规范：
-- `docs/standards/README.md`
-- `docs/standards/rules/development.md`
-
-冲突处理：
-- 若与 IDE 私有规则冲突，以仓库根 `AGENTS.md` 与 `docs/standards/` 为准。
+请改用始终生效的 `.cursor/rules/00-standards-index.mdc`。  
+正文入口：`docs/standards/rules/index.md`。

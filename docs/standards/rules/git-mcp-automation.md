@@ -33,10 +33,9 @@
 5. 反馈提交结果（commit hash + 简述）。
 
 ## 提交消息规范
-建议使用 Conventional Commits：
-- `feat`, `fix`, `docs`, `style`, `refactor`, `test`, `chore`
-
-格式：`type(scope): subject`
+- **判定权威**：先满足 [`commit-policy.md`](commit-policy.md)（E0），再执行本流程。
+- 使用 Conventional Commits：`feat` / `fix` / `docs` / `style` / `refactor` / `test` / `chore`
+- 格式：`type(scope): 中文主题`（主题与正文强制中文）
 
 ## 安全约束
 - 破坏性操作需要显式确认。

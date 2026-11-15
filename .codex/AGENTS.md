@@ -2,14 +2,13 @@
 type: "manual"
 ---
 
-# 兼容入口（已弃用）
+# 兼容入口（薄引读）
 
-本文件不再承载规则正文，仅作为历史兼容入口。
+本文件不承载规则正文。
 
-请优先读取以下规范：
-- `AGENTS.md`
-- `docs/standards/README.md`
-- `docs/standards/rules/development.md`
+请优先读取：
+1. 仓库根 `AGENTS.md`
+2. `docs/standards/rules/index.md`（任务触发表）
+3. 按触发加载 `docs/standards/rules/*`、`docs/product/delivery-flow.md`
 
-冲突处理：
-- 若与任何 IDE 私有规则冲突，以仓库根 `AGENTS.md` 与 `docs/standards/` 为准。
+冲突处理：以仓库根 `AGENTS.md` 与 `docs/standards/` 为准。

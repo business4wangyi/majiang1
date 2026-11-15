@@ -1,0 +1,14 @@
+---
+description: 本仓规范薄入口：先读任务触发表，再按需加载正文
+alwaysApply: true
+---
+
+# 共享规范引读（Cursor）
+
+本文件不承载规范正文。
+
+1. **先读** `docs/standards/rules/index.md`（任务触发表）  
+2. 再按触发加载对应 `docs/standards/rules/*.md` / `docs/product/*.md`  
+3. 冲突以仓库根 `AGENTS.md` 与 `docs/standards/` 为准  
+
+禁止在本文件追加大段规范正文。
