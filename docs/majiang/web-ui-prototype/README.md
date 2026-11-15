@@ -5,11 +5,10 @@
 - 仅改 `docs/majiang/web-ui-prototype/` 表现层、适配层、交互编排。
 - 未改 `src/majiang/core/`、`src/majiang/strategy/`、CLI 路径。
 
-> **当前状态**：冲顶进行中 · 目标图 R2 有条件通过 · 实现截图档位 B：**R2 改稿单已关**（`16_…IMPL`：**基本符合**；整桌仍未满分）  
-> **阻塞项**：整桌商业质感未满分（按需 sprite/牌河目标牌）；移动端帧未审  
-> **权威闸门**：`../design-freeze/stage-a-2026-05-10/13_RIICHI_CITY_HIFI_TARGET_REDRAW_BRIEF.md` + `15_…R2` + `16_…IMPL`（覆盖 `14_…` 打回与下方 2026-05-08「顶级判定通过」旧留档）  
-> **顶级判定口径**：必须同时引用 `13.1 + 13.6 + 14.7 + 13.3/13.4 双否决项复核`，不得仅写单侧否决项；**不得**用功能/自动化通过替代视觉通过。  
-> **原型定位**：R2 实现验收已关；以 `target-assets/…-review.png`（v3）为桌面骨架锚；动作层禁止退回圆钮/深色 Web 工具条。
+> **当前状态（2026-11-16 · 方案 C 一段）**：W4–W7 合同项可观察关闭；**`CAP-UI-GRAD` 人重批已毕业**；二段竞品再抬 **未开**。  
+> **口径**：禁「基本有」关毕业；功能绿 ≠ 视觉通过；二段须人点名 + 新蓝图。  
+> **权威闸门**：`docs/product/caps/majiang-webui-acceptance-stages.md` + 脊骨 `majiang-webui-target.md`；桌面锚仍见 `15_…R2` / `16_…IMPL`；移动见 `stage-b-w6-mobile/`；结果见 `stage-b-w7-result/`。  
+> **原型定位**：以桌面骨架 + W4–W7 入库证据为准；动作层禁止退回圆钮/深色 Web 工具条。
 
 ## 冲顶阻塞项（Blocking）
 
@@ -42,9 +41,9 @@
 
 | 复核项 | 复核结论 | 证据路径 |
 | --- | --- | --- |
-| 13.3 阶段A设计否决项 | **桌面目标图有条件通过**（移动端帧未审） | `../design-freeze/stage-a-2026-05-10/15_HIFI_TARGET_COMPETITOR_REVIEW_20260917_R2.md` |
-| 13.4 阶段B实现否决项 | **基线功能可验；R2 视觉改稿单已关，整桌冲顶仍有条件** | `.tmp/acceptance/majiang-webui-acceptance.json` + `16_…IMPL` |
-| 顶级判定口径 | **基本符合 · 有条件通过（R2 实现验收关；整桌未满分）** | `../design-freeze/stage-a-2026-05-10/15_…R2.md` + `16_…IMPL` |
+| 13.3 阶段A设计否决项 | **桌面目标有条件通过（历史 R2）**；移动策略/帧已由 W6 关 | `15_…R2.md` + `../design-freeze/stage-b-w6-mobile/` |
+| 13.4 阶段B实现否决项 | **ACT/TILE/LAYOUT/MOBILE/RESULT 证据可核**；整桌一段毕业仍待人重批 GRAD | `16_…IMPL` + `stage-b-w4|w5|w6|w7-*` |
+| 顶级判定口径 | **一段 GRAD 人重批已毕业（2026-11-16）；二段未开** | `docs/product/caps/majiang-webui-acceptance-stages.md` |
 
 ## 阶段B证据产物（当前实现）
 
@@ -62,11 +61,12 @@
   - `.tmp/acceptance/final-evidence/mobile-390x844.png`
   - `.tmp/acceptance/final-evidence/mobile-414x896.png`
   - `.tmp/acceptance/final-evidence/mobile-768x1024.png`
-- 四类结果页截图（缺失）：
-  - `.tmp/acceptance/final-evidence/result-tsumo.png`
-  - `.tmp/acceptance/final-evidence/result-ron.png`
-  - `.tmp/acceptance/final-evidence/result-draw.png`
-  - `.tmp/acceptance/final-evidence/result-abort.png`
+- 四类结果页截图（**正式证据已入库 W7**；`.tmp` 历史路径仍可缺）：
+  - `../design-freeze/stage-b-w7-result/2026-11-16-result-tsumo-1440x900.png`
+  - `../design-freeze/stage-b-w7-result/2026-11-16-result-ron-1440x900.png`
+  - `../design-freeze/stage-b-w7-result/2026-11-16-result-draw-1440x900.png`
+  - `../design-freeze/stage-b-w7-result/2026-11-16-result-abort-1440x900.png`
+  - 目录说明：`../design-freeze/stage-b-w7-result/README.md`
 - 关键交互链路录屏（缺失）：
   - `.tmp/acceptance/final-evidence/interaction-flow.webm`
 

@@ -5,10 +5,10 @@
 > **不替代内容**：不重写麻将核心规则，不改变 CLI 交互，不替代 `src/majiang/core/` 与 `src/majiang/strategy/` 的业务实现。  
 > **规范依据**：`AGENTS.md`、`docs/standards/rules/development.md`、`docs/majiang/FOLDER_STRUCTURE.md`。
 
-> **当前状态**：冲顶进行中 · 目标图有条件通过（2026-09-17 R2：**基本符合**）· 进入视觉落地  
-> **阻塞项**：动作层实现须向竞品胶囊/印章条收敛（见 `design-freeze/stage-a-2026-05-10/15_HIFI_TARGET_COMPETITOR_REVIEW_20260917_R2.md`）；移动端目标帧未审  
-> **权威闸门**：`design-freeze/stage-a-2026-05-10/13_RIICHI_CITY_HIFI_TARGET_REDRAW_BRIEF.md` + `15_…R2`（覆盖 `14_…` 打回与下方 2026-05-08「顶级判定通过」旧留档）  
-> **顶级判定口径**：必须同时引用 `13.1 + 13.6 + 14.7 + 13.3/13.4 双否决项复核`，不得仅写单侧否决项；**不得**用功能/自动化通过替代视觉通过。
+> **当前状态（2026-11-16）**：方案 C 一段 — W4–W7 合同项可观察关闭；**`CAP-UI-GRAD` 人重批已毕业**；二段竞品再抬 **未开**。  
+> **口径**：禁「基本有」关毕业；功能绿 ≠ 视觉通过；二段须人点名 + 新蓝图。  
+> **权威闸门**：`docs/product/caps/majiang-webui-acceptance-stages.md` + `docs/product/spines/majiang-webui-target.md`；移动 `stage-b-w6-mobile/`；结果 `stage-b-w7-result/`；桌面锚仍见 `15_…R2` / `16_…IMPL`。  
+> **顶级判定口径**：必须同时引用 `13.1 + 13.6 + 14.7 + 13.3/13.4`；**不得**用功能/自动化通过替代视觉通过。
 
 ## 1. 背景与目标
 

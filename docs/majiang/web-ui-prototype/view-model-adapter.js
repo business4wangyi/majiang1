@@ -189,19 +189,19 @@
       return {
         type,
         title: "异常终止",
-        reason: "状态同步失败，已中止本局",
+        reason: "状态同步失败，已中止本局（不计分）",
         rows: [
-          { player: "玩家1", delta: "0", total: 28400, role: "中止", reason: "未结算" },
-          { player: "玩家2", delta: "0", total: 21800, role: "中止", reason: "未结算" },
-          { player: "玩家3", delta: "0", total: 24200, role: "中止", reason: "未结算" },
-          { player: "玩家4", delta: "0", total: 25600, role: "中止", reason: "未结算" },
+          { player: "玩家1", delta: "0", total: 28400, role: "中止", reason: "未结算·不计分" },
+          { player: "玩家2", delta: "0", total: 21800, role: "中止", reason: "未结算·不计分" },
+          { player: "玩家3", delta: "0", total: 24200, role: "中止", reason: "未结算·不计分" },
+          { player: "玩家4", delta: "0", total: 25600, role: "中止", reason: "未结算·不计分" },
         ],
       };
     }
     return {
       type: "tsumo",
       title: "自摸胡牌",
-      reason: "你自摸胡牌：平胡",
+      reason: "你自摸胡牌：平胡（三家共同支付）",
       rows: [
         { player: "玩家1", delta: "+2400", total: 30800, role: "胡牌者", reason: "自摸" },
         { player: "玩家2", delta: "-800", total: 21000, role: "支付方", reason: "自摸支付" },

@@ -1,0 +1,98 @@
+[
+  {
+    "type": "tsumo",
+    "file": "docs/majiang/design-freeze/stage-b-w7-result/2026-11-16-result-tsumo-1440x900.png",
+    "audit": {
+      "badge": "自摸",
+      "headline": "自摸胡牌",
+      "sectionTitle": "分数变化与角色",
+      "subline": "赢家：玩家1 · 三家共同支付：玩家2、玩家3、玩家4",
+      "reason": "你自摸胡牌：平胡（三家共同支付）",
+      "chips": [
+        "赢家：玩家1",
+        "支付：玩家2",
+        "支付：玩家3",
+        "支付：玩家4"
+      ],
+      "diag": "",
+      "actions": [
+        "再来一局",
+        "回到大厅",
+        "查看复盘",
+        "关闭"
+      ]
+    }
+  },
+  {
+    "type": "ron",
+    "file": "docs/majiang/design-freeze/stage-b-w7-result/2026-11-16-result-ron-1440x900.png",
+    "audit": {
+      "badge": "点炮胡",
+      "headline": "点炮胡",
+      "sectionTitle": "分数变化与角色",
+      "subline": "赢家：玩家1 · 放炮：玩家4 · 旁家：玩家2、玩家3",
+      "reason": "你胡了玩家4打出的五万",
+      "chips": [
+        "赢家：玩家1",
+        "放炮：玩家4",
+        "旁家：玩家2",
+        "旁家：玩家3"
+      ],
+      "diag": "",
+      "actions": [
+        "再来一局",
+        "回到大厅",
+        "查看复盘",
+        "关闭"
+      ]
+    }
+  },
+  {
+    "type": "draw",
+    "file": "docs/majiang/design-freeze/stage-b-w7-result/2026-11-16-result-draw-1440x900.png",
+    "audit": {
+      "badge": "流局",
+      "headline": "流局",
+      "sectionTitle": "分数变化与角色",
+      "subline": "牌山耗尽，按流局规则结算 · 各家分数见下表（本例微调为 0）。",
+      "reason": "牌山耗尽，按流局规则结算",
+      "chips": [
+        "流局：无人胡牌",
+        "玩家1 0",
+        "玩家2 0",
+        "玩家3 0",
+        "玩家4 0"
+      ],
+      "diag": "",
+      "actions": [
+        "再来一局",
+        "回到大厅",
+        "查看复盘",
+        "关闭"
+      ]
+    }
+  },
+  {
+    "type": "abort",
+    "file": "docs/majiang/design-freeze/stage-b-w7-result/2026-11-16-result-abort-1440x900.png",
+    "audit": {
+      "badge": "异常终止",
+      "headline": "异常终止",
+      "sectionTitle": "分数变化与角色",
+      "subline": "本局不计分 · 建议「再来一局」或「回到大厅」后重开。",
+      "reason": "状态同步失败，已中止本局（不计分）",
+      "chips": [
+        "异常终止",
+        "本局不计分",
+        "建议重开"
+      ],
+      "diag": "终止原因：状态同步失败 · 本局是否计分：否 · 重开建议：点「再来一局」或「回到大厅」，并经诊断入口查看上下文。",
+      "actions": [
+        "再来一局",
+        "回到大厅",
+        "查看复盘",
+        "关闭"
+      ]
+    }
+  }
+]

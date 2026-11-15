@@ -777,7 +777,8 @@ function renderDiagnostics(model) {
 function renderResult(model) {
   const summary = model.resultSummary;
   if (!summary) return;
-  document.getElementById("resultTitle").textContent = summary.title;
+  // hero 已承载类型语气；此处用分区标签，避免标题叠字
+  document.getElementById("resultTitle").textContent = "分数变化与角色";
   document.getElementById("resultReason").textContent = summary.reason;
   const hero = document.getElementById("resultHero");
   const badge = document.getElementById("resultTypeBadge");
@@ -790,37 +791,40 @@ function renderResult(model) {
   badge.textContent = summary.type === "ron" ? "点炮胡" : summary.type === "draw" ? "流局" : summary.type === "abort" ? "异常终止" : "自摸";
   headline.textContent = summary.title;
   const winnerRow = summary.rows[0];
-  const payers = summary.rows.slice(1).filter((row) => row.delta.startsWith("-")).map((row) => row.player).join("、");
-  subline.textContent = summary.type === "draw" ? "本局以流局收束，未发生胡牌。" : summary.type === "abort" ? "本局因状态异常提前终止，请查看诊断入口。" : `赢家：${winnerRow.player} · ${summary.type === "ron" ? `放炮方：${summary.rows.find((row) => row.role === "点炮方")?.player || "未知"}` : `支付方：${payers || "无"}`}`;
-  roleChips.innerHTML = "";
-  if (summary.type === "abort") {
-    const chip = document.createElement("span");
-    chip.className = "result-role-chip abort";
-    chip.textContent = "异常终止";
-    roleChips.appendChild(chip);
-  } else if (summary.type === "draw") {
-    const chip = document.createElement("span");
-    chip.className = "result-role-chip";
-    chip.textContent = "流局：无人胡牌";
-    roleChips.appendChild(chip);
+  const payerRows = summary.rows.filter((row) => row.delta.startsWith("-"));
+  const payers = payerRows.map((row) => row.player).join("、");
+  const discarderRow = summary.rows.find((row) => row.role === "点炮方");
+  const bystanderRows = summary.rows.filter((row) => row.role === "旁家");
+  if (summary.type === "draw") {
+    subline.textContent = `${summary.reason} · 各家分数见下表（本例微调为 0）。`;
+  } else if (summary.type === "abort") {
+    subline.textContent = "本局不计分 · 建议「再来一局」或「回到大厅」后重开。";
+  } else if (summary.type === "ron") {
+    subline.textContent = `赢家：${winnerRow.player} · 放炮：${discarderRow?.player || "未知"} · 旁家：${bystanderRows.map((r) => r.player).join("、") || "无"}`;
   } else {
-    const winner = document.createElement("span");
-    winner.className = "result-role-chip winner";
-    winner.textContent = `赢家：${winnerRow.player}`;
-    roleChips.appendChild(winner);
+    subline.textContent = `赢家：${winnerRow.player} · 三家共同支付：${payers || "无"}`;
+  }
+  roleChips.innerHTML = "";
+  const addChip = (text, className) => {
+    const chip = document.createElement("span");
+    chip.className = className ? `result-role-chip ${className}` : "result-role-chip";
+    chip.textContent = text;
+    roleChips.appendChild(chip);
+  };
+  if (summary.type === "abort") {
+    addChip("异常终止", "abort");
+    addChip("本局不计分", "abort");
+    addChip("建议重开", "abort");
+  } else if (summary.type === "draw") {
+    addChip("流局：无人胡牌");
+    summary.rows.forEach((row) => addChip(`${row.player} ${row.delta}`));
+  } else {
+    addChip(`赢家：${winnerRow.player}`, "winner");
     if (summary.type === "ron") {
-      const discarder = summary.rows.find((row) => row.role === "点炮方");
-      const chip = document.createElement("span");
-      chip.className = "result-role-chip discarder";
-      chip.textContent = `放炮：${discarder ? discarder.player : "未知"}`;
-      roleChips.appendChild(chip);
+      addChip(`放炮：${discarderRow ? discarderRow.player : "未知"}`, "discarder");
+      bystanderRows.forEach((row) => addChip(`旁家：${row.player}`));
     } else {
-      summary.rows.filter((row) => row.delta.startsWith("-")).forEach((row) => {
-        const chip = document.createElement("span");
-        chip.className = "result-role-chip payer";
-        chip.textContent = `支付：${row.player}`;
-        roleChips.appendChild(chip);
-      });
+      payerRows.forEach((row) => addChip(`支付：${row.player}`, "payer"));
     }
   }
   const tbody = document.getElementById("resultTableBody");
@@ -834,7 +838,7 @@ function renderResult(model) {
   const diag = document.getElementById("resultDiag");
   if (summary.type === "abort") {
     diag.classList.remove("hidden");
-    diag.textContent = "异常终止：请通过诊断入口查看错误上下文并重试同步。";
+    diag.textContent = "终止原因：状态同步失败 · 本局是否计分：否 · 重开建议：点「再来一局」或「回到大厅」，并经诊断入口查看上下文。";
   } else {
     diag.classList.add("hidden");
     diag.textContent = "";
