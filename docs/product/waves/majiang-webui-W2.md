@@ -36,4 +36,5 @@
 
 ## 下一波
 
-默认候选：**G2** `MJ-UI-TILE-01`（牌面）或 **G4** `MJ-UI-MOBILE-01`（移动端）；须新人审蓝图后再施工。
+已开 **W3**（全量 UI 封顶任务账本）：`docs/product/waves/majiang-webui-W3.md`。  
+其后默认实现刀：**G2** `MJ-UI-TILE-01` 或 **G4** `MJ-UI-MOBILE-01`；须人点名 + 新人审实现波蓝图后再施工。

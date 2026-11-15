@@ -2,7 +2,9 @@
 
 > **状态**：冲顶进行中（观感未毕业）  
 > **关联**：`docs/majiang/WEB_UI_PRODUCT_INTERACTION_DESIGN.md`、`docs/majiang/web-ui-prototype/README.md`、design-freeze stage-a  
-> **流程**：`docs/product/delivery-flow.md`
+> **流程**：`docs/product/delivery-flow.md`  
+> **封顶任务队列**：`docs/product/caps/majiang-webui-cap-tasks.md`  
+> **阶段验收表**：`docs/product/caps/majiang-webui-acceptance-stages.md`
 
 ## 1. 当前天花板（一句话）
 
@@ -46,6 +48,7 @@
 
 ## 6. 下一刀建议
 
-G1 动作层账本已与 `16_…IMPL` 对齐关闭。默认下一刀排队 **G2 牌面**（`MJ-UI-TILE-01`）或 **G4 移动端**（`MJ-UI-MOBILE-01`）；**须人点名开波**后再施工。  
+W3 全量 UI 封顶账本已落盘（`waves/majiang-webui-W3.md` + `caps/*`）：任务队列与 A/B/冲顶验收表可查。  
+默认下一刀实现：**`CAP-UI-TILE`**（G2 / `MJ-UI-TILE-01`）或人点名 **`CAP-UI-MOBILE`**（G4）；**须人点名开实现波**后再施工（可日后 `/loop` 分批，禁自批 `CAP-UI-GRAD`）。  
 禁止默认改推「换游戏页 / 只做无关美化 / 重开动作层大改」除非人点名。  
-整桌观感合同不变：R2 有条件通过；**不得**因本波宣称视觉冲顶毕业。
+整桌观感合同不变：R2 有条件通过；**不得**因 W3 账本宣称视觉冲顶毕业。

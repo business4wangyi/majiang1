@@ -34,4 +34,5 @@
 ## 下一波
 
 已开 **W2**（G1 动作层账本收口）：`docs/product/waves/majiang-webui-W2.md`。  
-其后默认候选 G2 / G4；须再人审蓝图后施工。
+已开 **W3**（全量 UI 封顶账本）：`docs/product/waves/majiang-webui-W3.md`。  
+其后默认实现刀 G2 / G4；须人点名后再施工。
