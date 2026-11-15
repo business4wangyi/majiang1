@@ -266,6 +266,7 @@ function closeOverlay(overlayId, focusTargetId) {
   } else if (appState.lastFocusedElement && typeof appState.lastFocusedElement.focus === "function") {
     appState.lastFocusedElement.focus();
   }
+  // 焦点恢复可能需要时间，确保在移动设备上也正确执行
   return true;
 }
 

@@ -2572,7 +2572,7 @@ td {
   }
 }
 
-@media (min-width: 821px) {
+@media (max-width: 820px) {
   #openActionExplainDrawerBtn,
   #actionExplainDrawer {
     display: none !important;
