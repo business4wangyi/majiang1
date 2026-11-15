@@ -1,5 +1,7 @@
 const { ACTION_ORDER, createTableViewModelFromSnapshot, createDefaultLobbyState, createDefaultTableSnapshot, createResultSummary } = window.MajiangViewModelAdapter;
-const IS_ACCEPTANCE_MODE = new URLSearchParams(window.location.search).get("acceptance") === "1";
+const PAGE_PARAMS = new URLSearchParams(window.location.search);
+const IS_ACCEPTANCE_MODE = PAGE_PARAMS.get("acceptance") === "1";
+const TILE_SPRITE_HREF = "assets/mahjong-tiles.svg";
 document.body.classList.toggle("acceptance-mode", IS_ACCEPTANCE_MODE);
 
 const appState = {
@@ -97,32 +99,24 @@ const TILE_FACE_CELLS = {
   },
 };
 
-function tileFaceCellsHtml(kind, rank) {
-  const cells = (TILE_FACE_CELLS[kind] && TILE_FACE_CELLS[kind][rank]) || [];
-  const cls = kind === "dots" ? "tile-dot" : "tile-bamboo";
-  return cells
-    .map((cell) => {
-      const tone = kind === "dots" ? ` data-tone="${dotTone(rank, cell)}"` : "";
-      return `<span class="${cls}" data-cell="${cell}"${tone}></span>`;
-    })
-    .join("");
+function tileSpriteSymbolId(parsed) {
+  if (parsed.kind === "suit") {
+    if (parsed.suit === "筒") return `face-dots-${parsed.rankValue}`;
+    if (parsed.suit === "条") return `face-bamboo-${parsed.rankValue}`;
+    if (parsed.suit === "万") return `face-chars-${parsed.rankValue}`;
+  }
+  if (parsed.kind === "wind") return `face-wind-${parsed.honorShort}`;
+  if (parsed.kind === "dragon") return `face-dragon-${parsed.honorShort}`;
+  return null;
 }
 
-function dotTone(rank, cell) {
-  if (rank === 1) return "blue";
-  if (rank === 5 && cell === 5) return "red";
-  if (rank === 9) {
-    if (cell === 5) return "red";
-    if ([1, 3, 7, 9].includes(cell)) return "green";
-    return "blue";
-  }
-  if ([1, 3, 7, 9].includes(cell)) return "green";
-  if ([2, 4, 6, 8].includes(cell)) return "blue";
-  return "red";
+function createTileSpriteHtml(symbolId) {
+  // ponytail: 外链 sprite；file:// 下 <use> 可能失败 → 用 ?debugTiles=1 降级；升级=内联 symbol 或 data-URI
+  return `<svg class="tile-sprite" viewBox="0 0 36 48" focusable="false"><use href="${TILE_SPRITE_HREF}#${symbolId}" xlink:href="${TILE_SPRITE_HREF}#${symbolId}"></use></svg>`;
 }
 
 // ponytail: 布局表是硬编码；?selfcheck=1 校验 1–9 点/条数与格位数一致，升级路径=抽到独立 fixture
-if (new URLSearchParams(window.location.search).has("selfcheck")) {
+if (PAGE_PARAMS.has("selfcheck")) {
   Object.entries(TILE_FACE_CELLS).forEach(([kind, map]) => {
     for (let rank = 1; rank <= 9; rank += 1) {
       const cells = map[rank];
@@ -140,30 +134,21 @@ function createTileAssetNode(label, className) {
   node.className = className;
   node.setAttribute("data-tile-kind", parsed.kind);
   node.setAttribute("aria-hidden", "true");
-  if (parsed.kind === "suit") {
-    node.setAttribute("data-tile-suit", parsed.suit);
-    node.setAttribute("data-tile-rank", String(parsed.rankValue));
-    if (parsed.suit === "筒") {
-      node.innerHTML = `<span class="tile-pattern tile-pattern--dots" data-rank="${parsed.rankValue}">${tileFaceCellsHtml("dots", parsed.rankValue)}</span>`;
-      return node;
+  const symbolId = tileSpriteSymbolId(parsed);
+  if (symbolId) {
+    if (parsed.kind === "suit") {
+      node.setAttribute("data-tile-suit", parsed.suit);
+      node.setAttribute("data-tile-rank", String(parsed.rankValue));
+    } else {
+      node.setAttribute("data-tile-honor", parsed.honorShort);
     }
-    if (parsed.suit === "条") {
-      node.innerHTML = `<span class="tile-pattern tile-pattern--bamboo" data-rank="${parsed.rankValue}">${tileFaceCellsHtml("bamboo", parsed.rankValue)}</span>`;
-      return node;
-    }
-    node.innerHTML = `<span class="tile-asset-rank">${parsed.rankText}</span><span class="tile-asset-suit">萬</span>`;
-    return node;
-  }
-  if (parsed.kind === "wind" || parsed.kind === "dragon") {
-    node.setAttribute("data-tile-honor", parsed.honorShort);
-    if (parsed.honorShort === "白") {
-      node.innerHTML = `<span class="tile-asset-white" title="白板"></span>`;
-      return node;
-    }
-    node.innerHTML = `<span class="tile-asset-honor">${parsed.honorDisplay}</span>`;
+    node.setAttribute("data-tile-source", "svg-sprite");
+    node.setAttribute("data-tile-symbol", symbolId);
+    node.innerHTML = createTileSpriteHtml(symbolId);
     return node;
   }
   node.setAttribute("data-tile-fallback", "true");
+  node.setAttribute("data-tile-source", "text-fallback");
   node.innerHTML = `<span class="tile-asset-fallback">${parsed.raw || "?"}</span>`;
   return node;
 }
@@ -1569,6 +1554,11 @@ window.setMajiangTextTileFallback = function setMajiangTextTileFallback(enabled)
   appState.debugTextTiles = Boolean(enabled);
   rerender();
 };
+
+// W4 合同：?debugTiles=1 强制文字牌降级（调试/占位）
+if (PAGE_PARAMS.get("debugTiles") === "1") {
+  appState.debugTextTiles = true;
+}
 
 bindEvents();
 startCountdown();

@@ -5,7 +5,7 @@
 | 主题 | majiang-webui |
 | 波次 | W4 |
 | UI 层 | **U2·视觉**（牌面正式态） |
-| 施工状态 | **蓝图待人批**（本文件落盘 ≠ 已开工码） |
+| 施工状态 | **已落地**（人批 B-01 · 2026-11-15；证据 `design-freeze/stage-b-w4-tile/2026-11-15-table-1440x900.png`） |
 | 封顶任务 | `CAP-UI-TILE` · 切片 `MJ-UI-TILE-01` · 脊骨 G2 |
 | 任务队列 | `docs/product/caps/majiang-webui-cap-tasks.md` |
 | 阶段验收 | `docs/product/caps/majiang-webui-acceptance-stages.md`（A-02 / B-01） |
@@ -56,14 +56,13 @@
 
 | 切片 | 内容 | 状态 |
 |------|------|------|
-| `MJ-UI-TILE-01` | 阶段A 资产/降级合同 → 阶段B 四区域同语义资产化 → 对照 A-02/B-01 回写 | **蓝图待人批** |
+| `MJ-UI-TILE-01` | 阶段A 资产/降级合同 → 阶段B 四区域同语义资产化 → 对照 A-02/B-01 回写 | **已落地** |
 
-## `/loop` 与 Automation（人批本蓝图后）
+## `/loop` 与 Automation
 
-- 本机：固定 **15m** sentinel，每拍只推进 `CAP-UI-TILE` 直至人审可关或人改序。
-- Cloud Automation：定时唤醒，提示词只取 `cap-tasks` 下一条可施工项；**禁止**关 GRAD；引用已提交路径。
-- TILE 未关：**不**自动开 LAYOUT。
+- TILE 已关；后续队列见 W5 / `cap-tasks`。
+- **禁止**自批 `CAP-UI-GRAD`。
 
 ## 下一波
 
-TILE 阶段B 人审可关后，默认开 **`CAP-UI-LAYOUT`**（须新人审蓝图）；或人点名 MOBILE。
+已开 **W5**（`CAP-UI-LAYOUT`）：`docs/product/waves/majiang-webui-W5.md`。
