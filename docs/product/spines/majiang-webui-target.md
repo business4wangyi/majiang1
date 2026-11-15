@@ -48,7 +48,8 @@
 
 ## 6. 下一刀建议
 
-W3 全量 UI 封顶账本已落盘（`waves/majiang-webui-W3.md` + `caps/*`）：任务队列与 A/B/冲顶验收表可查。  
-默认下一刀实现：**`CAP-UI-TILE`**（G2 / `MJ-UI-TILE-01`）或人点名 **`CAP-UI-MOBILE`**（G4）；**须人点名开实现波**后再施工（可日后 `/loop` 分批，禁自批 `CAP-UI-GRAD`）。  
+W3 全量 UI 封顶账本已落盘（`waves/majiang-webui-W3.md` + `caps/*`）。  
+实现波 **W4** 蓝图已写：`waves/majiang-webui-W4.md`（仅 **`CAP-UI-TILE`** / G2）；**待人批后再上码**。  
+批后可用 `/loop` / Automation 一拍一刀；**禁自批** `CAP-UI-GRAD`。TILE 未关不自动开 LAYOUT（除非人改序）。  
 禁止默认改推「换游戏页 / 只做无关美化 / 重开动作层大改」除非人点名。  
-整桌观感合同不变：R2 有条件通过；**不得**因 W3 账本宣称视觉冲顶毕业。
+整桌观感合同不变：R2 有条件通过；**不得**因账本或 W4 开工宣称视觉冲顶毕业。

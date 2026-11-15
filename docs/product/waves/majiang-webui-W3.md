@@ -44,5 +44,5 @@
 
 ## 下一波
 
-默认开 **`CAP-UI-TILE`**（`MJ-UI-TILE-01` 牌面资产化实现）；或人点名 **`CAP-UI-MOBILE`**。  
-须新人审实现波蓝图后再施工；可按 `cap-tasks` §5 用 `/loop` 分批，但**每批须人点名**。
+已开 **W4**（`CAP-UI-TILE` / `MJ-UI-TILE-01`）：`docs/product/waves/majiang-webui-W4.md`。  
+须人批 W4 后再上码；可按 `cap-tasks` 用 `/loop` 分批，**禁自批** `CAP-UI-GRAD`。
