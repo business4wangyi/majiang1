@@ -1,6 +1,6 @@
 # 麻将双表面 — 目标差距脊骨（封顶）
 
-> **状态**：人批抬顶（2026-11-17 · 路径 A）· 账本施工中  
+> **状态**：双表面毕业 · **已人批**（2026-11-18 · `CAP-DUAL-GRAD`）  
 > **关联**：`docs/product/caps/majiang-dual-surface-cap-tasks.md`、`docs/product/waves/majiang-dual-surface-W9.md`、`docs/product/waves/majiang-dual-surface-W10.md`、`docs/product/waves/majiang-dual-surface-W11.md`  
 > **规格**：`docs/superpowers/specs/2026-11-17-majiang-dual-surface-design.md`  
 > **流程**：`docs/product/delivery-flow.md`  
@@ -16,12 +16,12 @@
 |----|------|------|
 | GR-D1 | 无头 Session 可驱动开局→出牌→响应→AI 步→终局，不依赖 readline/console 显示 | **已关**（`tests/majiang/game-session.test.ts`） |
 | GR-D2 | 快照合同可映射现有 `view-model-adapter`；动作可用性来自引擎 | **已关**（`tests/majiang/table-snapshot.test.ts` / `MJ-ACC-SNAP-01`） |
-| GR-D3 | CLI 自动对弈/训练主路径改走 Session，训练统计可回归 | **已落地** |
-| GR-D4 | 本机对局 API（HTTP，可选 WS）权威在 Node；Web 只提交动作与渲染 | 待做 |
-| GR-D5 | Web 原型去掉假 `waiting_ai` 死循环；人测可打完一局到结算 | 待做 |
+| GR-D3 | CLI 自动对弈/训练主路径改走 Session，训练统计可回归 | **已关**（`CAP-CLI-TRAIN` / `MJ-ACC-CLI-01`·`02`） |
+| GR-D4 | 本机对局 API（HTTP，可选 WS）权威在 Node；Web 只提交动作与渲染 | **已关**（`CAP-API-GAME` / `MJ-ACC-API-01`） |
+| GR-D5 | Web 原型去掉假 `waiting_ai` 死循环；人测可打完一局到结算 | **已关**（`CAP-WEB-BRIDGE` / `MJ-ACC-WEB-01`·`02`） |
 | GR-D6 | 大厅为可落地产品入口（主 CTA + 固定配置；诊断折叠） | **已关**（`tests/majiang/web-lobby.test.ts` / `MJ-WEB-LOBBY-01`） |
-| GR-D7 | 双表面验收：引擎契约测 + Web 人测主链路可自动化 | 待做（矩阵+smoke/nightly 脚手架已挂；能力跟 CAP 批序变绿） |
-| GR-D8 | 人明确批准「双表面毕业」；Agent / `/loop` 不得自批 | 待人批 |
+| GR-D7 | 双表面验收：引擎契约测 + Web 人测主链路可自动化 | **已关**（`CAP-ACC-DUAL` / `MJ-ACC-DUAL-01`） |
+| GR-D8 | 人明确批准「双表面毕业」；Agent / `/loop` 不得自批 | **已人批**（2026-11-18） |
 
 ## 3. 硬不做
 
@@ -43,7 +43,7 @@
 | G-D5 | Web handlers 接 API | Web·U1 | `MJ-WEB-BRIDGE-01` | `CAP-WEB-BRIDGE` | **已落地** |
 | G-D6 | 大厅产品入口 | Web·U0 | `MJ-WEB-LOBBY-01` | `CAP-WEB-LOBBY` | **已落地** |
 | G-D7 | 双表面验收 | 验收 | `MJ-ACC-DUAL-01` | `CAP-ACC-DUAL` | **已落地** |
-| G-D8 | 人批双表面毕业 | 收官 | — | `CAP-DUAL-GRAD` | 待人批 |
+| G-D8 | 人批双表面毕业 | 收官 | — | `CAP-DUAL-GRAD` | **已人批**（2026-11-18） |
 
 ## 5. 版式 / 观感合同
 
@@ -55,6 +55,6 @@
 
 ## 6. 下一刀建议
 
-默认队列下一切片：等人批 `CAP-DUAL-GRAD`（`CAP-ACC-DUAL` / `MJ-ACC-DUAL-01` 已绿）。  
-自动化：`/loop` 只从 `majiang-dual-surface-cap-tasks.md` 取下一条 `CAP-*`；**禁止自批** `CAP-DUAL-GRAD`。  
-验收账本：`docs/product/caps/majiang-dual-surface-acceptance-matrix.md`；命令：`npm run majiang:dual:smoke` / `majiang:dual:nightly`。
+本脊骨收官：**已人批毕业**（`CAP-DUAL-GRAD` · 2026-11-18）。  
+默认无下一施工刀；新天花板须另立脊骨/一本账后再开队列。  
+验收账本：`docs/product/caps/majiang-dual-surface-acceptance-matrix.md`；命令：`npm run majiang:dual:smoke` / `majiang:dual:nightly`（防回退）。

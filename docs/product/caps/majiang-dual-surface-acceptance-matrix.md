@@ -77,7 +77,8 @@
 ### `MJ-ACC-DUAL-01`
 
 - **通过**：同一 Session 契约被 CLI 与 API 共用的可观察证据 + smoke 可重复；且约定 default 子集（至少 ENG-01，落地后含 SNAP/CLI-01）已绿。
-- **挂测**：`npm run majiang:dual:smoke`（`MJ-ACC-DUAL-01` runner：catalog 子集绿 + CLI `runAutoTraining` / API store 均为 `GameSession` + 同快照键）；轻断言 `tests/majiang/dual-acc.test.ts`；`CAP-ACC-DUAL` 收束；不替代各能力 CAP；**仍等人批** `CAP-DUAL-GRAD`。
+- **挂测**：`npm run majiang:dual:smoke`（`MJ-ACC-DUAL-01` runner：catalog 子集绿 + CLI `runAutoTraining` / API store 均为 `GameSession` + 同快照键）；轻断言 `tests/majiang/dual-acc.test.ts`；`CAP-ACC-DUAL` 收束；不替代各能力 CAP。  
+- **收官**：`CAP-DUAL-GRAD` **已人批**（2026-11-18）；本矩阵防回退，不替代人批记录。
 
 ## 4. 跳过 / 失败
 

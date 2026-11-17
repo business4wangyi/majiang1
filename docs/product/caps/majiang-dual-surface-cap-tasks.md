@@ -5,7 +5,7 @@
 > **波次**：`docs/product/waves/majiang-dual-surface-W9.md` · `docs/product/waves/majiang-dual-surface-W10.md` · `docs/product/waves/majiang-dual-surface-W11.md`  
 > **规格**：`docs/superpowers/specs/2026-11-17-majiang-dual-surface-design.md`  
 > **验收矩阵**：`docs/product/caps/majiang-dual-surface-acceptance-matrix.md`  
-> **现状（2026-11-17）**：路径 **A** 人批；`CAP-ARCH-LEDGER` / `CAP-ENG-SESSION` / `CAP-ENG-SNAP` / `CAP-CLI-TRAIN` / `CAP-API-GAME` / `CAP-WEB-BRIDGE` / `CAP-WEB-LOBBY` / `CAP-ACC-DUAL` **已落地**。旧 `majiang-webui-cap-tasks.md` **只读防回退**，本波不取 `CAP-UI-*`。下一切片：等人批 `CAP-DUAL-GRAD`。
+> **现状（2026-11-18）**：路径 **A** 人批抬顶；CAP 0–7 **已落地**；`CAP-DUAL-GRAD` **已人批毕业**。旧 `majiang-webui-cap-tasks.md` **只读防回退**，本波不取 `CAP-UI-*`。默认无下一施工刀。
 
 ## 1. 怎么用
 
@@ -39,7 +39,7 @@ flowchart LR
 | `CAP-WEB-BRIDGE` | G-D5 / GR-D5 | `MJ-WEB-BRIDGE-01` | Web·U1 | **5** | **已落地** |
 | `CAP-WEB-LOBBY` | G-D6 / GR-D6 | `MJ-WEB-LOBBY-01` | Web·U0 | **6** | **已落地** |
 | `CAP-ACC-DUAL` | G-D7 / GR-D7 | `MJ-ACC-DUAL-01` | 验收 | **7** | **已落地** |
-| `CAP-DUAL-GRAD` | GR-D8 | （收官） | — | **8 · 仅人批** | 待人批 |
+| `CAP-DUAL-GRAD` | GR-D8 | （收官） | — | **8 · 仅人批** | **已人批**（2026-11-18） |
 
 ## 3. 各任务封顶线（可观察）
 
@@ -95,7 +95,8 @@ flowchart LR
 ### `CAP-DUAL-GRAD`（批序 8 · 仅人批）
 
 - **封顶**：人确认 CLI 训练未毁 + Web 人测可完局。  
-- **禁止**：Agent / `/loop` 自批。
+- **禁止**：Agent / `/loop` 自批。  
+- **人批记录**：2026-11-18 人口头批准「批准毕业并回写账本」；本表与脊骨 GR-D8 / G-D8 已回写 **已人批**。
 
 ## 4. 默认施工队列
 
