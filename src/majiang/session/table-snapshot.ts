@@ -1,5 +1,5 @@
 import { Game, GameState } from '../core/game';
-import { Player } from '../core/player';
+import { Player, PlayerState } from '../core/player';
 import { PlayerAction } from '../core/rule-types';
 
 /** 与 web-ui-prototype view-model-adapter 对齐的桌面阶段 */
@@ -171,7 +171,7 @@ function buildResultSummary(game: Game, phase: TablePhase): TableResultSummary |
   if (phase !== 'ended') return null;
 
   const players = game.getAllPlayers();
-  const winner = players.find((p) => p.winCount > 0);
+  const winner = players.find((p) => p.winCount > 0 || p.state === PlayerState.WON);
   const rows: TableResultSummaryRow[] = players.map((p) => ({
     player: p.name,
     delta: '0',

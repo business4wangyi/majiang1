@@ -1,4 +1,5 @@
 import { randomUUID } from 'crypto';
+import path from 'path';
 import express, { Express, Request, Response } from 'express';
 import cors from 'cors';
 import {
@@ -11,6 +12,8 @@ export type MajiangGameStore = Map<string, GameSession>;
 
 export interface CreateMajiangApiAppOptions {
   store?: MajiangGameStore;
+  /** 是否挂载 web-ui-prototype 静态资源与 bridge 配置（CAP-WEB-BRIDGE） */
+  servePrototype?: boolean;
 }
 
 export interface MajiangApiApp {
@@ -19,16 +22,21 @@ export interface MajiangApiApp {
 }
 
 /**
- * CAP-API-GAME：本机对局 API。
+ * CAP-API-GAME + CAP-WEB-BRIDGE：本机对局 API。
  * 状态权威在服务端 Session；浏览器只提交动作、消费快照。
  */
 export function createMajiangApiApp(
   options: CreateMajiangApiAppOptions = {}
 ): MajiangApiApp {
   const store: MajiangGameStore = options.store ?? new Map();
+  const servePrototype = options.servePrototype !== false;
   const app = express();
   app.use(cors());
   app.use(express.json());
+
+  app.get('/api/bridge-config', (_req: Request, res: Response) => {
+    res.json({ enabled: true, apiBase: '' });
+  });
 
   app.post('/games', (_req: Request, res: Response) => {
     const id = randomUUID();
@@ -53,7 +61,7 @@ export function createMajiangApiApp(
     });
   });
 
-  app.post('/games/:id/actions', (req: Request, res: Response) => {
+  app.post('/games/:id/actions', async (req: Request, res: Response) => {
     const id = req.params.id;
     const session = store.get(id);
     if (!session) {
@@ -64,7 +72,7 @@ export function createMajiangApiApp(
     const before = session.fingerprint();
     const body = (req.body || {}) as SessionActionInput;
     try {
-      const snapshot = session.applyAction(body);
+      const snapshot = await session.applyAction(body);
       res.json({ id, snapshot });
     } catch (err) {
       if (err instanceof SessionActionError) {
@@ -82,6 +90,14 @@ export function createMajiangApiApp(
       throw err;
     }
   });
+
+  if (servePrototype) {
+    const protoDir = path.resolve(
+      __dirname,
+      '../../../docs/majiang/web-ui-prototype'
+    );
+    app.use(express.static(protoDir));
+  }
 
   return { app, store };
 }

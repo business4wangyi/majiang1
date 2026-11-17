@@ -40,7 +40,7 @@ describe('CAP-API-GAME / MJ-ACC-API-01', function () {
     askQuestionStub.restore();
   });
 
-  it('api Session：开局后 discard 改变服务端状态，非法动作不脏写', () => {
+  it('api Session：开局后 discard 改变服务端状态，非法动作不脏写', async () => {
     const session = GameSession.create({ mode: 'api', gameId: 'test-api-1' });
     expect(session.game.getAllPlayers().some((p) => p.type === PlayerType.HUMAN)).to.equal(
       true
@@ -55,15 +55,20 @@ describe('CAP-API-GAME / MJ-ACC-API-01', function () {
     );
 
     const fp = session.fingerprint();
-    expect(() => session.applyAction({ id: 'discard', tileIndex: 9999 })).to.throw(
-      /invalid tileIndex/
-    );
+    try {
+      await session.applyAction({ id: 'discard', tileIndex: 9999 });
+      expect.fail('expected invalid tileIndex to throw');
+    } catch (err) {
+      expect(String(err && (err as Error).message)).to.match(/invalid tileIndex/);
+    }
     expect(session.fingerprint()).to.equal(fp);
 
-    const after = session.applyAction({ id: 'discard', tileIndex: 0 });
-    expect(after.selfHand.length).to.equal(before.selfHand.length - 1);
-    expect(after.discardRiver.east.length).to.equal(before.discardRiver.east.length + 1);
+    const after = await session.applyAction({ id: 'discard', tileIndex: 0 });
+    // AI 续走后可能已摸牌回到 14 张；以河牌增长与 phase 证明权威步进
+    expect(after.discardRiver.east.length).to.be.greaterThan(before.discardRiver.east.length);
     expect(after.gameId).to.equal('test-api-1');
+    // CAP-WEB-BRIDGE：出牌后不得假 waiting_ai；应回到人类决策或终局
+    expect(after.phase).to.be.oneOf(['player_turn', 'response_window', 'ended']);
   });
 
   it('HTTP：POST/GET/actions 权威在服务端 Session', async () => {
@@ -84,13 +89,14 @@ describe('CAP-API-GAME / MJ-ACC-API-01', function () {
       expect(got.status).to.equal(200);
       expect(got.json.snapshot.selfHand).to.deep.equal(created.json.snapshot.selfHand);
 
-      const handBefore = got.json.snapshot.selfHand.length;
+      const riverBefore = got.json.snapshot.discardRiver.east.length;
       const acted = await requestJson(base, 'POST', `/games/${created.json.id}/actions`, {
         id: 'discard',
         tileIndex: 0,
       });
       expect(acted.status).to.equal(200);
-      expect(acted.json.snapshot.selfHand.length).to.equal(handBefore - 1);
+      expect(acted.json.snapshot.discardRiver.east.length).to.be.greaterThan(riverBefore);
+      expect(acted.json.snapshot.phase).to.be.oneOf(['player_turn', 'response_window', 'ended']);
 
       const illegal = await requestJson(base, 'POST', `/games/${created.json.id}/actions`, {
         id: 'discard',

@@ -40,7 +40,7 @@
 | G-D2 | Snapshot 合同 | 契约 | `MJ-ENG-SNAP-01` | `CAP-ENG-SNAP` | **已落地** |
 | G-D3 | CLI 训练接 Session | CLI | `MJ-CLI-TRAIN-01` | `CAP-CLI-TRAIN` | **已落地** |
 | G-D4 | 对局 API | API | `MJ-API-GAME-01` | `CAP-API-GAME` | **已落地** |
-| G-D5 | Web handlers 接 API | Web·U1 | `MJ-WEB-BRIDGE-01` | `CAP-WEB-BRIDGE` | 待做 |
+| G-D5 | Web handlers 接 API | Web·U1 | `MJ-WEB-BRIDGE-01` | `CAP-WEB-BRIDGE` | **已落地** |
 | G-D6 | 大厅产品入口 | Web·U0 | `MJ-WEB-LOBBY-01` | `CAP-WEB-LOBBY` | 待做 |
 | G-D7 | 双表面验收 | 验收 | `MJ-ACC-DUAL-01` | `CAP-ACC-DUAL` | 待做 |
 | G-D8 | 人批双表面毕业 | 收官 | — | `CAP-DUAL-GRAD` | 待人批 |
@@ -51,10 +51,10 @@
 |------|------|
 | 局内视觉 · 一段/二段 | **沿用已毕业**（防回退；本脊骨不施工视觉冲顶） |
 | 大厅 U0 | 待 `CAP-WEB-LOBBY` |
-| 引擎/API 契约 | Snapshot **已落地**；API **已落地**（`CAP-API-GAME`） |
+| 引擎/API 契约 | Snapshot **已落地**；API **已落地**（`CAP-API-GAME`）；Web 桥 **已落地**（`CAP-WEB-BRIDGE`） |
 
 ## 6. 下一刀建议
 
-默认队列下一切片：`CAP-WEB-BRIDGE`（其后大厅 / 双表面验收）。  
+默认队列下一切片：`CAP-WEB-LOBBY`（其后双表面验收）。  
 自动化：`/loop` 只从 `majiang-dual-surface-cap-tasks.md` 取下一条 `CAP-*`。  
 验收账本：`docs/product/caps/majiang-dual-surface-acceptance-matrix.md`；命令：`npm run majiang:dual:smoke` / `majiang:dual:nightly`。

@@ -5,8 +5,8 @@
 | 主题 | majiang-dual-surface |
 | 波次 | W9 |
 | UI 层 | 流程 + 引擎（本波首刀不改大厅视觉大改；大厅属批序 6） |
-| 施工状态 | Session + Snapshot + CLI-TRAIN + API-GAME 已关；下刀 Web 桥/大厅 |
-| 封顶任务 | `CAP-ARCH-LEDGER` → `CAP-ENG-SESSION` → `CAP-ENG-SNAP` → `CAP-CLI-TRAIN` → `CAP-API-GAME` |
+| 施工状态 | Session + Snapshot + CLI-TRAIN + API-GAME + WEB-BRIDGE 已关；下刀大厅 |
+| 封顶任务 | `CAP-ARCH-LEDGER` → … → `CAP-API-GAME` → `CAP-WEB-BRIDGE` |
 | 原型 / 引擎 | `docs/majiang/web-ui-prototype/` 本波可动桥接准备；权威仍在 `src/majiang/core/` |
 | 关联旧视觉 | `majiang-webui-W8` 已关；本波不重开 COMP |
 
@@ -22,7 +22,8 @@
 - `CAP-ENG-SNAP`：引擎快照可喂 `createTableViewModelFromSnapshot`；`MJ-ACC-SNAP-01` 已绿  
 - `CAP-CLI-TRAIN`：自动对弈/训练入口走 Session；`MJ-ACC-CLI-01` default 绿、`MJ-ACC-CLI-02` nightly 可跑  
 - `CAP-API-GAME`：本机 `POST/GET/actions`；状态权威在服务端 Session；`MJ-ACC-API-01` smoke 绿  
-- 回写脊骨 G-D0/G-D1/G-D2/G-D3/G-D4 状态
+- `CAP-WEB-BRIDGE`：原型 handlers 接 API；出牌后 AI 回手；`MJ-ACC-WEB-01/02` smoke 绿  
+- 回写脊骨 G-D0…G-D5 状态
 
 ## 硬不做
 
@@ -41,8 +42,9 @@
 | `MJ-ENG-SNAP-01` | **已落地**（2026-11-17） |
 | `MJ-CLI-TRAIN-01` | **已落地**（2026-11-17） |
 | `MJ-API-GAME-01` | **已落地**（2026-11-17） |
+| `MJ-WEB-BRIDGE-01` | **已落地**（2026-11-17） |
 
 ## 下波预告（不施工）
 
-- W10：`CAP-WEB-BRIDGE`（及可选 `CAP-WEB-LOBBY`）  
+- W10：`CAP-WEB-LOBBY`  
 - W11：`CAP-ACC-DUAL` → 等人批 `CAP-DUAL-GRAD`

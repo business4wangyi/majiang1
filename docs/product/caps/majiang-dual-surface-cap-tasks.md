@@ -5,7 +5,7 @@
 > **波次**：`docs/product/waves/majiang-dual-surface-W9.md`  
 > **规格**：`docs/superpowers/specs/2026-11-17-majiang-dual-surface-design.md`  
 > **验收矩阵**：`docs/product/caps/majiang-dual-surface-acceptance-matrix.md`  
-> **现状（2026-11-17）**：路径 **A** 人批；`CAP-ARCH-LEDGER` / `CAP-ENG-SESSION` / `CAP-ENG-SNAP` / `CAP-CLI-TRAIN` / `CAP-API-GAME` **已落地**。旧 `majiang-webui-cap-tasks.md` **只读防回退**，本波不取 `CAP-UI-*`。下一切片：`CAP-WEB-BRIDGE`。
+> **现状（2026-11-17）**：路径 **A** 人批；`CAP-ARCH-LEDGER` / `CAP-ENG-SESSION` / `CAP-ENG-SNAP` / `CAP-CLI-TRAIN` / `CAP-API-GAME` / `CAP-WEB-BRIDGE` **已落地**。旧 `majiang-webui-cap-tasks.md` **只读防回退**，本波不取 `CAP-UI-*`。下一切片：`CAP-WEB-LOBBY`。
 
 ## 1. 怎么用
 
@@ -36,7 +36,7 @@ flowchart LR
 | `CAP-ENG-SNAP` | G-D2 / GR-D2 | `MJ-ENG-SNAP-01` | 契约 | **2** | **已落地** |
 | `CAP-CLI-TRAIN` | G-D3 / GR-D3 | `MJ-CLI-TRAIN-01` | CLI | **3** | **已落地** |
 | `CAP-API-GAME` | G-D4 / GR-D4 | `MJ-API-GAME-01` | API | **4**（可与 3 并行） | **已落地** |
-| `CAP-WEB-BRIDGE` | G-D5 / GR-D5 | `MJ-WEB-BRIDGE-01` | Web·U1 | **5** | 待做 |
+| `CAP-WEB-BRIDGE` | G-D5 / GR-D5 | `MJ-WEB-BRIDGE-01` | Web·U1 | **5** | **已落地** |
 | `CAP-WEB-LOBBY` | G-D6 / GR-D6 | `MJ-WEB-LOBBY-01` | Web·U0 | **6** | 待做 |
 | `CAP-ACC-DUAL` | G-D7 / GR-D7 | `MJ-ACC-DUAL-01` | 验收 | **7** | 待做 |
 | `CAP-DUAL-GRAD` | GR-D8 | （收官） | — | **8 · 仅人批** | 待人批 |

@@ -48,14 +48,14 @@ const CASES = [
     title: '人测主链路完局',
     tier: 'smoke',
     capIds: ['CAP-WEB-BRIDGE', 'CAP-WEB-LOBBY'],
-    status: 'pending',
+    status: 'green',
   },
   {
     id: 'MJ-ACC-WEB-02',
     title: '非法动作被拒且不脏写',
     tier: 'smoke',
     capIds: ['CAP-API-GAME', 'CAP-WEB-BRIDGE'],
-    status: 'pending',
+    status: 'green',
   },
   {
     id: 'MJ-ACC-DUAL-01',

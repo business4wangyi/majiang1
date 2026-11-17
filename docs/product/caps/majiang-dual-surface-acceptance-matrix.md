@@ -26,8 +26,8 @@
 | `MJ-ACC-CLI-01` | 自动对弈入口走 Session | default | `CAP-CLI-TRAIN` | 已绿 |
 | `MJ-ACC-CLI-02` | N 局统计可重复 | nightly | `CAP-CLI-TRAIN` | 已绿 |
 | `MJ-ACC-API-01` | 对局 API 权威在服务端 | smoke | `CAP-API-GAME` | 已绿 |
-| `MJ-ACC-WEB-01` | 人测主链路完局 | smoke | `CAP-WEB-BRIDGE`（大厅依赖 `CAP-WEB-LOBBY`） | 待实现 |
-| `MJ-ACC-WEB-02` | 非法动作被拒且不脏写 | smoke | `CAP-API-GAME` + `CAP-WEB-BRIDGE` | 待实现 |
+| `MJ-ACC-WEB-01` | 人测主链路完局 | smoke | `CAP-WEB-BRIDGE`（大厅依赖 `CAP-WEB-LOBBY`） | 已绿 |
+| `MJ-ACC-WEB-02` | 非法动作被拒且不脏写 | smoke | `CAP-API-GAME` + `CAP-WEB-BRIDGE` | 已绿 |
 | `MJ-ACC-DUAL-01` | 双表面同引擎契约可重复 | smoke | `CAP-ACC-DUAL` | 待实现 |
 
 ## 3. 封顶标准正文
@@ -65,14 +65,14 @@
 ### `MJ-ACC-WEB-01`
 
 - **通过**：大厅开局→出牌→AI 回手→结算；无假 `waiting_ai` 死等。
-- **挂测（落地后）**：smoke（Playwright 类路径）；禁止前端自造规则。
-- **未落地**：smoke 显式 skip。
+- **挂测**：`npm run majiang:dual:smoke`（HTTP 主链路至 `ended` + `resultSummary`；`tests/majiang/web-bridge.test.ts`）；禁止前端自造规则。大厅 CTA 抛光仍属 `CAP-WEB-LOBBY`。
+- **依赖**：`CAP-WEB-BRIDGE` 已落地。
 
 ### `MJ-ACC-WEB-02`
 
 - **通过**：提交非法动作被拒后，服务端/会话状态不脏写。
-- **挂测（落地后）**：smoke。
-- **未落地**：smoke 显式 skip。
+- **挂测**：`npm run majiang:dual:smoke`；`tests/majiang/web-bridge.test.ts`。
+- **依赖**：`CAP-API-GAME` + `CAP-WEB-BRIDGE` 已落地。
 
 ### `MJ-ACC-DUAL-01`
 

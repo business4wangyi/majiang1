@@ -57,7 +57,7 @@ const RUNNERS = {
         throw new Error('GET snapshot diverged from POST create (server authority broken)');
       }
 
-      const handBefore = got.json.snapshot.selfHand.length;
+      const riverBefore = got.json.snapshot.discardRiver.east.length;
       const acted = await requestJson(base, 'POST', `/games/${created.json.id}/actions`, {
         id: 'discard',
         tileIndex: 0,
@@ -65,8 +65,11 @@ const RUNNERS = {
       if (acted.status !== 200) {
         throw new Error(`POST actions failed: status=${acted.status} ${acted.json && acted.json.error}`);
       }
-      if (acted.json.snapshot.selfHand.length !== handBefore - 1) {
-        throw new Error('discard did not reduce selfHand on server');
+      if (!(acted.json.snapshot.discardRiver.east.length > riverBefore)) {
+        throw new Error('discard did not grow east river on server');
+      }
+      if (!['player_turn', 'response_window', 'ended'].includes(acted.json.snapshot.phase)) {
+        throw new Error(`unexpected phase after discard: ${acted.json.snapshot.phase}`);
       }
 
       const illegal = await requestJson(base, 'POST', `/games/${created.json.id}/actions`, {
@@ -83,6 +86,109 @@ const RUNNERS = {
         JSON.stringify(acted.json.snapshot.selfHand)
       ) {
         throw new Error('illegal action dirtied server state');
+      }
+    } finally {
+      await new Promise((resolve, reject) =>
+        server.close((err) => (err ? reject(err) : resolve()))
+      );
+    }
+  },
+
+  'MJ-ACC-WEB-01': async () => {
+    // eslint-disable-next-line global-require, import/no-extraneous-dependencies
+    require('ts-node/register/transpile-only');
+    // eslint-disable-next-line global-require
+    const { createMajiangApiApp } = require('../../src/majiang/ui/api-server');
+
+    const { app } = createMajiangApiApp({ servePrototype: false });
+    const server = http.createServer(app);
+    await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
+    const { port } = server.address();
+    const base = `http://127.0.0.1:${port}`;
+
+    try {
+      const created = await requestJson(base, 'POST', '/games');
+      if (created.status !== 201 || !created.json.id) {
+        throw new Error(`POST /games failed: status=${created.status}`);
+      }
+
+      let snap = created.json.snapshot;
+      let steps = 0;
+      while (snap.phase !== 'ended' && steps < 400) {
+        steps += 1;
+        if (snap.phase === 'waiting_ai') {
+          throw new Error('假 waiting_ai：桥接主链路禁止死等');
+        }
+        if (snap.phase === 'response_window') {
+          const acted = await requestJson(base, 'POST', `/games/${created.json.id}/actions`, {
+            id: 'pass',
+          });
+          if (acted.status !== 200) {
+            throw new Error(`pass failed: ${acted.status} ${acted.json && acted.json.error}`);
+          }
+          snap = acted.json.snapshot;
+          continue;
+        }
+        if (snap.phase === 'player_turn') {
+          const acted = await requestJson(base, 'POST', `/games/${created.json.id}/actions`, {
+            id: 'discard',
+            tileIndex: 0,
+          });
+          if (acted.status !== 200) {
+            throw new Error(`discard failed: ${acted.status} ${acted.json && acted.json.error}`);
+          }
+          snap = acted.json.snapshot;
+          continue;
+        }
+        throw new Error(`unexpected phase ${snap.phase}`);
+      }
+      if (snap.phase !== 'ended') {
+        throw new Error(`main path did not end within ${steps} steps`);
+      }
+      if (!snap.resultSummary) {
+        throw new Error('ended without resultSummary');
+      }
+    } finally {
+      await new Promise((resolve, reject) =>
+        server.close((err) => (err ? reject(err) : resolve()))
+      );
+    }
+  },
+
+  'MJ-ACC-WEB-02': async () => {
+    // eslint-disable-next-line global-require, import/no-extraneous-dependencies
+    require('ts-node/register/transpile-only');
+    // eslint-disable-next-line global-require
+    const { createMajiangApiApp } = require('../../src/majiang/ui/api-server');
+
+    const { app } = createMajiangApiApp({ servePrototype: false });
+    const server = http.createServer(app);
+    await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
+    const { port } = server.address();
+    const base = `http://127.0.0.1:${port}`;
+
+    try {
+      const created = await requestJson(base, 'POST', '/games');
+      if (created.status !== 201) {
+        throw new Error(`POST /games failed: status=${created.status}`);
+      }
+      const before = created.json.snapshot;
+      const illegal = await requestJson(base, 'POST', `/games/${created.json.id}/actions`, {
+        id: 'discard',
+        tileIndex: 9999,
+      });
+      if (illegal.status !== 400) {
+        throw new Error(`expected 400, got ${illegal.status}`);
+      }
+      const again = await requestJson(base, 'GET', `/games/${created.json.id}`);
+      if (JSON.stringify(again.json.snapshot.selfHand) !== JSON.stringify(before.selfHand)) {
+        throw new Error('illegal action dirtied selfHand');
+      }
+      if (JSON.stringify(again.json.snapshot.discardRiver) !== JSON.stringify(before.discardRiver)) {
+        throw new Error('illegal action dirtied discardRiver');
+      }
+      if (again.json.snapshot.phase !== before.phase) {
+        throw new Error('illegal action dirtied phase');
       }
     } finally {
       await new Promise((resolve, reject) =>
