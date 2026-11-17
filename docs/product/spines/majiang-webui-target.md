@@ -58,3 +58,5 @@
 ## 6. 下一刀建议
 
 **整桌 `CAP-UI-COMP` 已人批通过**（2026-11-17）。W8 二段闭环；默认无下一视觉刀，除非人点名新抬天花板。
+
+**后续抬顶（另立脊骨，非本表视觉刀）**：CLI+Web 共用引擎 → `docs/product/spines/majiang-dual-surface-target.md` / `docs/product/caps/majiang-dual-surface-cap-tasks.md`（W9）。本脊骨任务表改为只读防回退。

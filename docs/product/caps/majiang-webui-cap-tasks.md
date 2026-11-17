@@ -4,7 +4,8 @@
 > **关联脊骨**：`docs/product/spines/majiang-webui-target.md`  
 > **阶段验收**：`docs/product/caps/majiang-webui-acceptance-stages.md`  
 > **细则引用**：`docs/majiang/WEB_UI_PRODUCT_INTERACTION_DESIGN.md` §13 / §14（不另开第二套任务 ID）  
-> **现状（2026-11-17）**：方案 **C** 一段已关；二段 `CAP-UI-COMP` **已落地**（人批 2026-11-17 · W8）。
+> **现状（2026-11-17）**：方案 **C** 一段已关；二段 `CAP-UI-COMP` **已落地**（人批 2026-11-17 · W8）。  
+> **只读**：本表视觉队列已关；`/loop` 新抬顶请改读 `docs/product/caps/majiang-dual-surface-cap-tasks.md`（CLI+Web 共用引擎）。
 
 ## 1. 怎么用
 
@@ -98,7 +99,7 @@ flowchart LR
 | 二段 B 第四刀 | 打回后续刀 | 图集 v2 质感加强 · **已通过**（`*-atlas-v2-*`） |
 | 二段 B 第五刀 | 人点名角区 | 角区稀疏（头像+分数胶囊）· **已通过**（`*-corners-*`） |
 | 二段 B 第六刀 | 默认队列移动帧 | 单排手牌 + 竖屏局内桌面 · **人批通过**（随整桌收官） |
-| **二段当前** | 整桌已关 | **无默认下一刀**（新抬须人点名） |
+| **二段当前** | 整桌已关 | **无默认下一视觉刀**；双表面抬顶见 `majiang-dual-surface-cap-tasks.md` |
 
 ## 5. `/loop` 提示词骨架
 
