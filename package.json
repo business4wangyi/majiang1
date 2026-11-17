@@ -10,6 +10,8 @@
     "dev": "ts-node src/majiang/index.ts",
     "test": "node scripts/test/run-mocha-cjs.js",
     "majiang:web:acceptance": "node scripts/test/majiang-webui-acceptance.js",
+    "majiang:dual:smoke": "node scripts/test/majiang-dual-smoke.js",
+    "majiang:dual:nightly": "node scripts/test/majiang-dual-nightly.js",
     "regression:daily": "node scripts/test/daily-regression-report.js",
     "test:watch": "mocha -r ts-node/register --watch tests/**/*.test.ts",
     "tic-tac-toe": "ts-node src/tic-tac-toe/demo.ts",
