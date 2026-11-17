@@ -51,39 +51,46 @@ flowchart LR
 ### `CAP-ENG-SESSION`（批序 1）
 
 - **封顶**：`GameSession`（或等价）可：create → discard/response/AI step → end；无 readline、无 `displayManager` 硬依赖。  
+- **须挂**：`MJ-ACC-ENG-01`（default / `tests/majiang/game-session.test.ts`）：auto 一局 `ENDED`。
 - **验收**：Node 侧可跑通至少一局 headless（可断言终局或步数）。  
 - **禁止**：把规则判定搬进 Session 外的新引擎；禁止改番型语义。
 
 ### `CAP-ENG-SNAP`（批序 2）
 
 - **封顶**：书面 + 代码级快照字段：phase、seats、selfHand、discardRiver、availableActions、resultSummary 等，可喂现有 `createTableViewModelFromSnapshot`。  
+- **须挂**：`MJ-ACC-SNAP-01`（default）：快照字段齐全且 `availableActions` 来自引擎，可喂 view-model。
 - **禁止**：前端自造可用动作集合。
 
 ### `CAP-CLI-TRAIN`（批序 3）
 
 - **封顶**：`runAutoGameLoop`（或训练入口）走 Session；自动对弈可完成 N 局并输出统计。  
+- **须挂**：`MJ-ACC-CLI-01`（default 短路径终局）；`MJ-ACC-CLI-02`（nightly 统计形状，不进 `npm test`）。
 - **禁止**：训练路径回退到仅 console 可跑的死耦合而 Web 不可复用。
 
 ### `CAP-API-GAME`（批序 4）
 
 - **封顶**：本机 Express（或等价）至少：`POST /games`、`GET /games/:id`、`POST /games/:id/actions`；状态权威在服务端 Session。  
 - **参考**：`src/othello/ui/api-server.ts` 形态。  
+- **须挂**：`MJ-ACC-API-01`（smoke：POST/GET/actions，权威在服务端）；与 `CAP-WEB-BRIDGE` 共同支撑 `MJ-ACC-WEB-02`。
 - **禁止**：把完整 Game 状态机下沉到浏览器。
 
 ### `CAP-WEB-BRIDGE`（批序 5）
 
 - **封顶**：`docs/majiang/web-ui-prototype` 的 create/action handler 接 API；出牌后 AI 能回手；人测可到 ResultModal。  
+- **须挂**：`MJ-ACC-WEB-01`（smoke 主链路完局）；`MJ-ACC-WEB-02`（非法动作拒绝且不脏写）。
 - **禁止**：继续用假 `waiting_ai` 永久挂起冒充可玩。
 
 ### `CAP-WEB-LOBBY`（批序 6）
 
 - **封顶**：大厅一主 CTA「开始对局」+ 固定配置摘要；诊断/JSON 默认折叠；非三栏调试仪表盘主视觉。  
+- **须挂**：为 `MJ-ACC-WEB-01` 提供大厅开局入口（主 CTA）；本 CAP 本身不单独占用 smoke 行，但 WEB-01 依赖本 CAP 时矩阵须注明。
 - **禁止**：借刀重开整桌竞品视觉冲顶。
 
 ### `CAP-ACC-DUAL`（批序 7）
 
-- **封顶**：至少一条引擎契约测 + 一条 Web 主链路自动化（大厅→完局或到结算）可重复跑。  
-- **禁止**：仅手工一次通过就关项。
+- **封顶**：关键 default 子集已绿（至少 `MJ-ACC-ENG-01`；SNAP/CLI-01 落地后一并纳入）+ smoke 可重复跑通 `MJ-ACC-API-01` / `MJ-ACC-WEB-01` / `MJ-ACC-DUAL-01`（依赖未落地则不得宣称本 CAP 已绿）。
+- **须挂**：`MJ-ACC-DUAL-01`；报告引用上述 ID。
+- **禁止**：仅手工一次通过就关项；用 skip 装绿；自批 `CAP-DUAL-GRAD`。
 
 ### `CAP-DUAL-GRAD`（批序 8 · 仅人批）
 
