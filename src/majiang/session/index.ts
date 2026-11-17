@@ -1,4 +1,10 @@
-export { GameSession, GameSessionOptions } from './game-session';
+export {
+  GameSession,
+  GameSessionOptions,
+  GameSessionMode,
+  SessionActionInput,
+  SessionActionError,
+} from './game-session';
 export {
   runAutoTraining,
   RunAutoTrainingOptions,

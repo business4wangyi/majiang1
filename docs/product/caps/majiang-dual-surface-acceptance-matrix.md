@@ -25,7 +25,7 @@
 | `MJ-ACC-SNAP-01` | 快照可喂 view-model；动作来自引擎 | default | `CAP-ENG-SNAP` | 已绿 |
 | `MJ-ACC-CLI-01` | 自动对弈入口走 Session | default | `CAP-CLI-TRAIN` | 已绿 |
 | `MJ-ACC-CLI-02` | N 局统计可重复 | nightly | `CAP-CLI-TRAIN` | 已绿 |
-| `MJ-ACC-API-01` | 对局 API 权威在服务端 | smoke | `CAP-API-GAME` | 待实现 |
+| `MJ-ACC-API-01` | 对局 API 权威在服务端 | smoke | `CAP-API-GAME` | 已绿 |
 | `MJ-ACC-WEB-01` | 人测主链路完局 | smoke | `CAP-WEB-BRIDGE`（大厅依赖 `CAP-WEB-LOBBY`） | 待实现 |
 | `MJ-ACC-WEB-02` | 非法动作被拒且不脏写 | smoke | `CAP-API-GAME` + `CAP-WEB-BRIDGE` | 待实现 |
 | `MJ-ACC-DUAL-01` | 双表面同引擎契约可重复 | smoke | `CAP-ACC-DUAL` | 待实现 |
@@ -59,8 +59,8 @@
 ### `MJ-ACC-API-01`
 
 - **通过**：`POST /games`、`GET /games/:id`、`POST /games/:id/actions` 可用；状态以服务端 Session 为准。
-- **挂测（落地后）**：`npm run majiang:dual:smoke`。
-- **未落地**：smoke 显式 skip。
+- **挂测**：`npm run majiang:dual:smoke`（runner 已注册；非法动作须 400 且不脏写）。
+- **依赖**：`CAP-API-GAME` 已落地。
 
 ### `MJ-ACC-WEB-01`
 

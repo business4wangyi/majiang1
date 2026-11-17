@@ -40,8 +40,9 @@ const CASES = [
     title: '对局 API 权威在服务端',
     tier: 'smoke',
     capIds: ['CAP-API-GAME'],
-    status: 'pending',
+    status: 'green',
   },
+
   {
     id: 'MJ-ACC-WEB-01',
     title: '人测主链路完局',
