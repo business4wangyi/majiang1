@@ -22,7 +22,7 @@
 | ID | 能力 | 档位 | 依赖 CAP | 状态 |
 |----|------|------|----------|------|
 | `MJ-ACC-ENG-01` | 无头 Session 开局→步进→终局 | default | `CAP-ENG-SESSION` | 已绿 |
-| `MJ-ACC-SNAP-01` | 快照可喂 view-model；动作来自引擎 | default | `CAP-ENG-SNAP` | 待实现 |
+| `MJ-ACC-SNAP-01` | 快照可喂 view-model；动作来自引擎 | default | `CAP-ENG-SNAP` | 已绿 |
 | `MJ-ACC-CLI-01` | 自动对弈入口走 Session | default | `CAP-CLI-TRAIN` | 待实现 |
 | `MJ-ACC-CLI-02` | N 局统计可重复 | nightly | `CAP-CLI-TRAIN` | 待实现 |
 | `MJ-ACC-API-01` | 对局 API 权威在服务端 | smoke | `CAP-API-GAME` | 待实现 |
@@ -41,8 +41,8 @@
 ### `MJ-ACC-SNAP-01`
 
 - **通过**：快照含 phase、seats、selfHand、discardRiver、availableActions、resultSummary 等可喂 `createTableViewModelFromSnapshot`；`availableActions` 非前端自造。
-- **挂测（落地后）**：`tests/majiang/**` default 用例标注本 ID。
-- **未落地**：skip；状态保持 `待实现`。
+- **挂测**：`tests/majiang/table-snapshot.test.ts`；档位 default（含于 `npm test`）。
+- **依赖**：`CAP-ENG-SNAP` 已落地。
 
 ### `MJ-ACC-CLI-01`
 

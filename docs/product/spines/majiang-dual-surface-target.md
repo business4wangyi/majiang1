@@ -15,7 +15,7 @@
 | ID | 标准 | 状态 |
 |----|------|------|
 | GR-D1 | 无头 Session 可驱动开局→出牌→响应→AI 步→终局，不依赖 readline/console 显示 | **已关**（`tests/majiang/game-session.test.ts`） |
-| GR-D2 | 快照合同可映射现有 `view-model-adapter`；动作可用性来自引擎 | 待做 |
+| GR-D2 | 快照合同可映射现有 `view-model-adapter`；动作可用性来自引擎 | **已关**（`tests/majiang/table-snapshot.test.ts` / `MJ-ACC-SNAP-01`） |
 | GR-D3 | CLI 自动对弈/训练主路径改走 Session，训练统计可回归 | 待做 |
 | GR-D4 | 本机对局 API（HTTP，可选 WS）权威在 Node；Web 只提交动作与渲染 | 待做 |
 | GR-D5 | Web 原型去掉假 `waiting_ai` 死循环；人测可打完一局到结算 | 待做 |
@@ -37,7 +37,7 @@
 |------|------|----|------|----------|------|
 | G-D0 | 新脊骨/任务表/W9 落盘；旧 UI 队列标只读 | 流程 | `MJ-DUAL-LEDGER-01` | `CAP-ARCH-LEDGER` | **已落地** |
 | G-D1 | 无头 Session 从 CLI 耦合中抽出 | 引擎 | `MJ-ENG-SESSION-01` | `CAP-ENG-SESSION` | **已落地** |
-| G-D2 | Snapshot 合同 | 契约 | `MJ-ENG-SNAP-01` | `CAP-ENG-SNAP` | 待做 |
+| G-D2 | Snapshot 合同 | 契约 | `MJ-ENG-SNAP-01` | `CAP-ENG-SNAP` | **已落地** |
 | G-D3 | CLI 训练接 Session | CLI | `MJ-CLI-TRAIN-01` | `CAP-CLI-TRAIN` | 待做 |
 | G-D4 | 对局 API | API | `MJ-API-GAME-01` | `CAP-API-GAME` | 待做 |
 | G-D5 | Web handlers 接 API | Web·U1 | `MJ-WEB-BRIDGE-01` | `CAP-WEB-BRIDGE` | 待做 |
@@ -51,10 +51,10 @@
 |------|------|
 | 局内视觉 · 一段/二段 | **沿用已毕业**（防回退；本脊骨不施工视觉冲顶） |
 | 大厅 U0 | 待 `CAP-WEB-LOBBY` |
-| 引擎/API 契约 | 待 `CAP-ENG-SNAP` / `CAP-API-GAME` |
+| 引擎/API 契约 | Snapshot **已落地**；API 待 `CAP-API-GAME` |
 
 ## 6. 下一刀建议
 
-默认队列下一切片：`CAP-ENG-SNAP`。  
+默认队列下一切片：`CAP-CLI-TRAIN`（可与 `CAP-API-GAME` 并行）。  
 自动化：`/loop` 只从 `majiang-dual-surface-cap-tasks.md` 取下一条 `CAP-*`。  
 验收账本：`docs/product/caps/majiang-dual-surface-acceptance-matrix.md`；命令：`npm run majiang:dual:smoke` / `majiang:dual:nightly`。

@@ -2,15 +2,20 @@ import { Game, GameState } from '../core/game';
 import { TileManager } from '../core/tile-manager';
 import { GameEventHandler } from '../ui/game-event-handler';
 import { setAutoPlayMode } from '../config/runtime-state';
+import {
+  BuildTableSnapshotOptions,
+  TableSnapshot,
+  buildTableSnapshotFromGame,
+} from './table-snapshot';
 
 export interface GameSessionOptions {
   mode?: 'auto';
 }
 
 /**
- * 无头对局会话（CAP-ENG-SESSION）。
- * 本切片仅支持 auto：4 AI，复用 GameEventHandler.safeStartGameAndEnd。
- * ponytail: 人类步进 / Snapshot 留给 CAP-ENG-SNAP + CAP-API-GAME。
+ * 无头对局会话（CAP-ENG-SESSION + CAP-ENG-SNAP）。
+ * auto：4 AI，复用 GameEventHandler.safeStartGameAndEnd；快照可喂 view-model。
+ * ponytail: 人类步进 / Express 留给 CAP-API-GAME。
  */
 export class GameSession {
   readonly game: Game;
@@ -49,5 +54,10 @@ export class GameSession {
 
   getState(): GameState {
     return this.game.state;
+  }
+
+  /** CAP-ENG-SNAP：引擎权威快照，可供 createTableViewModelFromSnapshot */
+  getTableSnapshot(options?: BuildTableSnapshotOptions): TableSnapshot {
+    return buildTableSnapshotFromGame(this.game, options);
   }
 }

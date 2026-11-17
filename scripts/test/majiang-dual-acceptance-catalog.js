@@ -19,7 +19,7 @@ const CASES = [
     title: '快照可喂 view-model；动作来自引擎',
     tier: 'default',
     capIds: ['CAP-ENG-SNAP'],
-    status: 'pending',
+    status: 'green',
   },
   {
     id: 'MJ-ACC-CLI-01',

@@ -22,8 +22,9 @@ describe('dual acceptance catalog (MJ-ACC matrix mirror)', function () {
     expect(byId['MJ-ACC-ENG-01'].status).to.equal('green');
     expect(byId['MJ-ACC-CLI-02'].tier).to.equal('nightly');
     expect(byId['MJ-ACC-API-01'].tier).to.equal('smoke');
-    expect(byId['MJ-ACC-SNAP-01'].status).to.equal('pending');
+    expect(byId['MJ-ACC-SNAP-01'].status).to.equal('green');
     expect(catalog.isRunnable(byId['MJ-ACC-ENG-01'])).to.equal(true);
+    expect(catalog.isRunnable(byId['MJ-ACC-SNAP-01'])).to.equal(true);
     expect(catalog.isRunnable(byId['MJ-ACC-WEB-01'])).to.equal(false);
   });
 
