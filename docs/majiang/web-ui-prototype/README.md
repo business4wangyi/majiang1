@@ -5,7 +5,7 @@
 - 仅改 `docs/majiang/web-ui-prototype/` 表现层、适配层、交互编排。
 - 未改 `src/majiang/core/`、`src/majiang/strategy/`、CLI 路径。
 
-> **当前状态（2026-11-16 · 方案 C 一段）**：W4–W7 合同项可观察关闭；**`CAP-UI-GRAD` 人重批已毕业**；二段竞品再抬 **未开**。  
+> **当前状态（2026-11-16）**：一段已毕业；二段 W8-A **已冻结**；当前 `MJ-UI-COMP-02` 阶段B 可施工。  
 > **口径**：禁「基本有」关毕业；功能绿 ≠ 视觉通过；二段须人点名 + 新蓝图。  
 > **权威闸门**：`docs/product/caps/majiang-webui-acceptance-stages.md` + 脊骨 `majiang-webui-target.md`；桌面锚仍见 `15_…R2` / `16_…IMPL`；移动见 `stage-b-w6-mobile/`；结果见 `stage-b-w7-result/`。  
 > **原型定位**：以桌面骨架 + W4–W7 入库证据为准；动作层禁止退回圆钮/深色 Web 工具条。

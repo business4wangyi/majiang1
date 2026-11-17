@@ -217,7 +217,8 @@ function getPhasePrimaryActionId(model, actionMap) {
 }
 
 function getResponseVisibleActionIds(actionMap) {
-  const order = ["hu", "peng", "gang", "pass"];
+  /* W8-A 合同：胡 > 过 > 碰/杠 */
+  const order = ["hu", "pass", "peng", "gang"];
   return order.filter((actionId) => actionMap.has(actionId));
 }
 

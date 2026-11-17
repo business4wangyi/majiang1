@@ -1,5 +1,5 @@
 (function initMajiangViewModelAdapter(global) {
-  const ACTION_ORDER = ["hu", "gang", "peng", "pass", "discard", "confirm", "cancel"];
+  const ACTION_ORDER = ["hu", "pass", "peng", "gang", "discard", "confirm", "cancel"];
   const PHASE_ACTION_SCOPE = {
     response_window: ["hu", "gang", "peng", "pass"],
     player_turn: ["discard", "confirm", "cancel"],

@@ -5,7 +5,7 @@
 > **不替代内容**：不重写麻将核心规则，不改变 CLI 交互，不替代 `src/majiang/core/` 与 `src/majiang/strategy/` 的业务实现。  
 > **规范依据**：`AGENTS.md`、`docs/standards/rules/development.md`、`docs/majiang/FOLDER_STRUCTURE.md`。
 
-> **当前状态（2026-11-16）**：方案 C 一段 — W4–W7 合同项可观察关闭；**`CAP-UI-GRAD` 人重批已毕业**；二段竞品再抬 **未开**。  
+> **当前状态（2026-11-16）**：一段已毕业；二段 W8-A **已冻结**；`MJ-UI-COMP-02` 阶段B 可施工。  
 > **口径**：禁「基本有」关毕业；功能绿 ≠ 视觉通过；二段须人点名 + 新蓝图。  
 > **权威闸门**：`docs/product/caps/majiang-webui-acceptance-stages.md` + `docs/product/spines/majiang-webui-target.md`；移动 `stage-b-w6-mobile/`；结果 `stage-b-w7-result/`；桌面锚仍见 `15_…R2` / `16_…IMPL`。  
 > **顶级判定口径**：必须同时引用 `13.1 + 13.6 + 14.7 + 13.3/13.4`；**不得**用功能/自动化通过替代视觉通过。

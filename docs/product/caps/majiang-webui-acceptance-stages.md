@@ -3,7 +3,7 @@
 > **角色**：阶段闸门对照表；施工切片关闭时必须能指到本表某行。  
 > **任务队列**：`docs/product/caps/majiang-webui-cap-tasks.md`  
 > **细则**：`docs/majiang/WEB_UI_PRODUCT_INTERACTION_DESIGN.md` §13 / §14  
-> **现状（2026-11-16）**：方案 **C** 一段 — TILE/LAYOUT/MOBILE/RESULT/LEDGER/`CAP-UI-GRAD`（人重批）**已关**；二段未开。功能绿仍不得单独充当视觉证据。
+> **现状（2026-11-16）**：方案 **C** 一段已关；二段 `CAP-UI-COMP` **已开**（W8 阶段A 待产）。一段功能绿仍不得单独充当任何视觉证据。
 
 ```mermaid
 flowchart TB
@@ -68,17 +68,26 @@ flowchart TB
 | C-06 | GR-7 结果 | 四态入库证据可核 | `CAP-UI-RESULT` | **已关**（`stage-b-w7-result/`） |
 | C-07 | GR-8 账本 | 无「基本有」毕业口径矛盾 | `CAP-UI-LEDGER` | **已关**（W7 · 活文档对齐） |
 
-**硬规则**：Agent、`/loop`、automate **不得自批** C-01/02/05；二段竞品抬升不在本表关闭范围内。
+**硬规则**：Agent、`/loop`、automate **不得自批** C-01/02/05；**二段**关闭须另指 W8 证据与人批，不得用本表一段 C-* 行冒充。
 
 ---
 
-## 4. 与既有留档的指针
+## 4. 二段指针（W8 · 不关闭一段行）
+
+| ID / 指针 | 检查项 | 现状 |
+|-----------|--------|------|
+| W8-A | 整桌竞品目标：1440×900 + 390×844 同局势入库并人批 | **已关**（人批 2026-11-16 · `stage-a-w8-comp/`） |
+| W8-B | 实现对照二段目标（`MJ-UI-COMP-02`） | **首刀已关**（人批 2026-11-16）；整桌未关 |
+
+## 5. 与既有留档的指针
 
 | 留档 | 用途 |
 |------|------|
-| `design-freeze/.../15_…R2.md` | 桌面目标图阶段A/竞品复审 |
+| `design-freeze/.../15_…R2.md` | 桌面目标图阶段A/竞品复审（一段） |
 | `design-freeze/.../16_…IMPL.md` | 桌面实现 R2；动作层已关 |
-| `design-freeze/stage-b-w6-mobile/` | 移动目标+实现 |
+| `design-freeze/stage-b-w6-mobile/` | 移动目标+实现（一段） |
 | `design-freeze/stage-b-w7-result/` | 结果四态实现证据（已入库） |
 | `docs/product/waves/majiang-webui-W7.md` | 一段抬封顶波次蓝图 |
+| `docs/product/waves/majiang-webui-W8.md` | **二段**竞品目标重冻蓝图 |
+| `design-freeze/stage-a-w8-comp/` | 二段阶段A 证据（拟） |
 | `.tmp/acceptance/majiang-webui-acceptance.json` | 功能基线 only |

@@ -4,7 +4,7 @@
 > **关联脊骨**：`docs/product/spines/majiang-webui-target.md`  
 > **阶段验收**：`docs/product/caps/majiang-webui-acceptance-stages.md`  
 > **细则引用**：`docs/majiang/WEB_UI_PRODUCT_INTERACTION_DESIGN.md` §13 / §14（不另开第二套任务 ID）  
-> **现状（2026-11-16）**：方案 **C** 一段 — RESULT+LEDGER+**GRAD（人重批）已关**；竞品二段 `CAP-UI-COMP` **未开**。
+> **现状（2026-11-16）**：方案 **C** 一段已关；二段 `CAP-UI-COMP` **已开闸**（人点名方案 A · W8 阶段A 待产）。
 
 ## 1. 怎么用
 
@@ -40,7 +40,7 @@ flowchart LR
 | `CAP-UI-LEDGER` | G7 / **GR-8** | `MJ-STD-LEDGER-01` | 流程 | 与 W6/W7 事实对齐；清「基本有」 | **2（一段）** | **已落地**（W7） |
 | `CAP-UI-DIAG` | G6 / GR-2 | `MJ-UI-DIAG-01` | U1 | 守规抽检（不伪造规则原因） | 持续 | **守规** |
 | `CAP-UI-GRAD` | GR-1…9 | （收官） | — | 一段满分后 + 冲顶清单 14.7/14.8 | **最后（一段）** | **已毕业**（人重批 2026-11-16） |
-| `CAP-UI-COMP` | G8（二段） | 另开 | U2·视觉 | 须新波次蓝图 + 人点名 | 二段 | **未开** |
+| `CAP-UI-COMP` | G8（二段） | `MJ-UI-COMP-02` | U2·视觉 | W8-A 已冻；B 首刀已通过；整桌未毕业 | 二段 | **施工中**（首刀已关） |
 
 ## 3. 各任务封顶线（可观察）
 
@@ -79,25 +79,28 @@ flowchart LR
 - **现状**：人重批通过（聊天确认「符合 / 批准 GRAD」· **2026-11-16**）；旧撤回记录作废。  
 - **禁止**：Agent / `/loop` 自批；本项关闭 **不等于** 自动开二段 `CAP-UI-COMP`。
 
-### `CAP-UI-COMP`（二段 · 未开）
+### `CAP-UI-COMP`（二段 · 施工中）
 
-- **封顶**：相对雀魂/立直城等再抬观感（可能重开目标图）。  
-- **打开条件**：一段 GRAD 人重批后 + 人点名 + 新波次蓝图。
+- **封顶**：相对雀魂/立直城等整桌竞品向观感可并排对照；先重冻目标图再实现。  
+- **打开条件**：一段 GRAD 人重批 + 人点名 + 新波次蓝图 — **已满足**（2026-11-16 · 方案 A · `majiang-webui-W8.md`）。  
+- **本波**：`MJ-UI-COMP-01` 已冻；`MJ-UI-COMP-02` **首刀已通过**（桌心/动作/目标牌 · 人批 2026-11-16）。  
+- **未关**：整桌竞品收敛 / `CAP-UI-COMP` 毕业（须后续刀 + 人批）。  
+- **禁止**：用首刀冒充整桌毕业；功能绿冒充视觉通过；Agent 自批二段毕业。
 
-## 4. 默认施工队列（一段）
+## 4. 默认施工队列
 
 | 顺序 | 打开条件 | 建议波次 |
 |------|----------|----------|
-| 1 | 人已批方案 C（本会话） | W7 · `MJ-UI-RESULT-01` |
-| 2 | RESULT 证据可关或并行账本 | W7 · `MJ-STD-LEDGER-01` |
-| 最后 | 一段满分 | 仅人重批 `CAP-UI-GRAD` |
-| 二段 | 人点名 | 新蓝图 · `CAP-UI-COMP` |
+| 一段 1…最后 | （已关） | W7 · RESULT / LEDGER / GRAD |
+| 二段 A | 人点名方案 A | W8 · `MJ-UI-COMP-01` **已冻结** |
+| 二段 B 首刀 | W8-A 人批 | `MJ-UI-COMP-02` 首刀 **已通过** |
+| **二段当前** | 首刀已关 | **等人点名下一刀**（整桌未毕业） |
 
 ## 5. `/loop` 提示词骨架
 
 ```text
-从 docs/product/caps/majiang-webui-cap-tasks.md 取下一条可施工 CAP-*（一段优先 RESULT）；
-若无人点名或阶段A未齐则只汇报排队；
-禁止关闭 CAP-UI-GRAD；禁止用「基本有」关毕业行；禁止改 core 规则；
-对照 majiang-webui-acceptance-stages.md 勾验收并回写脊骨。
+从 docs/product/caps/majiang-webui-cap-tasks.md 取 CAP-UI-COMP / MJ-UI-COMP-02；
+对照 docs/majiang/design-freeze/stage-a-w8-comp/ 目标帧做阶段B；
+禁止自批二段毕业；禁止用功能绿关 W8-B；禁止改 core 规则；
+截图入库后回写脊骨与 acceptance W8-B。
 ```

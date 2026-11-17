@@ -20,7 +20,7 @@
 - `tsumo` / `ron` / `draw` / `abort` 四态实现帧入库（建议 `design-freeze/stage-b-w7-result/`）
 - 每态可读：结果类型语气、角色关系、分数变化、下一步入口（对齐 `03_RESULT_MODAL_TYPES.md`）
 - 脊骨 / `cap-tasks` / `acceptance-stages` 中 RESULT、A-04、B-05 不得残留「基本有 / 未审」与已关事实矛盾
-- `CAP-UI-GRAD` 已由人重批通过（2026-11-16）；二段仍未开
+- `CAP-UI-GRAD` 已由人重批通过（2026-11-16）；二段已另开 **W8**（见 `majiang-webui-W8.md`）
 
 ## 硬不做
 
