@@ -1,0 +1,33 @@
+# 队列任务 · {item_id}（{alias}）
+
+你是**新会话**执行体。本会话**只做这一刀**，做完即停；禁止连跑队列下一刀。
+
+## 本刀合同
+
+- 队列：`{queue_id}`（{title}）
+- 切片：`{item_id}` / {alias}
+- 一句话：{summary}
+- 验收：{acceptance}
+- 工作区：`{workspace}`
+
+## 执行要求
+
+1. 只完成上述本刀合同；禁止开启下一刀。
+2. 改动落在工作区内；测能确认再提交（按目标项目规范）。
+3. 成功后写完成标记（调度器硬依赖）。
+
+## 完成标记
+
+成功后写 JSON 到：`{marker_path}`
+
+```json
+{{
+  "status": "ok",
+  "summary": "一句话中文结论",
+  "item_id": "{item_id}",
+  "queue_id": "{queue_id}",
+  "artifacts": ["相关路径"]
+}}
+```
+
+失败则写 `"status": "failed"` 并短说明；然后停止。

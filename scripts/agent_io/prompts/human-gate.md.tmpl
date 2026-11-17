@@ -1,0 +1,33 @@
+# 人闸门 · {item_id}（{alias}）
+
+本会话**只做这一刀**：汇总待人批证据并写 marker，**禁止自批通过**，禁止连跑下一刀。
+
+## 合同
+
+- 队列：`{queue_id}`（{title}）
+- 摘要：{summary}
+- 验收：{acceptance}
+- 工作区：`{workspace}`
+- 脊骨：`{spine}`
+- 一本账：`{capability_yaml}`
+- 矩阵：`{page}`
+
+## 硬红线
+
+- **禁止**把账本/脊骨写成「已毕业 / 已通过人批」。
+- **禁止**用「测试全绿」冒充人闸门通过。
+- 只输出短决策卡：结论（待批）、证据路径、需人口头拍板的一句话。
+
+## 完成标记
+
+写 JSON 到：`{marker_path}`（`status` 仍用 `ok` 表示「汇报完成」，summary 必须含「待人口头批」）：
+
+```json
+{{
+  "status": "ok",
+  "summary": "待人口头批：……",
+  "item_id": "{item_id}",
+  "queue_id": "{queue_id}",
+  "artifacts": ["证据路径"]
+}}
+```

@@ -221,3 +221,6 @@ node_modules
 
 # Git worktrees (local isolation)
 .worktrees/
+
+# agent-auto-loop 运行时状态
+output/

@@ -1,0 +1,84 @@
+{
+  "id": "majiang-dual-surface",
+  "title": "麻将双表面 · 脊骨 CAP 队列（自 CAP-ENG-SNAP 起）",
+  "concurrency": 1,
+  "spine": "docs/product/spines/majiang-dual-surface-target.md",
+  "wave": "docs/product/waves/majiang-dual-surface-W9.md",
+  "capability_yaml": "docs/product/caps/majiang-dual-surface-cap-tasks.md",
+  "page": "docs/product/caps/majiang-dual-surface-acceptance-matrix.md",
+  "end_nodes": {
+    "finish": "CAP-DUAL-GRAD"
+  },
+  "items": [
+    {
+      "id": "CAP-ENG-SNAP",
+      "kind": "task",
+      "alias": "eng-snap",
+      "status": "pending",
+      "summary": "落地引擎 Snapshot 合同：字段齐全可喂 createTableViewModelFromSnapshot；availableActions 来自引擎；挂测 MJ-ACC-SNAP-01 并回写一本账/脊骨/矩阵。",
+      "acceptance": "MJ-ACC-SNAP-01 default 绿；npm test 含该挂测；矩阵/catalog 状态非 pending 装绿；cap-tasks CAP-ENG-SNAP=已落地；禁止改 src/*/core/；禁止自批 CAP-DUAL-GRAD。",
+      "depends_on": [],
+      "prompt_template": "cap-task.md.tmpl"
+    },
+    {
+      "id": "CAP-CLI-TRAIN",
+      "kind": "task",
+      "alias": "cli-train",
+      "status": "pending",
+      "summary": "训练/自动对弈入口走 Session；挂 MJ-ACC-CLI-01（default）与 MJ-ACC-CLI-02（nightly）。",
+      "acceptance": "CLI-01 default 绿；CLI-02 nightly 可跑；回写一本账；禁改 core；禁自批 GRAD。",
+      "depends_on": ["CAP-ENG-SNAP"],
+      "prompt_template": "cap-task.md.tmpl"
+    },
+    {
+      "id": "CAP-API-GAME",
+      "kind": "task",
+      "alias": "api-game",
+      "status": "pending",
+      "summary": "本机对局 API（POST/GET/actions），权威在服务端 Session；挂 MJ-ACC-API-01（smoke）。",
+      "acceptance": "smoke API-01 绿或可断言；回写一本账；禁把完整 Game 状态机下沉浏览器；禁改 core。",
+      "depends_on": ["CAP-ENG-SNAP"],
+      "prompt_template": "cap-task.md.tmpl"
+    },
+    {
+      "id": "CAP-WEB-BRIDGE",
+      "kind": "task",
+      "alias": "web-bridge",
+      "status": "pending",
+      "summary": "Web 原型 handlers 接 API；人测主链路可到结果；支撑 WEB-01/02。",
+      "acceptance": "按 cap-tasks 封顶；挂相关 MJ-ACC-WEB-*；禁改 core；禁自批视觉冲顶。",
+      "depends_on": ["CAP-API-GAME"],
+      "prompt_template": "cap-task.md.tmpl"
+    },
+    {
+      "id": "CAP-WEB-LOBBY",
+      "kind": "task",
+      "alias": "web-lobby",
+      "status": "pending",
+      "summary": "大厅产品入口 U0；与 WEB-01 大厅依赖对齐。",
+      "acceptance": "按 cap-tasks 封顶；回写一本账；禁视觉冲顶冒充毕业。",
+      "depends_on": ["CAP-WEB-BRIDGE"],
+      "prompt_template": "cap-task.md.tmpl"
+    },
+    {
+      "id": "CAP-ACC-DUAL",
+      "kind": "task",
+      "alias": "acc-dual",
+      "status": "pending",
+      "summary": "双表面同引擎契约可重复验收；挂 MJ-ACC-DUAL-01。",
+      "acceptance": "DUAL-01 按矩阵挂测；脚手架不得装绿；回写一本账。",
+      "depends_on": ["CAP-CLI-TRAIN", "CAP-WEB-BRIDGE"],
+      "prompt_template": "cap-task.md.tmpl"
+    },
+    {
+      "id": "CAP-DUAL-GRAD",
+      "kind": "seal",
+      "alias": "dual-grad",
+      "status": "pending",
+      "summary": "人闸门：双表面毕业。只汇报待批证据，禁止自批「已通过/已毕业」。",
+      "acceptance": "marker 写 status=ok 且 summary 标明「待人口头批」；禁止改账本为已毕业。",
+      "depends_on": ["CAP-ACC-DUAL"],
+      "prompt_template": "human-gate.md.tmpl"
+    }
+  ]
+}

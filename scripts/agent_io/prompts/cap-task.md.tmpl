@@ -1,0 +1,52 @@
+# 双表面 CAP 刀 · {item_id}（{alias}）
+
+你是**新会话**执行体。本会话**只做这一刀**，写完 marker 即停；**禁止**连跑队列下一刀。
+
+## 本刀合同
+
+- 队列：`{queue_id}`（{title}）
+- 切片：`{item_id}` / {alias}
+- 一句话：{summary}
+- 验收：{acceptance}
+- 工作区：`{workspace}`
+- 一本账（SSOT）：`{capability_yaml}`
+- 脊骨：`{spine}`
+- 波次：`{wave}`
+- 验收矩阵：`{page}`
+
+## 执行前必读（够用即停）
+
+1. `docs/standards/rules/index.md` → 按任务加载；改码读 `development.md`；测试读 `docs/standards/testing/quality.md`；给人结论读 `communication-for-beginners.md`。
+2. 本刀在一本账中的 **封顶 / 须挂 / 禁止** 三段；只实现本 `CAP-*`。
+3. 验收矩阵中对应 `MJ-ACC-*`：未落地前可 skip，**禁止装绿**；落地后挂测并回写矩阵/catalog 状态。
+
+## 硬红线
+
+- **禁止**改 `src/*/core/` 权威规则判定。
+- **禁止**自批 `CAP-DUAL-GRAD` / 视觉冲顶 / 「双表面已毕业」。
+- **禁止**把 `CAP-ACC-DUAL` 标已落地除非本刀就是它且测真绿。
+- 一本账只扩 `majiang-dual-surface-cap-tasks.md`（及本刀相关脊骨/矩阵回写）；勿开平行账本。
+- 主语言中文；提交说明中文（仅在本刀需要提交且符合项目 commit 规范时）。
+
+## 建议落地方式
+
+1. 隔离 worktree + 功能分支（可参考既有 `.worktrees/` 约定）；勿污染主仓无关脏文件。
+2. 先挂测/失败断言 → 最小实现 → 回写账本状态。
+3. 验证：优先 `npm test`（CJS mocha）；涉及双表面档位时跑 `npm run majiang:dual:smoke` / `majiang:dual:nightly`。
+4. 成功后写 marker；会话停止。
+
+## 完成标记
+
+成功后写 JSON 到：`{marker_path}`
+
+```json
+{{
+  "status": "ok",
+  "summary": "一句话中文结论",
+  "item_id": "{item_id}",
+  "queue_id": "{queue_id}",
+  "artifacts": ["相关路径"]
+}}
+```
+
+失败则写 `"status": "failed"` 并短说明；然后停止。
