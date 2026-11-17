@@ -5,7 +5,7 @@ import { GameSession } from '../../src/majiang/session/game-session';
 import * as input from '../../src/majiang/ui/input';
 import { setAutoPlayMode } from '../../src/majiang/config/runtime-state';
 
-describe('GameSession (CAP-ENG-SESSION)', function () {
+describe('GameSession (CAP-ENG-SESSION / MJ-ACC-ENG-01)', function () {
   this.timeout(120000);
 
   let consoleLogStub: sinon.SinonStub;
@@ -22,7 +22,7 @@ describe('GameSession (CAP-ENG-SESSION)', function () {
     askQuestionStub.restore();
   });
 
-  it('auto 模式可无交互跑完一局并进入 ENDED', async () => {
+  it('MJ-ACC-ENG-01: auto 模式可无交互跑完一局并进入 ENDED', async () => {
     const session = GameSession.create({ mode: 'auto' });
     expect(session.game.getAllPlayers()).to.have.lengthOf(4);
 
