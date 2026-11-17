@@ -47,4 +47,4 @@
 ## 下波预告（不施工）
 
 - W10：`CAP-WEB-LOBBY` → 见 `majiang-dual-surface-W10.md`  
-- W11：`CAP-ACC-DUAL` **已关** → 见 `majiang-dual-surface-W11.md`；收官等人批 `CAP-DUAL-GRAD`
+- W11：`CAP-ACC-DUAL` **已关** → 见 `majiang-dual-surface-W11.md`；收官 `CAP-DUAL-GRAD` **已人批**（2026-11-18）
