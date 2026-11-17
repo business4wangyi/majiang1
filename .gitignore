@@ -218,3 +218,6 @@ notebooks/.ipynb_checkpoints/
 
 #node_modules
 node_modules
+
+# Git worktrees (local isolation)
+.worktrees/
