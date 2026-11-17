@@ -5,7 +5,7 @@
   "main": "dist/majiang/index.js",
   "scripts": {
     "docs:update-file-list": "node scripts/docs/generate-file-list.js all",
-    "start": "node dist/majiang/index.js",
+    "start": "ts-node src/majiang/index.ts",
     "build": "tsc",
     "dev": "ts-node src/majiang/index.ts",
     "test": "node scripts/test/run-mocha-cjs.js",

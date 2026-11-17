@@ -1,13 +1,13 @@
 import './tools/performance-injector';
-import { Game } from '../core/game';
-import { runAutoGameLoop, runInteractiveGameLoop } from '../ui/gameLoop';
-import { Style } from '../ui/display';
-import { InputState, askQuestion } from '../ui/input';
-import { errorLog, setLogLevel, LogLevel } from '../tools/logger';
-import { displayManager } from '../ui/display-manager';
-import { CountdownManager } from '../ui/countdown-manager';
-import { GameEventHandler } from '../ui/game-event-handler';
-import { PerformanceMonitor } from '../tools/performance-monitor';
+import { Game } from './core/game';
+import { runAutoGameLoop, runInteractiveGameLoop } from './ui/gameLoop';
+import { Style } from './ui/display';
+import { InputState, askQuestion } from './ui/input';
+import { errorLog, setLogLevel, LogLevel } from './tools/logger';
+import { displayManager } from './ui/display-manager';
+import { CountdownManager } from './ui/countdown-manager';
+import { GameEventHandler } from './ui/game-event-handler';
+import { PerformanceMonitor } from './tools/performance-monitor';
 import { AUTO_PLAY_ROUNDS } from './config/config';
 import { AUTO_PLAY_MODE, DEBUG_MODE, setAutoPlayMode, setDebugMode } from './config/runtime-state';
 
