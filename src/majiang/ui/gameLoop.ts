@@ -14,6 +14,7 @@ import { displayManager } from '../ui/display-manager';
 import { GameEventHandler } from '../ui/game-event-handler';
 import { TileManager } from '../core/tile-manager';
 import { AUTO_PLAY_ROUNDS } from '../config/config';
+import { runAutoTraining } from '../session/auto-train';
 
 // 游戏循环检查间隔（毫秒）
 const GAME_LOOP_INTERVAL = 100;
@@ -28,41 +29,29 @@ let gameEventHandler: GameEventHandler;
 let hasPlayerActed = false;
 
 /**
- * 自动模式主循环：批量AI对弈
+ * 自动模式主循环：批量 AI 对弈（CAP-CLI-TRAIN：权威路径走 Session）。
+ * `game` 参数保留兼容旧调用方；对弈与统计由 Session 自建局完成。
  */
-export async function runAutoGameLoop(game: Game, rounds: number): Promise<void> {
+export async function runAutoGameLoop(_game: Game, rounds: number): Promise<void> {
   displayManager.printSuccess(`自动模式主循环启动...`);
-  const gameEventHandler = new GameEventHandler(
-    game,
-    TileManager.getInstance()
-  );
-  for (let i = 0; i < rounds; i++) {
-    await gameEventHandler.safeStartGameAndEnd();
-    // 只在不是最后一局时重置
-    if (i < rounds - 1) {
-      game.reset();
-    }
-  }
+  const { result } = await runAutoTraining({ rounds });
 
-  // 统计与输出
-  const players = game.getAllPlayers();
-  // 只统计AI玩家
-  const aiPlayers = players.filter(p => p.type === 1 || p.constructor.name === 'AIPlayer');
   let totalWinRate = 0;
   let totalAvgScore = 0;
   displayManager.printTitle('【AI统计结果】');
-  aiPlayers.forEach(ai => {
-    const winRate = ai.totalGames > 0 ? ai.winCount / ai.totalGames : 0;
-    const avgScore = ai.totalGames > 0 ? ai.score / ai.totalGames : 0;
-    totalWinRate += winRate;
-    totalAvgScore += avgScore;
-    displayManager.print(`AI玩家 ${ai.name}：胜率 ${(winRate * 100).toFixed(2)}%，平均得分 ${avgScore.toFixed(2)}，总局数 ${ai.totalGames}，流局数 ${ai.drawCount}，胜局数 ${ai.winCount}，总得分 ${ai.score}`);
+  result.players.forEach((ai) => {
+    totalWinRate += ai.winRate;
+    totalAvgScore += ai.avgScore;
+    displayManager.print(
+      `AI玩家 ${ai.name}：胜率 ${(ai.winRate * 100).toFixed(2)}%，平均得分 ${ai.avgScore.toFixed(2)}，总局数 ${ai.totalGames}，流局数 ${ai.drawCount}，胜局数 ${ai.winCount}，总得分 ${ai.score}`
+    );
   });
-  if (aiPlayers.length > 0) {
+  if (result.players.length > 0) {
     displayManager.print('------------------------------');
-    displayManager.print(`所有AI平均胜率：${((totalWinRate / aiPlayers.length) * 100).toFixed(2)}%，所有AI平均得分：${(totalAvgScore / aiPlayers.length).toFixed(2)}`);
+    displayManager.print(
+      `所有AI平均胜率：${((totalWinRate / result.players.length) * 100).toFixed(2)}%，所有AI平均得分：${(totalAvgScore / result.players.length).toFixed(2)}`
+    );
   }
-
 }
 
 /**

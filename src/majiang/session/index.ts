@@ -1,5 +1,12 @@
 export { GameSession, GameSessionOptions } from './game-session';
 export {
+  runAutoTraining,
+  RunAutoTrainingOptions,
+  RunAutoTrainingOutcome,
+  AutoTrainPlayerStat,
+  AutoTrainResult,
+} from './auto-train';
+export {
   buildTableSnapshotFromGame,
   mapGameStateToPhase,
   BuildTableSnapshotOptions,

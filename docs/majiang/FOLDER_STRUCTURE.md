@@ -228,7 +228,7 @@ graph TD
 - `tools/` 提供工具函数，可被其他模块使用
 
 **依赖方向**：`ui/ → strategy/ → core/ → config/`（单向依赖，避免循环）  
-`session/ → ui/GameEventHandler + core/`（Session 编排，规则仍在 core；`table-snapshot.ts` 只读映射，不改规则）。
+`session/ → ui/GameEventHandler + core/`（Session 编排，规则仍在 core；`table-snapshot.ts` 只读映射；`auto-train.ts` 为 CLI 训练入口，不改规则）。
 
 ## 📋 文件清单
 

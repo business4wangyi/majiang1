@@ -23,8 +23,8 @@
 |----|------|------|----------|------|
 | `MJ-ACC-ENG-01` | 无头 Session 开局→步进→终局 | default | `CAP-ENG-SESSION` | 已绿 |
 | `MJ-ACC-SNAP-01` | 快照可喂 view-model；动作来自引擎 | default | `CAP-ENG-SNAP` | 已绿 |
-| `MJ-ACC-CLI-01` | 自动对弈入口走 Session | default | `CAP-CLI-TRAIN` | 待实现 |
-| `MJ-ACC-CLI-02` | N 局统计可重复 | nightly | `CAP-CLI-TRAIN` | 待实现 |
+| `MJ-ACC-CLI-01` | 自动对弈入口走 Session | default | `CAP-CLI-TRAIN` | 已绿 |
+| `MJ-ACC-CLI-02` | N 局统计可重复 | nightly | `CAP-CLI-TRAIN` | 已绿 |
 | `MJ-ACC-API-01` | 对局 API 权威在服务端 | smoke | `CAP-API-GAME` | 待实现 |
 | `MJ-ACC-WEB-01` | 人测主链路完局 | smoke | `CAP-WEB-BRIDGE`（大厅依赖 `CAP-WEB-LOBBY`） | 待实现 |
 | `MJ-ACC-WEB-02` | 非法动作被拒且不脏写 | smoke | `CAP-API-GAME` + `CAP-WEB-BRIDGE` | 待实现 |
@@ -47,14 +47,14 @@
 ### `MJ-ACC-CLI-01`
 
 - **通过**：自动对弈短路径走 Session，可断言终局；不依赖 readline 硬耦合。
-- **挂测（落地后）**：default 用例标注本 ID。
-- **未落地**：skip。
+- **挂测**：`tests/majiang/cli-train.test.ts`；档位 default（含于 `npm test`）。
+- **依赖**：`CAP-CLI-TRAIN` 已落地。
 
 ### `MJ-ACC-CLI-02`
 
 - **通过**：固定配置下 N 局输出含局数与统计字段形状稳定（可固定种子）；不进 `npm test`。
-- **挂测（落地后）**：`npm run majiang:dual:nightly`。
-- **未落地**：nightly 显式 skip。
+- **挂测**：`npm run majiang:dual:nightly`（`scripts/test/majiang-dual-nightly.js` runner）；默认 N=`MAJIANG_DUAL_NIGHTLY_ROUNDS` 或 2。
+- **依赖**：`CAP-CLI-TRAIN` 已落地。
 
 ### `MJ-ACC-API-01`
 

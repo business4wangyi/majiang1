@@ -26,14 +26,14 @@ const CASES = [
     title: '自动对弈入口走 Session',
     tier: 'default',
     capIds: ['CAP-CLI-TRAIN'],
-    status: 'pending',
+    status: 'green',
   },
   {
     id: 'MJ-ACC-CLI-02',
     title: 'N 局统计可重复',
     tier: 'nightly',
     capIds: ['CAP-CLI-TRAIN'],
-    status: 'pending',
+    status: 'green',
   },
   {
     id: 'MJ-ACC-API-01',

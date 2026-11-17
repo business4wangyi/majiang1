@@ -5,8 +5,8 @@
 | 主题 | majiang-dual-surface |
 | 波次 | W9 |
 | UI 层 | 流程 + 引擎（本波首刀不改大厅视觉大改；大厅属批序 6） |
-| 施工状态 | Session + Snapshot 已关；下刀 CLI/API |
-| 封顶任务 | `CAP-ARCH-LEDGER` → `CAP-ENG-SESSION` → `CAP-ENG-SNAP` |
+| 施工状态 | Session + Snapshot + CLI-TRAIN 已关；下刀 API/Web |
+| 封顶任务 | `CAP-ARCH-LEDGER` → `CAP-ENG-SESSION` → `CAP-ENG-SNAP` → `CAP-CLI-TRAIN` |
 | 原型 / 引擎 | `docs/majiang/web-ui-prototype/` 本波可动桥接准备；权威仍在 `src/majiang/core/` |
 | 关联旧视觉 | `majiang-webui-W8` 已关；本波不重开 COMP |
 
@@ -20,7 +20,8 @@
 - 旧 `majiang-webui-cap-tasks` 标明只读防回退  
 - `CAP-ENG-SESSION`：Node 可 headless 跑通至少一局关键路径（开局→若干动作→终局或可断言的步进）  
 - `CAP-ENG-SNAP`：引擎快照可喂 `createTableViewModelFromSnapshot`；`MJ-ACC-SNAP-01` 已绿  
-- 回写脊骨 G-D0/G-D1/G-D2 状态
+- `CAP-CLI-TRAIN`：自动对弈/训练入口走 Session；`MJ-ACC-CLI-01` default 绿、`MJ-ACC-CLI-02` nightly 可跑  
+- 回写脊骨 G-D0/G-D1/G-D2/G-D3 状态
 
 ## 硬不做
 
@@ -37,8 +38,9 @@
 | `MJ-DUAL-LEDGER-01` | **已落地**（2026-11-17） |
 | `MJ-ENG-SESSION-01` | **已落地** |
 | `MJ-ENG-SNAP-01` | **已落地**（2026-11-17） |
+| `MJ-CLI-TRAIN-01` | **已落地**（2026-11-17） |
 
 ## 下波预告（不施工）
 
-- W10：`CAP-CLI-TRAIN` ∥ `CAP-API-GAME` + `CAP-WEB-BRIDGE`（及可选 `CAP-WEB-LOBBY`）  
+- W10：`CAP-API-GAME` + `CAP-WEB-BRIDGE`（及可选 `CAP-WEB-LOBBY`）  
 - W11：`CAP-ACC-DUAL` → 等人批 `CAP-DUAL-GRAD`
