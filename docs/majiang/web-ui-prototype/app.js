@@ -2,6 +2,32 @@ const { ACTION_ORDER, createTableViewModelFromSnapshot, createDefaultLobbyState,
 const PAGE_PARAMS = new URLSearchParams(window.location.search);
 const IS_ACCEPTANCE_MODE = PAGE_PARAMS.get("acceptance") === "1";
 const TILE_SPRITE_HREF = "assets/mahjong-tiles.svg";
+const USE_SVG_TILES = PAGE_PARAMS.get("svgTiles") === "1";
+/** Path A：自研 PNG 图集（整牌含陶瓷壳）；?svgTiles=1 回退 SVG 印花 */
+const TILE_ATLAS = {
+  href: "assets/mahjong-tiles-atlas.png",
+  cols: 9,
+  rows: 4,
+};
+const TILE_ATLAS_INDEX = (() => {
+  const index = {};
+  const list = [
+    ...Array.from({ length: 9 }, (_, i) => `face-dots-${i + 1}`),
+    ...Array.from({ length: 9 }, (_, i) => `face-bamboo-${i + 1}`),
+    ...Array.from({ length: 9 }, (_, i) => `face-chars-${i + 1}`),
+    "face-wind-东",
+    "face-wind-南",
+    "face-wind-西",
+    "face-wind-北",
+    "face-dragon-中",
+    "face-dragon-发",
+    "face-dragon-白",
+  ];
+  list.forEach((symbol, i) => {
+    index[symbol] = { col: i % TILE_ATLAS.cols, row: Math.floor(i / TILE_ATLAS.cols) };
+  });
+  return index;
+})();
 document.body.classList.toggle("acceptance-mode", IS_ACCEPTANCE_MODE);
 
 const appState = {
@@ -115,6 +141,12 @@ function createTileSpriteHtml(symbolId) {
   return `<svg class="tile-sprite" viewBox="0 0 36 48" focusable="false"><use href="${TILE_SPRITE_HREF}#${symbolId}" xlink:href="${TILE_SPRITE_HREF}#${symbolId}"></use></svg>`;
 }
 
+function createTileAtlasHtml(symbolId) {
+  const pos = TILE_ATLAS_INDEX[symbolId];
+  if (!pos) return createTileSpriteHtml(symbolId);
+  return `<span class="tile-atlas" style="--atlas-col:${pos.col};--atlas-row:${pos.row}" role="presentation"></span>`;
+}
+
 // ponytail: 布局表是硬编码；?selfcheck=1 校验 1–9 点/条数与格位数一致，升级路径=抽到独立 fixture
 if (PAGE_PARAMS.has("selfcheck")) {
   Object.entries(TILE_FACE_CELLS).forEach(([kind, map]) => {
@@ -142,9 +174,10 @@ function createTileAssetNode(label, className) {
     } else {
       node.setAttribute("data-tile-honor", parsed.honorShort);
     }
-    node.setAttribute("data-tile-source", "svg-sprite");
+    const useAtlas = !USE_SVG_TILES && TILE_ATLAS_INDEX[symbolId];
+    node.setAttribute("data-tile-source", useAtlas ? "png-atlas" : "svg-sprite");
     node.setAttribute("data-tile-symbol", symbolId);
-    node.innerHTML = createTileSpriteHtml(symbolId);
+    node.innerHTML = useAtlas ? createTileAtlasHtml(symbolId) : createTileSpriteHtml(symbolId);
     return node;
   }
   node.setAttribute("data-tile-fallback", "true");
@@ -156,8 +189,13 @@ function createTileAssetNode(label, className) {
 function applyTileVisual(container, label, options = {}) {
   const fallback = options.forceText || appState.debugTextTiles;
   container.innerHTML = "";
+  container.classList.remove("has-tile-atlas");
   if (!fallback) {
-    container.appendChild(createTileAssetNode(label, options.assetClassName || "tile-asset"));
+    const asset = createTileAssetNode(label, options.assetClassName || "tile-asset");
+    container.appendChild(asset);
+    if (asset.getAttribute("data-tile-source") === "png-atlas") {
+      container.classList.add("has-tile-atlas");
+    }
   }
   const text = document.createElement("span");
   text.className = fallback ? "tile-text-fallback" : "tile-text-sr";

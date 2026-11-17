@@ -1,0 +1,147 @@
+{
+  "cols": 9,
+  "rows": 4,
+  "cellW": 160,
+  "cellH": 214,
+  "image": "mahjong-tiles-atlas.png",
+  "symbols": {
+    "face-dots-1": {
+      "col": 0,
+      "row": 0
+    },
+    "face-dots-2": {
+      "col": 1,
+      "row": 0
+    },
+    "face-dots-3": {
+      "col": 2,
+      "row": 0
+    },
+    "face-dots-4": {
+      "col": 3,
+      "row": 0
+    },
+    "face-dots-5": {
+      "col": 4,
+      "row": 0
+    },
+    "face-dots-6": {
+      "col": 5,
+      "row": 0
+    },
+    "face-dots-7": {
+      "col": 6,
+      "row": 0
+    },
+    "face-dots-8": {
+      "col": 7,
+      "row": 0
+    },
+    "face-dots-9": {
+      "col": 8,
+      "row": 0
+    },
+    "face-bamboo-1": {
+      "col": 0,
+      "row": 1
+    },
+    "face-bamboo-2": {
+      "col": 1,
+      "row": 1
+    },
+    "face-bamboo-3": {
+      "col": 2,
+      "row": 1
+    },
+    "face-bamboo-4": {
+      "col": 3,
+      "row": 1
+    },
+    "face-bamboo-5": {
+      "col": 4,
+      "row": 1
+    },
+    "face-bamboo-6": {
+      "col": 5,
+      "row": 1
+    },
+    "face-bamboo-7": {
+      "col": 6,
+      "row": 1
+    },
+    "face-bamboo-8": {
+      "col": 7,
+      "row": 1
+    },
+    "face-bamboo-9": {
+      "col": 8,
+      "row": 1
+    },
+    "face-chars-1": {
+      "col": 0,
+      "row": 2
+    },
+    "face-chars-2": {
+      "col": 1,
+      "row": 2
+    },
+    "face-chars-3": {
+      "col": 2,
+      "row": 2
+    },
+    "face-chars-4": {
+      "col": 3,
+      "row": 2
+    },
+    "face-chars-5": {
+      "col": 4,
+      "row": 2
+    },
+    "face-chars-6": {
+      "col": 5,
+      "row": 2
+    },
+    "face-chars-7": {
+      "col": 6,
+      "row": 2
+    },
+    "face-chars-8": {
+      "col": 7,
+      "row": 2
+    },
+    "face-chars-9": {
+      "col": 8,
+      "row": 2
+    },
+    "face-wind-东": {
+      "col": 0,
+      "row": 3
+    },
+    "face-wind-南": {
+      "col": 1,
+      "row": 3
+    },
+    "face-wind-西": {
+      "col": 2,
+      "row": 3
+    },
+    "face-wind-北": {
+      "col": 3,
+      "row": 3
+    },
+    "face-dragon-中": {
+      "col": 4,
+      "row": 3
+    },
+    "face-dragon-发": {
+      "col": 5,
+      "row": 3
+    },
+    "face-dragon-白": {
+      "col": 6,
+      "row": 3
+    }
+  },
+  "note": "自研程序绘制 v2 质感加强；非竞品资产拷贝",
+  "version": 2
+}

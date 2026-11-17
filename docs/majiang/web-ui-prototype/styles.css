@@ -19,6 +19,12 @@
   --danger: #e26a5a;
   --tile-base: #faf4e8;
   --tile-shadow: #b5ab94;
+  /* W8-B 第二刀：实体牌侧棱（竞品向绿塑边） */
+  --tile-edge-lit: rgba(72, 132, 98, 0.42);
+  --tile-edge-dim: rgba(28, 78, 55, 0.48);
+  --tile-face-cream: #fffaf0;
+  --tile-face-mid: #f3e6cc;
+  --tile-face-base: #e5d4b0;
 }
 
 * {
@@ -822,16 +828,19 @@ body {
 }
 
 .tile-face--target {
-  width: 62px;
-  height: 86px;
+  width: 64px;
+  height: 90px;
   border-radius: 9px;
   border: 1px solid #c8b894;
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.58) 0, rgba(255, 255, 255, 0.1) 18%, transparent 20%),
-    linear-gradient(180deg, #fffaf0 0%, #f3e6cc 72%, #e5d4b0 100%);
+    linear-gradient(90deg, var(--tile-edge-lit) 0 5%, transparent 6% 94%, var(--tile-edge-dim) 95%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.6) 0, rgba(255, 255, 255, 0.1) 18%, transparent 20%),
+    linear-gradient(180deg, var(--tile-face-cream) 0%, var(--tile-face-mid) 72%, var(--tile-face-base) 100%);
   box-shadow:
     0 0 0 3px rgba(255, 177, 43, 0.75),
     0 0 20px rgba(255, 184, 59, 0.55),
+    inset 3px 0 0 rgba(58, 118, 88, 0.28),
+    inset -3px 0 0 rgba(24, 70, 50, 0.32),
     inset 3px 0 5px rgba(255, 255, 248, 0.22),
     inset -4px 0 7px rgba(118, 98, 71, 0.22),
     inset 0 -12px 14px rgba(173, 157, 120, 0.3),
@@ -839,7 +848,8 @@ body {
     0 3px 0 #c9ba95,
     0 5px 0 #b6a57e,
     0 7px 0 #8f7f58,
-    0 12px 14px rgba(0, 0, 0, 0.4);
+    0 9px 0 #6a5a3c,
+    0 14px 16px rgba(0, 0, 0, 0.42);
   transform: rotate(-3deg) translateY(-2px);
 }
 
@@ -853,32 +863,128 @@ body {
   color: #1e1e18;
 }
 
-/* W4：正式态主牌面走 SVG sprite（陶瓷壳仍由 .tile-face / 手牌按钮背景承担） */
+/* W4：SVG sprite 回退（?svgTiles=1）；默认 Path A 走 PNG 图集 */
 .tile-sprite {
   width: 28px;
   height: 36px;
   display: block;
   overflow: visible;
+  filter: contrast(1.08) saturate(1.1);
 }
 
 .tile-asset--hand .tile-sprite {
-  width: 34px;
-  height: 46px;
+  width: 38px;
+  height: 50px;
 }
 
 .tile-asset--target .tile-sprite {
-  width: 36px;
-  height: 48px;
+  width: 38px;
+  height: 50px;
 }
 
 .tile-asset--mini .tile-sprite {
-  width: 22px;
-  height: 30px;
+  width: 24px;
+  height: 32px;
 }
 
 .tile-asset--micro .tile-sprite {
   width: 18px;
   height: 24px;
+}
+
+/* Path A：自研整牌 PNG 图集（9×4）；陶瓷壳烘焙进图元 */
+.tile-atlas {
+  --atlas-cols: 9;
+  --atlas-rows: 4;
+  display: block;
+  width: 28px;
+  height: 37px;
+  background-image: url("assets/mahjong-tiles-atlas.png");
+  background-repeat: no-repeat;
+  background-size: calc(var(--atlas-cols) * 100%) calc(var(--atlas-rows) * 100%);
+  /* % position = (container-bg)*p/100；用 (n-1) 公式对齐格点，勿用负倍数 % */
+  background-position:
+    calc(var(--atlas-col, 0) * 100% / (var(--atlas-cols) - 1))
+    calc(var(--atlas-row, 0) * 100% / (var(--atlas-rows) - 1));
+  image-rendering: auto;
+  /* v2 图集：略抬釉光对比，不改布局 */
+  filter: contrast(1.06) saturate(1.08);
+}
+
+.tile-asset--hand .tile-atlas {
+  width: 52px;
+  height: 70px;
+}
+
+.tile-asset--target .tile-atlas {
+  width: 48px;
+  height: 64px;
+}
+
+.tile-asset--mini .tile-atlas {
+  width: 30px;
+  height: 40px;
+}
+
+.tile-asset--micro .tile-atlas {
+  width: 20px;
+  height: 27px;
+}
+
+/* 图集已含实体壳：弱化按钮 CSS 陶瓷，避免双层塑料感 */
+.tile.has-tile-atlas,
+.tile-mini.has-tile-atlas,
+.tile-face--target.has-tile-atlas {
+  background: transparent;
+  border-color: transparent;
+  box-shadow: none;
+  padding: 0;
+}
+
+.tile.has-tile-atlas::before,
+.tile.has-tile-atlas::after,
+.tile-mini.has-tile-atlas::before,
+.tile-mini.has-tile-atlas::after,
+.tile-face--target.has-tile-atlas::before,
+.tile-face--target.has-tile-atlas::after {
+  display: none;
+}
+
+.tile.has-tile-atlas {
+  width: clamp(54px, 4vw, 70px);
+  min-height: 74px;
+  filter: drop-shadow(0 12px 10px rgba(0, 0, 0, 0.42));
+}
+
+.tile-mini.has-tile-atlas {
+  min-width: 32px;
+  min-height: 44px;
+  filter: drop-shadow(0 8px 7px rgba(0, 0, 0, 0.4));
+}
+
+.tile-face--target.has-tile-atlas {
+  width: 56px;
+  height: 76px;
+  transform: rotate(-3deg) translateY(-2px);
+  filter:
+    drop-shadow(0 0 10px rgba(255, 184, 59, 0.75))
+    drop-shadow(0 10px 12px rgba(0, 0, 0, 0.4));
+}
+
+.tile.has-tile-atlas .tile-asset--hand,
+.tile-mini.has-tile-atlas .tile-asset--mini,
+.tile-face--target.has-tile-atlas .tile-asset--target {
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+}
+
+.tile.has-tile-atlas .tile-atlas,
+.tile-mini.has-tile-atlas .tile-atlas,
+.tile-face--target.has-tile-atlas .tile-atlas {
+  width: 100%;
+  height: 100%;
 }
 
 .tile-asset--target {
@@ -1136,36 +1242,49 @@ body {
 
 .river-grid {
   display: grid;
-  grid-template-columns: repeat(6, 33px);
-  gap: 3px;
+  grid-template-columns: repeat(6, 36px);
+  gap: 4px;
   justify-content: center;
 }
 
 .tile-mini {
   position: relative;
-  min-width: 33px;
-  min-height: 46px;
+  min-width: 36px;
+  min-height: 50px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   border-radius: 5px;
   border: 1px solid #c9ba95;
+  /* W8-B 第二刀：牌河与手牌同套陶瓷壳 + 绿塑侧棱 */
   background:
-    linear-gradient(90deg, rgba(129, 97, 56, 0.2) 0 6%, transparent 7% 93%, rgba(129, 97, 56, 0.22) 94%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.62) 0, rgba(255, 255, 255, 0.1) 15%, transparent 17%),
+    linear-gradient(90deg, var(--tile-edge-lit) 0 5%, transparent 6% 94%, var(--tile-edge-dim) 95%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.66) 0, rgba(255, 255, 255, 0.12) 15%, transparent 17%),
     repeating-linear-gradient(0deg, rgba(120, 95, 60, 0.025) 0 1px, transparent 1px 3px),
-    linear-gradient(180deg, #fffaf0 0%, #f3e6cc 72%, #e5d4b0 100%);
+    linear-gradient(180deg, var(--tile-face-cream) 0%, var(--tile-face-mid) 72%, var(--tile-face-base) 100%);
   box-shadow:
-    inset 0 0 0 1px rgba(255, 255, 255, 0.42),
-    inset 2px 0 4px rgba(255, 255, 255, 0.2),
-    inset -3px 0 5px rgba(120, 92, 55, 0.26),
-    inset 0 -8px 10px rgba(160, 140, 100, 0.28),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.46),
+    inset 2px 0 4px rgba(255, 255, 255, 0.22),
+    inset -3px 0 5px rgba(120, 92, 55, 0.28),
+    inset 0 -9px 11px rgba(160, 140, 100, 0.3),
     0 1px 0 #d8c9a6,
     0 2px 0 #c7b68f,
     0 3px 0 #b3a178,
-    0 4px 0 #8f7f58,
-    0 8px 9px -2px rgba(0, 0, 0, 0.48),
-    0 14px 16px -6px rgba(0, 0, 0, 0.34);
+    0 5px 0 #8f7f58,
+    0 7px 0 #6a5a3c,
+    0 10px 10px -2px rgba(0, 0, 0, 0.5),
+    0 16px 18px -6px rgba(0, 0, 0, 0.36);
+}
+
+.tile-mini::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  box-shadow:
+    inset 2.5px 0 0 rgba(58, 118, 88, 0.28),
+    inset -2.5px 0 0 rgba(24, 70, 50, 0.32);
 }
 
 .tile-mini::after {
@@ -1176,7 +1295,7 @@ body {
   top: 4px;
   height: 7px;
   border-radius: 999px;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.66), transparent);
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.7), transparent);
   pointer-events: none;
 }
 
@@ -1249,13 +1368,13 @@ body {
 }
 
 .tile-asset--mini {
-  min-width: 20px;
-  min-height: 27px;
+  min-width: 22px;
+  min-height: 30px;
 }
 
 .tile-asset--mini .tile-pattern {
-  width: 18px;
-  height: 24px;
+  width: 22px;
+  height: 30px;
 }
 
 .tile-asset--mini .tile-dot {
@@ -1293,49 +1412,58 @@ body {
 
 .seat {
   position: absolute;
-  width: 236px;
-  min-height: 72px;
+  width: auto;
+  min-width: 0;
+  min-height: 0;
   border-radius: 0;
   border: none;
   background: transparent;
   display: grid;
-  gap: 2px;
-  padding: 4px 6px;
+  gap: 4px;
+  padding: 0;
   box-shadow: none;
+  justify-items: center;
 }
 
+/* W8-B 角区刀：头像居中 + 分数胶囊；稀疏，不抢桌心 */
 .seat-header {
   display: flex;
-  justify-content: space-between;
+  flex-direction: column;
+  justify-content: flex-start;
   align-items: center;
+  gap: 6px;
 }
 
 .seat-identity {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
+  justify-content: center;
+  gap: 4px;
   white-space: nowrap;
+  max-width: 108px;
 }
 
 .seat-profile {
   display: inline-grid;
-  grid-template-columns: 64px auto;
+  grid-template-columns: 1fr;
+  justify-items: center;
   align-items: center;
-  gap: 7px;
+  gap: 4px;
+  position: relative;
 }
 
 .seat-avatar {
-  width: 64px;
-  height: 64px;
-  border-radius: 12px;
-  border: 2px solid rgba(240, 205, 127, 0.9);
+  width: 70px;
+  height: 70px;
+  border-radius: 14px;
+  border: 2px solid rgba(255, 214, 140, 0.95);
   box-shadow:
-    0 0 0 2px rgba(45, 30, 16, 0.72),
-    0 0 0 3px rgba(255, 218, 132, 0.22),
-    0 4px 10px rgba(0, 0, 0, 0.42),
-    inset 4px 0 8px rgba(255, 244, 207, 0.12),
-    inset -5px 0 9px rgba(67, 43, 27, 0.42),
-    inset 0 0 0 1px rgba(255, 240, 196, 0.32);
+    0 0 0 2px rgba(32, 22, 12, 0.85),
+    0 0 0 4px rgba(255, 205, 110, 0.28),
+    0 6px 14px rgba(0, 0, 0, 0.48),
+    inset 3px 0 7px rgba(255, 244, 207, 0.16),
+    inset -4px 0 8px rgba(67, 43, 27, 0.4),
+    inset 0 0 0 1px rgba(255, 240, 196, 0.35);
   background:
     linear-gradient(135deg, rgba(255, 247, 214, 0.22), transparent 18%),
     url("assets/avatar-north.png");
@@ -1399,65 +1527,72 @@ body {
 
 .seat-wind {
   display: inline-flex;
-  min-width: 20px;
-  height: 20px;
+  min-width: 18px;
+  height: 18px;
   align-items: center;
   justify-content: center;
   border-radius: 50%;
-  border: 1px solid rgba(243, 202, 116, 0.85);
-  background: rgba(104, 67, 19, 0.55);
+  border: 1px solid rgba(243, 202, 116, 0.9);
+  background: linear-gradient(180deg, rgba(140, 90, 28, 0.85), rgba(70, 44, 14, 0.9));
   color: #f7dc9d;
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 700;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.45);
 }
 
 .seat .name {
-  font-size: 18px;
-  font-weight: 700;
-  color: #ecebdc;
+  font-size: 12px;
+  font-weight: 650;
+  color: rgba(236, 235, 220, 0.88);
   line-height: 1;
   white-space: nowrap;
-  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.7);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 88px;
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.75);
 }
 
 .seat .score {
-  font-size: 48px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 92px;
+  min-height: 26px;
+  padding: 3px 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(240, 205, 127, 0.78);
+  background:
+    linear-gradient(180deg, rgba(48, 36, 18, 0.92), rgba(10, 12, 10, 0.94));
+  font-size: 15px;
   line-height: 1;
-  font-weight: 800;
-  color: #f8e4aa;
+  font-weight: 750;
+  letter-spacing: 0.02em;
+  color: #fff4d2;
   white-space: nowrap;
-  text-shadow:
-    0 2px 10px rgba(0, 0, 0, 0.7),
-    0 0 16px rgba(248, 228, 170, 0.22);
-}
-
-.seat-west .name,
-.seat-east .name {
-  font-size: 13px;
-}
-
-.seat-west .score,
-.seat-east .score {
-  font-size: 34px;
+  box-shadow:
+    0 0 0 1px rgba(20, 14, 8, 0.65),
+    0 4px 10px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255, 230, 170, 0.18);
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.65);
 }
 
 .seat-west .seat-header,
 .seat-east .seat-header {
-  justify-content: flex-start;
-  gap: 8px;
+  align-items: center;
+  gap: 6px;
 }
 
 .seat-west .seat-profile,
 .seat-east .seat-profile {
-  grid-template-columns: 56px auto;
-  gap: 5px;
+  grid-template-columns: 1fr;
+  gap: 4px;
 }
 
 .seat-west .seat-avatar,
 .seat-east .seat-avatar {
-  width: 56px;
-  height: 56px;
-  border-radius: 10px;
+  width: 64px;
+  height: 64px;
+  border-radius: 12px;
 }
 
 .seat-meta {
@@ -1551,8 +1686,9 @@ body {
   font-size: 14px;
 }
 
+/* 角区稀疏：对手手牌背改由桌墙表达，角 HUD 不再挂一排牌背 */
 .seat-hand-back {
-  display: flex;
+  display: none;
   gap: 2px;
 }
 
@@ -1613,21 +1749,21 @@ body {
 }
 
 .seat-north {
-  top: 6px;
+  top: 10px;
   left: 50%;
   transform: translateX(-50%);
-  width: 416px;
-  min-height: 66px;
-  padding: 5px 8px 6px;
+  width: auto;
+  min-height: 0;
+  padding: 0;
 }
 
 .seat-north .seat-avatar {
-  width: 58px;
-  height: 58px;
+  width: 64px;
+  height: 64px;
 }
 
 .seat-north .seat-profile {
-  grid-template-columns: 58px auto;
+  grid-template-columns: 1fr;
 }
 
 .seat-north .seat-latest-action {
@@ -1640,27 +1776,27 @@ body {
 }
 
 .seat-west {
-  top: 242px;
-  left: 16px;
-  transform: rotate(-0.8deg);
-  width: 304px;
+  top: 210px;
+  left: 18px;
+  transform: none;
+  width: auto;
 }
 
 .seat-east {
-  top: 242px;
-  right: 16px;
-  transform: rotate(0.8deg);
-  width: 318px;
+  top: 210px;
+  right: 18px;
+  transform: none;
+  width: auto;
 }
 
 .seat-south {
-  left: 22px;
-  bottom: 100px;
-  width: 320px;
+  left: 18px;
+  bottom: 118px;
+  width: auto;
 }
 
-.seat-south .score {
-  font-size: 51px;
+.seat-south .seat-latest-action {
+  justify-self: center;
 }
 
 .side-panel {
@@ -1813,44 +1949,59 @@ body {
 .hand-tiles {
   display: flex;
   justify-content: center;
-  gap: 3px;
+  gap: 4px;
   perspective: 980px;
-  transform: perspective(980px) rotateX(11deg);
+  transform: perspective(980px) rotateX(12deg);
   transform-origin: center bottom;
   transform-style: preserve-3d;
-  padding-bottom: 10px;
+  padding-bottom: 14px;
+  /* W8-B 第二刀：整排接触阴影，抬实体落桌感 */
+  filter: drop-shadow(0 16px 12px rgba(0, 0, 0, 0.38));
 }
 
 .tile {
   position: relative;
-  width: clamp(57px, 4.15vw, 74px);
-  min-height: 84px;
+  width: clamp(58px, 4.2vw, 76px);
+  min-height: 88px;
   border-radius: 8px 8px 6px 6px;
   border: 1px solid #c8b894;
+  /* W8-B 第二刀：手牌绿塑侧棱 + 更厚陶瓷叠层 */
   background:
-    linear-gradient(90deg, rgba(123, 96, 61, 0.22) 0 5%, transparent 6% 94%, rgba(123, 96, 61, 0.24) 95%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.68) 0, rgba(255, 255, 255, 0.12) 16%, transparent 19%),
+    linear-gradient(90deg, var(--tile-edge-lit) 0 5%, transparent 6% 94%, var(--tile-edge-dim) 95%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.72) 0, rgba(255, 255, 255, 0.14) 16%, transparent 19%),
     repeating-linear-gradient(0deg, rgba(120, 95, 60, 0.028) 0 1px, transparent 1px 3px),
     repeating-linear-gradient(90deg, rgba(90, 70, 40, 0.02) 0 1px, transparent 1px 4px),
-    linear-gradient(180deg, #fffaf0 0%, #f4e7cd 68%, #e6d5b2 100%);
+    linear-gradient(180deg, var(--tile-face-cream) 0%, #f4e7cd 68%, var(--tile-face-base) 100%);
   box-shadow:
-    inset 0 0 0 1px rgba(255, 255, 255, 0.48),
-    inset 3px 0 5px rgba(255, 255, 248, 0.22),
-    inset -4px 0 7px rgba(118, 92, 58, 0.24),
-    inset 0 -12px 14px rgba(160, 140, 100, 0.3),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.5),
+    inset 3px 0 5px rgba(255, 255, 248, 0.24),
+    inset -4px 0 7px rgba(118, 92, 58, 0.26),
+    inset 0 -13px 15px rgba(160, 140, 100, 0.32),
     0 1px 0 #d9caa8,
     0 2px 0 #c9ba95,
     0 4px 0 #b6a57e,
     0 6px 0 #9a8964,
-    0 8px 0 #6f6246,
-    0 12px 10px -3px rgba(0, 0, 0, 0.5),
-    0 20px 24px -8px rgba(0, 0, 0, 0.38);
+    0 8px 0 #7a6b4a,
+    0 10px 0 #5a4e36,
+    0 14px 12px -3px rgba(0, 0, 0, 0.52),
+    0 22px 26px -8px rgba(0, 0, 0, 0.4);
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 6px 4px 10px;
+  padding: 6px 4px 11px;
   cursor: pointer;
   transform: translateZ(0);
+}
+
+.tile::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  box-shadow:
+    inset 3px 0 0 rgba(58, 118, 88, 0.3),
+    inset -3px 0 0 rgba(24, 70, 50, 0.34);
 }
 
 .tile::after {
@@ -1861,13 +2012,13 @@ body {
   top: 5px;
   height: 11px;
   border-radius: 999px;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.7), transparent);
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.74), transparent);
   pointer-events: none;
 }
 
 .tile-asset--hand {
-  min-width: 30px;
-  min-height: 42px;
+  min-width: 34px;
+  min-height: 46px;
 }
 
 .tile-asset--hand .tile-asset-rank {
@@ -1883,8 +2034,8 @@ body {
 }
 
 .tile-asset--hand .tile-pattern {
-  width: 34px;
-  height: 46px;
+  width: 38px;
+  height: 50px;
 }
 
 .tile-asset--hand .tile-dot {
@@ -2447,21 +2598,56 @@ td {
 }
 
 @media (max-width: 820px) {
+  /* W8-B 第六刀·移动帧：竖屏仍是局内桌面（单排手牌 + 强桌心），非说明书 */
+  .page.table-page {
+    padding: 4px 4px 0;
+    max-width: 100%;
+    height: 100dvh;
+    min-height: 100dvh;
+    overflow: hidden;
+  }
+
   .table-page {
-    grid-template-rows: auto 1fr auto auto;
+    grid-template-rows: minmax(0, 1fr);
+  }
+
+  .table-stage {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    height: 100%;
+  }
+
+  .table-layout {
+    flex: 1 1 auto;
+    min-height: 0;
+  }
+
+  .table-stage-frame {
+    inset: 0 0 118px;
+    border-radius: 28px;
   }
 
   .table-zone {
-    min-height: 450px;
-    border-radius: 24px;
+    min-height: 0;
+    height: 100%;
+    border-radius: 22px;
+    padding: 8px 6px 4px;
+    transform: perspective(1200px) rotateX(5.2deg) scale(1.02);
+    transform-origin: center 68%;
   }
 
   .table-zone::before {
-    inset: 76px 42px 120px;
+    inset: 64px 28px 96px;
+  }
+
+  .table-zone::after {
+    inset: 8px;
+    border-radius: 18px;
   }
 
   .table-center {
-    inset: 90px 34px 122px;
+    inset: 72px 18px 88px;
     transform: none;
   }
 
@@ -2470,33 +2656,34 @@ td {
   }
 
   .center-score-disk {
-    width: 205px;
-    height: 154px;
+    width: 178px;
+    height: 134px;
+    margin-top: 8px;
   }
 
   .score-wind {
-    width: 58px;
-    font-size: 12px;
+    width: 50px;
+    font-size: 11px;
   }
 
   .score-wind span {
-    font-size: 18px;
+    font-size: 15px;
   }
 
   .score-core {
-    inset: 36px 41px;
+    inset: 30px 34px;
   }
 
   .score-round {
-    font-size: 27px;
+    font-size: 22px;
   }
 
   .score-wall-label {
-    font-size: 16px;
+    font-size: 13px;
   }
 
   #scoreCoreWall {
-    font-size: 32px;
+    font-size: 28px;
   }
 
   .latest-action-wrap {
@@ -2512,102 +2699,231 @@ td {
     font-size: 24px;
   }
 
+  .river-board {
+    margin-top: -10px;
+    padding: 4px 6px 8px;
+    transform: perspective(640px) rotateX(16deg);
+  }
+
+  .river-grid-wrap {
+    min-height: 168px;
+  }
+
+  .river-grid {
+    grid-template-columns: repeat(6, 22px);
+    gap: 2px;
+  }
+
+  .tile-mini {
+    min-width: 22px;
+    min-height: 32px;
+  }
+
+  .tile-mini.has-tile-atlas {
+    min-width: 22px;
+    min-height: 30px;
+  }
+
+  .tile-asset--mini .tile-atlas {
+    width: 20px;
+    height: 27px;
+  }
+
   .tile-face--target {
-    width: 44px;
-    height: 64px;
+    width: 36px;
+    height: 52px;
+  }
+
+  .tile-face--target.has-tile-atlas {
+    width: 40px;
+    height: 54px;
+  }
+
+  .tile-asset--target .tile-atlas {
+    width: 36px;
+    height: 48px;
   }
 
   .seat {
-    width: 152px;
-    min-height: 78px;
+    width: 78px;
+    min-height: auto;
   }
 
   .seat .name {
-    font-size: 12px;
+    font-size: 10px;
+    max-width: 64px;
   }
 
   .seat .score {
-    font-size: 21px;
-  }
-
-  .seat-latest-action {
+    min-width: 64px;
+    min-height: 20px;
+    padding: 2px 8px;
     font-size: 12px;
   }
 
+  .seat-avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+  }
+
+  .seat-west .seat-avatar,
+  .seat-east .seat-avatar,
+  .seat-north .seat-avatar {
+    width: 44px;
+    height: 44px;
+  }
+
+  .seat-latest-action {
+    font-size: 11px;
+  }
+
   .seat-north {
-    top: 8px;
+    top: 4px;
   }
 
   .seat-west {
+    top: 132px;
     left: 4px;
   }
 
   .seat-east {
+    top: 132px;
     right: 4px;
   }
 
+  .seat-south {
+    left: 6px;
+    bottom: 72px;
+  }
+
+  .table-bottom-anchor {
+    flex: 0 0 auto;
+    margin-top: -28px;
+    padding: 0 2px calc(env(safe-area-inset-bottom, 0px) + 4px);
+    z-index: 8;
+  }
+
   .hand-panel {
-    margin-top: -6px;
+    margin-top: 0;
+    padding: 2px 6px 8px;
+    border-radius: 10px 10px 0 0;
+    width: 100%;
+  }
+
+  /* 竞品/W8-A 移动：手牌单排近大透视，禁止 7×2 说明书网格 */
+  .hand-head {
+    display: none;
   }
 
   .hand-tiles {
-    display: grid;
-    grid-template-columns: repeat(7, minmax(0, 1fr));
-    gap: 4px;
+    display: flex;
+    flex-wrap: nowrap;
+    justify-content: center;
+    align-items: flex-end;
+    gap: 0;
+    overflow-x: auto;
+    overflow-y: visible;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    perspective: 720px;
+    transform: perspective(720px) rotateX(10deg);
+    transform-origin: center bottom;
+    padding: 4px 6px 6px;
+    filter: drop-shadow(0 10px 8px rgba(0, 0, 0, 0.4));
   }
 
-  .tile {
-    width: 100%;
-    min-height: 62px;
+  .hand-tiles::-webkit-scrollbar {
+    display: none;
   }
 
-  .tile-asset--hand {
-    min-width: 26px;
-    min-height: 37px;
+  .tile,
+  .tile.has-tile-atlas {
+    flex: 0 0 auto;
+    width: 30px;
+    height: 42px;
+    min-width: 30px;
+    min-height: 42px;
+    margin-left: -6px;
+  }
+
+  .hand-tiles .tile:first-child {
+    margin-left: 0;
+  }
+
+  /* 压过 .tile.has-tile-atlas .tile-atlas {height:100%}：窄屏百分比链会塌成 0 */
+  .tile.has-tile-atlas .tile-asset--hand {
+    width: 30px;
+    height: 40px;
+    min-width: 30px;
+    min-height: 40px;
+  }
+
+  .tile.has-tile-atlas .tile-asset--hand .tile-atlas {
+    width: 30px;
+    height: 40px;
   }
 
   .tile-asset--hand .tile-asset-rank {
-    font-size: 24px;
+    font-size: 14px;
   }
 
   .tile-asset--hand .tile-asset-honor {
-    font-size: 30px;
+    font-size: 18px;
   }
 
   .action-bar {
-    position: sticky;
-    bottom: 0;
+    position: relative;
     z-index: 15;
-    /* 保留可读性底晕，避免回到深色 Web 工具条面板 */
-    background: linear-gradient(180deg, rgba(5, 10, 8, 0), rgba(5, 10, 8, 0.55));
-    padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 6px);
+    margin-top: -14px;
+    margin-bottom: 0;
+    max-width: 100%;
+    gap: 8px 10px;
+    padding: 6px 8px 4px;
+    /* 底晕落在手牌上方，避免 sticky 说明书工具条 */
+    background: radial-gradient(ellipse at center, rgba(6, 18, 14, 0.62) 0%, rgba(6, 18, 14, 0.28) 52%, transparent 78%);
   }
 
+  /* 保持全局隐藏：移动帧不回显「为什么不能做？」说明条 */
   .action-reason-toggle-row {
-    display: flex;
-    justify-content: flex-end;
-    gap: 8px;
-    margin-top: 4px;
+    display: none !important;
   }
 
   .action-btn {
-    --seal-h: 46px;
-    --seal-min-w: 88px;
-    font-size: 24px;
-    min-height: 46px;
+    --seal-h: 42px;
+    --seal-min-w: 72px;
+    font-size: 22px;
+    min-height: 42px;
+    padding: 0 14px;
   }
 
   .action-main-path,
   .action-primary {
-    --seal-h: 56px;
-    --seal-min-w: 120px;
-    font-size: 32px;
+    --seal-h: 50px;
+    --seal-min-w: 104px;
+    font-size: 28px;
+    padding: 0 20px;
+  }
+
+  .action-btn[data-action-id="peng"],
+  .action-btn[data-action-id="gang"],
+  .action-btn[data-action-id="pass"] {
+    font-size: 22px;
+  }
+
+  .action-btn[data-action-id="hu"].action-main-path,
+  .action-btn[data-action-id="hu"].action-primary {
+    font-size: 28px;
+  }
+
+  .action-secondary {
+    --seal-h: 34px;
+    --seal-min-w: 72px;
+    font-size: 12px;
   }
 
   #openActionExplainDrawerBtn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
+    display: none !important;
   }
 
   .modal-actions {
