@@ -4,6 +4,7 @@
 > **关联脊骨**：`docs/product/spines/majiang-dual-surface-target.md`  
 > **波次**：`docs/product/waves/majiang-dual-surface-W9.md`  
 > **规格**：`docs/superpowers/specs/2026-11-17-majiang-dual-surface-design.md`  
+> **验收矩阵**：`docs/product/caps/majiang-dual-surface-acceptance-matrix.md`  
 > **现状（2026-11-17）**：路径 **A** 人批；`CAP-ARCH-LEDGER` **已落地**（脊骨/本表/W9/规格齐）；`CAP-ENG-SESSION` **已落地**。旧 `majiang-webui-cap-tasks.md` **只读防回退**，本波不取 `CAP-UI-*`。下一切片：`CAP-ENG-SNAP`。
 
 ## 1. 怎么用
