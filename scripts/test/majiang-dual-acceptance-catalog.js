@@ -62,7 +62,7 @@ const CASES = [
     title: '双表面同引擎契约可重复',
     tier: 'smoke',
     capIds: ['CAP-ACC-DUAL'],
-    status: 'pending',
+    status: 'green',
   },
 ];
 

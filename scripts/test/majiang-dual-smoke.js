@@ -196,6 +196,107 @@ const RUNNERS = {
       );
     }
   },
+
+  /**
+   * MJ-ACC-DUAL-01：CLI 训练与 API 人测共用同一 GameSession 契约；
+   * 且约定 default 子集（ENG/SNAP/CLI-01）catalog 已绿。禁止装绿。
+   */
+  'MJ-ACC-DUAL-01': async () => {
+    // eslint-disable-next-line global-require, import/no-extraneous-dependencies
+    require('ts-node/register/transpile-only');
+    // eslint-disable-next-line global-require
+    const sinon = require('sinon');
+    // eslint-disable-next-line global-require
+    const { getAcceptanceCases, isRunnable } = require('./majiang-dual-acceptance-catalog');
+    // eslint-disable-next-line global-require
+    const { GameState } = require('../../src/majiang/core/game');
+    // eslint-disable-next-line global-require
+    const { GameSession } = require('../../src/majiang/session/game-session');
+    // eslint-disable-next-line global-require
+    const { runAutoTraining } = require('../../src/majiang/session/auto-train');
+    // eslint-disable-next-line global-require
+    const { createMajiangApiApp } = require('../../src/majiang/ui/api-server');
+    // eslint-disable-next-line global-require
+    const input = require('../../src/majiang/ui/input');
+
+    const SNAP_KEYS = [
+      'gameId',
+      'phase',
+      'seats',
+      'selfHand',
+      'discardRiver',
+      'availableActions',
+      'resultSummary',
+    ];
+
+    const byId = Object.fromEntries(getAcceptanceCases().map((c) => [c.id, c]));
+    for (const id of ['MJ-ACC-ENG-01', 'MJ-ACC-SNAP-01', 'MJ-ACC-CLI-01']) {
+      if (!byId[id] || !isRunnable(byId[id])) {
+        throw new Error(
+          `default subset not green: ${id} status=${byId[id] && byId[id].status}`
+        );
+      }
+    }
+
+    const consoleLogStub = sinon.stub(console, 'log');
+    const askQuestionStub = sinon.stub(input, 'askQuestion').resolves('n');
+    try {
+      const { session: cliSession } = await runAutoTraining({ rounds: 1 });
+      if (!(cliSession instanceof GameSession)) {
+        throw new Error('CLI path did not return GameSession instance');
+      }
+      if (cliSession.mode !== 'auto') {
+        throw new Error(`CLI session mode expected auto, got ${cliSession.mode}`);
+      }
+      if (cliSession.getState() !== GameState.ENDED) {
+        throw new Error('CLI Session did not reach ENDED');
+      }
+      const cliSnap = cliSession.getTableSnapshot();
+      for (const key of SNAP_KEYS) {
+        if (!(key in cliSnap)) {
+          throw new Error(`CLI snapshot missing key ${key}`);
+        }
+      }
+      if (cliSnap.phase !== 'ended') {
+        throw new Error(`CLI snapshot phase expected ended, got ${cliSnap.phase}`);
+      }
+
+      const { app, store } = createMajiangApiApp({ servePrototype: false });
+      const server = http.createServer(app);
+      await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
+      const { port } = server.address();
+      const base = `http://127.0.0.1:${port}`;
+
+      try {
+        const created = await requestJson(base, 'POST', '/games');
+        if (created.status !== 201 || !created.json.id) {
+          throw new Error(`POST /games failed: status=${created.status}`);
+        }
+        const apiSession = store.get(created.json.id);
+        if (!(apiSession instanceof GameSession)) {
+          throw new Error('API store does not hold GameSession instance');
+        }
+        if (apiSession.mode !== 'api') {
+          throw new Error(`API session mode expected api, got ${apiSession.mode}`);
+        }
+        for (const key of SNAP_KEYS) {
+          if (!(key in created.json.snapshot)) {
+            throw new Error(`API snapshot missing key ${key}`);
+          }
+        }
+        if (created.json.snapshot.gameId !== created.json.id) {
+          throw new Error('API snapshot.gameId must equal server game id');
+        }
+      } finally {
+        await new Promise((resolve, reject) =>
+          server.close((err) => (err ? reject(err) : resolve()))
+        );
+      }
+    } finally {
+      consoleLogStub.restore();
+      askQuestionStub.restore();
+    }
+  },
 };
 
 async function runCase(acceptanceCase) {

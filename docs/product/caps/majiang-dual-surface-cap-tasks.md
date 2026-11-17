@@ -2,10 +2,10 @@
 
 > **角色**：CLI 训练 + Web 人测 / 共用引擎抬顶时的任务排队源；Agent / `/loop` 只从本表取下一切片。  
 > **关联脊骨**：`docs/product/spines/majiang-dual-surface-target.md`  
-> **波次**：`docs/product/waves/majiang-dual-surface-W9.md` · `docs/product/waves/majiang-dual-surface-W10.md`  
+> **波次**：`docs/product/waves/majiang-dual-surface-W9.md` · `docs/product/waves/majiang-dual-surface-W10.md` · `docs/product/waves/majiang-dual-surface-W11.md`  
 > **规格**：`docs/superpowers/specs/2026-11-17-majiang-dual-surface-design.md`  
 > **验收矩阵**：`docs/product/caps/majiang-dual-surface-acceptance-matrix.md`  
-> **现状（2026-11-17）**：路径 **A** 人批；`CAP-ARCH-LEDGER` / `CAP-ENG-SESSION` / `CAP-ENG-SNAP` / `CAP-CLI-TRAIN` / `CAP-API-GAME` / `CAP-WEB-BRIDGE` / `CAP-WEB-LOBBY` **已落地**。旧 `majiang-webui-cap-tasks.md` **只读防回退**，本波不取 `CAP-UI-*`。下一切片：`CAP-ACC-DUAL`。
+> **现状（2026-11-17）**：路径 **A** 人批；`CAP-ARCH-LEDGER` / `CAP-ENG-SESSION` / `CAP-ENG-SNAP` / `CAP-CLI-TRAIN` / `CAP-API-GAME` / `CAP-WEB-BRIDGE` / `CAP-WEB-LOBBY` / `CAP-ACC-DUAL` **已落地**。旧 `majiang-webui-cap-tasks.md` **只读防回退**，本波不取 `CAP-UI-*`。下一切片：等人批 `CAP-DUAL-GRAD`。
 
 ## 1. 怎么用
 
@@ -38,7 +38,7 @@ flowchart LR
 | `CAP-API-GAME` | G-D4 / GR-D4 | `MJ-API-GAME-01` | API | **4**（可与 3 并行） | **已落地** |
 | `CAP-WEB-BRIDGE` | G-D5 / GR-D5 | `MJ-WEB-BRIDGE-01` | Web·U1 | **5** | **已落地** |
 | `CAP-WEB-LOBBY` | G-D6 / GR-D6 | `MJ-WEB-LOBBY-01` | Web·U0 | **6** | **已落地** |
-| `CAP-ACC-DUAL` | G-D7 / GR-D7 | `MJ-ACC-DUAL-01` | 验收 | **7** | 待做 |
+| `CAP-ACC-DUAL` | G-D7 / GR-D7 | `MJ-ACC-DUAL-01` | 验收 | **7** | **已落地** |
 | `CAP-DUAL-GRAD` | GR-D8 | （收官） | — | **8 · 仅人批** | 待人批 |
 
 ## 3. 各任务封顶线（可观察）

@@ -1,7 +1,7 @@
 # 麻将双表面 — 目标差距脊骨（封顶）
 
 > **状态**：人批抬顶（2026-11-17 · 路径 A）· 账本施工中  
-> **关联**：`docs/product/caps/majiang-dual-surface-cap-tasks.md`、`docs/product/waves/majiang-dual-surface-W9.md`、`docs/product/waves/majiang-dual-surface-W10.md`  
+> **关联**：`docs/product/caps/majiang-dual-surface-cap-tasks.md`、`docs/product/waves/majiang-dual-surface-W9.md`、`docs/product/waves/majiang-dual-surface-W10.md`、`docs/product/waves/majiang-dual-surface-W11.md`  
 > **规格**：`docs/superpowers/specs/2026-11-17-majiang-dual-surface-design.md`  
 > **流程**：`docs/product/delivery-flow.md`  
 > **与旧脊骨关系**：`majiang-webui-target.md` 视觉一段/二段已毕业；本脊骨另立「CLI+Web 共用引擎」天花板，不重开 `CAP-UI-COMP`
@@ -42,7 +42,7 @@
 | G-D4 | 对局 API | API | `MJ-API-GAME-01` | `CAP-API-GAME` | **已落地** |
 | G-D5 | Web handlers 接 API | Web·U1 | `MJ-WEB-BRIDGE-01` | `CAP-WEB-BRIDGE` | **已落地** |
 | G-D6 | 大厅产品入口 | Web·U0 | `MJ-WEB-LOBBY-01` | `CAP-WEB-LOBBY` | **已落地** |
-| G-D7 | 双表面验收 | 验收 | `MJ-ACC-DUAL-01` | `CAP-ACC-DUAL` | 待做 |
+| G-D7 | 双表面验收 | 验收 | `MJ-ACC-DUAL-01` | `CAP-ACC-DUAL` | **已落地** |
 | G-D8 | 人批双表面毕业 | 收官 | — | `CAP-DUAL-GRAD` | 待人批 |
 
 ## 5. 版式 / 观感合同
@@ -55,6 +55,6 @@
 
 ## 6. 下一刀建议
 
-默认队列下一切片：`CAP-ACC-DUAL`（其后等人批 `CAP-DUAL-GRAD`）。  
-自动化：`/loop` 只从 `majiang-dual-surface-cap-tasks.md` 取下一条 `CAP-*`。  
+默认队列下一切片：等人批 `CAP-DUAL-GRAD`（`CAP-ACC-DUAL` / `MJ-ACC-DUAL-01` 已绿）。  
+自动化：`/loop` 只从 `majiang-dual-surface-cap-tasks.md` 取下一条 `CAP-*`；**禁止自批** `CAP-DUAL-GRAD`。  
 验收账本：`docs/product/caps/majiang-dual-surface-acceptance-matrix.md`；命令：`npm run majiang:dual:smoke` / `majiang:dual:nightly`。

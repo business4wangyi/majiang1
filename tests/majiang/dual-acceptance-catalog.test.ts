@@ -27,6 +27,8 @@ describe('dual acceptance catalog (MJ-ACC matrix mirror)', function () {
     expect(catalog.isRunnable(byId['MJ-ACC-SNAP-01'])).to.equal(true);
     expect(catalog.isRunnable(byId['MJ-ACC-WEB-01'])).to.equal(true);
     expect(catalog.isRunnable(byId['MJ-ACC-WEB-02'])).to.equal(true);
+    expect(byId['MJ-ACC-DUAL-01'].status).to.equal('green');
+    expect(catalog.isRunnable(byId['MJ-ACC-DUAL-01'])).to.equal(true);
   });
 
   it('casesForTier 按档位过滤', function () {

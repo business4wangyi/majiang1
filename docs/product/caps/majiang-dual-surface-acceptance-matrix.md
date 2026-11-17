@@ -28,7 +28,7 @@
 | `MJ-ACC-API-01` | 对局 API 权威在服务端 | smoke | `CAP-API-GAME` | 已绿 |
 | `MJ-ACC-WEB-01` | 人测主链路完局 | smoke | `CAP-WEB-BRIDGE` + `CAP-WEB-LOBBY`（大厅主 CTA） | 已绿 |
 | `MJ-ACC-WEB-02` | 非法动作被拒且不脏写 | smoke | `CAP-API-GAME` + `CAP-WEB-BRIDGE` | 已绿 |
-| `MJ-ACC-DUAL-01` | 双表面同引擎契约可重复 | smoke | `CAP-ACC-DUAL` | 待实现 |
+| `MJ-ACC-DUAL-01` | 双表面同引擎契约可重复 | smoke | `CAP-ACC-DUAL` | 已绿 |
 
 ## 3. 封顶标准正文
 
@@ -77,8 +77,7 @@
 ### `MJ-ACC-DUAL-01`
 
 - **通过**：同一 Session 契约被 CLI 与 API 共用的可观察证据 + smoke 可重复；且约定 default 子集（至少 ENG-01，落地后含 SNAP/CLI-01）已绿。
-- **挂测（落地后）**：`CAP-ACC-DUAL` 收束；不替代各能力 CAP。
-- **未落地**：smoke 显式 skip；禁止装绿。
+- **挂测**：`npm run majiang:dual:smoke`（`MJ-ACC-DUAL-01` runner：catalog 子集绿 + CLI `runAutoTraining` / API store 均为 `GameSession` + 同快照键）；轻断言 `tests/majiang/dual-acc.test.ts`；`CAP-ACC-DUAL` 收束；不替代各能力 CAP；**仍等人批** `CAP-DUAL-GRAD`。
 
 ## 4. 跳过 / 失败
 
