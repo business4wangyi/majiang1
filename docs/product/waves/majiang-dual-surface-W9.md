@@ -5,7 +5,7 @@
 | 主题 | majiang-dual-surface |
 | 波次 | W9 |
 | UI 层 | 流程 + 引擎（本波首刀不改大厅视觉大改；大厅属批序 6） |
-| 施工状态 | **施工中** · 人批路径 A（2026-11-17） |
+| 施工状态 | Session 已关；Snapshot 另波/续刀 |
 | 封顶任务 | `CAP-ARCH-LEDGER` → `CAP-ENG-SESSION`（本波默认开到 Session 可验） |
 | 原型 / 引擎 | `docs/majiang/web-ui-prototype/` 本波可动桥接准备；权威仍在 `src/majiang/core/` |
 | 关联旧视觉 | `majiang-webui-W8` 已关；本波不重开 COMP |
@@ -34,7 +34,7 @@
 | 切片 | 状态 |
 |------|------|
 | `MJ-DUAL-LEDGER-01` | **已落地**（2026-11-17） |
-| `MJ-ENG-SESSION-01` | **下一切片**（待实现计划后人审开干） |
+| `MJ-ENG-SESSION-01` | **已落地** |
 
 ## 下波预告（不施工）
 

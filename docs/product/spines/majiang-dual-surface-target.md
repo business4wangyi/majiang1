@@ -14,7 +14,7 @@
 
 | ID | 标准 | 状态 |
 |----|------|------|
-| GR-D1 | 无头 Session 可驱动开局→出牌→响应→AI 步→终局，不依赖 readline/console 显示 | 待做 |
+| GR-D1 | 无头 Session 可驱动开局→出牌→响应→AI 步→终局，不依赖 readline/console 显示 | **已关**（`tests/majiang/game-session.test.ts`） |
 | GR-D2 | 快照合同可映射现有 `view-model-adapter`；动作可用性来自引擎 | 待做 |
 | GR-D3 | CLI 自动对弈/训练主路径改走 Session，训练统计可回归 | 待做 |
 | GR-D4 | 本机对局 API（HTTP，可选 WS）权威在 Node；Web 只提交动作与渲染 | 待做 |
@@ -36,7 +36,7 @@
 | 差距 | 摘要 | 层 | 切片 | 封顶任务 | 状态 |
 |------|------|----|------|----------|------|
 | G-D0 | 新脊骨/任务表/W9 落盘；旧 UI 队列标只读 | 流程 | `MJ-DUAL-LEDGER-01` | `CAP-ARCH-LEDGER` | **已落地** |
-| G-D1 | 无头 Session 从 CLI 耦合中抽出 | 引擎 | `MJ-ENG-SESSION-01` | `CAP-ENG-SESSION` | 待做 |
+| G-D1 | 无头 Session 从 CLI 耦合中抽出 | 引擎 | `MJ-ENG-SESSION-01` | `CAP-ENG-SESSION` | **已落地** |
 | G-D2 | Snapshot 合同 | 契约 | `MJ-ENG-SNAP-01` | `CAP-ENG-SNAP` | 待做 |
 | G-D3 | CLI 训练接 Session | CLI | `MJ-CLI-TRAIN-01` | `CAP-CLI-TRAIN` | 待做 |
 | G-D4 | 对局 API | API | `MJ-API-GAME-01` | `CAP-API-GAME` | 待做 |
@@ -55,5 +55,5 @@
 
 ## 6. 下一刀建议
 
-默认队列下一切片：`CAP-ENG-SESSION`（账本已关）。  
+默认队列下一切片：`CAP-ENG-SNAP`。  
 自动化：`/loop` 只从 `majiang-dual-surface-cap-tasks.md` 取下一条 `CAP-*`。

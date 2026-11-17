@@ -12,6 +12,7 @@ majiang/
 ├── config/    # 游戏配置
 ├── strategy/  # AI策略（AlphaZero，多阶段训练）
 ├── ui/        # 用户界面
+├── session/   # 无头对局会话（CLI/API 共用，不进浏览器）
 └── tools/     # 工具函数
 ```
 
@@ -226,7 +227,8 @@ graph TD
 - `strategy/` 提供AI策略，被 `ui/` 使用
 - `tools/` 提供工具函数，可被其他模块使用
 
-**依赖方向**：`ui/ → strategy/ → core/ → config/`（单向依赖，避免循环）
+**依赖方向**：`ui/ → strategy/ → core/ → config/`（单向依赖，避免循环）  
+`session/ → ui/GameEventHandler + core/`（Session 编排，规则仍在 core）。
 
 ## 📋 文件清单
 

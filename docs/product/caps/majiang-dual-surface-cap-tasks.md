@@ -4,7 +4,7 @@
 > **关联脊骨**：`docs/product/spines/majiang-dual-surface-target.md`  
 > **波次**：`docs/product/waves/majiang-dual-surface-W9.md`  
 > **规格**：`docs/superpowers/specs/2026-11-17-majiang-dual-surface-design.md`  
-> **现状（2026-11-17）**：路径 **A** 人批；`CAP-ARCH-LEDGER` **已落地**（脊骨/本表/W9/规格齐）。旧 `majiang-webui-cap-tasks.md` **只读防回退**，本波不取 `CAP-UI-*`。下一切片：`CAP-ENG-SESSION`。
+> **现状（2026-11-17）**：路径 **A** 人批；`CAP-ARCH-LEDGER` **已落地**（脊骨/本表/W9/规格齐）；`CAP-ENG-SESSION` **已落地**。旧 `majiang-webui-cap-tasks.md` **只读防回退**，本波不取 `CAP-UI-*`。下一切片：`CAP-ENG-SNAP`。
 
 ## 1. 怎么用
 
@@ -31,7 +31,7 @@ flowchart LR
 | 封顶任务 ID | 脊骨差距 | 切片 | 层 | 建议批序 | 账本状态 |
 |-------------|----------|------|----|----------|----------|
 | `CAP-ARCH-LEDGER` | G-D0 | `MJ-DUAL-LEDGER-01` | 流程 | **0** | **已落地** |
-| `CAP-ENG-SESSION` | G-D1 / GR-D1 | `MJ-ENG-SESSION-01` | 引擎 | **1** | 待做 |
+| `CAP-ENG-SESSION` | G-D1 / GR-D1 | `MJ-ENG-SESSION-01` | 引擎 | **1** | **已落地** |
 | `CAP-ENG-SNAP` | G-D2 / GR-D2 | `MJ-ENG-SNAP-01` | 契约 | **2** | 待做 |
 | `CAP-CLI-TRAIN` | G-D3 / GR-D3 | `MJ-CLI-TRAIN-01` | CLI | **3** | 待做 |
 | `CAP-API-GAME` | G-D4 / GR-D4 | `MJ-API-GAME-01` | API | **4**（可与 3 并行） | 待做 |
