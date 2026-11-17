@@ -20,7 +20,7 @@
 | GR-D4 | 本机对局 API（HTTP，可选 WS）权威在 Node；Web 只提交动作与渲染 | 待做 |
 | GR-D5 | Web 原型去掉假 `waiting_ai` 死循环；人测可打完一局到结算 | 待做 |
 | GR-D6 | 大厅为可落地产品入口（主 CTA + 固定配置；诊断折叠） | 待做 |
-| GR-D7 | 双表面验收：引擎契约测 + Web 人测主链路可自动化 | 待做 |
+| GR-D7 | 双表面验收：引擎契约测 + Web 人测主链路可自动化 | 待做（矩阵+smoke/nightly 脚手架已挂；能力跟 CAP 批序变绿） |
 | GR-D8 | 人明确批准「双表面毕业」；Agent / `/loop` 不得自批 | 待人批 |
 
 ## 3. 硬不做
@@ -56,4 +56,5 @@
 ## 6. 下一刀建议
 
 默认队列下一切片：`CAP-ENG-SNAP`。  
-自动化：`/loop` 只从 `majiang-dual-surface-cap-tasks.md` 取下一条 `CAP-*`。
+自动化：`/loop` 只从 `majiang-dual-surface-cap-tasks.md` 取下一条 `CAP-*`。  
+验收账本：`docs/product/caps/majiang-dual-surface-acceptance-matrix.md`；命令：`npm run majiang:dual:smoke` / `majiang:dual:nightly`。

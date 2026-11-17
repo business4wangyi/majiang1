@@ -1,6 +1,6 @@
 # 设计：麻将双表面功能验收测试模块
 
-> **状态**：设计已口头批准（§1–§4 · 2026-11-17「符合」）；待人审本规格后写实现计划  
+> **状态**：设计已批准；实现计划见 `docs/superpowers/plans/2026-11-17-majiang-dual-surface-acceptance.md` 
 > **日期**：2026-11-17  
 > **父设计**：`docs/superpowers/specs/2026-11-17-majiang-dual-surface-design.md`  
 > **脊骨**：`docs/product/spines/majiang-dual-surface-target.md`  
