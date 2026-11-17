@@ -1,7 +1,7 @@
 # 麻将双表面 — 目标差距脊骨（封顶）
 
 > **状态**：人批抬顶（2026-11-17 · 路径 A）· 账本施工中  
-> **关联**：`docs/product/caps/majiang-dual-surface-cap-tasks.md`、`docs/product/waves/majiang-dual-surface-W9.md`  
+> **关联**：`docs/product/caps/majiang-dual-surface-cap-tasks.md`、`docs/product/waves/majiang-dual-surface-W9.md`、`docs/product/waves/majiang-dual-surface-W10.md`  
 > **规格**：`docs/superpowers/specs/2026-11-17-majiang-dual-surface-design.md`  
 > **流程**：`docs/product/delivery-flow.md`  
 > **与旧脊骨关系**：`majiang-webui-target.md` 视觉一段/二段已毕业；本脊骨另立「CLI+Web 共用引擎」天花板，不重开 `CAP-UI-COMP`
@@ -19,7 +19,7 @@
 | GR-D3 | CLI 自动对弈/训练主路径改走 Session，训练统计可回归 | **已落地** |
 | GR-D4 | 本机对局 API（HTTP，可选 WS）权威在 Node；Web 只提交动作与渲染 | 待做 |
 | GR-D5 | Web 原型去掉假 `waiting_ai` 死循环；人测可打完一局到结算 | 待做 |
-| GR-D6 | 大厅为可落地产品入口（主 CTA + 固定配置；诊断折叠） | 待做 |
+| GR-D6 | 大厅为可落地产品入口（主 CTA + 固定配置；诊断折叠） | **已关**（`tests/majiang/web-lobby.test.ts` / `MJ-WEB-LOBBY-01`） |
 | GR-D7 | 双表面验收：引擎契约测 + Web 人测主链路可自动化 | 待做（矩阵+smoke/nightly 脚手架已挂；能力跟 CAP 批序变绿） |
 | GR-D8 | 人明确批准「双表面毕业」；Agent / `/loop` 不得自批 | 待人批 |
 
@@ -41,7 +41,7 @@
 | G-D3 | CLI 训练接 Session | CLI | `MJ-CLI-TRAIN-01` | `CAP-CLI-TRAIN` | **已落地** |
 | G-D4 | 对局 API | API | `MJ-API-GAME-01` | `CAP-API-GAME` | **已落地** |
 | G-D5 | Web handlers 接 API | Web·U1 | `MJ-WEB-BRIDGE-01` | `CAP-WEB-BRIDGE` | **已落地** |
-| G-D6 | 大厅产品入口 | Web·U0 | `MJ-WEB-LOBBY-01` | `CAP-WEB-LOBBY` | 待做 |
+| G-D6 | 大厅产品入口 | Web·U0 | `MJ-WEB-LOBBY-01` | `CAP-WEB-LOBBY` | **已落地** |
 | G-D7 | 双表面验收 | 验收 | `MJ-ACC-DUAL-01` | `CAP-ACC-DUAL` | 待做 |
 | G-D8 | 人批双表面毕业 | 收官 | — | `CAP-DUAL-GRAD` | 待人批 |
 
@@ -50,11 +50,11 @@
 | 合同 | 状态 |
 |------|------|
 | 局内视觉 · 一段/二段 | **沿用已毕业**（防回退；本脊骨不施工视觉冲顶） |
-| 大厅 U0 | 待 `CAP-WEB-LOBBY` |
+| 大厅 U0 | **已落地**（`CAP-WEB-LOBBY`；非视觉冲顶） |
 | 引擎/API 契约 | Snapshot **已落地**；API **已落地**（`CAP-API-GAME`）；Web 桥 **已落地**（`CAP-WEB-BRIDGE`） |
 
 ## 6. 下一刀建议
 
-默认队列下一切片：`CAP-WEB-LOBBY`（其后双表面验收）。  
+默认队列下一切片：`CAP-ACC-DUAL`（其后等人批 `CAP-DUAL-GRAD`）。  
 自动化：`/loop` 只从 `majiang-dual-surface-cap-tasks.md` 取下一条 `CAP-*`。  
 验收账本：`docs/product/caps/majiang-dual-surface-acceptance-matrix.md`；命令：`npm run majiang:dual:smoke` / `majiang:dual:nightly`。

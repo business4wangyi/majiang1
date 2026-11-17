@@ -21,30 +21,29 @@
 
     <section id="lobbyPage" class="page lobby-page">
       <h1>麻将对局大厅</h1>
-      <div class="lobby-cards">
-        <article class="card">
-          <h2>对局配置摘要</h2>
-          <ul>
-            <li>玩家数：<span id="cfgPlayers"></span></li>
-            <li>AI 类型：<span id="cfgAiType"></span></li>
-            <li>规则集：<span id="cfgRuleSet"></span></li>
-            <li>起始分：<span id="cfgBaseScore"></span></li>
-          </ul>
-          <p class="fixed-config">当前版本固定配置</p>
-          <p id="lobbyError" class="lobby-error hidden"></p>
-          <button id="startGameBtn" type="button" class="primary-btn">开始对局</button>
-        </article>
-        <article class="card">
-          <h2>最近对局</h2>
-          <p id="recentGamesEmpty">暂无最近对局，开始一局后会在这里显示。</p>
-          <ul id="recentGamesList" class="hidden"></ul>
-        </article>
-        <article class="card">
-          <h2>诊断入口</h2>
-          <button id="lobbyDiagBtn" type="button" class="ghost-btn">查看状态快照</button>
-          <pre id="lobbyDiagOutput" class="diagnostics-output">等待诊断操作...</pre>
-        </article>
-      </div>
+      <article class="card lobby-hero">
+        <h2>开始新对局</h2>
+        <p class="lobby-config-lead">固定配置摘要（本版不可改）</p>
+        <ul class="lobby-config-list">
+          <li>玩家数：<span id="cfgPlayers"></span></li>
+          <li>AI 类型：<span id="cfgAiType"></span></li>
+          <li>规则集：<span id="cfgRuleSet"></span></li>
+          <li>起始分：<span id="cfgBaseScore"></span></li>
+        </ul>
+        <p class="fixed-config">当前版本固定配置</p>
+        <p id="lobbyError" class="lobby-error hidden"></p>
+        <button id="startGameBtn" type="button" class="primary-btn">开始对局</button>
+      </article>
+      <details class="lobby-secondary card">
+        <summary>最近对局</summary>
+        <p id="recentGamesEmpty">暂无最近对局，开始一局后会在这里显示。</p>
+        <ul id="recentGamesList" class="hidden"></ul>
+      </details>
+      <details id="lobbyDiagDetails" class="lobby-secondary lobby-diagnostics card">
+        <summary>诊断入口</summary>
+        <button id="lobbyDiagBtn" type="button" class="ghost-btn">查看状态快照</button>
+        <pre id="lobbyDiagOutput" class="diagnostics-output hidden">等待诊断操作...</pre>
+      </details>
     </section>
 
     <section id="tablePage" class="page table-page hidden" aria-busy="false">

@@ -45,6 +45,7 @@ const appState = {
   gameCreationHandler: null,
   contextExpanded: false,
   diagnosticsExpanded: false,
+  lobbyDiagnosticsExpanded: false,
   sideTab: "events",
   sidePanelExpanded: false,
   showMoreActions: false,
@@ -411,7 +412,17 @@ function renderLobby() {
     });
   }
 
-  document.getElementById("lobbyDiagOutput").textContent = JSON.stringify({ phase: appState.phase, lobby: appState.lobby }, null, 2);
+  const diagDetails = document.getElementById("lobbyDiagDetails");
+  const diagOutput = document.getElementById("lobbyDiagOutput");
+  if (diagDetails) {
+    diagDetails.open = !!appState.lobbyDiagnosticsExpanded;
+  }
+  if (appState.lobbyDiagnosticsExpanded) {
+    diagOutput.classList.remove("hidden");
+    diagOutput.textContent = JSON.stringify({ phase: appState.phase, lobby: appState.lobby }, null, 2);
+  } else {
+    diagOutput.classList.add("hidden");
+  }
 }
 
 function renderStatus(model) {
@@ -1112,8 +1123,11 @@ async function createGame() {
   } catch (err) {
     appState.phase = "lobby_error";
     appState.route = "lobby";
+    appState.lobbyDiagnosticsExpanded = true;
     showToast("创建对局失败", "error");
-    document.getElementById("lobbyDiagOutput").textContent = JSON.stringify({ error: String(err && err.message ? err.message : err), phase: appState.phase }, null, 2);
+    const out = document.getElementById("lobbyDiagOutput");
+    out.classList.remove("hidden");
+    out.textContent = JSON.stringify({ error: String(err && err.message ? err.message : err), phase: appState.phase }, null, 2);
     rerender();
   }
 }
@@ -1174,8 +1188,23 @@ async function submitAction(actionId) {
 
 function bindEvents() {
   document.getElementById("startGameBtn").addEventListener("click", createGame);
+  const lobbyDiagDetails = document.getElementById("lobbyDiagDetails");
+  if (lobbyDiagDetails) {
+    lobbyDiagDetails.addEventListener("toggle", () => {
+      appState.lobbyDiagnosticsExpanded = lobbyDiagDetails.open;
+      if (!lobbyDiagDetails.open) {
+        document.getElementById("lobbyDiagOutput").classList.add("hidden");
+      }
+      rerender();
+    });
+  }
   document.getElementById("lobbyDiagBtn").addEventListener("click", () => {
-    document.getElementById("lobbyDiagOutput").textContent = JSON.stringify({ lobby: appState.lobby, phase: appState.phase }, null, 2);
+    appState.lobbyDiagnosticsExpanded = true;
+    const out = document.getElementById("lobbyDiagOutput");
+    out.classList.remove("hidden");
+    out.textContent = JSON.stringify({ lobby: appState.lobby, phase: appState.phase }, null, 2);
+    if (lobbyDiagDetails) lobbyDiagDetails.open = true;
+    rerender();
   });
 
   document.querySelectorAll("[data-action-id]").forEach((btn) => {
@@ -1568,6 +1597,7 @@ window.resetMajiangPrototype = function resetMajiangPrototype() {
   appState.inlineError = null;
   appState.contextExpanded = false;
   appState.diagnosticsExpanded = false;
+  appState.lobbyDiagnosticsExpanded = false;
   appState.sideTab = "events";
   appState.sidePanelExpanded = false;
   appState.showMoreActions = false;
