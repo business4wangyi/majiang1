@@ -16,21 +16,42 @@ import {
 
 export type GameSessionMode = 'auto' | 'api';
 
-/** 测试/显式 API：固定副露/胡响应窗；默认对局勿传 */
-export type MeldFixtureId = 'peng-ready' | 'chi-ready' | 'hu-ready';
+/** 测试/显式 API：会话夹具 id（含后续 catalog）；默认对局勿传 */
+export type SessionFixtureId =
+  | 'peng-ready'
+  | 'chi-ready'
+  | 'hu-ready'
+  | 'pass-ready'
+  | 'gang-ready'
+  | 'tsumo-ready'
+  | 'draw-ready'
+  | 'discard-ready'
+  | 'angang-ready';
 
-export const MELD_FIXTURE_IDS: readonly MeldFixtureId[] = [
+/** 兼容别名：避免一次改爆调用方 */
+export type MeldFixtureId = SessionFixtureId;
+
+/** 已安装夹具白名单；未装 ID 不列入，避免 catalog 误用 */
+export const MELD_FIXTURE_IDS: readonly SessionFixtureId[] = [
   'peng-ready',
   'chi-ready',
   'hu-ready',
+  'pass-ready',
+  'gang-ready',
+  'tsumo-ready',
+  'draw-ready',
+  'discard-ready',
+  'angang-ready',
 ] as const;
+
+export const SESSION_FIXTURE_IDS = MELD_FIXTURE_IDS;
 
 export interface GameSessionOptions {
   mode?: GameSessionMode;
   /** api 模式：稳定对局 id，写入快照 gameId */
   gameId?: string;
-  /** 仅测试/显式：开局后装入能碰/能吃响应窗 */
-  fixture?: MeldFixtureId;
+  /** 仅测试/显式：开局后装入响应窗/决策点夹具 */
+  fixture?: SessionFixtureId;
 }
 
 /** CAP-API-GAME / CAP-WEB-BRIDGE：客户端提交的动作（状态机仍在服务端 Session） */
@@ -48,13 +69,13 @@ export class SessionActionError extends Error {
   }
 }
 
-export function parseMeldFixture(raw: unknown): MeldFixtureId | undefined {
+export function parseMeldFixture(raw: unknown): SessionFixtureId | undefined {
   if (raw === undefined || raw === null || raw === '') return undefined;
   if (typeof raw !== 'string') {
     throw new SessionActionError(`invalid fixture: ${String(raw)}`);
   }
   if ((MELD_FIXTURE_IDS as readonly string[]).includes(raw)) {
-    return raw as MeldFixtureId;
+    return raw as SessionFixtureId;
   }
   throw new SessionActionError(`unknown fixture: ${raw}`);
 }
@@ -75,7 +96,7 @@ export class GameSession {
   readonly game: Game;
   readonly mode: GameSessionMode;
   readonly gameId: string;
-  readonly fixture?: MeldFixtureId;
+  readonly fixture?: SessionFixtureId;
   private readonly handler: GameEventHandler;
   private started = false;
 
@@ -84,7 +105,7 @@ export class GameSession {
     handler: GameEventHandler,
     mode: GameSessionMode,
     gameId: string,
-    fixture?: MeldFixtureId
+    fixture?: SessionFixtureId
   ) {
     this.game = game;
     this.handler = handler;
@@ -134,6 +155,18 @@ export class GameSession {
       this.installChiReadyFixture();
     } else if (this.fixture === 'hu-ready') {
       this.installHuReadyFixture();
+    } else if (this.fixture === 'pass-ready') {
+      this.installPassReadyFixture();
+    } else if (this.fixture === 'gang-ready') {
+      this.installGangReadyFixture();
+    } else if (this.fixture === 'tsumo-ready') {
+      this.installTsumoReadyFixture();
+    } else if (this.fixture === 'draw-ready') {
+      this.installDrawReadyFixture();
+    } else if (this.fixture === 'discard-ready') {
+      this.installDiscardReadyFixture();
+    } else if (this.fixture === 'angang-ready') {
+      this.installAngangReadyFixture();
     }
   }
 
@@ -163,6 +196,10 @@ export class GameSession {
       await this.applyHumanResponse(action.id);
     } else if (action.id === 'discard') {
       await this.applyHumanDiscard(action.tileIndex);
+    } else if (action.id === 'hu') {
+      await this.applyHumanTsumoHu();
+    } else if (action.id === 'gang') {
+      await this.applyHumanTurnGang();
     } else {
       throw new SessionActionError(`unsupported action: ${action.id}`);
     }
@@ -226,6 +263,46 @@ export class GameSession {
       .map((p) => (p.discardedTiles || []).map((t) => t.toString()).join(','))
       .join('|');
     return `${this.game.state}:${this.game.currentPlayerIndex}:${hands}:${rivers}`;
+  }
+
+  /**
+   * 自摸胡：仅人类自己回合；tile=null 走 handler 自摸分支（lastWinBySelfDrawn）。
+   * 不可把已在手的自摸张再传入，否则会被当成荣和并重复入牌。
+   */
+  private async applyHumanTsumoHu(): Promise<void> {
+    const human = this.getHumanPlayer();
+    const current = this.game.getCurrentPlayer();
+    if (!current || current.id !== human.id) {
+      throw new SessionActionError('tsumo hu only on human turn');
+    }
+    if (!RuleEngine.canHu(human, null, { isDrawn: true })) {
+      throw new SessionActionError('tsumo hu not available');
+    }
+    this.handler.handlePlayerHu(human, null);
+    this.markWinnerStats();
+  }
+
+  /**
+   * 回合内暗杠/补杠：tile=null 走 RuleEngine.canGang → handleGang。
+   * 人类 requirePlayerToDiscard 仅提示、不阻塞；状态保持 PLAYING。
+   */
+  private async applyHumanTurnGang(): Promise<void> {
+    const human = this.getHumanPlayer();
+    const current = this.game.getCurrentPlayer();
+    if (!current || current.id !== human.id) {
+      throw new SessionActionError('turn gang only on human turn');
+    }
+    const allPlayers = this.game.getAllPlayers();
+    if (
+      !RuleEngine.canGang(human, null, { currentPlayer: human, allPlayers }).canGang
+    ) {
+      throw new SessionActionError('turn gang not available');
+    }
+    const ok = await this.handler.handleGang(human, null);
+    if (!ok) throw new SessionActionError('gang failed');
+    if (this.game.state !== GameState.ENDED) {
+      this.game.setState(GameState.PLAYING);
+    }
   }
 
   private async applyHumanDiscard(tileIndex: number | undefined): Promise<void> {
@@ -442,6 +519,136 @@ export class GameSession {
   }
 
   /**
+   * 开局即真流局：无赢家 → ENDED + settleEndedRound 流局分支（delta 全 0）。
+   * ponytail: 不改 core 流局判定，只装可观察态；升级可改为抽空牌山 + pass 真路径。
+   */
+  private installDrawReadyFixture(): void {
+    this.clearResponseWindow();
+    this.game.setLastDiscardedTile(null);
+    this.game.setState(GameState.ENDED);
+    this.markWinnerStats();
+  }
+
+  /**
+   * 合法出牌决策点：人类为当前玩家，14 张须出牌，无响应窗。
+   * ponytail: 抽空牌山，避免 discard 后 AI 续走再摸回 14 张导致断言漂；升级可固定牌面种子。
+   */
+  private installDiscardReadyFixture(): void {
+    const human = this.getHumanPlayer();
+    this.game.setCurrentPlayerIndex(0);
+    this.game.setState(GameState.PLAYING);
+    this.game.setLastDiscardedTile(null);
+    this.clearResponseWindow();
+    this.normalizeHumanHandSize(human, 14);
+    human.sortHand();
+    const wall = TileManager.getInstance();
+    while (wall.getRemainingTiles() > 0) {
+      wall.drawTile();
+    }
+  }
+
+  /**
+   * 暗杠决策点：人类回合 14 张含四张东风 → canGang(null) 为真。
+   * ponytail: 抽空牌山，避免杠后摸牌/杠上开花把断言漂到 ended；升级可保留墙并断言杠后出牌。
+   */
+  private installAngangReadyFixture(): void {
+    const players = this.game.getAllPlayers();
+    const human = this.getHumanPlayer();
+    this.game.setCurrentPlayerIndex(0);
+    this.game.setState(GameState.PLAYING);
+    this.game.setLastDiscardedTile(null);
+    this.clearResponseWindow();
+
+    const type = TileType.FENG;
+    const value = FengValue.DONG;
+    for (const p of players) {
+      p.handTiles = p.handTiles.filter((t) => !(t.type === type && t.value === value));
+    }
+
+    human.handTiles = [
+      new Tile(type, value, 9701),
+      new Tile(type, value, 9702),
+      new Tile(type, value, 9703),
+      new Tile(type, value, 9704),
+      new Tile(TileType.WAN, 1, 9705),
+      new Tile(TileType.WAN, 2, 9706),
+      new Tile(TileType.WAN, 3, 9707),
+      new Tile(TileType.WAN, 4, 9708),
+      new Tile(TileType.TIAO, 5, 9709),
+      new Tile(TileType.TIAO, 6, 9710),
+      new Tile(TileType.TIAO, 7, 9711),
+      new Tile(TileType.TONG, 2, 9712),
+      new Tile(TileType.TONG, 3, 9713),
+      new Tile(TileType.TONG, 4, 9714),
+    ];
+    human.sortHand();
+
+    const wall = TileManager.getInstance();
+    while (wall.getRemainingTiles() > 0) {
+      wall.drawTile();
+    }
+
+    if (
+      !RuleEngine.canGang(human, null, {
+        currentPlayer: human,
+        allPlayers: players,
+      }).canGang
+    ) {
+      throw new Error('fixture angang-ready: GANG not available');
+    }
+  }
+
+  /**
+   * 必现过：同 peng 牌面开窗，确保 pass 可选。
+   * ponytail: peng 过滤后 AI 手牌张数可能不连贯，pass 后 nextTurn 摸牌会炸；
+   * 抽空牌山让 apply pass 走流局结束。升级：正规化各家 13 张并控墙，再续走至 human turn。
+   */
+  private installPassReadyFixture(): void {
+    this.installPengReadyFixture();
+    const pending = this.game.pendingAction;
+    if (!pending || !pending.allowedActions.includes(PlayerAction.PASS)) {
+      throw new Error('fixture pass-ready: PASS not available');
+    }
+    const wall = TileManager.getInstance();
+    while (wall.getRemainingTiles() > 0) {
+      wall.drawTile();
+    }
+  }
+
+  /**
+   * 固定响应窗：南家打出东风，人类手握三张东风 → 能明杠（风牌，避免误出吃）。
+   * ponytail: 只改手牌/河牌/pending，不改 core 判定；升级可换成整山种子。
+   */
+  private installGangReadyFixture(): void {
+    const players = this.game.getAllPlayers();
+    const human = this.getHumanPlayer();
+    const discarderIndex = 1; // 南家 AI
+    this.game.setCurrentPlayerIndex(discarderIndex);
+    const discarder = players[discarderIndex];
+
+    const type = TileType.FENG;
+    const value = FengValue.DONG;
+    for (const p of players) {
+      p.handTiles = p.handTiles.filter((t) => !(t.type === type && t.value === value));
+    }
+    this.normalizeHumanHandSize(human, 13);
+    human.handTiles[0] = new Tile(type, value, 9501);
+    human.handTiles[1] = new Tile(type, value, 9502);
+    human.handTiles[2] = new Tile(type, value, 9503);
+    human.sortHand();
+
+    const discarded = new Tile(type, value, 9504);
+    discarder.discardedTiles.push(discarded);
+    this.game.setLastDiscardedTile(discarded);
+
+    const actions = this.listHumanResponseActions(discarded);
+    if (!actions.includes(PlayerAction.GANG)) {
+      throw new Error('fixture gang-ready: GANG not available');
+    }
+    this.openResponseWindow(discarded, actions);
+  }
+
+  /**
    * 固定响应窗：南家打出东风，人类手牌必有一对东风 → 能碰（风牌，避免误出吃）。
    * ponytail: 只改手牌/河牌/pending，不改 core 判定；升级可换成整山种子。
    */
@@ -471,6 +678,47 @@ export class GameSession {
       throw new Error('fixture peng-ready: PENG not available');
     }
     this.openResponseWindow(discarded, actions);
+  }
+
+  /**
+   * 自摸决策点：人类为当前玩家，14 张听成牌，可点 hu。
+   * 牌面 = hu-ready 13 张听东风 + 自摸东风；PLAYING，无响应窗。
+   */
+  private installTsumoReadyFixture(): void {
+    const players = this.game.getAllPlayers();
+    const human = this.getHumanPlayer();
+    this.game.setCurrentPlayerIndex(0);
+    this.game.setState(GameState.PLAYING);
+    this.game.setLastDiscardedTile(null);
+    this.clearResponseWindow();
+
+    for (const p of players) {
+      p.handTiles = p.handTiles.filter(
+        (t) => !(t.type === TileType.FENG && t.value === FengValue.DONG)
+      );
+    }
+
+    human.handTiles = [
+      new Tile(TileType.WAN, 1, 9601),
+      new Tile(TileType.WAN, 1, 9602),
+      new Tile(TileType.WAN, 1, 9603),
+      new Tile(TileType.WAN, 2, 9604),
+      new Tile(TileType.WAN, 3, 9605),
+      new Tile(TileType.WAN, 4, 9606),
+      new Tile(TileType.TIAO, 3, 9607),
+      new Tile(TileType.TIAO, 4, 9608),
+      new Tile(TileType.TIAO, 5, 9609),
+      new Tile(TileType.TONG, 7, 9610),
+      new Tile(TileType.TONG, 8, 9611),
+      new Tile(TileType.TONG, 9, 9612),
+      new Tile(TileType.FENG, FengValue.DONG, 9613),
+      new Tile(TileType.FENG, FengValue.DONG, 9614),
+    ];
+    human.sortHand();
+
+    if (!RuleEngine.canHu(human, null, { isDrawn: true })) {
+      throw new Error('fixture tsumo-ready: HU not available');
+    }
   }
 
   /**

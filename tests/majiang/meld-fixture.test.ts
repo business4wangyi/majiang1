@@ -71,6 +71,86 @@ describe('meld fixture（能碰 / 能吃）', function () {
     );
   });
 
+  it('pass-ready：响应窗必有 pass，apply 后不崩且离 response_window', async () => {
+    const session = GameSession.create({
+      mode: 'api',
+      gameId: 'fx-pass',
+      fixture: 'pass-ready',
+    });
+    session.start();
+    const before = session.getTableSnapshot();
+    expect(before.phase).to.equal('response_window');
+    expect(before.availableActions.some((a) => a.id === 'pass' && a.available)).to.equal(true);
+
+    const after = await session.applyAction({ id: 'pass' });
+    expect(after.phase).to.not.equal('response_window');
+    expect([GameState.PLAYING, GameState.WAITING_ACTION, GameState.ENDED]).to.include(
+      session.getState()
+    );
+  });
+
+  it('gang-ready：响应窗必有 gang，apply 后明杠出现', async () => {
+    const session = GameSession.create({
+      mode: 'api',
+      gameId: 'fx-gang',
+      fixture: 'gang-ready',
+    });
+    session.start();
+    const before = session.getTableSnapshot();
+    expect(before.phase).to.equal('response_window');
+    expect(before.availableActions.some((a) => a.id === 'gang' && a.available)).to.equal(true);
+
+    const after = await session.applyAction({ id: 'gang' });
+    expect(session.getState()).to.equal(GameState.PLAYING);
+    const east = session.game.getAllPlayers()[0];
+    expect(east.revealedSets.some((s) => s.type === 'GANG')).to.equal(true);
+    expect(after.phase).to.equal('player_turn');
+  });
+
+  it('angang-ready：player_turn 必有 gang，apply 后暗杠出现', async () => {
+    const session = GameSession.create({
+      mode: 'api',
+      gameId: 'fx-angang',
+      fixture: 'angang-ready',
+    });
+    session.start();
+    const before = session.getTableSnapshot();
+    expect(before.phase).to.equal('player_turn');
+    expect(before.availableActions.some((a) => a.id === 'gang' && a.available)).to.equal(
+      true
+    );
+
+    const after = await session.applyAction({ id: 'gang' });
+    expect(session.getState()).to.equal(GameState.PLAYING);
+    const east = session.game.getAllPlayers()[0];
+    expect(east.revealedSets.some((s) => s.type === 'GANG' && s.source === 'an')).to.equal(
+      true
+    );
+    expect(after.phase).to.equal('player_turn');
+  });
+
+  it('discard-ready：player_turn 可出牌，discard 后手牌/河变化', async () => {
+    const session = GameSession.create({
+      mode: 'api',
+      gameId: 'fx-discard',
+      fixture: 'discard-ready',
+    });
+    session.start();
+    const before = session.getTableSnapshot();
+    expect(before.phase).to.equal('player_turn');
+    expect(before.availableActions.some((a) => a.id === 'discard')).to.equal(true);
+    const handBefore = before.selfHand.length;
+
+    const after = await session.applyAction({ id: 'discard', tileIndex: 0 });
+    // 可能进入 response_window（他家）或继续；至少人类手牌减少或对局推进
+    const east = session.game.getAllPlayers()[0];
+    expect(east.discardedTiles.length).to.be.at.least(1);
+    expect(east.handTiles.length).to.equal(handBefore - 1);
+    expect(after.phase).to.be.oneOf(['player_turn', 'response_window', 'ended', 'waiting_ai']);
+    // 禁止假 waiting_ai 死等：若 phase 为 waiting_ai 则本用例 FAIL
+    expect(after.phase).to.not.equal('waiting_ai');
+  });
+
   it('HTTP：POST /games { fixture } 透传能碰', async () => {
     const { app } = createMajiangApiApp({ servePrototype: false });
     const server = http.createServer(app);

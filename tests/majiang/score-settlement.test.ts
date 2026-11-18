@@ -76,4 +76,39 @@ describe('分数结算（API 胡牌后座位分不得全 0）', function () {
     expect(deltas.some((d) => d !== 0)).to.equal(true);
     expect(deltas.reduce((a, b) => a + b, 0)).to.equal(0);
   });
+
+  it('fixture=tsumo-ready：自摸后 resultSummary.type=tsumo，分数非全 0 且零和', async () => {
+    const session = GameSession.create({
+      mode: 'api',
+      gameId: 'score-tsumo-ready',
+      fixture: 'tsumo-ready',
+    });
+    session.start();
+    const before = session.getTableSnapshot();
+    expect(before.phase).to.equal('player_turn');
+    expect(before.availableActions.some((a) => a.id === 'hu' && a.available)).to.equal(true);
+
+    await session.applyAction({ id: 'hu' });
+    const snap = session.getTableSnapshot();
+    expect(snap.phase).to.equal('ended');
+    expect(snap.resultSummary?.type).to.equal('tsumo');
+    const deltas = (snap.resultSummary?.rows || []).map((r) => Number(r.delta));
+    expect(deltas.some((d) => d !== 0)).to.equal(true);
+    expect(deltas.reduce((a, b) => a + b, 0)).to.equal(0);
+  });
+
+  it('fixture=draw-ready：开局即 ended/draw，delta 全 0', async () => {
+    const session = GameSession.create({
+      mode: 'api',
+      gameId: 'score-draw-ready',
+      fixture: 'draw-ready',
+    });
+    session.start();
+    const snap = session.getTableSnapshot();
+    expect(snap.phase).to.equal('ended');
+    expect(snap.resultSummary?.type).to.equal('draw');
+    const deltas = (snap.resultSummary?.rows || []).map((r) => String(r.delta));
+    expect(deltas.length).to.be.at.least(4);
+    expect(deltas.every((d) => d === '0' || d === '+0')).to.equal(true);
+  });
 });

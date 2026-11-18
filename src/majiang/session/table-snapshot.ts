@@ -1,5 +1,6 @@
 import { Game, GameState } from '../core/game';
 import { Player, PlayerState } from '../core/player';
+import { RuleEngine } from '../core/rule-engine';
 import { PlayerAction } from '../core/rule-types';
 
 /** 与 web-ui-prototype view-model-adapter 对齐的桌面阶段 */
@@ -115,33 +116,47 @@ function seatIdAt(index: number): (typeof SEAT_IDS)[number] {
   return SEAT_IDS[((index % 4) + 4) % 4];
 }
 
+function pushActionView(
+  actions: TableActionView[],
+  seen: Set<string>,
+  action: PlayerAction,
+  reasonText: string
+): void {
+  const meta = ACTION_META[action];
+  if (!meta || seen.has(meta.id)) return;
+  seen.add(meta.id);
+  actions.push({
+    id: meta.id,
+    label: meta.label,
+    available: true,
+    reasonText,
+    isPrimaryPath: meta.id === 'hu' || meta.id === 'discard',
+  });
+}
+
 function mapEngineActions(game: Game, phase: TablePhase): TableActionView[] {
   const actions: TableActionView[] = [];
   const seen = new Set<string>();
 
   for (const action of game.getAvailableActions()) {
-    const meta = ACTION_META[action];
-    if (!meta || seen.has(meta.id)) continue;
-    seen.add(meta.id);
-    actions.push({
-      id: meta.id,
-      label: meta.label,
-      available: true,
-      reasonText: `引擎允许：${meta.label}`,
-      isPrimaryPath: meta.id === 'hu' || meta.id === 'discard',
-    });
+    pushActionView(actions, seen, action, `引擎允许：${ACTION_META[action]?.label ?? action}`);
   }
 
-  // 出牌义务来自引擎 needsToDiscard，不是前端自造集合
+  // 出牌义务 / 自摸胡：Game.getAvailableActions 在 PLAYING 恒为空，须走 RuleEngine
   const current = game.getCurrentPlayer();
-  if (phase === 'player_turn' && current && current.needsToDiscard() && !seen.has('discard')) {
-    actions.push({
-      id: 'discard',
-      label: '出牌',
-      available: true,
-      reasonText: '引擎：当前须出牌',
-      isPrimaryPath: true,
-    });
+  if (phase === 'player_turn' && current) {
+    for (const action of RuleEngine.getAvailableActions(current, null)) {
+      pushActionView(actions, seen, action, `引擎允许：${ACTION_META[action]?.label ?? action}`);
+    }
+    if (current.needsToDiscard() && !seen.has('discard')) {
+      actions.push({
+        id: 'discard',
+        label: '出牌',
+        available: true,
+        reasonText: '引擎：当前须出牌',
+        isPrimaryPath: true,
+      });
+    }
   }
 
   return actions;
@@ -213,7 +228,7 @@ function buildResultSummary(
 
 /**
  * 从引擎 Game 构建可喂 createTableViewModelFromSnapshot 的快照。
- * availableActions 仅来自 Game.getAvailableActions / needsToDiscard。
+ * availableActions：响应窗用 Game.getAvailableActions；player_turn 用 RuleEngine + needsToDiscard。
  */
 export function buildTableSnapshotFromGame(
   game: Game,
