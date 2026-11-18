@@ -34,7 +34,16 @@
   }
 
   async function apiGameCreationHandler() {
-    const result = await requestJson("POST", "/games");
+    // 可选 ?fixture=peng-ready|chi-ready：测试夹具；默认不传
+    var body;
+    try {
+      var q = new URLSearchParams(global.location.search || "");
+      var fixture = q.get("fixture");
+      if (fixture) body = { fixture: fixture };
+    } catch (_err) {
+      body = undefined;
+    }
+    const result = await requestJson("POST", "/games", body);
     if (!result.ok || !result.json || !result.json.id || !result.json.snapshot) {
       return {
         ok: false,
@@ -112,7 +121,32 @@
     submitAction: apiActionHandler,
   };
 
-  // 仅当同源 API 暴露 bridge-config 时自动安装（file:// / 纯静态打开不接假 waiting_ai）
+  function allowPrototypeDemo() {
+    try {
+      var q = new URLSearchParams(global.location.search || "");
+      // acceptance=1：旧视觉验收；prototypeDemo=1：显式允许本地假对局
+      return q.get("acceptance") === "1" || q.get("prototypeDemo") === "1";
+    } catch (_err) {
+      return false;
+    }
+  }
+
+  function installOfflineGuard() {
+    // 纯静态 / 无 API：禁止落入 defaultActionHandler 的假 waiting_ai 死等
+    if (typeof global.setMajiangGameCreationHandler === "function") {
+      global.setMajiangGameCreationHandler(async function offlineCreateGuard() {
+        return {
+          ok: false,
+          message:
+            "未连接对局 API。请运行 npm run majiang:api-server，然后打开 http://localhost:4100/（视觉演示可加 ?prototypeDemo=1）",
+        };
+      });
+    }
+    global.__majiangApiBridgeInstalled = false;
+    global.__majiangApiBridgeOffline = true;
+  }
+
+  // 仅当同源 API 暴露 bridge-config 时自动安装；否则默认 fail-closed（避免假 waiting_ai）
   if (typeof fetch === "function") {
     fetch(`${apiBase()}/api/bridge-config`)
       .then(function (res) {
@@ -121,10 +155,16 @@
       .then(function (cfg) {
         if (cfg && cfg.enabled) {
           installMajiangApiBridge({ apiBase: cfg.apiBase || apiBase() });
+          return;
+        }
+        if (!allowPrototypeDemo()) {
+          installOfflineGuard();
         }
       })
       .catch(function () {
-        /* 无 API 时保持原型默认 handler */
+        if (!allowPrototypeDemo()) {
+          installOfflineGuard();
+        }
       });
   }
 })(window);

@@ -153,6 +153,12 @@ const RUNNERS = {
         server.close((err) => (err ? reject(err) : resolve()))
       );
     }
+
+    // Playwright 真浏览器主链路（补 HTTP-only 空洞）：静态 fail-closed + UI 完局
+    // eslint-disable-next-line global-require
+    const webE2e = require('./majiang-web-e2e');
+    await webE2e.assertStaticFailClosed();
+    await webE2e.runApiBackedE2e();
   },
 
   'MJ-ACC-WEB-02': async () => {

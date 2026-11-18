@@ -39,6 +39,7 @@ const appState = {
   selectedActionId: null,
   submitting: false,
   inlineError: null,
+  lastLobbyError: null,
   toastTimer: null,
   countdownTimer: null,
   actionHandler: null,
@@ -218,7 +219,8 @@ function renderSeatActionSignal(node, seat, model) {
   node.classList.remove("is-source-action", "is-self-response", "hidden");
   // 角区稀疏：默认不渲染多座位标签墙；仅南位响应窗口保留轻量「可胡」
   const isResponse = model.phase === "response_window";
-  const isSelfOpportunity = isResponse && seat.id === "south";
+  const selfSeatId = model.selfSeatId || "south";
+  const isSelfOpportunity = isResponse && seat.id === selfSeatId;
   if (!isSelfOpportunity) {
     node.classList.add("hidden");
     return;
@@ -256,9 +258,12 @@ function getPhasePrimaryActionId(model, actionMap) {
 }
 
 function getResponseVisibleActionIds(actionMap) {
-  /* W8-A 合同：胡 > 过 > 碰/杠 */
-  const order = ["hu", "pass", "peng", "gang"];
-  return order.filter((actionId) => actionMap.has(actionId));
+  /* W8-A 合同：胡 > 过 > 碰/杠/吃 */
+  const order = ["hu", "pass", "peng", "gang", "chi"];
+  return order.filter((actionId) => {
+    const action = actionMap.get(actionId);
+    return action && action.available;
+  });
 }
 
 function showToast(message, type) {
@@ -391,7 +396,7 @@ function renderLobby() {
   }
   if (appState.phase === "lobby_error") {
     errorNode.classList.remove("hidden");
-    errorNode.textContent = "创建失败：请重试或查看诊断";
+    errorNode.textContent = appState.lastLobbyError || "创建失败：请重试或查看诊断";
   } else {
     errorNode.classList.add("hidden");
   }
@@ -419,7 +424,15 @@ function renderLobby() {
   }
   if (appState.lobbyDiagnosticsExpanded) {
     diagOutput.classList.remove("hidden");
-    diagOutput.textContent = JSON.stringify({ phase: appState.phase, lobby: appState.lobby }, null, 2);
+    diagOutput.textContent = JSON.stringify(
+      {
+        phase: appState.phase,
+        error: appState.lastLobbyError,
+        lobby: appState.lobby,
+      },
+      null,
+      2
+    );
   } else {
     diagOutput.classList.add("hidden");
   }
@@ -551,10 +564,11 @@ function renderFeedback(model) {
 
 function renderSeats(model) {
   const sourceSeatId = model.responseContext.sourcePlayerId || "";
+  const selfSeatId = model.selfSeatId || "south";
   model.seats.forEach((seat) => {
     const target = document.getElementById(`seat-${seat.id}`);
     if (!target) return;
-    const isSelfSeat = seat.id === "south";
+    const isSelfSeat = seat.id === selfSeatId;
     target.querySelector(".name").textContent = seat.name;
     target.querySelector(".score").textContent = String(seat.score);
     const seatMeta = target.querySelector(".seat-meta");
@@ -565,7 +579,7 @@ function renderSeats(model) {
     const windChip = target.querySelector(".seat-wind");
     if (windChip && seat.windLabel) windChip.textContent = seat.windLabel;
     target.querySelector(".seat-hand-back")?.remove();
-    if (seat.id !== "south") {
+    if (!isSelfSeat) {
       const backRow = document.createElement("div");
       backRow.className = "seat-hand-back";
       const visibleBacks = Math.max(4, Math.min(8, seat.handCount || 0));
@@ -577,19 +591,27 @@ function renderSeats(model) {
       target.insertBefore(backRow, target.querySelector(".meld-list"));
     }
     target.classList.toggle("is-active", seat.id === model.currentPlayerId);
-    target.classList.toggle("is-opportunity", seat.id === "south" && model.phase === "response_window");
+    target.classList.toggle("is-opportunity", isSelfSeat && model.phase === "response_window");
     target.classList.toggle("is-risk", seat.id === sourceSeatId && model.phase === "response_window");
 
     const meldList = target.querySelector(".meld-list");
     meldList.innerHTML = "";
-    seat.meldGroups.forEach((group) => {
+    const meldGroups = Array.isArray(seat.meldGroups) ? seat.meldGroups : [];
+    meldGroups.forEach((group) => {
+      // 引擎快照为 string[][]；演示模型可能为 { type, tiles }[]
+      const tiles = Array.isArray(group) ? group : (group && group.tiles) || [];
+      const type = Array.isArray(group)
+        ? tiles.length >= 4
+          ? "gang"
+          : "peng"
+        : (group && group.type) || "peng";
       const node = document.createElement("div");
       node.className = "meld-zone";
       const tag = document.createElement("span");
       tag.className = "meld-tag";
-      tag.textContent = group.type === "peng" ? "碰" : "杠";
+      tag.textContent = type === "peng" ? "碰" : type === "chi" ? "吃" : "杠";
       node.appendChild(tag);
-      group.tiles.forEach((tile) => {
+      tiles.forEach((tile) => {
         const t = document.createElement("span");
         t.className = "tile-mini";
         applyTileVisual(t, tile, { assetClassName: "tile-asset tile-asset--mini" });
@@ -600,7 +622,7 @@ function renderSeats(model) {
     if (isSelfSeat) {
       meldList.classList.remove("hidden");
     } else {
-      meldList.classList.toggle("hidden", seat.meldGroups.length === 0);
+      meldList.classList.toggle("hidden", meldGroups.length === 0);
     }
   });
 }
@@ -1103,31 +1125,29 @@ async function defaultActionHandler({ actionId, model }) {
 async function createGame() {
   appState.phase = "creating_game";
   appState.inlineError = null;
+  appState.lastLobbyError = null;
   rerender();
   const handler = appState.gameCreationHandler || defaultGameCreationHandler;
 
   try {
-    appState.route = "table";
-    appState.phase = "table_loading";
-    rerender();
+    // 先在大厅等 API 结果，避免未就绪时渲染默认演示快照导致误操作
     const result = await handler({ lobby: appState.lobby });
     if (!result.ok) throw new Error(result.message || "创建失败");
-    await new Promise((resolve) => setTimeout(resolve, 350));
 
+    appState.route = "table";
     appState.tableSnapshot = result.tableSnapshot;
     appState.phase = "table";
     appState.lobby.recentGames = [{ id: appState.tableSnapshot.gameId, result: "进行中" }];
     appState.selectedTileIndex = null;
     appState.inlineError = null;
+    appState.lastLobbyError = null;
     rerender();
   } catch (err) {
     appState.phase = "lobby_error";
     appState.route = "lobby";
     appState.lobbyDiagnosticsExpanded = true;
+    appState.lastLobbyError = String(err && err.message ? err.message : err);
     showToast("创建对局失败", "error");
-    const out = document.getElementById("lobbyDiagOutput");
-    out.classList.remove("hidden");
-    out.textContent = JSON.stringify({ error: String(err && err.message ? err.message : err), phase: appState.phase }, null, 2);
     rerender();
   }
 }
@@ -1626,6 +1646,39 @@ window.runMajiangDemoFlow = async function runMajiangDemoFlow() {
 window.setMajiangTextTileFallback = function setMajiangTextTileFallback(enabled) {
   appState.debugTextTiles = Boolean(enabled);
   rerender();
+};
+
+/** Playwright e2e：经真实 handler 提交，避开牌面 atlas hit-test 抖动 */
+window.__majiangE2e = {
+  getPhase: () => (appState.tableSnapshot && appState.tableSnapshot.phase) || "",
+  getHint: () => (appState.tableSnapshot && appState.tableSnapshot.turnHint) || "",
+  getHandCount: () => ((appState.tableSnapshot && appState.tableSnapshot.selfHand) || []).length,
+  getSelfHand: () => ((appState.tableSnapshot && appState.tableSnapshot.selfHand) || []).slice(),
+  getInlineErrorMessage: () =>
+    (appState.inlineError && appState.inlineError.message) ||
+    (document.getElementById("inlineError")?.textContent || "").trim(),
+  isSubmitting: () => Boolean(appState.submitting),
+  getAvailableActionIds: () =>
+    ((appState.tableSnapshot && appState.tableSnapshot.availableActions) || [])
+      .filter((a) => a && a.available)
+      .map((a) => a.id),
+  async submit(actionId) {
+    await submitAction(actionId);
+  },
+  async discardFirst() {
+    if (!appState.tableSnapshot || !appState.tableSnapshot.selfHand.length) {
+      throw new Error("no hand");
+    }
+    appState.selectedTileIndex = 0;
+    await submitAction("discard");
+  },
+  async discardIllegal() {
+    appState.selectedTileIndex = 9999;
+    await submitAction("discard");
+  },
+  async pass() {
+    await submitAction("pass");
+  },
 };
 
 // W4 合同：?debugTiles=1 强制文字牌降级（调试/占位）

@@ -815,14 +815,15 @@ export class GameEventHandler {
 
     let selectedCombination: Tile[];
 
-    // 根据玩家类型选择吃牌组合
-    if (player.type === PlayerType.HUMAN) {
+    // 仅一种组合时直接吃（API/夹具无需额外 payload）；多种仍交互选
+    if (possibleCombinations.length === 1) {
+      selectedCombination = possibleCombinations[0];
+    } else if (player.type === PlayerType.HUMAN) {
       displayManager.print(`请选择要吃的组合：`);
       possibleCombinations.forEach((combo, index) => {
         displayManager.print(`${index + 1}. ${combo.map(t => t.toString()).join(' ')}`);
       });
 
-      // 等待玩家输入
       const choice = parseInt(await askQuestion("请输入选择的组合编号："));
       if (isNaN(choice) || choice < 1 || choice > possibleCombinations.length) {
         displayManager.printError("无效的选择");
@@ -831,7 +832,6 @@ export class GameEventHandler {
 
       selectedCombination = possibleCombinations[choice - 1];
     } else {
-      // AI玩家自动选择第一个可用的组合
       selectedCombination = possibleCombinations[0];
     }
 

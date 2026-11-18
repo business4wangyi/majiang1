@@ -5,6 +5,23 @@
 - 仅改 `docs/majiang/web-ui-prototype/` 表现层、适配层、交互编排。
 - 未改 `src/majiang/core/`、`src/majiang/strategy/`、CLI 路径。
 
+## 本地入口（方案 A）
+
+| 用途 | 做法 |
+|------|------|
+| **真玩（唯一正式入口）** | `npm run majiang:api-server` → 浏览器打开 `http://localhost:4100/` |
+| **纯静态** | 会**拒绝开局**（fail-closed，避免无 API 时假对局卡在 `waiting_ai`） |
+| **视觉演示（假对局）** | 静态打开时加 `?prototypeDemo=1`（或既有 `?acceptance=1`） |
+| **真浏览器 e2e** | `npm run majiang:web:e2e`（静态拒开局 / 演示旁路 / 结果四态 / API 完局+非法出牌；副露为机会覆盖） |
+
+```bash
+npm run majiang:api-server
+# → http://localhost:4100/
+```
+
+> 一句口径：纯静态会拒绝开局；演示加 `?prototypeDemo=1`；真玩只用 `npm run majiang:api-server` → `http://localhost:4100/`。  
+> 勿把 `python3 -m http.server` / `npx serve` 当成可玩入口。
+
 > **当前状态（2026-11-16）**：一段已毕业；二段 W8-A **已冻结**；当前 `MJ-UI-COMP-02` 阶段B 可施工。  
 > **口径**：禁「基本有」关毕业；功能绿 ≠ 视觉通过；二段须人点名 + 新蓝图。  
 > **权威闸门**：`docs/product/caps/majiang-webui-acceptance-stages.md` + 脊骨 `majiang-webui-target.md`；桌面锚仍见 `15_…R2` / `16_…IMPL`；移动见 `stage-b-w6-mobile/`；结果见 `stage-b-w7-result/`。  

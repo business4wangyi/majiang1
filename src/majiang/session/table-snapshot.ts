@@ -47,6 +47,8 @@ export interface TableSnapshot {
   gameId: string;
   phase: TablePhase;
   currentPlayerId: string;
+  /** 视角座位（api 模式为人类座位） */
+  selfSeatId: 'east' | 'south' | 'west' | 'north';
   wallCount: number;
   roundInfo: string;
   turnHint: string;
@@ -218,14 +220,23 @@ export function buildTableSnapshotFromGame(
 
   const lastTile = game.getLastDiscardedTile();
   const pending = game.pendingAction;
+  const turnHint =
+    phase === 'ended'
+      ? '本局已结束'
+      : phase === 'response_window'
+        ? '可响应：选择胡/碰/杠或过'
+        : phase === 'player_turn'
+          ? '轮到你出牌：先选手牌再点出牌'
+          : '等待状态更新';
 
   return {
     gameId: options.gameId ?? `session-${Date.now()}`,
     phase,
     currentPlayerId,
+    selfSeatId,
     wallCount: game.getRemainingTiles(),
     roundInfo: `风圈${game.windRound}`,
-    turnHint: phase === 'ended' ? '本局已结束' : '等待状态更新',
+    turnHint,
     seats,
     selfHand: selfPlayer ? selfPlayer.handTiles.map((t) => t.toString()) : [],
     discardRiver: buildDiscardRiver(players),

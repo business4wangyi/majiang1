@@ -1,7 +1,7 @@
 (function initMajiangViewModelAdapter(global) {
-  const ACTION_ORDER = ["hu", "pass", "peng", "gang", "discard", "confirm", "cancel"];
+  const ACTION_ORDER = ["hu", "pass", "peng", "gang", "chi", "discard", "confirm", "cancel"];
   const PHASE_ACTION_SCOPE = {
-    response_window: ["hu", "gang", "peng", "pass"],
+    response_window: ["hu", "gang", "peng", "chi", "pass"],
     player_turn: ["discard", "confirm", "cancel"],
     waiting_ai: [],
     ended: [],
@@ -73,6 +73,7 @@
       gameId: source.gameId || "demo-round-001",
       phase,
       currentPlayerId: source.currentPlayerId || "south",
+      selfSeatId: source.selfSeatId || "south",
       wallCount: Number.isFinite(source.wallCount) ? source.wallCount : 0,
       roundInfo: source.roundInfo || "东一局",
       turnHint: source.turnHint || "等待状态更新",
@@ -116,6 +117,7 @@
       gameId: "demo-round-001",
       phase: "response_window",
       currentPlayerId: "south",
+      selfSeatId: "south",
       wallCount: 36,
       roundInfo: "东风局",
       turnHint: "右家打出三万，你可胡",

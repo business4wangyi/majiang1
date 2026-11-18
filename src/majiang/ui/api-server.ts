@@ -6,6 +6,7 @@ import {
   GameSession,
   SessionActionError,
   SessionActionInput,
+  parseMeldFixture,
 } from '../session/game-session';
 
 export type MajiangGameStore = Map<string, GameSession>;
@@ -38,14 +39,25 @@ export function createMajiangApiApp(
     res.json({ enabled: true, apiBase: '' });
   });
 
-  app.post('/games', (_req: Request, res: Response) => {
+  app.post('/games', (req: Request, res: Response) => {
     const id = randomUUID();
-    const session = GameSession.create({ mode: 'api', gameId: id });
+    let fixture;
+    try {
+      fixture = parseMeldFixture((req.body || {}).fixture);
+    } catch (err) {
+      if (err instanceof SessionActionError) {
+        res.status(400).json({ error: err.message });
+        return;
+      }
+      throw err;
+    }
+    const session = GameSession.create({ mode: 'api', gameId: id, fixture });
     session.start();
     store.set(id, session);
     res.status(201).json({
       id,
       snapshot: session.getTableSnapshot(),
+      ...(fixture ? { fixture } : {}),
     });
   });
 

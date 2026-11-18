@@ -1,0 +1,47 @@
+{
+  "id": "majiang-meld-fixture",
+  "title": "麻将副露夹具 · 能碰/能吃必现",
+  "concurrency": 1,
+  "items": [
+    {
+      "id": "MELD-DESIGN",
+      "kind": "task",
+      "alias": "design",
+      "status": "pending",
+      "summary": "设计卡已批（方案 B：Session fixture + 可选 API）。本刀只写确认 marker，不改码。",
+      "acceptance": "marker ok；摘要含「方案 B 已批」。",
+      "depends_on": [],
+      "prompt_template": "task.md.tmpl"
+    },
+    {
+      "id": "MELD-PENG",
+      "kind": "task",
+      "alias": "peng",
+      "status": "pending",
+      "summary": "Session/API fixture=peng-ready：开局即能碰；单测 apply peng 绿。禁改 core 判定；禁前端伪造。",
+      "acceptance": "tests/majiang/meld-fixture.test.ts 含 peng-ready 绿；默认 POST /games 无 fixture 行为不变。",
+      "depends_on": ["MELD-DESIGN"],
+      "prompt_template": "task.md.tmpl"
+    },
+    {
+      "id": "MELD-CHI",
+      "kind": "task",
+      "alias": "chi",
+      "status": "pending",
+      "summary": "Session/API fixture=chi-ready：开局即能吃；单测 apply chi 绿。禁改 core；禁前端伪造。",
+      "acceptance": "meld-fixture 含 chi-ready 绿；单组合吃可无 payload。",
+      "depends_on": ["MELD-PENG"],
+      "prompt_template": "task.md.tmpl"
+    },
+    {
+      "id": "MELD-E2E",
+      "kind": "task",
+      "alias": "e2e",
+      "status": "pending",
+      "summary": "e2e：?fixture=peng-ready|chi-ready 必 did:peng / did:chi；可挂 smoke。人已授权免闸门直接合入检查。",
+      "acceptance": "npm run majiang:web:e2e 含 meldFixtures 绿；禁止自批视觉冲顶。",
+      "depends_on": ["MELD-CHI"],
+      "prompt_template": "task.md.tmpl"
+    }
+  ]
+}

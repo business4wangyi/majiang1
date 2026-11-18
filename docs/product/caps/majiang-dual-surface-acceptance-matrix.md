@@ -65,7 +65,8 @@
 ### `MJ-ACC-WEB-01`
 
 - **通过**：大厅开局→出牌→AI 回手→结算；无假 `waiting_ai` 死等。
-- **挂测**：`npm run majiang:dual:smoke`（HTTP 主链路至 `ended` + `resultSummary`；`tests/majiang/web-bridge.test.ts`）；大厅 U0 结构挂测 `tests/majiang/web-lobby.test.ts`（主 CTA + 固定配置 + 诊断默认折叠）；禁止前端自造规则。
+- **挂测**：`npm run majiang:dual:smoke`（HTTP 主链路至 `ended` + `resultSummary`；并跑 Playwright `scripts/test/majiang-web-e2e.js`：静态 fail-closed + `?prototypeDemo=1` 假对局 + 结果四态 + API 完局（响应优先 hu/副露，机会覆盖）+ 非法 discard 不脏写）；亦可单独 `npm run majiang:web:e2e`；`tests/majiang/web-bridge.test.ts`；大厅 U0 结构挂测 `tests/majiang/web-lobby.test.ts`（主 CTA + 固定配置 + 诊断默认折叠）；禁止前端自造规则。
+- **入口口径（方案 A）**：真玩只用 `npm run majiang:api-server` → `http://localhost:4100/`；纯静态会拒绝开局；视觉演示加 `?prototypeDemo=1`（勿把 `python -m http.server` / `npx serve` 写成可玩入口）。
 - **依赖**：`CAP-WEB-BRIDGE` + `CAP-WEB-LOBBY` 已落地。
 
 ### `MJ-ACC-WEB-02`

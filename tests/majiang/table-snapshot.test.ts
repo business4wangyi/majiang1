@@ -60,6 +60,7 @@ describe('TableSnapshot (CAP-ENG-SNAP / MJ-ACC-SNAP-01)', function () {
 
     expect(snap0).to.include.keys(
       'phase',
+      'selfSeatId',
       'seats',
       'selfHand',
       'discardRiver',

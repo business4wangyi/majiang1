@@ -2,7 +2,7 @@ import { Game, GameState } from '../core/game';
 import { Player, PlayerState, PlayerType } from '../core/player';
 import { PlayerAction } from '../core/rule-types';
 import { RuleEngine } from '../core/rule-engine';
-import { Tile } from '../core/tile';
+import { FengValue, Tile, TileType } from '../core/tile';
 import { TileManager } from '../core/tile-manager';
 import { GameEventHandler } from '../ui/game-event-handler';
 import * as input from '../ui/input';
@@ -16,10 +16,20 @@ import {
 
 export type GameSessionMode = 'auto' | 'api';
 
+/** 测试/显式 API：固定副露响应窗；默认对局勿传 */
+export type MeldFixtureId = 'peng-ready' | 'chi-ready';
+
+export const MELD_FIXTURE_IDS: readonly MeldFixtureId[] = [
+  'peng-ready',
+  'chi-ready',
+] as const;
+
 export interface GameSessionOptions {
   mode?: GameSessionMode;
   /** api 模式：稳定对局 id，写入快照 gameId */
   gameId?: string;
+  /** 仅测试/显式：开局后装入能碰/能吃响应窗 */
+  fixture?: MeldFixtureId;
 }
 
 /** CAP-API-GAME / CAP-WEB-BRIDGE：客户端提交的动作（状态机仍在服务端 Session） */
@@ -35,6 +45,17 @@ export class SessionActionError extends Error {
     super(message);
     this.name = 'SessionActionError';
   }
+}
+
+export function parseMeldFixture(raw: unknown): MeldFixtureId | undefined {
+  if (raw === undefined || raw === null || raw === '') return undefined;
+  if (typeof raw !== 'string') {
+    throw new SessionActionError(`invalid fixture: ${String(raw)}`);
+  }
+  if ((MELD_FIXTURE_IDS as readonly string[]).includes(raw)) {
+    return raw as MeldFixtureId;
+  }
+  throw new SessionActionError(`unknown fixture: ${raw}`);
 }
 
 const ACTION_ID_TO_ENUM: Record<string, PlayerAction> = {
@@ -53,6 +74,7 @@ export class GameSession {
   readonly game: Game;
   readonly mode: GameSessionMode;
   readonly gameId: string;
+  readonly fixture?: MeldFixtureId;
   private readonly handler: GameEventHandler;
   private started = false;
 
@@ -60,18 +82,23 @@ export class GameSession {
     game: Game,
     handler: GameEventHandler,
     mode: GameSessionMode,
-    gameId: string
+    gameId: string,
+    fixture?: MeldFixtureId
   ) {
     this.game = game;
     this.handler = handler;
     this.mode = mode;
     this.gameId = gameId;
+    this.fixture = fixture;
   }
 
   static create(options: GameSessionOptions = {}): GameSession {
     const mode: GameSessionMode = options.mode ?? 'auto';
     if (mode !== 'auto' && mode !== 'api') {
       throw new Error(`GameSession: unsupported mode "${mode}"`);
+    }
+    if (options.fixture && mode !== 'api') {
+      throw new Error('GameSession: fixture only supported in api mode');
     }
 
     const gameId = options.gameId ?? `session-${Date.now()}`;
@@ -87,7 +114,7 @@ export class GameSession {
     const handler = new GameEventHandler(game, TileManager.getInstance());
     // 抬高 currentRound，避免 handleGameEnd 按 AUTO_PLAY_ROUNDS 误判「还要下一局」；多局由 runRounds 外层驱动
     handler.currentRound = Number.MAX_SAFE_INTEGER;
-    return new GameSession(game, handler, mode, gameId);
+    return new GameSession(game, handler, mode, gameId, options.fixture);
   }
 
   /** CAP-API-GAME：开局发牌，进入可出牌态（权威在服务端） */
@@ -100,6 +127,11 @@ export class GameSession {
     }
     this.handler.startGame();
     this.started = true;
+    if (this.fixture === 'peng-ready') {
+      this.installPengReadyFixture();
+    } else if (this.fixture === 'chi-ready') {
+      this.installChiReadyFixture();
+    }
   }
 
   /**
@@ -402,6 +434,80 @@ export class GameSession {
       allowedActions: actions,
       waitingPlayers: humanIndex >= 0 ? [humanIndex] : [],
     });
+  }
+
+  /**
+   * 固定响应窗：南家打出东风，人类手牌必有一对东风 → 能碰（风牌，避免误出吃）。
+   * ponytail: 只改手牌/河牌/pending，不改 core 判定；升级可换成整山种子。
+   */
+  private installPengReadyFixture(): void {
+    const players = this.game.getAllPlayers();
+    const human = this.getHumanPlayer();
+    const discarderIndex = 1; // 南家 AI
+    this.game.setCurrentPlayerIndex(discarderIndex);
+    const discarder = players[discarderIndex];
+
+    const type = TileType.FENG;
+    const value = FengValue.DONG;
+    for (const p of players) {
+      p.handTiles = p.handTiles.filter((t) => !(t.type === type && t.value === value));
+    }
+    this.normalizeHumanHandSize(human, 13);
+    human.handTiles[0] = new Tile(type, value, 9101);
+    human.handTiles[1] = new Tile(type, value, 9102);
+    human.sortHand();
+
+    const discarded = new Tile(type, value, 9103);
+    discarder.discardedTiles.push(discarded);
+    this.game.setLastDiscardedTile(discarded);
+
+    const actions = this.listHumanResponseActions(discarded);
+    if (!actions.includes(PlayerAction.PENG)) {
+      throw new Error('fixture peng-ready: PENG not available');
+    }
+    this.openResponseWindow(discarded, actions);
+  }
+
+  /**
+   * 固定响应窗：北家打出 5万，人类为下家且手握 4万+6万 → 能吃。
+   */
+  private installChiReadyFixture(): void {
+    const players = this.game.getAllPlayers();
+    const human = this.getHumanPlayer();
+    const discarderIndex = 3; // 北家 AI；下家即东家人类
+    this.game.setCurrentPlayerIndex(discarderIndex);
+    const discarder = players[discarderIndex];
+
+    const type = TileType.WAN;
+    for (const p of players) {
+      p.handTiles = p.handTiles.filter(
+        (t) => !(t.type === type && (t.value === 4 || t.value === 5 || t.value === 6))
+      );
+    }
+    this.normalizeHumanHandSize(human, 13);
+    human.handTiles[0] = new Tile(type, 4, 9201);
+    human.handTiles[1] = new Tile(type, 6, 9202);
+    human.sortHand();
+
+    const discarded = new Tile(type, 5, 9203);
+    discarder.discardedTiles.push(discarded);
+    this.game.setLastDiscardedTile(discarded);
+
+    const actions = this.listHumanResponseActions(discarded);
+    if (!actions.includes(PlayerAction.CHI)) {
+      throw new Error('fixture chi-ready: CHI not available');
+    }
+    this.openResponseWindow(discarded, actions);
+  }
+
+  private normalizeHumanHandSize(human: Player, size: number): void {
+    while (human.handTiles.length > size) {
+      human.handTiles.pop();
+    }
+    let id = 9300;
+    while (human.handTiles.length < size) {
+      human.handTiles.push(new Tile(TileType.TIAO, 9, id++));
+    }
   }
 
   private clearResponseWindow(): void {

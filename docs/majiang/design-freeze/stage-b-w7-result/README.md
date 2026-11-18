@@ -18,8 +18,9 @@
 ## 复现
 
 ```bash
-# 原型需已在 8765（或任意静态服）打开
-# 控制台：
+# 结果四态采证：打开原型页后在控制台调用（视觉演示，非真对局）
+# 推荐：npm run majiang:api-server → http://localhost:4100/
+# 或纯静态 + ?prototypeDemo=1（纯静态默认会拒绝开局）
 window.showMajiangResultExample("tsumo")
 window.showMajiangResultExample("ron")
 window.showMajiangResultExample("draw")

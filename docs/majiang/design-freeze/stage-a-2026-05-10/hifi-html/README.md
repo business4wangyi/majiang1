@@ -3,7 +3,10 @@
 ## 当前版本
 - `index.html`：**Batch-3（S-C 主锚点）**
 
-## 预览
+## 预览（仅静态视觉稿，非可玩对局）
+
+> 阶段A 冻结 HTML：**只看布局/观感**。真玩请用正式入口 `npm run majiang:api-server` → `http://localhost:4100/`（见 `docs/majiang/web-ui-prototype/README.md`）。
+
 ```bash
 python3 -m http.server 9030
 ```
