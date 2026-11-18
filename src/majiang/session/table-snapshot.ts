@@ -76,6 +76,13 @@ export interface BuildTableSnapshotOptions {
   gameId?: string;
   /** 视角座位，默认 south（与原型一致） */
   selfSeatId?: 'east' | 'south' | 'west' | 'north';
+  /** 胡牌形态提示（自摸/荣和）；缺省时有赢家则按 tsumo */
+  resultTypeHint?: 'tsumo' | 'ron';
+}
+
+function formatScoreDelta(delta: number): string {
+  if (!Number.isFinite(delta) || delta === 0) return '0';
+  return delta > 0 ? `+${delta}` : String(delta);
 }
 
 const SEAT_IDS = ['east', 'south', 'west', 'north'] as const;
@@ -169,22 +176,27 @@ function buildDiscardRiver(
   return river;
 }
 
-function buildResultSummary(game: Game, phase: TablePhase): TableResultSummary | null {
+function buildResultSummary(
+  game: Game,
+  phase: TablePhase,
+  resultTypeHint?: 'tsumo' | 'ron'
+): TableResultSummary | null {
   if (phase !== 'ended') return null;
 
   const players = game.getAllPlayers();
   const winner = players.find((p) => p.winCount > 0 || p.state === PlayerState.WON);
   const rows: TableResultSummaryRow[] = players.map((p) => ({
     player: p.name,
-    delta: '0',
+    delta: formatScoreDelta(p.lastRoundDelta),
     total: Number.isFinite(p.score) ? p.score : 0,
     role: winner && p.id === winner.id ? '胡牌者' : winner ? '旁家' : '流局',
     reason: winner && p.id === winner.id ? '本局胡牌' : winner ? '未胡' : '流局',
   }));
 
   if (winner) {
+    const type = resultTypeHint === 'ron' ? 'ron' : 'tsumo';
     return {
-      type: 'tsumo',
+      type,
       title: '胡牌',
       reason: `${winner.name} 本局胡牌`,
       rows,
@@ -241,7 +253,7 @@ export function buildTableSnapshotFromGame(
     selfHand: selfPlayer ? selfPlayer.handTiles.map((t) => t.toString()) : [],
     discardRiver: buildDiscardRiver(players),
     availableActions: mapEngineActions(game, phase),
-    resultSummary: buildResultSummary(game, phase),
+    resultSummary: buildResultSummary(game, phase, options.resultTypeHint),
     latestEvent: {
       actor: pending ? seatIdAt(pending.fromPlayerId) : '系统',
       verb: lastTile ? '打出' : '等待',

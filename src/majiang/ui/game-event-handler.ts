@@ -34,6 +34,9 @@ export class GameEventHandler {
   public currentRound = 0;
   private lastWinBySelfDrawn: boolean = false; // 记录本局胡牌是否自摸
   private lastLoserIndex: number = -1; // 记录点炮者索引（荣和时）
+  /** 胡牌当时算出的分，结算时作兜底（避免终局再判 canHu 失败得 0） */
+  private lastWinScore: number = 0;
+  private roundSettled = false;
 
   /**
    * 启动游戏
@@ -86,6 +89,10 @@ export class GameEventHandler {
    */
   public startGame(): void {
     // 新一局前重置所有玩家状态和牌
+    this.roundSettled = false;
+    this.lastWinScore = 0;
+    this.lastWinBySelfDrawn = false;
+    this.lastLoserIndex = -1;
     for (const player of this.game.getAllPlayers()) {
       player.state = PlayerState.WAITING;
       player.handTiles = [];
@@ -93,6 +100,7 @@ export class GameEventHandler {
       player.revealedSets = [];
       player.flowerTiles = [];
       player.lastDrawnTile = null;
+      player.lastRoundDelta = 0;
     }
     displayManager.print("开始游戏...");
     
@@ -1104,8 +1112,9 @@ export class GameEventHandler {
       }
       const winTypeInfo = ScoreCalculator.getWinTypeInfo(huDetails.huType);
       displayManager.printSuccess(`${player.name} ${winTypeInfo.name} ${huDetails.description}`);
-      // 计算得分
+      // 计算得分（写入 lastWinScore，供 settleEndedRound 使用）
       const scoreResult = RuleEngine.calculateScore(player, huDetails.huType, { isSelfDrawn: !tile });
+      this.lastWinScore = scoreResult.score;
       displayManager.printSuccess(`得分: ${scoreResult.score}`);
       // 设置玩家状态为赢
       player.state = PlayerState.WON;
@@ -1380,13 +1389,27 @@ export class GameEventHandler {
     }
   }
 
+  /** 本局结束形态：供快照 resultSummary.type（未胡则 null） */
+  public getLastWinKind(): 'tsumo' | 'ron' | null {
+    const hasWinner = this.game.getAllPlayers().some((p) => p.state === PlayerState.WON);
+    if (!hasWinner) return null;
+    return this.lastWinBySelfDrawn ? 'tsumo' : 'ron';
+  }
+
   /**
-   * 处理游戏结束
+   * 终局分数/胜负统计（可被 API Session 与 CLI handleGameEnd 共用；幂等）。
    */
-  public async handleGameEnd(): Promise<GameEndResult> {
-    debugLog('[调试] handleGameEnd入口');
-    // 检查是否有玩家胡牌
+  public settleEndedRound(): void {
+    if (this.roundSettled) {
+      return;
+    }
+    this.roundSettled = true;
+
     const players = this.game.getAllPlayers();
+    for (const player of players) {
+      player.lastRoundDelta = 0;
+    }
+
     let winningPlayer: Player | null = null;
     for (const player of players) {
       if (player.state === PlayerState.WON) {
@@ -1394,64 +1417,63 @@ export class GameEventHandler {
         break;
       }
     }
-    debugLog(`[调试] handleGameEnd: 胡牌玩家: ${winningPlayer ? winningPlayer.name : '无'}, 玩家分数: ${players.map(p => p.name + ':' + p.score).join(', ')}`);
-    // 统计胜负局数和总局数，并结算分数
-    let winnerScore = 0;
-    let huType = null;
+    debugLog(
+      `[调试] settleEndedRound: 胡牌玩家: ${winningPlayer ? winningPlayer.name : '无'}, 玩家分数: ${players.map((p) => p.name + ':' + p.score).join(', ')}`
+    );
 
-    // 分数结算后，统计每个玩家的总局数
     for (const player of players) {
       player.totalGames++;
     }
+
     if (winningPlayer) {
-      debugLog(`[调试] 赢家: ${winningPlayer.name}, state: ${winningPlayer.state}`);
-      // 判断是否自摸
       let isSelfDrawn = this.lastWinBySelfDrawn;
-      // 自动判断自摸/荣和
       if (isSelfDrawn === undefined || isSelfDrawn === null) {
-        // 兜底：如果lastLoserIndex为-1则自摸，否则荣和
         isSelfDrawn = this.lastLoserIndex === -1;
       }
-      // 获取胡牌类型
       const huDetails = RuleEngine.getHuDetails(winningPlayer, null, { isDrawn: isSelfDrawn });
-      huType = huDetails.huType;
+      const huType = huDetails.huType;
       debugLog(`[调试] 赢家胡牌类型: ${huType}, canHu: ${huDetails.canHu}`);
-      // 计算赢家得分
+
+      let winnerScore = 0;
       if (huType !== null && huType !== undefined) {
-        let winScoreDetail;
+        const winScoreDetail = WinConditions.calculateScore(winningPlayer, {
+          isDrawn: isSelfDrawn,
+        });
+        winnerScore = winScoreDetail.score;
+        if (!(winnerScore > 0) && this.lastWinScore > 0) {
+          winnerScore = this.lastWinScore;
+        }
+        debugLog(`[调试] 结算分数: ${winnerScore} (detail=${JSON.stringify(winScoreDetail)})`);
+
         if (isSelfDrawn) {
-          debugLog('[调试] 进入自摸结算分支');
-          winScoreDetail = WinConditions.calculateScore(winningPlayer, { isDrawn: true });
-          winnerScore = winScoreDetail.score;
-          debugLog(`[调试] WinConditions自摸分数明细: ${JSON.stringify(winScoreDetail)}`);
           for (const player of players) {
-            debugLog(`[调试] [自摸结算前] 玩家: ${player.name}, 分数: ${player.score}`);
             if (player === winningPlayer) {
-              player.score += winnerScore * (players.length - 1);
+              const delta = winnerScore * (players.length - 1);
+              player.score += delta;
+              player.lastRoundDelta = delta;
             } else {
-              player.score -= winnerScore;
+              const delta = -winnerScore;
+              player.score += delta;
+              player.lastRoundDelta = delta;
             }
-            debugLog(`[调试] [自摸结算后] 玩家: ${player.name}, 分数: ${player.score}`);
           }
         } else {
-          // 荣和，点炮者为lastLoserIndex
           let loserIndex = this.lastLoserIndex;
           if (loserIndex === -1) {
-            // 兜底：找出最后一个出牌的玩家
-            loserIndex = players.findIndex(p => p !== winningPlayer && p.state !== PlayerState.WON);
+            loserIndex = players.findIndex(
+              (p) => p !== winningPlayer && p.state !== PlayerState.WON
+            );
           }
-          debugLog('[调试] 进入荣和结算分支');
-          winScoreDetail = WinConditions.calculateScore(winningPlayer, { isDrawn: false });
-          winnerScore = winScoreDetail.score;
-          debugLog(`[调试] WinConditions荣和分数明细: ${JSON.stringify(winScoreDetail)}`);
           const loser = players[loserIndex];
-          debugLog(`[调试] [荣和结算前] 赢家: ${winningPlayer.name}, 分数: ${winningPlayer.score}, 点炮者: ${loser.name}, 分数: ${loser.score}`);
           winningPlayer.score += winnerScore;
-          loser.score -= winnerScore;
-          debugLog(`[调试] [荣和结算后] 赢家: ${winningPlayer.name}, 分数: ${winningPlayer.score}, 点炮者: ${loser.name}, 分数: ${loser.score}`);
+          winningPlayer.lastRoundDelta = winnerScore;
+          if (loser) {
+            loser.score -= winnerScore;
+            loser.lastRoundDelta = -winnerScore;
+          }
         }
       }
-      // 分数结算后，统计每个玩家的总局数、胜利局数、失败局数
+
       for (const player of players) {
         if (player === winningPlayer) {
           player.winCount++;
@@ -1460,11 +1482,23 @@ export class GameEventHandler {
         }
       }
     } else {
-      // 无人胡牌，流局
       for (const player of players) {
         player.drawCount++;
       }
     }
+
+    debugLog(
+      `[调试] settleEndedRound 后: ${players.map((p) => p.name + ':' + p.score + '(Δ' + p.lastRoundDelta + ')').join(', ')}`
+    );
+  }
+
+  /**
+   * 处理游戏结束
+   */
+  public async handleGameEnd(): Promise<GameEndResult> {
+    debugLog('[调试] handleGameEnd入口');
+    const players = this.game.getAllPlayers();
+    this.settleEndedRound();
     // 显示游戏结算
     this.displayGameSummary();
     debugLog('[调试] displayGameSummary已调用');

@@ -35,6 +35,8 @@ export class Player {
   lastDrawnTile: Tile | null = null;
   // 分数
   score: number = 0;
+  /** 本局结算分差（供快照 resultSummary.delta；开局/结算时写入） */
+  lastRoundDelta: number = 0;
   // 新增：统计字段
   winCount: number = 0; // 胜利局数
   loseCount: number = 0; // 失败局数

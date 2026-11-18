@@ -34,7 +34,7 @@
   }
 
   async function apiGameCreationHandler() {
-    // 可选 ?fixture=peng-ready|chi-ready：测试夹具；默认不传
+    // 可选 ?fixture=peng-ready|chi-ready|hu-ready：测试夹具；默认不传
     var body;
     try {
       var q = new URLSearchParams(global.location.search || "");

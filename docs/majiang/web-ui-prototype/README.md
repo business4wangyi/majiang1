@@ -12,7 +12,7 @@
 | **真玩（唯一正式入口）** | `npm run majiang:api-server` → 浏览器打开 `http://localhost:4100/` |
 | **纯静态** | 会**拒绝开局**（fail-closed，避免无 API 时假对局卡在 `waiting_ai`） |
 | **视觉演示（假对局）** | 静态打开时加 `?prototypeDemo=1`（或既有 `?acceptance=1`） |
-| **真浏览器 e2e** | `npm run majiang:web:e2e`（静态拒开局 / 演示旁路 / 结果四态 / API 完局+非法出牌；副露为机会覆盖） |
+| **真浏览器 e2e** | `npm run majiang:web:e2e`（静态拒开局 / 演示旁路 / 结果四态 / API 完局+非法出牌；副露夹具；`hu-ready` 分数结算专用项） |
 
 ```bash
 npm run majiang:api-server

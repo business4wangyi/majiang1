@@ -1662,6 +1662,14 @@ window.__majiangE2e = {
     ((appState.tableSnapshot && appState.tableSnapshot.availableActions) || [])
       .filter((a) => a && a.available)
       .map((a) => a.id),
+  getSeatScores: () =>
+    ((appState.tableSnapshot && appState.tableSnapshot.seats) || []).map((s) => ({
+      id: s.id,
+      name: s.name,
+      score: s.score,
+    })),
+  getResultSummary: () =>
+    (appState.tableSnapshot && appState.tableSnapshot.resultSummary) || null,
   async submit(actionId) {
     await submitAction(actionId);
   },

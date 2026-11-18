@@ -6,7 +6,8 @@
  * - ?prototypeDemo=1 可进假对局
  * - 结果四态 showMajiangResultExample
  * - API：开局→优先 hu/副露→否则 discard/pass→ended；非法 discard 不脏写
- * 副露/胡：随机局仍为机会覆盖；必现碰/吃见 ?fixture=peng-ready|chi-ready。
+ * - 分数：?fixture=hu-ready 点胡后 seats/resultSummary 非全 0；随机完局若有赢家亦校验
+ * 副露/胡：随机局仍为机会覆盖；必现碰/吃/胡见 ?fixture=peng-ready|chi-ready|hu-ready。
  */
 const http = require('http');
 const fs = require('fs');
@@ -89,6 +90,58 @@ function pickResponseAction(actions) {
     if (actions.includes(id)) return id;
   }
   return null;
+}
+
+/** 胡牌局分数验收：座位分、delta、total 对齐、零和 */
+function assertScoreSettlement(scoreInfo, { requireWinner = false } = {}) {
+  const { seats, resultSummary } = scoreInfo || {};
+  if (!resultSummary) {
+    throw new Error(`missing resultSummary: ${JSON.stringify(scoreInfo)}`);
+  }
+  const hasWinner =
+    resultSummary.type === 'tsumo' ||
+    resultSummary.type === 'ron' ||
+    (resultSummary.rows || []).some((r) => r.role === '胡牌者');
+
+  if (!hasWinner) {
+    if (requireWinner) {
+      throw new Error(`expected winner settlement, got ${JSON.stringify(resultSummary)}`);
+    }
+    const deltas = (resultSummary.rows || []).map((r) => r.delta);
+    if (deltas.some((d) => d !== '0')) {
+      throw new Error(`draw must have delta 0, got ${JSON.stringify(deltas)}`);
+    }
+    return { hasWinner: false, seats, resultSummary };
+  }
+
+  const seatScores = (seats || []).map((s) => s.score);
+  if (!seatScores.some((s) => s !== 0)) {
+    throw new Error(`winner round seat scores all 0: ${JSON.stringify(seats)}`);
+  }
+  const deltas = (resultSummary.rows || []).map((r) => r.delta);
+  if (!deltas.some((d) => d !== '0')) {
+    throw new Error(`winner round deltas all 0: ${JSON.stringify(resultSummary.rows)}`);
+  }
+  if (!deltas.some((d) => String(d).startsWith('+'))) {
+    throw new Error(`missing positive delta: ${JSON.stringify(deltas)}`);
+  }
+  if (!deltas.some((d) => String(d).startsWith('-'))) {
+    throw new Error(`missing negative delta: ${JSON.stringify(deltas)}`);
+  }
+  const sum = deltas.reduce((a, b) => a + Number(b), 0);
+  if (sum !== 0) {
+    throw new Error(`deltas not zero-sum (${sum}): ${JSON.stringify(deltas)}`);
+  }
+  for (const row of resultSummary.rows || []) {
+    const seat = (seats || []).find((s) => s.name === row.player);
+    if (!seat) {
+      throw new Error(`seat missing for ${row.player}`);
+    }
+    if (seat.score !== row.total) {
+      throw new Error(`seat/total mismatch ${row.player}: seat=${seat.score} total=${row.total}`);
+    }
+  }
+  return { hasWinner: true, seats, resultSummary, seatScores, deltas };
 }
 
 async function assertStaticFailClosed() {
@@ -267,7 +320,12 @@ async function playToEndViaUi(baseUrl) {
       }
 
       if (snap.resultOpen || snap.phase === 'ended' || /本局已结束/.test(snap.hint || '')) {
-        return { steps, ended: true, actionsSeen, illegalChecked };
+        const scoreInfo = await page.evaluate(() => ({
+          seats: window.__majiangE2e.getSeatScores(),
+          resultSummary: window.__majiangE2e.getResultSummary(),
+        }));
+        const scoreCheck = assertScoreSettlement(scoreInfo, { requireWinner: false });
+        return { steps, ended: true, actionsSeen, illegalChecked, scoreCheck };
       }
       if (snap.phase === 'waiting_ai') {
         throw new Error(`假 waiting_ai 死等 at step ${steps}: ${JSON.stringify(snap)}`);
@@ -439,6 +497,53 @@ async function runMeldFixtureE2e() {
   });
 }
 
+/** 专用分数 e2e：hu-ready 点胡，覆盖座位分 / delta / 零和 / 对齐 */
+async function assertHuReadyScoreViaUi(base) {
+  return withBrowser(async (page) => {
+    await page.goto(`${base}/index.html?fixture=hu-ready`, {
+      waitUntil: 'domcontentloaded',
+      timeout: 60000,
+    });
+    await page.waitForFunction(() => window.__majiangApiBridgeInstalled === true, null, {
+      timeout: 10000,
+    });
+    await page.click('#startGameBtn');
+    await page.waitForFunction(() => {
+      const api = window.__majiangE2e;
+      return api && api.getPhase() === 'response_window' && api.getAvailableActionIds().includes('hu');
+    }, null, { timeout: 30000 });
+
+    await Promise.all([
+      page.waitForResponse(
+        (r) => r.url().includes('/actions') && r.request().method() === 'POST',
+        { timeout: 60000 }
+      ),
+      page.evaluate(async () => {
+        await window.__majiangE2e.submit('hu');
+      }),
+    ]);
+
+    await page.waitForFunction(() => {
+      const api = window.__majiangE2e;
+      return api && !api.isSubmitting() && api.getPhase() === 'ended';
+    }, null, { timeout: 30000 });
+
+    const scoreInfo = await page.evaluate(() => ({
+      seats: window.__majiangE2e.getSeatScores(),
+      resultSummary: window.__majiangE2e.getResultSummary(),
+    }));
+    const scoreCheck = assertScoreSettlement(scoreInfo, { requireWinner: true });
+    if (scoreCheck.resultSummary.type !== 'ron') {
+      throw new Error(`hu-ready expected ron, got ${scoreCheck.resultSummary.type}`);
+    }
+    return { fixture: 'hu-ready', did: 'hu', phase: 'ended', scoreCheck };
+  });
+}
+
+async function runScoreSettlementE2e() {
+  return withApiServer(async (base) => assertHuReadyScoreViaUi(base));
+}
+
 async function main() {
   const wallStart = Date.now();
   const startedAt = new Date().toISOString();
@@ -474,6 +579,11 @@ async function main() {
     const meld = await runMeldFixtureE2e();
     result.checks.meldFixtures = meld;
     result.timingsMs.meldFixtures = Date.now() - t0;
+
+    t0 = Date.now();
+    const scoreSettlement = await runScoreSettlementE2e();
+    result.checks.scoreSettlement = scoreSettlement;
+    result.timingsMs.scoreSettlement = Date.now() - t0;
     result.ok = true;
   } catch (err) {
     result.ok = false;
@@ -500,8 +610,18 @@ async function main() {
           ended: result.checks.apiUiPlayToEnd.ended,
           illegalChecked: result.checks.apiUiPlayToEnd.illegalChecked,
           actionsSeen: result.checks.apiUiPlayToEnd.actionsSeen,
+          scoreCheck: result.checks.apiUiPlayToEnd.scoreCheck
+            ? { hasWinner: result.checks.apiUiPlayToEnd.scoreCheck.hasWinner }
+            : null,
         },
         meldFixtures: result.checks.meldFixtures,
+        scoreSettlement: {
+          fixture: result.checks.scoreSettlement.fixture,
+          did: result.checks.scoreSettlement.did,
+          hasWinner: result.checks.scoreSettlement.scoreCheck.hasWinner,
+          type: result.checks.scoreSettlement.scoreCheck.resultSummary.type,
+          deltas: result.checks.scoreSettlement.scoreCheck.deltas,
+        },
       },
       timingsMs: result.timingsMs,
     })}`
@@ -517,5 +637,7 @@ module.exports = {
   assertPrototypeDemoAllowsFakeGame,
   runApiBackedE2e,
   runMeldFixtureE2e,
+  runScoreSettlementE2e,
   playToEndViaUi,
+  assertScoreSettlement,
 };

@@ -16,12 +16,13 @@ import {
 
 export type GameSessionMode = 'auto' | 'api';
 
-/** 测试/显式 API：固定副露响应窗；默认对局勿传 */
-export type MeldFixtureId = 'peng-ready' | 'chi-ready';
+/** 测试/显式 API：固定副露/胡响应窗；默认对局勿传 */
+export type MeldFixtureId = 'peng-ready' | 'chi-ready' | 'hu-ready';
 
 export const MELD_FIXTURE_IDS: readonly MeldFixtureId[] = [
   'peng-ready',
   'chi-ready',
+  'hu-ready',
 ] as const;
 
 export interface GameSessionOptions {
@@ -131,6 +132,8 @@ export class GameSession {
       this.installPengReadyFixture();
     } else if (this.fixture === 'chi-ready') {
       this.installChiReadyFixture();
+    } else if (this.fixture === 'hu-ready') {
+      this.installHuReadyFixture();
     }
   }
 
@@ -210,6 +213,7 @@ export class GameSession {
     const defaults: BuildTableSnapshotOptions = {
       gameId: this.gameId,
       ...(this.mode === 'api' ? { selfSeatId: 'east' as const } : {}),
+      resultTypeHint: this.handler.getLastWinKind() ?? undefined,
     };
     return buildTableSnapshotFromGame(this.game, { ...defaults, ...options });
   }
@@ -351,6 +355,7 @@ export class GameSession {
 
         if (this.game.getRemainingTiles() <= 0 || this.handler.checkGameEnd()) {
           this.game.setState(GameState.ENDED);
+          this.markWinnerStats();
           break;
         }
 
@@ -469,6 +474,51 @@ export class GameSession {
   }
 
   /**
+   * 固定响应窗：南家打出东风，人类听东风 → 能胡（荣和）。
+   * ponytail: 只改手牌/河牌/pending，不改 core 判定。
+   */
+  private installHuReadyFixture(): void {
+    const players = this.game.getAllPlayers();
+    const human = this.getHumanPlayer();
+    const discarderIndex = 1; // 南家 AI
+    this.game.setCurrentPlayerIndex(discarderIndex);
+    const discarder = players[discarderIndex];
+
+    const winTile = new Tile(TileType.FENG, FengValue.DONG, 9400);
+    for (const p of players) {
+      p.handTiles = p.handTiles.filter(
+        (t) => !(t.type === winTile.type && t.value === winTile.value)
+      );
+    }
+    human.handTiles = [
+      new Tile(TileType.WAN, 1, 9401),
+      new Tile(TileType.WAN, 1, 9402),
+      new Tile(TileType.WAN, 1, 9403),
+      new Tile(TileType.WAN, 2, 9404),
+      new Tile(TileType.WAN, 3, 9405),
+      new Tile(TileType.WAN, 4, 9406),
+      new Tile(TileType.TIAO, 3, 9407),
+      new Tile(TileType.TIAO, 4, 9408),
+      new Tile(TileType.TIAO, 5, 9409),
+      new Tile(TileType.TONG, 7, 9410),
+      new Tile(TileType.TONG, 8, 9411),
+      new Tile(TileType.TONG, 9, 9412),
+      new Tile(TileType.FENG, FengValue.DONG, 9413),
+    ];
+    human.sortHand();
+
+    const discarded = new Tile(TileType.FENG, FengValue.DONG, 9414);
+    discarder.discardedTiles.push(discarded);
+    this.game.setLastDiscardedTile(discarded);
+
+    const actions = this.listHumanResponseActions(discarded);
+    if (!actions.includes(PlayerAction.HU)) {
+      throw new Error('fixture hu-ready: HU not available');
+    }
+    this.openResponseWindow(discarded, actions);
+  }
+
+  /**
    * 固定响应窗：北家打出 5万，人类为下家且手握 4万+6万 → 能吃。
    */
   private installChiReadyFixture(): void {
@@ -526,11 +576,8 @@ export class GameSession {
   }
 
   private markWinnerStats(): void {
-    for (const p of this.game.getAllPlayers()) {
-      if (p.state === PlayerState.WON && p.winCount === 0) {
-        p.winCount = 1;
-      }
-    }
+    // 与 CLI handleGameEnd 共用结算：改 score / lastRoundDelta / 胜负统计
+    this.handler.settleEndedRound();
   }
 
   /**
