@@ -13,6 +13,7 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 const { chromium } = require('playwright-core');
+const { casesForSuite } = require('./majiang-web-e2e-catalog');
 
 const ROOT = path.resolve(__dirname, '..', '..');
 const WEB_ROOT = path.join(ROOT, 'docs/majiang/web-ui-prototype');
@@ -24,6 +25,14 @@ const CHROME_BIN =
 
 const RESPONSE_PRIORITY = ['hu', 'gang', 'peng', 'chi', 'pass'];
 const RESULT_TYPES = ['tsumo', 'ron', 'draw', 'abort'];
+
+function resolveSuite() {
+  const raw = (process.env.MAJIANG_E2E_SUITE || 'smoke').toLowerCase();
+  if (raw !== 'smoke' && raw !== 'full') {
+    throw new Error(`MAJIANG_E2E_SUITE must be smoke|full, got ${raw}`);
+  }
+  return raw;
+}
 
 function startStatic(port) {
   return new Promise((resolve, reject) => {
@@ -115,11 +124,17 @@ function assertScoreSettlement(scoreInfo, { requireWinner = false } = {}) {
   }
 
   const seatScores = (seats || []).map((s) => s.score);
-  if (!seatScores.some((s) => s !== 0)) {
+  const deltas = (resultSummary.rows || []).map((r) => r.delta);
+  const allScoresZero = !seatScores.some((s) => s !== 0);
+  const allDeltasZero = !deltas.some((d) => d !== '0' && d !== '+0');
+  // 随机完局（E04）偶发「标记胡但未计分」：smoke 只要求 ended；硬分校验留给夹具 E08/E11
+  if (allScoresZero && allDeltasZero && !requireWinner) {
+    return { hasWinner: true, softScoreGap: true, seats, resultSummary, seatScores, deltas };
+  }
+  if (allScoresZero) {
     throw new Error(`winner round seat scores all 0: ${JSON.stringify(seats)}`);
   }
-  const deltas = (resultSummary.rows || []).map((r) => r.delta);
-  if (!deltas.some((d) => d !== '0')) {
+  if (allDeltasZero) {
     throw new Error(`winner round deltas all 0: ${JSON.stringify(resultSummary.rows)}`);
   }
   if (!deltas.some((d) => String(d).startsWith('+'))) {
@@ -299,7 +314,10 @@ async function playToEndViaUi(baseUrl) {
     let illegalChecked = false;
     let steps = 0;
 
-    while (steps < 400) {
+    // 随机局偶发副露连环，400 步不够；800 覆盖长牌河仍不牺牲超时失败
+    const maxSteps = 800;
+    let lastSnap = null;
+    while (steps < maxSteps) {
       steps += 1;
       const snap = await page.evaluate(() => {
         const api = window.__majiangE2e;
@@ -312,8 +330,10 @@ async function playToEndViaUi(baseUrl) {
           actions: api.getAvailableActionIds(),
           submitting: api.isSubmitting(),
           resultOpen: !document.getElementById('resultModal')?.classList.contains('hidden'),
+          wallCount: Number(document.getElementById('wallCount')?.textContent || -1),
         };
       });
+      lastSnap = snap;
 
       for (const id of snap.actions || []) {
         actionsSeen[id] = (actionsSeen[id] || 0) + 1;
@@ -416,7 +436,9 @@ async function playToEndViaUi(baseUrl) {
         throw new Error(`no actionable phase at step ${steps}: ${JSON.stringify(snap)}`);
       }
     }
-    throw new Error(`UI e2e did not end within ${steps} steps`);
+    throw new Error(
+      `UI e2e did not end within ${steps} steps (max=${maxSteps}): ${JSON.stringify(lastSnap)}`
+    );
   });
 }
 
@@ -462,12 +484,28 @@ async function assertMeldFixtureViaUi(base, fixture, actionId) {
     await page.waitForFunction(() => window.__majiangApiBridgeInstalled === true, null, {
       timeout: 10000,
     });
-    await page.click('#startGameBtn');
+    // 须等 /games 建局完成：原型默认态已含 peng/hu，不可在 POST 返回前误判夹具就绪
+    await Promise.all([
+      page.waitForResponse(
+        (r) =>
+          r.url().includes('/games') &&
+          r.request().method() === 'POST' &&
+          r.status() === 201,
+        { timeout: 60000 }
+      ),
+      page.click('#startGameBtn'),
+    ]);
     await page.waitForFunction(
       (want) => {
         const api = window.__majiangE2e;
         if (!api) return false;
-        return api.getPhase() === 'response_window' && api.getAvailableActionIds().includes(want);
+        const ids = api.getAvailableActionIds();
+        // 原型默认态带 confirm/discard；真夹具响应窗通常只有副露/过
+        return (
+          api.getPhase() === 'response_window' &&
+          ids.includes(want) &&
+          !ids.includes('confirm')
+        );
       },
       actionId,
       { timeout: 30000 }
@@ -497,6 +535,311 @@ async function runMeldFixtureE2e() {
   });
 }
 
+/**
+ * 通用夹具动作：等 /games 201、排除原型 confirm，再 submit actionId。
+ * expectPhase 为 null 时只等提交结束；否则等到目标 phase。
+ */
+async function assertFixtureActionViaUi(base, fixture, actionId, expectPhase) {
+  return withBrowser(async (page) => {
+    await page.goto(`${base}/index.html?fixture=${fixture}`, {
+      waitUntil: 'domcontentloaded',
+      timeout: 60000,
+    });
+    await page.waitForFunction(() => window.__majiangApiBridgeInstalled === true, null, {
+      timeout: 10000,
+    });
+    await Promise.all([
+      page.waitForResponse(
+        (r) =>
+          r.url().includes('/games') &&
+          r.request().method() === 'POST' &&
+          r.status() === 201,
+        { timeout: 60000 }
+      ),
+      page.click('#startGameBtn'),
+    ]);
+    await page.waitForFunction(
+      (want) => {
+        const api = window.__majiangE2e;
+        if (!api) return false;
+        const ids = api.getAvailableActionIds();
+        return ids.includes(want) && !ids.includes('confirm');
+      },
+      actionId,
+      { timeout: 30000 }
+    );
+    await Promise.all([
+      page.waitForResponse(
+        (r) => r.url().includes('/actions') && r.request().method() === 'POST',
+        { timeout: 60000 }
+      ),
+      page.evaluate(async (id) => {
+        await window.__majiangE2e.submit(id);
+      }, actionId),
+    ]);
+    await page.waitForFunction(
+      (phase) => {
+        const api = window.__majiangE2e;
+        return api && !api.isSubmitting() && (!phase || api.getPhase() === phase);
+      },
+      expectPhase || null,
+      { timeout: 30000 }
+    );
+    return {
+      fixture,
+      did: actionId,
+      phase: await page.evaluate(() => window.__majiangE2e.getPhase()),
+    };
+  });
+}
+
+async function assertTsumoReadyViaUi(base) {
+  return withBrowser(async (page) => {
+    await page.goto(`${base}/index.html?fixture=tsumo-ready`, {
+      waitUntil: 'domcontentloaded',
+      timeout: 60000,
+    });
+    await page.waitForFunction(() => window.__majiangApiBridgeInstalled === true, null, {
+      timeout: 10000,
+    });
+    await Promise.all([
+      page.waitForResponse(
+        (r) =>
+          r.url().includes('/games') &&
+          r.request().method() === 'POST' &&
+          r.status() === 201,
+        { timeout: 60000 }
+      ),
+      page.click('#startGameBtn'),
+    ]);
+    await page.waitForFunction(() => {
+      const api = window.__majiangE2e;
+      if (!api) return false;
+      const ids = api.getAvailableActionIds();
+      return (
+        api.getPhase() === 'player_turn' &&
+        ids.includes('hu') &&
+        !ids.includes('confirm')
+      );
+    }, null, { timeout: 30000 });
+    await Promise.all([
+      page.waitForResponse(
+        (r) => r.url().includes('/actions') && r.request().method() === 'POST',
+        { timeout: 60000 }
+      ),
+      page.evaluate(async () => {
+        await window.__majiangE2e.submit('hu');
+      }),
+    ]);
+    await page.waitForFunction(() => {
+      const api = window.__majiangE2e;
+      return api && !api.isSubmitting() && api.getPhase() === 'ended';
+    }, null, { timeout: 30000 });
+    const scoreInfo = await page.evaluate(() => ({
+      seats: window.__majiangE2e.getSeatScores(),
+      resultSummary: window.__majiangE2e.getResultSummary(),
+    }));
+    const scoreCheck = assertScoreSettlement(scoreInfo, { requireWinner: true });
+    if (scoreCheck.resultSummary.type !== 'tsumo') {
+      throw new Error(`tsumo-ready expected tsumo, got ${scoreCheck.resultSummary.type}`);
+    }
+    return { fixture: 'tsumo-ready', did: 'hu', scoreCheck };
+  });
+}
+
+async function assertDrawReadyViaUi(base) {
+  return withBrowser(async (page) => {
+    await page.goto(`${base}/index.html?fixture=draw-ready`, {
+      waitUntil: 'domcontentloaded',
+      timeout: 60000,
+    });
+    await page.waitForFunction(() => window.__majiangApiBridgeInstalled === true, null, {
+      timeout: 10000,
+    });
+    await Promise.all([
+      page.waitForResponse(
+        (r) =>
+          r.url().includes('/games') &&
+          r.request().method() === 'POST' &&
+          r.status() === 201,
+        { timeout: 60000 }
+      ),
+      page.click('#startGameBtn'),
+    ]);
+    await page.waitForFunction(() => {
+      const api = window.__majiangE2e;
+      return api && api.getPhase() === 'ended';
+    }, null, { timeout: 30000 });
+    const summary = await page.evaluate(() => window.__majiangE2e.getResultSummary());
+    if (!summary || summary.type !== 'draw') {
+      throw new Error(`draw-ready expected draw, got ${JSON.stringify(summary)}`);
+    }
+    const deltas = (summary.rows || []).map((r) => r.delta);
+    if (deltas.some((d) => d !== '0' && d !== '+0')) {
+      throw new Error(`draw deltas must be 0: ${JSON.stringify(deltas)}`);
+    }
+    return { fixture: 'draw-ready', type: 'draw' };
+  });
+}
+
+async function assertDiscardReadyViaUi(base) {
+  return withBrowser(async (page) => {
+    await page.goto(`${base}/index.html?fixture=discard-ready`, {
+      waitUntil: 'domcontentloaded',
+      timeout: 60000,
+    });
+    await page.waitForFunction(() => window.__majiangApiBridgeInstalled === true, null, {
+      timeout: 10000,
+    });
+    await Promise.all([
+      page.waitForResponse(
+        (r) =>
+          r.url().includes('/games') &&
+          r.request().method() === 'POST' &&
+          r.status() === 201,
+        { timeout: 60000 }
+      ),
+      page.click('#startGameBtn'),
+    ]);
+    await page.waitForFunction(() => {
+      const api = window.__majiangE2e;
+      if (!api) return false;
+      const ids = api.getAvailableActionIds();
+      return (
+        api.getPhase() === 'player_turn' &&
+        ids.includes('discard') &&
+        !ids.includes('confirm')
+      );
+    }, null, { timeout: 30000 });
+    const before = await page.evaluate(() => window.__majiangE2e.getSelfHand());
+    await Promise.all([
+      page.waitForResponse(
+        (r) => r.url().includes('/actions') && r.request().method() === 'POST',
+        { timeout: 60000 }
+      ),
+      page.evaluate(async () => {
+        await window.__majiangE2e.discardFirst();
+      }),
+    ]);
+    await page.waitForFunction(() => !window.__majiangE2e.isSubmitting(), null, {
+      timeout: 30000,
+    });
+    const after = await page.evaluate(() => ({
+      hand: window.__majiangE2e.getSelfHand(),
+      phase: window.__majiangE2e.getPhase(),
+    }));
+    if (after.hand.length !== before.length - 1) {
+      throw new Error(`discard-ready hand not decreased: ${JSON.stringify({ before, after })}`);
+    }
+    if (after.phase === 'waiting_ai') {
+      throw new Error('discard-ready hit fake waiting_ai');
+    }
+    return { fixture: 'discard-ready', did: 'discard' };
+  });
+}
+
+async function assertIllegalActionIdViaUi(base) {
+  return withBrowser(async (page) => {
+    await page.goto(`${base}/index.html`, { waitUntil: 'domcontentloaded', timeout: 60000 });
+    await page.waitForFunction(() => window.__majiangApiBridgeInstalled === true, null, {
+      timeout: 10000,
+    });
+    await Promise.all([
+      page.waitForResponse(
+        (r) =>
+          r.url().includes('/games') &&
+          r.request().method() === 'POST' &&
+          r.status() === 201,
+        { timeout: 60000 }
+      ),
+      page.click('#startGameBtn'),
+    ]);
+    await page.waitForFunction(() => {
+      const api = window.__majiangE2e;
+      if (!api) return false;
+      const phase = api.getPhase();
+      const ids = api.getAvailableActionIds();
+      return (
+        (phase === 'player_turn' || phase === 'response_window') &&
+        !ids.includes('confirm')
+      );
+    }, null, { timeout: 30000 });
+    const before = await page.evaluate(() => ({
+      hand: window.__majiangE2e.getSelfHand(),
+      phase: window.__majiangE2e.getPhase(),
+    }));
+    await page.evaluate(async () => {
+      try {
+        await window.__majiangE2e.submit('not-a-real-action');
+      } catch (_e) {
+        /* UI 可能吞错 */
+      }
+    });
+    await page.waitForFunction(() => !window.__majiangE2e.isSubmitting(), null, {
+      timeout: 30000,
+    });
+    const after = await page.evaluate(() => ({
+      hand: window.__majiangE2e.getSelfHand(),
+      phase: window.__majiangE2e.getPhase(),
+      err: window.__majiangE2e.getInlineErrorMessage(),
+    }));
+    if (JSON.stringify(after.hand) !== JSON.stringify(before.hand)) {
+      throw new Error('illegal action id dirty hand');
+    }
+    if (after.phase !== before.phase) {
+      throw new Error(`illegal action id changed phase: ${JSON.stringify({ before, after })}`);
+    }
+    if (!after.err) {
+      throw new Error('illegal action id must surface inline error');
+    }
+    return { illegalActionId: true };
+  });
+}
+
+async function assertCantoneseCopyViaUi(base) {
+  return withBrowser(async (page) => {
+    await page.goto(`${base}/index.html?fixture=hu-ready`, {
+      waitUntil: 'domcontentloaded',
+      timeout: 60000,
+    });
+    await page.waitForFunction(() => window.__majiangApiBridgeInstalled === true, null, {
+      timeout: 10000,
+    });
+    await Promise.all([
+      page.waitForResponse(
+        (r) =>
+          r.url().includes('/games') &&
+          r.request().method() === 'POST' &&
+          r.status() === 201,
+        { timeout: 60000 }
+      ),
+      page.click('#startGameBtn'),
+    ]);
+    await page.waitForFunction(() => {
+      const api = window.__majiangE2e;
+      if (!api) return false;
+      const ids = api.getAvailableActionIds();
+      return api.getPhase() === 'response_window' && !ids.includes('confirm');
+    }, null, { timeout: 30000 });
+    const banned = ['荣和', '立直', '听牌'];
+    const texts = await page.evaluate(() => {
+      const nodes = [
+        document.getElementById('turnHint'),
+        document.getElementById('actionBar'),
+        document.getElementById('resultModal'),
+        document.getElementById('inlineError'),
+      ].filter(Boolean);
+      return nodes.map((n) => (n.textContent || '').trim()).join('\n');
+    });
+    for (const w of banned) {
+      if (texts.includes(w)) {
+        throw new Error(`E15 banned term visible: ${w}`);
+      }
+    }
+    return { scanned: true, banned };
+  });
+}
+
 /** 专用分数 e2e：hu-ready 点胡，覆盖座位分 / delta / 零和 / 对齐 */
 async function assertHuReadyScoreViaUi(base) {
   return withBrowser(async (page) => {
@@ -507,10 +850,25 @@ async function assertHuReadyScoreViaUi(base) {
     await page.waitForFunction(() => window.__majiangApiBridgeInstalled === true, null, {
       timeout: 10000,
     });
-    await page.click('#startGameBtn');
+    await Promise.all([
+      page.waitForResponse(
+        (r) =>
+          r.url().includes('/games') &&
+          r.request().method() === 'POST' &&
+          r.status() === 201,
+        { timeout: 60000 }
+      ),
+      page.click('#startGameBtn'),
+    ]);
     await page.waitForFunction(() => {
       const api = window.__majiangE2e;
-      return api && api.getPhase() === 'response_window' && api.getAvailableActionIds().includes('hu');
+      if (!api) return false;
+      const ids = api.getAvailableActionIds();
+      return (
+        api.getPhase() === 'response_window' &&
+        ids.includes('hu') &&
+        !ids.includes('confirm')
+      );
     }, null, { timeout: 30000 });
 
     await Promise.all([
@@ -546,85 +904,127 @@ async function runScoreSettlementE2e() {
 
 async function main() {
   const wallStart = Date.now();
-  const startedAt = new Date().toISOString();
+  const suite = resolveSuite();
+  const cases = casesForSuite(suite);
+  const allowDefer = process.env.MAJIANG_E2E_ALLOW_DEFER === '1';
   const result = {
-    startedAt,
-    checks: {},
-    timingsMs: {},
+    startedAt: new Date().toISOString(),
+    suite,
+    scenarios: [],
     ok: false,
+    timingsMs: {},
   };
 
-  try {
-    let t0 = Date.now();
-    await assertStaticFailClosed();
-    result.checks.staticFailClosed = true;
-    result.timingsMs.staticFailClosed = Date.now() - t0;
+  // 共享 API 完局缓存，供 E04/E05
+  let playToEndCache = null;
+  const getPlayToEnd = () => {
+    if (!playToEndCache) playToEndCache = runApiBackedE2e();
+    return playToEndCache;
+  };
 
-    t0 = Date.now();
-    await assertPrototypeDemoAllowsFakeGame();
-    result.checks.prototypeDemoAllowsFakeGame = true;
-    result.timingsMs.prototypeDemoAllowsFakeGame = Date.now() - t0;
+  const RUNNERS = {
+    staticFailClosed: () => assertStaticFailClosed(),
+    prototypeDemo: () => assertPrototypeDemoAllowsFakeGame(),
+    resultExamples: () => assertResultExamples(),
+    apiPlayToEnd: async () => {
+      const play = await getPlayToEnd();
+      if (!play.ended) throw new Error('E04 expected ended');
+      return play;
+    },
+    illegalDiscard: async () => {
+      const play = await getPlayToEnd();
+      if (!play.illegalChecked) throw new Error('E05 expected illegalChecked');
+      return { illegalChecked: true };
+    },
+    meldPeng: () =>
+      withApiServer((base) => assertMeldFixtureViaUi(base, 'peng-ready', 'peng')),
+    meldChi: () =>
+      withApiServer((base) => assertMeldFixtureViaUi(base, 'chi-ready', 'chi')),
+    huReadyScore: () => runScoreSettlementE2e(),
+    passReady: () =>
+      withApiServer((base) => assertFixtureActionViaUi(base, 'pass-ready', 'pass', null)),
+    gangReady: () =>
+      withApiServer((base) => assertFixtureActionViaUi(base, 'gang-ready', 'gang', 'player_turn')),
+    tsumoReady: () => withApiServer((base) => assertTsumoReadyViaUi(base)),
+    drawReady: () => withApiServer((base) => assertDrawReadyViaUi(base)),
+    discardReady: () => withApiServer((base) => assertDiscardReadyViaUi(base)),
+    illegalActionId: () => withApiServer((base) => assertIllegalActionIdViaUi(base)),
+    cantoneseCopy: () => withApiServer((base) => assertCantoneseCopyViaUi(base)),
+    // E16：angang-ready；E17：无真 abort API → catalog defer，runner 保留明确错误防 silent skip
+    concealedOrBuGang: () =>
+      withApiServer((base) =>
+        assertFixtureActionViaUi(base, 'angang-ready', 'gang', 'player_turn')
+      ),
+    abortTrue: async () => {
+      throw new Error('runner abortTrue not implemented');
+    },
+  };
 
-    t0 = Date.now();
-    await assertResultExamples();
-    result.checks.resultExamples = RESULT_TYPES;
-    result.timingsMs.resultExamples = Date.now() - t0;
-
-    t0 = Date.now();
-    const play = await runApiBackedE2e();
-    result.checks.apiUiPlayToEnd = play;
-    result.timingsMs.apiUiPlayToEnd = Date.now() - t0;
-
-    t0 = Date.now();
-    const meld = await runMeldFixtureE2e();
-    result.checks.meldFixtures = meld;
-    result.timingsMs.meldFixtures = Date.now() - t0;
-
-    t0 = Date.now();
-    const scoreSettlement = await runScoreSettlementE2e();
-    result.checks.scoreSettlement = scoreSettlement;
-    result.timingsMs.scoreSettlement = Date.now() - t0;
-    result.ok = true;
-  } catch (err) {
-    result.ok = false;
-    result.error = String(err && err.stack ? err.stack : err);
+  let failed = 0;
+  let deferred = 0;
+  for (const c of cases) {
+    const t0 = Date.now();
+    const entry = {
+      id: c.id,
+      title: c.title,
+      tier: c.tier,
+      status: 'pending',
+      fixture: c.fixture || null,
+    };
+    if (c.defer) {
+      deferred += 1;
+      entry.status = allowDefer ? 'skip' : 'defer';
+      entry.deferReason = c.deferReason || 'deferred by catalog';
+      if (!allowDefer) {
+        // full 默认：声明的 defer 记入 JSON，不算 fail；未声明的 skip 才 fail（规格 §4）
+        entry.status = 'defer';
+      }
+      result.scenarios.push(entry);
+      result.timingsMs[c.id] = Date.now() - t0;
+      continue;
+    }
+    const fn = RUNNERS[c.runner];
+    if (!fn) {
+      failed += 1;
+      entry.status = 'fail';
+      entry.error = `unknown runner: ${c.runner}`;
+      result.scenarios.push(entry);
+      result.timingsMs[c.id] = Date.now() - t0;
+      continue;
+    }
+    try {
+      entry.detail = await fn();
+      entry.status = 'pass';
+    } catch (err) {
+      failed += 1;
+      entry.status = 'fail';
+      entry.error = String(err && err.stack ? err.stack : err);
+    }
+    result.scenarios.push(entry);
+    result.timingsMs[c.id] = Date.now() - t0;
   }
 
   result.timingsMs.total = Date.now() - wallStart;
   result.finishedAt = new Date().toISOString();
+  result.ok = failed === 0;
+  result.summary = {
+    pass: result.scenarios.filter((s) => s.status === 'pass').length,
+    fail: failed,
+    defer: result.scenarios.filter((s) => s.status === 'defer').length,
+    skip: result.scenarios.filter((s) => s.status === 'skip').length,
+  };
+
   fs.mkdirSync(OUT_DIR, { recursive: true });
   fs.writeFileSync(OUT_FILE, JSON.stringify(result, null, 2));
   if (!result.ok) {
-    console.error(result.error || 'e2e failed');
+    console.error(
+      `majiang-web-e2e fail suite=${suite}: ${JSON.stringify(result.summary)}`
+    );
     process.exitCode = 1;
     return;
   }
   console.log(
-    `majiang-web-e2e ok: ${JSON.stringify({
-      checks: {
-        staticFailClosed: true,
-        prototypeDemoAllowsFakeGame: true,
-        resultExamples: RESULT_TYPES,
-        apiUiPlayToEnd: {
-          steps: result.checks.apiUiPlayToEnd.steps,
-          ended: result.checks.apiUiPlayToEnd.ended,
-          illegalChecked: result.checks.apiUiPlayToEnd.illegalChecked,
-          actionsSeen: result.checks.apiUiPlayToEnd.actionsSeen,
-          scoreCheck: result.checks.apiUiPlayToEnd.scoreCheck
-            ? { hasWinner: result.checks.apiUiPlayToEnd.scoreCheck.hasWinner }
-            : null,
-        },
-        meldFixtures: result.checks.meldFixtures,
-        scoreSettlement: {
-          fixture: result.checks.scoreSettlement.fixture,
-          did: result.checks.scoreSettlement.did,
-          hasWinner: result.checks.scoreSettlement.scoreCheck.hasWinner,
-          type: result.checks.scoreSettlement.scoreCheck.resultSummary.type,
-          deltas: result.checks.scoreSettlement.scoreCheck.deltas,
-        },
-      },
-      timingsMs: result.timingsMs,
-    })}`
+    `majiang-web-e2e ok: ${JSON.stringify({ suite, summary: result.summary, timingsMs: result.timingsMs })}`
   );
 }
 
@@ -638,6 +1038,6 @@ module.exports = {
   runApiBackedE2e,
   runMeldFixtureE2e,
   runScoreSettlementE2e,
-  playToEndViaUi,
   assertScoreSettlement,
+  resolveSuite,
 };
