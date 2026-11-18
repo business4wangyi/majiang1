@@ -1,7 +1,7 @@
 # 广东麻将 Web e2e 场景目录表设计
 
 > 日期：2026-11-18  
-> 状态：待用户审阅（brainstorming 已口头对齐方案 A）  
+> 状态：已落地（smoke E01–E08；full E01–E16 绿，E17 声明 defer）  
 > 范围：仅 Web 端真浏览器 e2e；CLI / 其他端另波
 
 ## 1. 背景与目标
@@ -41,7 +41,7 @@
 | E10 | 必现明杠 | **新** `gang-ready` | did:gang → 可继续 | full |
 | E11 | 自摸胡 + 分数 | **新** `tsumo-ready` | `tsumo`；分校验同 E08 | full |
 | E12 | 真流局 | **新** `draw-ready` | `draw`；delta 全 0 | full |
-| E13 | 合法出牌 | **新** `discard-ready` 或开局即出 | 河牌/手牌变化正确 | full |
+| E13 | 合法出牌 | **新** `discard-ready`（开局即 `player_turn` 且指定可出下标） | 河牌/手牌变化正确 | full |
 | E14 | 非法动作 ID | API 桌 | 拒绝且不脏写 | full |
 | E15 | 广东术语文案 | 局内关键态 | 可见文案无「荣和 / 立直 / 听牌」 | full |
 | E16 | 暗杠 / 补杠 | **新** 若 Session 能装 | 点杠后状态合理 | full；不能装则 `defer` |
