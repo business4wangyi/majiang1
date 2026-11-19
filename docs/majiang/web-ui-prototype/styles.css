@@ -117,33 +117,111 @@ body {
 }
 
 .lobby-page {
-  display: grid;
-  gap: 12px;
-  max-width: 560px;
-  margin: 0 auto;
+  position: relative;
+  display: block;
+  max-width: none;
+  margin: 0;
   width: 100%;
+  min-height: 100vh;
+  padding: 0;
+  overflow: hidden;
+  color: #f7f1e6;
 }
 
-.lobby-hero h2 {
-  margin: 0 0 8px;
+.lobby-felt {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse at 50% 48%, rgba(78, 150, 104, 0.52) 0%, transparent 55%),
+    linear-gradient(165deg, #128a64 0%, #0b5c45 42%, #052e23 78%, #12160f 100%);
 }
 
-.lobby-config-lead {
-  margin: 0 0 6px;
-  color: var(--muted);
+/* table-felt-texture.png 是含牌/中控的整桌截图，不能当纯毡纹理，故大厅不叠加（见 task-4-report） */
+
+.lobby-felt::before {
+  content: "";
+  position: absolute;
+  inset: 18% 26%;
+  border-radius: 50%;
+  border: 2px solid rgba(226, 182, 58, 0.28);
+  background: rgba(18, 70, 42, 0.22);
+}
+
+/* 阶段 A 绝对叠放：品牌 11% / 中心 36% / 芯片 bottom 18% / 抽屉贴底 */
+.lobby-brand,
+.lobby-hero,
+.lobby-config-chips,
+.lobby-drawer {
+  position: absolute;
+  left: 0;
+  right: 0;
+  z-index: 1;
+}
+
+.lobby-brand {
+  top: 11%;
+  text-align: center;
+}
+
+.lobby-brand-title {
+  margin: 0;
+  font-size: 56px;
+  font-family: "Songti SC", "Noto Serif SC", "Source Han Serif SC", serif;
+  letter-spacing: 0.22em;
+  font-weight: 700;
+  color: #f7f1e6;
+}
+
+.lobby-hero {
+  top: 36%;
+  text-align: center;
+}
+
+.lobby-tagline {
+  margin: 0 0 22px;
+  font-size: 20px;
+  letter-spacing: 0.14em;
+  opacity: 0.9;
+  font-family: "Songti SC", "Noto Serif SC", "Source Han Serif SC", serif;
+}
+
+.lobby-config-chips {
+  bottom: 18%;
+  text-align: center;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.lobby-chip {
+  display: inline-block;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.38);
+  background: rgba(0, 0, 0, 0.25);
+  padding: 6px 14px;
+  margin: 0 6px;
   font-size: 13px;
+  letter-spacing: 0.04em;
+  color: #f7f1e6;
 }
 
-.lobby-config-list {
-  margin: 0 0 8px;
-  padding-left: 1.2em;
+.lobby-drawer {
+  bottom: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 2rem;
+  padding: 14px 28px 16px;
+  font-size: 14px;
+  border-top: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(8, 12, 10, 0.9);
 }
 
 .lobby-secondary {
-  border-radius: 12px;
-  border: 1px solid var(--panel-border);
-  background: var(--panel);
-  padding: 10px 12px;
+  border: none;
+  background: transparent;
+  padding: 0;
 }
 
 .lobby-secondary > summary {
@@ -156,8 +234,18 @@ body {
   display: none;
 }
 
+.lobby-secondary > summary::before {
+  content: "▾ ";
+}
+
+.lobby-secondary + .lobby-secondary > summary {
+  opacity: 0.7;
+}
+
 .lobby-diagnostics .diagnostics-output {
   margin-top: 8px;
+  max-width: min(720px, 92vw);
+  overflow: auto;
 }
 
 .card {
@@ -165,11 +253,6 @@ body {
   border: 1px solid var(--panel-border);
   background: var(--panel);
   padding: 12px;
-}
-
-.fixed-config {
-  color: var(--muted);
-  font-size: 13px;
 }
 
 .lobby-error {
@@ -190,6 +273,26 @@ body {
 .primary-btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+}
+
+.lobby-page .primary-btn.lobby-cta {
+  width: auto;
+  min-width: 0;
+  min-height: 0;
+  padding: 16px 64px;
+  font-family: "Songti SC", "Noto Serif SC", "Source Han Serif SC", serif;
+  font-size: 22px;
+  border: none;
+  background: #e2b63a;
+  color: #1b1306;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  border-radius: 8px;
+}
+
+.lobby-page .primary-btn.lobby-cta:disabled {
+  opacity: 0.55;
+  filter: grayscale(0.15);
 }
 
 .table-page {

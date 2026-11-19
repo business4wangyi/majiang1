@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <title>大厅阶段A · 1440×900</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { width: 1440px; height: 900px; overflow: hidden; }
+    body {
+      color: #f7f1e6;
+      font-family: "Songti SC", "Noto Serif SC", "Source Han Serif SC", serif;
+      background:
+        radial-gradient(ellipse at 50% 48%, rgba(78, 150, 104, 0.52) 0%, transparent 55%),
+        linear-gradient(165deg, #128a64 0%, #0b5c45 42%, #052e23 78%, #12160f 100%);
+    }
+    .desk {
+      position: absolute; inset: 18% 26%;
+      border-radius: 50%;
+      border: 2px solid rgba(226, 182, 58, 0.28);
+      background: rgba(18, 70, 42, 0.22);
+    }
+    .brand {
+      position: absolute; left: 0; right: 0; top: 11%;
+      text-align: center; font-size: 56px; font-weight: 700; letter-spacing: 0.22em;
+    }
+    .center { position: absolute; left: 0; right: 0; top: 36%; text-align: center; }
+    .tag { font-size: 20px; letter-spacing: 0.14em; opacity: 0.9; margin-bottom: 22px; }
+    .cta {
+      display: inline-block; background: #e2b63a; color: #1b1306;
+      padding: 16px 64px; border-radius: 8px; font-size: 22px; font-weight: 800; letter-spacing: 0.14em;
+    }
+    .chips { position: absolute; left: 0; right: 0; bottom: 18%; text-align: center; }
+    .chip {
+      display: inline-block; font-size: 13px; padding: 6px 14px; margin: 0 6px;
+      border-radius: 999px; border: 1px solid rgba(255,255,255,0.38); background: rgba(0,0,0,0.25);
+      font-family: "PingFang SC", "Noto Sans SC", sans-serif; letter-spacing: 0.04em;
+    }
+    .drawer {
+      position: absolute; left: 0; right: 0; bottom: 0;
+      background: rgba(8, 12, 10, 0.9);
+      border-top: 1px solid rgba(255,255,255,0.14);
+      padding: 14px 28px 16px;
+      font-size: 14px; display: flex; gap: 2rem;
+      font-family: "PingFang SC", "Noto Sans SC", sans-serif;
+    }
+    .drawer .muted { margin-left: auto; opacity: 0.45; }
+  </style>
+</head>
+<body>
+  <div class="desk" aria-hidden="true"></div>
+  <div class="brand">广东麻将</div>
+  <div class="center">
+    <div class="tag">一局见真章</div>
+    <div class="cta">开始对局</div>
+  </div>
+  <div class="chips">
+    <span class="chip">玩家 4</span>
+    <span class="chip">AI 固定</span>
+    <span class="chip">广东推倒胡</span>
+    <span class="chip">起始分 25000</span>
+  </div>
+  <div class="drawer">
+    <span>▾ 最近对局</span>
+    <span style="opacity:.7">▾ 诊断</span>
+    <span class="muted">桌面 1440×900 · A3+V1+S1</span>
+  </div>
+</body>
+</html>

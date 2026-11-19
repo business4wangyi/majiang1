@@ -20,30 +20,33 @@
     <div id="screenReaderAnnouncements" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></div>
 
     <section id="lobbyPage" class="page lobby-page">
-      <h1>麻将对局大厅</h1>
-      <article class="card lobby-hero">
-        <h2>开始新对局</h2>
-        <p class="lobby-config-lead">固定配置摘要（本版不可改）</p>
-        <ul class="lobby-config-list">
-          <li>玩家数：<span id="cfgPlayers"></span></li>
-          <li>AI 类型：<span id="cfgAiType"></span></li>
-          <li>规则集：<span id="cfgRuleSet"></span></li>
-          <li>起始分：<span id="cfgBaseScore"></span></li>
-        </ul>
-        <p class="fixed-config">当前版本固定配置</p>
-        <p id="lobbyError" class="lobby-error hidden"></p>
-        <button id="startGameBtn" type="button" class="primary-btn">开始对局</button>
-      </article>
-      <details class="lobby-secondary card">
-        <summary>最近对局</summary>
-        <p id="recentGamesEmpty">暂无最近对局，开始一局后会在这里显示。</p>
-        <ul id="recentGamesList" class="hidden"></ul>
-      </details>
-      <details id="lobbyDiagDetails" class="lobby-secondary lobby-diagnostics card">
-        <summary>诊断入口</summary>
-        <button id="lobbyDiagBtn" type="button" class="ghost-btn">查看状态快照</button>
-        <pre id="lobbyDiagOutput" class="diagnostics-output hidden">等待诊断操作...</pre>
-      </details>
+      <div class="lobby-felt" aria-hidden="true"></div>
+      <header class="lobby-brand">
+        <h1 class="lobby-brand-title">广东麻将</h1>
+      </header>
+      <div class="lobby-hero">
+        <p class="lobby-tagline">一局见真章</p>
+        <button id="startGameBtn" type="button" class="primary-btn lobby-cta">开始对局</button>
+        <p id="lobbyError" class="lobby-error hidden" role="alert"></p>
+      </div>
+      <ul class="lobby-config-chips" aria-label="固定配置摘要（本版不可改）">
+        <li class="lobby-chip">玩家 <span id="cfgPlayers"></span></li>
+        <li class="lobby-chip">AI <span id="cfgAiType"></span></li>
+        <li class="lobby-chip"><span id="cfgRuleSet"></span></li>
+        <li class="lobby-chip">起始分 <span id="cfgBaseScore"></span></li>
+      </ul>
+      <footer class="lobby-drawer">
+        <details class="lobby-secondary">
+          <summary>最近对局</summary>
+          <p id="recentGamesEmpty">暂无最近对局，开始一局后会在这里显示。</p>
+          <ul id="recentGamesList" class="hidden"></ul>
+        </details>
+        <details id="lobbyDiagDetails" class="lobby-secondary lobby-diagnostics">
+          <summary>诊断</summary>
+          <button id="lobbyDiagBtn" type="button" class="ghost-btn">查看状态快照</button>
+          <pre id="lobbyDiagOutput" class="diagnostics-output hidden">等待诊断操作...</pre>
+        </details>
+      </footer>
     </section>
 
     <section id="tablePage" class="page table-page hidden" aria-busy="false">

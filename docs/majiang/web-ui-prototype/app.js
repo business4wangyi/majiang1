@@ -381,9 +381,10 @@ function renderRoute() {
 
 function renderLobby() {
   document.getElementById("cfgPlayers").textContent = String(appState.lobby.players);
-  document.getElementById("cfgAiType").textContent = appState.lobby.aiType;
-  document.getElementById("cfgRuleSet").textContent = appState.lobby.ruleSet;
-  document.getElementById("cfgBaseScore").textContent = String(appState.lobby.baseScore);
+  // 商业大厅仅展示阶段 A 短文案；appState.lobby 完整字段仍供对局逻辑使用（U1 不开编辑）
+  document.getElementById("cfgAiType").textContent = "固定";
+  document.getElementById("cfgRuleSet").textContent = "广东推倒胡";
+  document.getElementById("cfgBaseScore").textContent = "25000";
 
   const startBtn = document.getElementById("startGameBtn");
   const errorNode = document.getElementById("lobbyError");
