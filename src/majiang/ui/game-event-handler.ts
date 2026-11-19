@@ -60,6 +60,14 @@ export class GameEventHandler {
         if (!specialAction) {
           await this.handleCurrentPlayerDiscard();
         }
+
+        // 特殊动作声称完成但仍多一张时（如杠失败仍 return true），补打，避免带着余牌进 nextTurn
+        if (this.game.state === GameState.PLAYING) {
+          const cur = this.game.getCurrentPlayer();
+          if (cur.needsToDiscard()) {
+            await this.handleCurrentPlayerDiscard();
+          }
+        }
         
         // 检查游戏是否结束
         if (this.checkGameEnd()) {
@@ -79,6 +87,7 @@ export class GameEventHandler {
       debugLog(`[DEBUG] 安全模式局内循环结束: currentRound=${this.currentRound}`);
     } catch (e) {
       debugLog(`[DEBUG] round exception: ${e instanceof Error ? e.stack : e}`);
+      errorLog(`局内异常: ${e instanceof Error ? e.message : String(e)}`, e instanceof Error ? e : undefined);
     } finally {
       await this.handleGameEnd();
     }
@@ -378,6 +387,16 @@ export class GameEventHandler {
     
     // 只有在非跳过摸牌的情况下才为下一个玩家摸牌
     if (!skipDraw) {
+      // 下家若已多一张（上轮未出净就被切走），跳过摸牌，避免「手牌数量无效」中断整局
+      if (nextPlayer.needsToDiscard()) {
+        displayManager.printWarning(
+          `玩家 ${nextPlayer.name} 手牌已多一张(${nextPlayer.handTiles.length}/${nextPlayer.getExpectedHandSize(false)})，跳过摸牌直接行动`
+        );
+        errorLog(
+          `nextTurn 跳过摸牌: ${nextPlayer.name} hand=${nextPlayer.handTiles.length} expected=${nextPlayer.getExpectedHandSize(false)}`
+        );
+        return;
+      }
       this.currentPlayerDraw();
     }
   }
@@ -1080,10 +1099,12 @@ export class GameEventHandler {
     switch (selectedAction) {
       case PlayerAction.HU:
         this.handlePlayerHu(player, null);
-        return true;
-      case PlayerAction.GANG:
-        await this.handleGang(player, null);
-        return true;
+        // 仅在真正胡牌终局时视为已处理；否则让主循环继续出牌
+        return this.game.state === GameState.ENDED || player.state === PlayerState.WON;
+      case PlayerAction.GANG: {
+        const gangOk = await this.handleGang(player, null);
+        return gangOk;
+      }
       default:
         // 玩家选择"过"，不做任何操作
         displayManager.print(`玩家 ${player.name} 选择了"过"`);

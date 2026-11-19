@@ -458,8 +458,8 @@ export class Player {
    * @returns 是否需要打出一张牌
    */
   public needsToDiscard(): boolean {
+    // 只比「暗牌手牌」与预期：吃/碰/杠后总牌数恒 ≥13，用 total 会把已出完牌的人误判为仍需出牌
     const expectedHandSize = this.getExpectedHandSize(false);
-    // 如果总牌数超过预期，需要打出
-    return this.getTotalTileCount() > expectedHandSize;
+    return this.handTiles.length > expectedHandSize;
   }
 } 
