@@ -1,0 +1,69 @@
+{
+  "ok": true,
+  "algorithm": "heuristic-AIPlayer",
+  "note": "CLI 自动对弈四家同算法基线；供后续训练对照（非 AlphaZero）",
+  "roundsRequested": 1000,
+  "roundsCompleted": 1000,
+  "failed": 0,
+  "fails": [],
+  "players": [
+    {
+      "name": "东家(AI)",
+      "totalGames": 1000,
+      "winCount": 267,
+      "drawCount": 12,
+      "loseCount": 721,
+      "score": -138,
+      "winRate": 0.267,
+      "winRatePct": 26.7,
+      "avgScore": -0.138
+    },
+    {
+      "name": "南家(AI)",
+      "totalGames": 1000,
+      "winCount": 271,
+      "drawCount": 12,
+      "loseCount": 717,
+      "score": 98,
+      "winRate": 0.271,
+      "winRatePct": 27.1,
+      "avgScore": 0.098
+    },
+    {
+      "name": "西家(AI)",
+      "totalGames": 1000,
+      "winCount": 214,
+      "drawCount": 12,
+      "loseCount": 774,
+      "score": -108,
+      "winRate": 0.214,
+      "winRatePct": 21.4,
+      "avgScore": -0.108
+    },
+    {
+      "name": "北家(AI)",
+      "totalGames": 1000,
+      "winCount": 236,
+      "drawCount": 12,
+      "loseCount": 752,
+      "score": 148,
+      "winRate": 0.236,
+      "winRatePct": 23.6,
+      "avgScore": 0.148
+    }
+  ],
+  "summary": {
+    "totalWins": 988,
+    "totalDrawSeatCounts": 48,
+    "avgWinRatePct": 24.7,
+    "seatWinRatesPct": {
+      "东家(AI)": 26.7,
+      "南家(AI)": 27.1,
+      "西家(AI)": 21.4,
+      "北家(AI)": 23.6
+    }
+  },
+  "ms": 1128550,
+  "finishedAt": "2026-11-20T07:33:07.861Z",
+  "outPath": "models/majiang/heuristic-baseline-1000.json"
+}
