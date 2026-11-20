@@ -768,6 +768,7 @@ export class GameSession {
 
   /**
    * 固定响应窗：北家打出 5万，人类为下家且手握 4万+6万 → 能吃。
+   * 须清掉 3/7 万，否则 findChiCombinations 多组会走 CLI 选组并在 API 超时失败。
    */
   private installChiReadyFixture(): void {
     const players = this.game.getAllPlayers();
@@ -777,9 +778,11 @@ export class GameSession {
     const discarder = players[discarderIndex];
 
     const type = TileType.WAN;
+    // 5万可吃组合涉及 3–7；只留植入的 4+6，保证唯一组合
+    const stripValues = new Set([3, 4, 5, 6, 7]);
     for (const p of players) {
       p.handTiles = p.handTiles.filter(
-        (t) => !(t.type === type && (t.value === 4 || t.value === 5 || t.value === 6))
+        (t) => !(t.type === type && stripValues.has(t.value))
       );
     }
     this.normalizeHumanHandSize(human, 13);

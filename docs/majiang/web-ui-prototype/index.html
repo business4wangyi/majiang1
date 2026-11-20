@@ -103,7 +103,7 @@
           </article>
 
           <section class="table-center">
-            <div class="center-public-info">
+            <div class="center-public-info hidden" aria-hidden="true">
               <div class="center-info-item">
                 <span class="label">圈风 / 局数</span>
                 <span id="centerRoundInfo" class="center-info-value">东风局</span>
@@ -113,7 +113,7 @@
                 <span id="centerWallCount" class="center-info-value">36</span>
               </div>
             </div>
-            <div class="center-score-disk" aria-hidden="true">
+            <div class="center-score-disk" aria-hidden="false">
               <div class="score-wind score-wind-n">北<br /><span id="scoreNorth">24200</span></div>
               <div class="score-wind score-wind-e">东<br /><span id="scoreEast">25600</span></div>
               <div class="score-wind score-wind-s">南<br /><span id="scoreSouth">28400</span></div>
@@ -123,7 +123,7 @@
                 <div class="score-wall"><span class="score-wall-label">余牌</span><span id="scoreCoreWall">36</span></div>
               </div>
             </div>
-            <div class="latest-action-wrap">
+            <div class="latest-action-wrap center-detail-drawer table-aux">
               <div class="stage-keyline">
                 <span id="stageActor" class="stage-actor">玩家4</span>
                 <span id="stageVerb" class="stage-verb">打出</span>
@@ -131,10 +131,9 @@
                 <span id="stageToYou" class="stage-to-you">→ 可胡</span>
                 <span id="stagePriorityTag" class="stage-priority-tag">主动作：胡</span>
               </div>
-              <span class="label">当前关键提示</span>
-              <p id="primaryFocusHint" class="primary-focus-hint">右家打出三万，可胡</p>
-              <p id="stageMainPath" class="stage-main-path">主路径：点【胡】；次动作【过】。</p>
               <div id="secondaryContext" class="secondary-context hidden">
+                <p id="primaryFocusHint" class="primary-focus-hint"></p>
+                <p id="stageMainPath" class="stage-main-path"></p>
                 <p id="latestActionMain" class="latest-action"></p>
                 <p id="latestActionSub" class="latest-action-sub"></p>
                 <p id="responseLinkHint" class="response-link-hint"></p>
