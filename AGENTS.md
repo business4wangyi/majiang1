@@ -9,8 +9,9 @@
 5. **涉及 security / 密钥**：须 **MUST Read** `docs/standards/rules/security-baseline.md`（R1）  
 6. **涉及改码 / 分层**：须 **MUST Read** `docs/standards/rules/development.md`（R1）  
 7. **涉及测试 / 回归**：须 **MUST Read** `docs/standards/testing/quality.md`（R1）  
-8. Cursor 可同时读 `.cursor/rules/00-standards-index.mdc`（薄入口，**不替代**第 1 步）  
-9. **涉及规则/规范/IDE 入口修改**：`.cursor/rules/*.mdc` 只做薄引读；正文只写在 `docs/standards/` 或 `docs/product/`
+8. **涉及 spec / superpowers / brainstorm / SDD 产物**：须 **SHOULD Read** `docs/standards/rules/superpowers-artifacts.md`（R1）；提交产物时 **MUST**  
+9. Cursor 可同时读 `.cursor/rules/00-standards-index.mdc`（薄入口，**不替代**第 1 步）  
+10. **涉及规则/规范/IDE 入口修改**：`.cursor/rules/*.mdc` 只做薄引读；正文只写在 `docs/standards/` 或 `docs/product/`
 
 ## 规范源（SSOT）
 
@@ -39,6 +40,7 @@
 
 - 麻将 / 棋类 **UI 不重写** `src/*/core/` 权威规则判定  
 - 功能自动化通过 **≠** 视觉冲顶通过  
+- `docs/superpowers/{specs,plans}` 与可管理 `.superpowers` 产物须入库（见 `superpowers-artifacts.md`）；运行时态不入库  
 - 说明优先图表；主语言中文；专业英文名词首次中文解释  
 - 提交说明使用中文（见 `commit-policy.md`）
 

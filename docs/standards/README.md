@@ -24,6 +24,7 @@
 - 研发分层：`docs/standards/rules/development.md`
 - 提交判定：`docs/standards/rules/commit-policy.md`
 - Git 自动化：`docs/standards/rules/git-mcp-automation.md`
+- Spec / Superpowers 产物入库：`docs/standards/rules/superpowers-artifacts.md`
 - 安全红线：`docs/standards/rules/security-baseline.md`
 - 沟通与决策卡：`docs/standards/rules/communication-for-beginners.md`
 - Mermaid：`docs/standards/rules/mermaid-rules.md`

@@ -1,0 +1,97 @@
+<h2>第 2 节 · A3 构图下的视觉气质</h2>
+<p class="subtitle">骨架已钉 A3（顶栏品牌 + 中心 CTA）。选一种氛围材质。请用 http://127.0.0.1:60026/… 打开并强刷。</p>
+
+<style>
+  .atm {
+    width: 100%;
+    height: 300px;
+    border-radius: 10px;
+    position: relative;
+    overflow: hidden;
+    color: #f7f1e6;
+    font-family: "Songti SC", "Noto Serif SC", Georgia, serif;
+  }
+  .atm .brand { font-size: 32px; font-weight: 700; letter-spacing: .2em; }
+  .atm .tag { font-size: 14px; letter-spacing: .1em; opacity: .88; }
+  .atm .cta {
+    display: inline-block;
+    padding: 12px 44px;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 800;
+    letter-spacing: .14em;
+  }
+  .atm .chip {
+    display: inline-block;
+    font-size: 12px;
+    padding: 4px 10px;
+    margin: 0 4px;
+    border-radius: 999px;
+    border: 1px solid rgba(255,255,255,.35);
+    background: rgba(0,0,0,.22);
+  }
+  .atm .foot { position: absolute; left: 14px; bottom: 10px; font-size: 11px; opacity: .55; }
+</style>
+
+<div class="cards">
+  <div class="card" data-choice="v1" onclick="toggleSelect(this)">
+    <div class="card-image" style="aspect-ratio:auto;height:auto;padding:10px;background:#0a0f0c;">
+      <div class="atm" style="background:radial-gradient(ellipse at 50% 48%,rgba(78,150,104,.5) 0%,transparent 55%),linear-gradient(165deg,#2a6344 0%,#143528 50%,#12160f 100%);">
+        <div style="position:absolute;inset:18% 26%;border-radius:50%;border:2px solid rgba(226,182,58,.28);background:rgba(18,70,42,.28);"></div>
+        <div style="position:absolute;left:0;right:0;top:9%;text-align:center;"><div class="brand">广东麻将</div></div>
+        <div style="position:absolute;left:0;right:0;top:40%;text-align:center;">
+          <div class="tag" style="margin-bottom:14px;">一局见真章</div>
+          <div class="cta" style="background:#e2b63a;color:#1b1306;">开始对局</div>
+        </div>
+        <div style="position:absolute;left:0;right:0;bottom:12%;text-align:center;">
+          <span class="chip">玩家 4</span><span class="chip">AI 固定</span><span class="chip">起始分 25000</span>
+        </div>
+        <div class="foot">次级抽屉</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>V1 · 绿毡金扣（推荐）</h3>
+      <p>与已毕业局内牌桌同族：绿毡 + 金 CTA。进入感连续，商业启动页最稳。</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="v2" onclick="toggleSelect(this)">
+    <div class="card-image" style="aspect-ratio:auto;height:auto;padding:10px;background:#120e0b;">
+      <div class="atm" style="background:radial-gradient(ellipse at 50% 40%,rgba(180,90,40,.35) 0%,transparent 50%),linear-gradient(165deg,#5a2e1c 0%,#2a1810 55%,#120c0a 100%);color:#f8e8d0;">
+        <div style="position:absolute;left:0;right:0;top:9%;text-align:center;"><div class="brand">广东麻将</div></div>
+        <div style="position:absolute;left:0;right:0;top:40%;text-align:center;">
+          <div class="tag" style="margin-bottom:14px;">一局见真章</div>
+          <div class="cta" style="background:#c45c2a;color:#fff8f0;">开始对局</div>
+        </div>
+        <div style="position:absolute;left:0;right:0;bottom:12%;text-align:center;">
+          <span class="chip">玩家 4</span><span class="chip">AI 固定</span><span class="chip">起始分 25000</span>
+        </div>
+        <div class="foot">次级抽屉</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>V2 · 夜宴漆木</h3>
+      <p>暖木/漆光，茶馆夜场感。个性强，但与局内绿毡会跳色。</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="v3" onclick="toggleSelect(this)">
+    <div class="card-image" style="aspect-ratio:auto;height:auto;padding:10px;background:#0c1014;">
+      <div class="atm" style="background:radial-gradient(ellipse at 50% 45%,rgba(90,120,150,.28) 0%,transparent 55%),linear-gradient(165deg,#1c2836 0%,#101820 55%,#0a0d12 100%);color:#e8eef5;">
+        <div style="position:absolute;left:0;right:0;top:9%;text-align:center;"><div class="brand" style="letter-spacing:.22em;">广东麻将</div></div>
+        <div style="position:absolute;left:0;right:0;top:40%;text-align:center;">
+          <div class="tag" style="margin-bottom:14px;">一局见真章</div>
+          <div class="cta" style="background:#e8eef5;color:#101820;">开始对局</div>
+        </div>
+        <div style="position:absolute;left:0;right:0;bottom:12%;text-align:center;">
+          <span class="chip">玩家 4</span><span class="chip">AI 固定</span><span class="chip">起始分 25000</span>
+        </div>
+        <div class="foot">次级抽屉</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>V3 · 墨蓝极简</h3>
+      <p>冷静现代。干净，但少「麻将桌」符号，商业棋牌感偏弱。</p>
+    </div>
+  </div>
+</div>

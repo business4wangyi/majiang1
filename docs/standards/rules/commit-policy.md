@@ -15,6 +15,7 @@
 - 配置、文档、测试补充完成
 - 用户明确要求「提交 / commit」
 - 阶段性完成并希望保存进度
+- **设计与过程产物**（见 [`superpowers-artifacts.md`](superpowers-artifacts.md)）：`docs/superpowers/specs/`、`docs/superpowers/plans/`、`.superpowers/sdd/`、`.superpowers/brainstorm/**/content/`
 
 ## 禁止提交
 
@@ -22,6 +23,7 @@
 - 功能不完整或已知明显缺陷
 - 用户明确「不要提交 / 先不 commit」
 - 含密钥、Token、证书等敏感明文（见 `security-baseline.md`）
+- `.superpowers` 运行时态：`**/state/`、`.last-token`、`.last-port`、`*.pid`、`*.log`（由 `.superpowers/.gitignore` 拦截）
 
 ## 提交消息格式
 

@@ -1,0 +1,12 @@
+---
+description: Spec / Superpowers 产物入库薄入口
+alwaysApply: false
+---
+
+# Superpowers 产物入库（入口引读）
+
+不承载正文。请读：
+- `docs/standards/rules/superpowers-artifacts.md`（R1）
+- `docs/standards/rules/commit-policy.md`（E0，提交时）
+
+冲突以 `AGENTS.md` 与 `docs/standards/` 为准。

@@ -26,6 +26,7 @@
 - docs/standards/rules/mermaid-rules.md
 - docs/standards/rules/git-mcp-automation.md
 - docs/standards/rules/desktop-commander-mcp-priority.md
+- docs/standards/rules/superpowers-artifacts.md
 - docs/standards/testing/quality.md
 - docs/product/delivery-flow.md
 
@@ -65,6 +66,11 @@
 - 状态：强制
 - 验证方式：`scan`/`gate` 敏感模式 + 提交前人工
 
+8. 需求：spec / plans / `.superpowers` 过程产物可版本管理
+- 规则：docs/standards/rules/superpowers-artifacts.md、docs/standards/rules/commit-policy.md
+- 状态：强制
+- 验证方式：提交抽查路径是否入库；运行时态是否被 `.superpowers/.gitignore` 拦住
+
 ## 迭代节奏
 - 新需求进入前：先补映射，再开始实现。
 - 每日扫描后：将中高优先级问题回写到本文件。
@@ -73,3 +79,4 @@
 ## 变更记录
 - 2026-05-08：初次建立规则演进文档，补齐 fit 必需闭环结构。
 - 2026-11-14：对齐 quantification 定封顶模型；落地触发表、E0 沟通/提交、delivery-flow 与 Web UI 脊骨；明确不引入 OpenSpec。
+- 2026-11-20：强制 `docs/superpowers/{specs,plans}` 与可管理 `.superpowers` 产物入库；运行时态仍忽略。

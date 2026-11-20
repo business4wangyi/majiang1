@@ -13,6 +13,7 @@
 | security / 敏感 / 密钥 / Token | [security-baseline.md](security-baseline.md) | **MUST Read** | R1 |
 | coding / Write / 改 `src/**` / 分层 | [development.md](development.md) | **MUST Read** | R1 |
 | 测试 / 回归 / 验收测例 | [../testing/quality.md](../testing/quality.md) | **MUST Read** | R1 |
+| spec / superpowers / brainstorm / SDD 产物入库 | [superpowers-artifacts.md](superpowers-artifacts.md) | **SHOULD Read**；提交产物时 **MUST** | R1 |
 | mermaid / 流程图 / 架构图 | [mermaid-rules.md](mermaid-rules.md) | **SHOULD Read** | R1 |
 | git MCP / gh pr / 自动化提交 | [git-mcp-automation.md](git-mcp-automation.md) | **SHOULD Read** | R1 |
 | 长任务 / Desktop Commander / 进程工具 | [desktop-commander-mcp-priority.md](desktop-commander-mcp-priority.md) | **SHOULD Read** | R1 |
@@ -28,6 +29,7 @@
 | [security-baseline.md](security-baseline.md) | R1 | 安全红线（本仓 Node/TS/Web） |
 | [mermaid-rules.md](mermaid-rules.md) | R1 | 图语法硬约束 |
 | [git-mcp-automation.md](git-mcp-automation.md) | R1 | Git 自动化提交流程 |
+| [superpowers-artifacts.md](superpowers-artifacts.md) | R1 | spec / plans / `.superpowers` 产物入库 |
 | [desktop-commander-mcp-priority.md](desktop-commander-mcp-priority.md) | R1 | 长任务工具优先级 |
 | [../testing/quality.md](../testing/quality.md) | R1 | 测试与质量保障 |
 

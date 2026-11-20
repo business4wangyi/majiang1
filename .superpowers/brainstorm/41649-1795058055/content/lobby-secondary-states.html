@@ -1,0 +1,82 @@
+<h2>第 3 节 · 次级区与状态（A3 + V1）</h2>
+<p class="subtitle">主舞台已定。只需确认次级信息怎么收、出错长什么样。点选一套行为。</p>
+
+<style>
+  .stage {
+    width: 100%;
+    height: 260px;
+    border-radius: 10px;
+    position: relative;
+    overflow: hidden;
+    color: #f7f1e6;
+    font-family: "Songti SC", Georgia, serif;
+    background: radial-gradient(ellipse at 50% 48%,rgba(78,150,104,.5) 0%,transparent 55%),linear-gradient(165deg,#2a6344 0%,#143528 50%,#12160f 100%);
+  }
+  .stage .brand { font-size: 28px; font-weight: 700; letter-spacing: .18em; text-align: center; }
+  .stage .cta {
+    display: inline-block; background: #e2b63a; color: #1b1306;
+    padding: 10px 36px; border-radius: 8px; font-weight: 800; letter-spacing: .12em;
+  }
+  .stage .chip {
+    display: inline-block; font-size: 11px; padding: 3px 8px; margin: 0 3px;
+    border-radius: 999px; border: 1px solid rgba(255,255,255,.35); background: rgba(0,0,0,.22);
+  }
+  .drawer {
+    position: absolute; left: 0; right: 0; bottom: 0;
+    background: rgba(8,12,10,.88);
+    border-top: 1px solid rgba(255,255,255,.15);
+    padding: 8px 14px 10px;
+    font-size: 12px;
+  }
+  .err {
+    position: absolute; left: 50%; top: 62%; transform: translateX(-50%);
+    background: rgba(120,24,24,.85); color: #ffe8e8;
+    padding: 6px 12px; border-radius: 6px; font-size: 12px; white-space: nowrap;
+  }
+</style>
+
+<div class="cards">
+  <div class="card" data-choice="s1" onclick="toggleSelect(this)">
+    <div class="card-image" style="aspect-ratio:auto;height:auto;padding:10px;background:#0a0f0c;">
+      <div class="stage">
+        <div style="position:absolute;left:0;right:0;top:10%;"><div class="brand">广东麻将</div></div>
+        <div style="position:absolute;left:0;right:0;top:38%;text-align:center;">
+          <div style="opacity:.85;margin-bottom:10px;font-size:13px;">一局见真章</div>
+          <div class="cta">开始对局</div>
+        </div>
+        <div style="position:absolute;left:0;right:0;bottom:22%;text-align:center;">
+          <span class="chip">玩家 4</span><span class="chip">AI 固定</span><span class="chip">25000</span>
+        </div>
+        <div class="drawer">▾ 最近对局　·　诊断（默认收起，点开才见）</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>S1 · 底栏双折叠（推荐）</h3>
+      <p>最近对局 + 诊断共用底栏，默认收起；开局失败时错误贴在 CTA 下方红条，不占英雄区。</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="s2" onclick="toggleSelect(this)">
+    <div class="card-image" style="aspect-ratio:auto;height:auto;padding:10px;background:#0a0f0c;">
+      <div class="stage">
+        <div style="position:absolute;left:0;right:0;top:10%;"><div class="brand">广东麻将</div></div>
+        <div style="position:absolute;left:0;right:0;top:36%;text-align:center;">
+          <div style="opacity:.85;margin-bottom:10px;font-size:13px;">一局见真章</div>
+          <div class="cta">开始对局</div>
+          <div class="err">无法连接对局服务 · 重试</div>
+        </div>
+        <div style="position:absolute;left:12px;bottom:10px;font-size:11px;opacity:.55;">最近对局 ▾</div>
+        <div style="position:absolute;right:12px;bottom:10px;font-size:11px;opacity:.45;">诊断 ▾</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>S2 · 左右角链 + 错误贴 CTA</h3>
+      <p>次级入口更轻；错误仍贴主按钮。诊断更隐蔽，人测时略难找。</p>
+    </div>
+  </div>
+</div>
+
+<div class="section" style="margin-top:1rem;">
+  <p class="label">本波状态约定（两案共用）</p>
+  <p class="subtitle">空闲：可点「开始对局」· 忙碌：CTA 变「创建中…」且不可连点 · 失败：红条 +「重试创建」· 诊断 JSON 默认不倾倒</p>
+</div>

@@ -1,0 +1,127 @@
+<h2>大厅构图（高对比大预览）</h2>
+<p class="subtitle">若上一屏是灰块，看这一版。点卡片选 A1 / A2 / A3，并在聊天回确认。</p>
+
+<style>
+  .lobby-frame {
+    width: 100%;
+    height: 280px;
+    border-radius: 10px;
+    position: relative;
+    overflow: hidden;
+    color: #f7f1e6;
+    font-family: "Songti SC", "Noto Serif SC", Georgia, serif;
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,.12);
+  }
+  .lobby-frame .brand { font-size: 34px; font-weight: 700; letter-spacing: .18em; }
+  .lobby-frame .tag { font-size: 14px; opacity: .85; letter-spacing: .08em; }
+  .lobby-frame .cta {
+    display: inline-block;
+    background: #e2b63a;
+    color: #1b1306;
+    padding: 12px 42px;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 800;
+    letter-spacing: .12em;
+  }
+  .lobby-frame .chip {
+    display: inline-block;
+    font-size: 12px;
+    border: 1px solid rgba(247,241,230,.45);
+    padding: 4px 10px;
+    border-radius: 999px;
+    margin: 0 4px;
+    background: rgba(0,0,0,.25);
+  }
+  .lobby-frame .felt {
+    position: absolute; inset: 0;
+    background:
+      radial-gradient(ellipse at 50% 42%, rgba(72,140,96,.55) 0%, transparent 52%),
+      linear-gradient(165deg, #24553a 0%, #123024 48%, #1c1610 100%);
+  }
+  .lobby-frame .table-oval {
+    position: absolute;
+    left: 50%; top: 46%;
+    transform: translate(-50%,-50%);
+    width: 48%; height: 36%;
+    border-radius: 50%;
+    border: 2px solid rgba(226,182,58,.35);
+    background: rgba(20,60,40,.35);
+  }
+  .pick-note { margin: .5rem 0 0; font-size: .9rem; color: var(--text-secondary); }
+</style>
+
+<div class="cards">
+  <div class="card" data-choice="a1" onclick="toggleSelect(this)">
+    <div class="card-image" style="aspect-ratio:auto;height:auto;padding:10px;background:#0b1210;">
+      <div class="lobby-frame">
+        <div class="felt"></div>
+        <div class="table-oval"></div>
+        <div style="position:absolute;left:0;right:0;top:14%;text-align:center;">
+          <div class="brand">广东麻将</div>
+          <div class="tag" style="margin-top:8px;">一局见真章</div>
+        </div>
+        <div style="position:absolute;left:0;right:0;bottom:14%;text-align:center;">
+          <div class="cta">开始对局</div>
+          <div style="margin-top:12px;">
+            <span class="chip">4 人</span>
+            <span class="chip">规则固定</span>
+            <span class="chip">起始分 25000</span>
+          </div>
+        </div>
+        <div style="position:absolute;left:14px;bottom:8px;font-size:11px;opacity:.55;">最近对局 · 诊断 ▾</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>A1 · 中轴叠层</h3>
+      <p class="pick-note">品牌上、CTA 下，开局路径最短。推荐。</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="a2" onclick="toggleSelect(this)">
+    <div class="card-image" style="aspect-ratio:auto;height:auto;padding:10px;background:#0b1210;">
+      <div class="lobby-frame">
+        <div class="felt"></div>
+        <div class="table-oval"></div>
+        <div style="position:absolute;left:5%;top:8%;">
+          <div class="brand" style="font-size:28px;">广东麻将</div>
+          <div class="tag" style="margin-top:6px;">一局见真章</div>
+        </div>
+        <div style="position:absolute;left:0;right:0;bottom:10%;text-align:center;">
+          <div class="cta">开始对局</div>
+          <div class="tag" style="margin-top:10px;">4 人 · 规则固定 · 25000</div>
+        </div>
+        <div style="position:absolute;right:14px;bottom:8px;font-size:11px;opacity:.55;">最近 · 诊断 ▾</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>A2 · 电影下三分</h3>
+      <p class="pick-note">中景留给桌面氛围，CTA 压底，更片头感。</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="a3" onclick="toggleSelect(this)">
+    <div class="card-image" style="aspect-ratio:auto;height:auto;padding:10px;background:#0b1210;">
+      <div class="lobby-frame">
+        <div class="felt"></div>
+        <div style="position:absolute;left:0;right:0;top:10%;text-align:center;">
+          <div class="brand">广东麻将</div>
+        </div>
+        <div style="position:absolute;left:0;right:0;top:42%;text-align:center;">
+          <div class="tag" style="margin-bottom:14px;">一局见真章</div>
+          <div class="cta">开始对局</div>
+        </div>
+        <div style="position:absolute;left:0;right:0;bottom:12%;text-align:center;">
+          <span class="chip">玩家 4</span>
+          <span class="chip">AI 固定</span>
+          <span class="chip">起始分 25000</span>
+        </div>
+        <div style="position:absolute;left:14px;bottom:8px;font-size:11px;opacity:.5;">次级抽屉</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>A3 · 顶栏品牌 + 中心 CTA</h3>
+      <p class="pick-note">层次清晰，略偏产品落地页。</p>
+    </div>
+  </div>
+</div>
