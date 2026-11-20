@@ -51,6 +51,24 @@ describe('手牌数量与回合守卫（CLI 多轮偶现异常）', () => {
     expect(p.needsToDiscard()).to.equal(false);
   });
 
+  it('requirePlayerToDiscard：无需出牌时跳过，不进入 AI handleDiscard', async () => {
+    const game = new Game();
+    game.setupPlayers(true);
+    const handler = new GameEventHandler(game, TileManager.getInstance());
+    const player = game.getAllPlayers()[0];
+    expect(player.needsToDiscard()).to.equal(false);
+
+    let discardCalled = false;
+    const orig = (handler as any).handleCurrentPlayerDiscard.bind(handler);
+    (handler as any).handleCurrentPlayerDiscard = async () => {
+      discardCalled = true;
+      return orig();
+    };
+
+    await (handler as any).requirePlayerToDiscard(player, '杠');
+    expect(discardCalled).to.equal(false);
+  });
+
   it('nextTurn：下家已多一张时跳过摸牌，不抛「手牌数量无效」', () => {
     const game = new Game();
     game.setupPlayers(true);

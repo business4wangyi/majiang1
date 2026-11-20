@@ -1,0 +1,69 @@
+{
+  "ok": true,
+  "algorithm": "heuristic-P1-AIPlayer",
+  "note": "CLI 自动对弈四家同算法基线（P1：向听→有效牌→现物危险度）；供与旧启发式对照（非 AlphaZero）",
+  "roundsRequested": 20,
+  "roundsCompleted": 20,
+  "failed": 0,
+  "fails": [],
+  "players": [
+    {
+      "name": "东家(AI)",
+      "totalGames": 20,
+      "winCount": 5,
+      "drawCount": 0,
+      "loseCount": 15,
+      "score": 20,
+      "winRate": 0.25,
+      "winRatePct": 25,
+      "avgScore": 1
+    },
+    {
+      "name": "南家(AI)",
+      "totalGames": 20,
+      "winCount": 7,
+      "drawCount": 0,
+      "loseCount": 13,
+      "score": 2,
+      "winRate": 0.35,
+      "winRatePct": 35,
+      "avgScore": 0.1
+    },
+    {
+      "name": "西家(AI)",
+      "totalGames": 20,
+      "winCount": 5,
+      "drawCount": 0,
+      "loseCount": 15,
+      "score": -22,
+      "winRate": 0.25,
+      "winRatePct": 25,
+      "avgScore": -1.1
+    },
+    {
+      "name": "北家(AI)",
+      "totalGames": 20,
+      "winCount": 3,
+      "drawCount": 0,
+      "loseCount": 17,
+      "score": 0,
+      "winRate": 0.15,
+      "winRatePct": 15,
+      "avgScore": 0
+    }
+  ],
+  "summary": {
+    "totalWins": 20,
+    "totalDrawSeatCounts": 0,
+    "avgWinRatePct": 25,
+    "seatWinRatesPct": {
+      "东家(AI)": 25,
+      "南家(AI)": 35,
+      "西家(AI)": 25,
+      "北家(AI)": 15
+    }
+  },
+  "ms": 29233,
+  "finishedAt": "2026-11-20T13:55:59.263Z",
+  "outPath": "models/majiang/heuristic-p1-smoke-20.json"
+}

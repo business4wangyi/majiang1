@@ -1,13 +1,37 @@
-import { debugLog, errorLog, infoLog } from '../../tools/logger';
+import { debugLog, errorLog } from '../../tools/logger';
 import { Player, PlayerType } from '../../core/player';
 import { Tile, TileType } from '../../core/tile';
-import { displayManager } from '../../ui/display-manager';
 import { GameEventHandler } from '../../ui/game-event-handler';
 import { AUTO_PLAY_MODE } from '../../config/runtime-state';
 import { WinConditions } from '../../core/win-conditions/win-conditions-main';
+import { pickDiscardIndex } from '../heuristics/discard-ranker';
+
+/** 弃牌策略：legacy=旧权重（默认）；p1=向听排序（试用，需显式打开） */
+export type DiscardStrategy = 'p1' | 'legacy';
+
+function resolveDiscardStrategy(explicit?: DiscardStrategy): DiscardStrategy {
+  if (explicit === 'p1' || explicit === 'legacy') return explicit;
+  // 试用开关：MAJIANG_DISCARD_STRATEGY=p1
+  return process.env.MAJIANG_DISCARD_STRATEGY === 'p1' ? 'p1' : 'legacy';
+}
 
 export class AIPlayer extends Player {
   private static idCounter = 1;
+
+  private visibleDiscards: Tile[] = [];
+  private discardStrategy: DiscardStrategy = 'legacy';
+
+  public setVisibleDiscards(tiles: Tile[]): void {
+    this.visibleDiscards = tiles.map(t => t.clone());
+  }
+
+  public setDiscardStrategy(strategy: DiscardStrategy): void {
+    this.discardStrategy = strategy;
+  }
+
+  public getDiscardStrategy(): DiscardStrategy {
+    return this.discardStrategy;
+  }
 
   /**
    * AI策略相关常量
@@ -98,8 +122,9 @@ export class AIPlayer extends Player {
     }
   };
 
-  constructor(name: string) {
+  constructor(name: string, discardStrategy?: DiscardStrategy) {
     super(AIPlayer.idCounter++, name, PlayerType.AI);
+    this.discardStrategy = resolveDiscardStrategy(discardStrategy);
   }
 
   /**
@@ -131,6 +156,7 @@ export class AIPlayer extends Player {
     const canHuResult = WinConditions.canHu(this);
     debugLog(`[AI日志] canHu判定: ${canHuResult.canHu}, 描述: ${canHuResult.description}`);
     await AIPlayer.pauseForThinking();
+    this.setVisibleDiscards(gameEventHandler.collectVisibleDiscards());
     try {
       // 埋点：AI出牌决策
       const discardIndex = this.getAIMove();
@@ -221,7 +247,7 @@ export class AIPlayer extends Player {
     }
   }
 
-  // 获取AI出牌选择（优化版）
+  // 获取AI出牌选择（P1：向听启发式排序；legacy：旧权重最低分）
   public getAIMove(): number {
     debugLog(`AI玩家 ${this.name} 正在思考出牌...`);
     debugLog(`当前手牌数量: ${this.handTiles.length}`);
@@ -233,57 +259,33 @@ export class AIPlayer extends Player {
     }
 
     try {
-
       // 打印手牌详情用于调试
       debugLog(`AI玩家 ${this.name} 手牌详情: ${this.handTiles.map((t, idx) => `${idx}:${t.toString()}`).join(' ')}`);
 
-      // 使用needsToDiscard方法判断是否需要出牌
-      if (this.needsToDiscard()) {
-        // 获取每张牌的价值评分
+      if (this.discardStrategy === 'legacy') {
         const tileValues = this.getAllTileValues();
-
-        // 安全检查：确保有评分结果
         if (tileValues.length > 0) {
-          // 选择价值最低的牌
-          const lowestValueTile = tileValues[0];
-          // 验证索引有效性
-          if (lowestValueTile.index >= 0 && lowestValueTile.index < this.handTiles.length) {
-            infoLog(`手牌数量超过预期(${this.getExpectedHandSize()})，实际(${this.handTiles.length})，选择价值最低的牌，索引=${lowestValueTile.index}, 牌=${lowestValueTile.tile.toString()}, 价值=${lowestValueTile.value}`);
-            if (this.handTiles.length > this.getExpectedHandSize() + 1) {
-              displayManager.displayPlayerHand(this)
-              errorLog(`退出游戏排查问题`);
-              process.exit(0);
-            }
-            return lowestValueTile.index;
-          } else {
-            debugLog(`警告: 评分结果索引无效 ${lowestValueTile.index}，使用备选策略`);
+          const idx = tileValues[0].index;
+          if (idx >= 0 && idx < this.handTiles.length) {
+            debugLog(`AI legacy选择索引 ${idx}: ${this.handTiles[idx].toString()}`);
+            return idx;
           }
         }
-
-        // 如果评分失败，使用安全的备选策略：打出最后一张牌
-        const lastIndex = this.handTiles.length - 1;
-        debugLog(`评分失败，使用备选策略: 打出最后一张牌，索引=${lastIndex}`);
-        return lastIndex;
+        return this.handTiles.length - 1;
       }
 
-      // 获取每张牌的价值评分
-      const tileValues = this.getAllTileValues();
-
-      // 安全检查：确保有评分结果
-      if (tileValues.length > 0) {
-        const selectedIndex = tileValues[0].index;
-        // 确保索引在有效范围内
-        if (selectedIndex >= 0 && selectedIndex < this.handTiles.length) {
-          debugLog(`AI选择打出索引 ${selectedIndex}: ${this.handTiles[selectedIndex].toString()}, 价值: ${tileValues[0].value}`);
-          return selectedIndex;
-        } else {
-          debugLog(`错误: AI返回的索引 ${selectedIndex} 超出范围，改为使用默认策略`);
-        }
-      } else {
-        debugLog(`错误: 牌值评估结果为空，使用默认策略`);
+      const index = pickDiscardIndex(
+        {
+          handTiles: this.handTiles,
+          revealedSets: this.revealedSets ?? [],
+          visibleDiscards: this.visibleDiscards
+        },
+        (i, tile) => this.evaluateTileValue(tile, i)
+      );
+      if (index >= 0 && index < this.handTiles.length) {
+        debugLog(`AI P1排序选择索引 ${index}: ${this.handTiles[index].toString()}`);
+        return index;
       }
-
-      // 如果评分系统出问题，返回最后一张牌的索引（最安全）
       return this.handTiles.length - 1;
     } catch (error) {
       errorLog(`AI出牌决策发生错误: ${error instanceof Error ? error.message : error}`);

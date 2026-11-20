@@ -1,136 +1,254 @@
-# Review package Task 5 FELT
-# Task 5 报告 · MJ-T3-FELT-01
+# Review package Task 5
+## ai-player.ts diff
+diff --git a/src/majiang/strategy/agents/ai-player.ts b/src/majiang/strategy/agents/ai-player.ts
+index d990f7b..5c12271 100644
+--- a/src/majiang/strategy/agents/ai-player.ts
++++ b/src/majiang/strategy/agents/ai-player.ts
+@@ -1,21 +1,27 @@
+-import { debugLog, errorLog, infoLog } from '../../tools/logger';
++import { debugLog, errorLog } from '../../tools/logger';
+ import { Player, PlayerType } from '../../core/player';
+ import { Tile, TileType } from '../../core/tile';
+-import { displayManager } from '../../ui/display-manager';
+ import { GameEventHandler } from '../../ui/game-event-handler';
+ import { AUTO_PLAY_MODE } from '../../config/runtime-state';
+ import { WinConditions } from '../../core/win-conditions/win-conditions-main';
++import { pickDiscardIndex } from '../heuristics/discard-ranker';
+ 
+ export class AIPlayer extends Player {
+   private static idCounter = 1;
+ 
++  private visibleDiscards: Tile[] = [];
++
++  public setVisibleDiscards(tiles: Tile[]): void {
++    this.visibleDiscards = tiles.map(t => t.clone());
++  }
++
+   /**
+    * AI策略相关常量
+    */
+   private static AI_STRATEGY = {
+     // 牌的基础评分权重
+     WEIGHTS: {
+       PAIR: 10,         // 对子
+       TRIPLET: 25,      // 刻子
+       SEQUENCE: 8,      // 顺子贡献
+       NEAR_COMPLETE: 5, // 接近完成的组合
+@@ -124,20 +130,21 @@ export class AIPlayer extends Player {
+     if (this.handTiles.length === 0) {
+       errorLog(`AI玩家 ${this.name} 不需要出牌，手牌数量：${this.handTiles.length}`);
+       errorLog('游戏错误检查原因')
+       process.exit(0)
+     }
+     // 新增日志：出牌前输出手牌、明牌、总数、canHu判定
+     debugLog(`[AI日志] 玩家: ${this.name}，操作: 出牌前，手牌: ${this.handTiles.map(t=>t.toString()).join(' ')}，明牌: ${(this.revealedSets||[]).map(set=>set.tiles.map(t=>t.toString()).join(',')).join('|')}，总数: ${this.handTiles.length + (this.revealedSets||[]).reduce((sum,set)=>sum+set.tiles.length,0)}`);
+     const canHuResult = WinConditions.canHu(this);
+     debugLog(`[AI日志] canHu判定: ${canHuResult.canHu}, 描述: ${canHuResult.description}`);
+     await AIPlayer.pauseForThinking();
++    this.setVisibleDiscards(gameEventHandler.collectVisibleDiscards());
+     try {
+       // 埋点：AI出牌决策
+       const discardIndex = this.getAIMove();
+ 
+       // 验证索引是否有效
+       if (discardIndex < 0 || discardIndex >= this.handTiles.length) {
+         debugLog(`AI玩家 ${this.name} 返回的索引 ${discardIndex} 无效`);
+         debugLog(`AI玩家 ${this.name} 无法决定要打出哪张牌，随机选择`);
+ 
+         // 随机选择一张牌出牌
+@@ -214,83 +221,47 @@ export class AIPlayer extends Player {
+       } catch (fallbackError) {
+         debugLog(`AI出牌恢复策略也失败: ${fallbackError instanceof Error ? fallbackError.message : String(fallbackError)}`);
+         debugLog(`AI玩家无法出牌，请检查游戏状态`);
+       }
+ 
+       errorLog('游戏错误检查原因')
+       process.exit(0)
+     }
+   }
+ 
+-  // 获取AI出牌选择（优化版）
++  // 获取AI出牌选择（P1：向听启发式排序，旧权重仅破平）
+   public getAIMove(): number {
+     debugLog(`AI玩家 ${this.name} 正在思考出牌...`);
+     debugLog(`当前手牌数量: ${this.handTiles.length}`);
+ 
+     // 安全检查：如果手牌为空，返回-1
+     if (this.handTiles.length === 0) {
+       debugLog(`警告: AI玩家 ${this.name} 没有手牌可出`);
+       return -1;
+     }
+ 
+     try {
+-
+       // 打印手牌详情用于调试
+       debugLog(`AI玩家 ${this.name} 手牌详情: ${this.handTiles.map((t, idx) => `${idx}:${t.toString()}`).join(' ')}`);
+ 
+-      // 使用needsToDiscard方法判断是否需要出牌
+-      if (this.needsToDiscard()) {
+-        // 获取每张牌的价值评分
+-        const tileValues = this.getAllTileValues();
+-
+-        // 安全检查：确保有评分结果
+-        if (tileValues.length > 0) {
+-          // 选择价值最低的牌
+-          const lowestValueTile = tileValues[0];
+-          // 验证索引有效性
+-          if (lowestValueTile.index >= 0 && lowestValueTile.index < this.handTiles.length) {
+-            infoLog(`手牌数量超过预期(${this.getExpectedHandSize()})，实际(${this.handTiles.length})，选择价值最低的牌，索引=${lowestValueTile.index}, 牌=${lowestValueTile.tile.toString()}, 价值=${lowestValueTile.value}`);
+-            if (this.handTiles.length > this.getExpectedHandSize() + 1) {
+-              displayManager.displayPlayerHand(this)
+-              errorLog(`退出游戏排查问题`);
+-              process.exit(0);
+-            }
+-            return lowestValueTile.index;
+-          } else {
+-            debugLog(`警告: 评分结果索引无效 ${lowestValueTile.index}，使用备选策略`);
+-          }
+-        }
+-
+-        // 如果评分失败，使用安全的备选策略：打出最后一张牌
+-        const lastIndex = this.handTiles.length - 1;
+-        debugLog(`评分失败，使用备选策略: 打出最后一张牌，索引=${lastIndex}`);
+-        return lastIndex;
+-      }
+-
+-      // 获取每张牌的价值评分
+-      const tileValues = this.getAllTileValues();
+-
+-      // 安全检查：确保有评分结果
+-      if (tileValues.length > 0) {
+-        const selectedIndex = tileValues[0].index;
+-        // 确保索引在有效范围内
+-        if (selectedIndex >= 0 && selectedIndex < this.handTiles.length) {
+-          debugLog(`AI选择打出索引 ${selectedIndex}: ${this.handTiles[selectedIndex].toString()}, 价值: ${tileValues[0].value}`);
+-          return selectedIndex;
+-        } else {
+-          debugLog(`错误: AI返回的索引 ${selectedIndex} 超出范围，改为使用默认策略`);
+-        }
+-      } else {
+-        debugLog(`错误: 牌值评估结果为空，使用默认策略`);
++      const index = pickDiscardIndex(
++        {
++          handTiles: this.handTiles,
++          revealedSets: this.revealedSets ?? [],
++          visibleDiscards: this.visibleDiscards
++        },
++        (i, tile) => this.evaluateTileValue(tile, i)
++      );
++      if (index >= 0 && index < this.handTiles.length) {
++        debugLog(`AI P1排序选择索引 ${index}: ${this.handTiles[index].toString()}`);
++        return index;
+       }
+-
+-      // 如果评分系统出问题，返回最后一张牌的索引（最安全）
+       return this.handTiles.length - 1;
+     } catch (error) {
+       errorLog(`AI出牌决策发生错误: ${error instanceof Error ? error.message : error}`);
+       errorLog(`错误堆栈: ${error instanceof Error ? error.stack : '无堆栈信息'}`);
+ 
+       // 发生错误时返回最后一张牌的索引（最安全）
+       return this.handTiles.length > 0 ? this.handTiles.length - 1 : -1;
+     }
+   }
+ 
 
-## 结论
+## game-event-handler.ts diff
+diff --git a/src/majiang/ui/game-event-handler.ts b/src/majiang/ui/game-event-handler.ts
+index 17361ee..7f40e23 100644
+--- a/src/majiang/ui/game-event-handler.ts
++++ b/src/majiang/ui/game-event-handler.ts
+@@ -31,20 +31,31 @@ export class GameEventHandler {
+     this.tileManager = tileManager;
+   }
+ 
+   public currentRound = 0;
+   private lastWinBySelfDrawn: boolean = false; // 记录本局胡牌是否自摸
+   private lastLoserIndex: number = -1; // 记录点炮者索引（荣和时）
+   /** 胡牌当时算出的分，结算时作兜底（避免终局再判 canHu 失败得 0） */
+   private lastWinScore: number = 0;
+   private roundSettled = false;
+ 
++  /** 汇总桌上各家已弃牌（clone），供 AI 现物危险度评估；窄 API，不暴露整局 Game */
++  public collectVisibleDiscards(): Tile[] {
++    const out: Tile[] = [];
++    for (const p of this.game.getAllPlayers()) {
++      for (const t of p.discardedTiles ?? []) {
++        out.push(t.clone());
++      }
++    }
++    return out;
++  }
++
+   /**
+    * 启动游戏
+    */
+   public async safeStartGameAndEnd(): Promise<void> {
+     try {
+       this.startGame();
+       
+       // 实现主循环，确保游戏正常进行
+       debugLog(`[DEBUG] 安全模式局内循环开始: currentRound=${this.currentRound}`);
+       
 
-局内绿毡光影已对齐大厅同族 `--table-felt-*` / 金扣；去掉整桌截图毡纹理硬叠。挂测绿。未 commit；未关 GR-T7。
+## test tail
+      new Tile(TileType.FENG, 2, id.next()),
+      new Tile(TileType.JIAN, 1, id.next()), // 中
+    ];
+    const visibleDiscards = [new Tile(TileType.JIAN, 1, id.next())]; // 中已现物
+    const idx = pickDiscardIndex({ handTiles, revealedSets: [], visibleDiscards });
+    expect(handTiles[idx].type).to.equal(TileType.JIAN);
+    expect(handTiles[idx].value).to.equal(1);
+  });
+});
 
-## 改动
+describe('AIPlayer · P1 接入', () => {
+  it('getAIMove 在现物场景下打出安全字牌', () => {
+    const id = tid();
+    const ai = new AIPlayer('测AI');
+    ai.handTiles = [
+      new Tile(TileType.WAN, 1, id.next()),
+      new Tile(TileType.WAN, 2, id.next()),
+      new Tile(TileType.WAN, 3, id.next()),
+      new Tile(TileType.WAN, 4, id.next()),
+      new Tile(TileType.WAN, 5, id.next()),
+      new Tile(TileType.WAN, 6, id.next()),
+      new Tile(TileType.TIAO, 2, id.next()),
+      new Tile(TileType.TIAO, 3, id.next()),
+      new Tile(TileType.TIAO, 4, id.next()),
+      new Tile(TileType.TONG, 7, id.next()),
+      new Tile(TileType.TONG, 8, id.next()),
+      new Tile(TileType.TONG, 9, id.next()),
+      new Tile(TileType.FENG, 2, id.next()),
+      new Tile(TileType.JIAN, 1, id.next()),
+    ];
+    ai.setVisibleDiscards([new Tile(TileType.JIAN, 1, id.next())]);
+    const idx = ai.getAIMove();
+    expect(ai.handTiles[idx].type).to.equal(TileType.JIAN);
+  });
+});
 
-| 面 | 内容 |
-|----|------|
-| CSS | `.table-page` / `.table-stage-frame` 复用毡变量渐变 + 金边内阴影；`::before` 去掉 `table-felt-texture.png`；`.table-zone` 毡底改变量、外圈去冷灰回潮 |
-| 账本 | G-T4 / `MJ-T3-FELT-01` / `CAP-T3-FELT` → **已落地**；下一刀 GRAD |
-| 未关 | GR-T6（视觉人批）、GR-T7 |
+describe('GameEventHandler · 可见弃牌', () => {
+  it('collectVisibleDiscards 汇总各家弃牌', () => {
+    // 与 tests/majiang/game.test.ts 一致：先 addPlayer，再 new GameEventHandler(..., getAllPlayers())
+    const game = new Game();
+    game.addPlayer(new HumanPlayer('玩家1'));
+    game.addPlayer(new AIPlayer('AI玩家1'));
+    game.addPlayer(new AIPlayer('AI玩家2'));
+    game.addPlayer(new AIPlayer('AI玩家3'));
 
-## 验证
+    const players = game.getAllPlayers();
+    expect(players.length).to.be.greaterThan(0);
+    players[0].discardedTiles = [new Tile(TileType.WAN, 1, 1)];
+    players[1].discardedTiles = [new Tile(TileType.TIAO, 9, 2)];
 
-```text
-npx mocha --require ts-node/register tests/majiang/web-table-v3.test.ts -v
-→ 5 passing
-```
-
-目视建议：原型 `#tablePage` @ 1440×900，对照大厅绿毡金扣同族、无紫霓虹/灰面板。
-
-## 硬边界
-
-- 未碰 `#lobbyPage` / `src/majiang/core/`
-- 未 commit（按 overrides）
-
-## CSS felt hunks
-8-   filter: grayscale(0.15);
-9- }
-10- 
-11:+/* MJ-T3-FELT-01：与大厅同族绿毡金扣（加深可，禁换灰紫） */
-12: .table-page {
-13-   display: grid;
-14-   grid-template-rows: minmax(0, 1fr) auto;
-15-   gap: 0;
---
-17-   padding: 0 2px 0;
-18-+  background:
-19-+    radial-gradient(ellipse at 50% 42%, rgba(40, 120, 80, 0.35) 0%, transparent 52%),
-20:+    linear-gradient(165deg, var(--table-felt-a) 0%, var(--table-felt-b) 45%, var(--table-felt-c) 100%);
-21- }
-22- 
-23- .table-bottom-anchor {
---
-25-   margin-top: -56px;
-26-@@ -380,59 +384,62 @@ body {
-27- 
-28: .table-stage-frame {
-29-   position: absolute;
-30-   inset: 0 0 58px;
-31-   border-radius: 56px;
---
-35-     radial-gradient(circle at 50% 10%, rgba(255, 224, 154, 0.12), transparent 26%),
-36--    radial-gradient(circle at 50% 58%, rgba(0, 0, 0, 0.18), transparent 54%);
-37-+    radial-gradient(circle at 50% 58%, rgba(0, 0, 0, 0.22), transparent 54%),
-38:+    linear-gradient(165deg, var(--table-felt-a) 0%, var(--table-felt-b) 45%, var(--table-felt-c) 100%);
-39-+  box-shadow: inset 0 0 80px rgba(0, 0, 0, 0.35);
-40-   pointer-events: none;
-41-   z-index: 0;
-42-   overflow: hidden;
-43- }
-44- 
-45:+/* table-felt-texture.png 含牌/中控整桌截图，不可当纯毡；局内用渐变+内阴影（同大厅） */
-46: .table-stage-frame::before {
-47-   content: "";
-48-   position: absolute;
-49-   inset: 0;
---
-57-     url("assets/table-edge-left.png"),
-58-     url("assets/table-edge-right.png"),
-59--    url("assets/table-rim-top.png"),
-60:-    url("assets/table-felt-texture.png");
-61-+    url("assets/table-rim-top.png");
-62-   background-size:
-63-     cover,
---
-79-   mix-blend-mode: normal;
-80- }
-81- 
-82: .table-stage-frame::after {
-83-   content: "";
-84-   position: absolute;
-85-   inset: 12px 12px 54px;
---
-104-     radial-gradient(circle at 88% 14%, rgba(255, 255, 255, 0.08), transparent 39%),
-105-     radial-gradient(circle at 18% 88%, rgba(0, 0, 0, 0.42), transparent 46%),
-106--    radial-gradient(ellipse at 50% 44%, #149368 0%, #0b5c45 46%, #052e23 76%, #021510 100%);
-107:+    radial-gradient(ellipse at 50% 44%, var(--table-felt-a) 0%, var(--table-felt-b) 46%, var(--table-felt-c) 76%, #021510 100%);
-108-   box-shadow:
-109--    0 0 0 12px rgba(58, 64, 76, 0.98),
-110--    0 0 0 15px rgba(148, 157, 168, 0.64),
---
-246--    0 0 6px rgba(91, 240, 255, 0.82),
-247--    0 0 16px rgba(91, 240, 255, 0.42),
-248--    0 2px 8px rgba(0, 0, 0, 0.55);
-249:+  color: var(--gold-2);
-250-+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.55);
-251-   font-weight: 800;
-252- }
---
-289-+.river-grid .mini.latest,
-290- .tile-mini--latest {
-291--  border-color: rgba(118, 174, 255, 0.82);
-292:+  outline: 2px solid var(--gold-2);
-293-+  outline-offset: 1px;
-294-+  transform: translateY(-3px);
-295:+  border-color: var(--gold-2);
-296-   box-shadow:
-297--    0 0 0 2px rgba(118, 174, 255, 0.4),
-298-+    0 6px 10px rgba(0, 0, 0, 0.35),
---
-362- .tile.selected {
-363--  transform: translateY(-8px) translateZ(8px);
-364-+  transform: translateY(-10px) translateZ(8px);
-365:+  border-color: var(--gold-2);
-366-   box-shadow:
-367--    0 0 0 2px rgba(255, 184, 59, 0.55),
-368--    inset 0 -12px 14px rgba(160, 140, 100, 0.3),
---
-383-+.hand-tiles .tile.has-tile-atlas.selected,
-384-+.tile.has-tile-atlas.selected {
-385-+  border-color: transparent;
-386:+  outline: 2px solid var(--gold-2);
-387-+  outline-offset: 1px;
-388-+  filter: drop-shadow(0 14px 12px rgba(0, 0, 0, 0.42));
-389- }
---
-## Ledger
-docs/product/waves/majiang-web-table-v3-W1.md:8:| 施工状态 | **STAGEA 已人批**；CENTER / TILE / FELT 已落地；下一刀 GRAD |
-docs/product/waves/majiang-web-table-v3-W1.md:42:| `MJ-T3-FELT-01` | 毡光影与大厅连续 | **已落地** |
-docs/product/spines/majiang-web-table-v3-target.md:23:| GR-T6 | 毡/光影与大厅绿毡金扣同族 | 待做 |
-docs/product/spines/majiang-web-table-v3-target.md:45:| G-T4 | 毡光影整桌 | U2·视觉 | `MJ-T3-FELT-01` | **已落地** |
-docs/product/caps/majiang-web-table-v3-cap-tasks.md:36:| `CAP-T3-FELT` | G-T4 / GR-T6 | `MJ-T3-FELT-01` | U2·视觉 | STAGEA 已批 | **已落地** |
+    const handler = new GameEventHandler(game, TileManager.getInstance(), game.getAllPlayers());
+    const visible = handler.collectVisibleDiscards();
+    expect(visible.some(t => t.type === TileType.WAN && t.value === 1)).to.equal(true);
+    expect(visible.some(t => t.type === TileType.TIAO && t.value === 9)).to.equal(true);
+    expect(visible).to.have.lengthOf(2);
+    // clone：改源不应污染收集结果
+    players[0].discardedTiles[0].value = 5;
+    expect(visible[0].value).to.equal(1);
+  });
+});

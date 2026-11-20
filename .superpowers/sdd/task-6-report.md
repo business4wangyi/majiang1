@@ -1,61 +1,64 @@
-# Task 6 报告：挂测回归 + 阶段 B 对照帧 · 防回退
+# Task 6 Report：回归与规格回写
 
-**状态：PASS（功能防回退绿；不宣称视觉毕业 / 不关闭 GR-T7）**  
-**日期：2026-11-19**
+**Status:** PASS  
+**Commits:** none（按 Critical overrides / brief Step 3：仅用户要求时才 commit）  
+**Date:** 2026-11-20
 
-## 结论
-
-| 项 | 结果 |
-|----|------|
-| 阶段 B 桌面实现帧 1440×900 | 已入库 |
-| Mocha `web-table-v3` + `web-lobby` | **8 passing** |
-| `npm run majiang:web:e2e` smoke | **8 pass / 0 fail** |
-| 移动 390×844 | 仅抽检（**不计入毕业**） |
-| 视觉毕业 / GR-T7 | **未宣称、未关闭** |
-| Commit | **未执行**（按 override） |
-
-## 阶段 B 产物
-
-| 路径 | 说明 |
-|------|------|
-| `docs/majiang/design-freeze/stage-b-v3-table/README.md` | 对照说明 + 清单 |
-| `docs/majiang/design-freeze/stage-b-v3-table/2026-11-19-table-impl-desktop-1440x900.png` | 实现帧 **1440×900** |
-| 对照目标 | `../stage-a-v3-table/2026-11-19-table-desktop-1440x900.png`（未冒充为本帧） |
-
-采证：`index.html?acceptance=1` + `window.majiangNextModelExample`（`response_window` / 可胡）。  
-移动抽检帧（非入库）：`.tmp/stage-b-v3-table-smoke/2026-11-19-table-impl-mobile-390x844-smoke.png` — 目视可胡主路径仍在，未见相对现网明显恶化；**不作毕业门槛**。
-
-## 回归命令与计数
+## 1. 回归命令
 
 ```bash
-npx mocha --require ts-node/register \
-  tests/majiang/web-table-v3.test.ts tests/majiang/web-lobby.test.ts -v
-# → 8 passing
-
-npm run majiang:web:e2e
-# → smoke pass=8 fail=0（E01–E08）
+node scripts/test/run-mocha-cjs.js \
+  tests/majiang/discard-ranker.test.ts \
+  tests/majiang/rule-engine.test.ts \
+  tests/majiang/game-session.test.ts
 ```
 
-另复验：`tests/majiang/meld-fixture.test.ts` 含 chi-ready → 与挂测合计 **15 passing**（非 brief 硬门槛，作夹具修复证据）。
+说明：`scripts/test/run-mocha-cjs.js` 当前实现会 `glob.sync('tests/**/*.test.ts')` 装载全量测例，**忽略** CLI 传入的路径参数；等价于全仓 Mocha 回归（含上述三文件）。
 
-## 夹具修复（e2e 根因，非 UI 三刀回退）
+## 2. 测试结果摘要
 
-首跑 e2e：**E07 必现吃** 失败  
-`page.waitForFunction` 等 `player_turn` 超时 30s（`.tmp/acceptance/majiang-web-e2e.json`）。
+| 项 | 值 |
+|----|----|
+| Exit code | `0` |
+| Summary line | `3376 passing (15s)` |
+| Failures | `0` |
+| Duration | ~15s（墙钟约 24s） |
+| game-session 脆弱断言 | 未触发；**未**改测例、**未**回退 ranker |
 
-根因：`installChiReadyFixture` 只清 4/5/6 万，手牌残留 **3/7 万** → `findChiCombinations` 多组 → `handleChi` 走 CLI 选组 → API 下超时/`chi failed`。单元测同失败。
+关键套件（节选，均 PASS）：
 
-修复：`src/majiang/session/game-session.ts` 吃夹具一并清 **3–7 万**，只植入唯一 4+6 组合。  
-**未改** `docs/majiang/web-ui-prototype/` 视觉实现。
+- `discard-ranker · 向听主排序`
+- `discard-ranker · 有效牌破平`（含 ukeire 破平）
+- `discard-ranker · 现物危险度`
+- `AIPlayer · P1 接入`
+- `GameSession (CAP-ENG-SESSION / MJ-ACC-ENG-01)` 及相关 dual/session 烟测
+- `rule-engine` 相关向听 / 胡牌条件等（含在全量 3376 内）
 
-## 关注点（Concerns）
+末行原文：
 
-1. 阶段 B 对照清单仍为未勾选人审项；功能绿 ≠ 视觉冲顶。
-2. `handleChi` 多组合仍依赖 CLI；API/e2e 依赖夹具保证单组合（已知天花板）。
-3. 移动帧仅 smoke，窄屏信息密度需另波评估。
+```
+  3376 passing (15s)
+```
 
-## 规范引用
+## 3. 规格回写
 
-- `docs/standards/testing/quality.md`
-- `docs/product/delivery-flow.md`（阶段 A/B 分验；功能自动化 ≠ 视觉毕业）
-- `docs/standards/rules/communication-for-beginners.md`
+文件：`docs/superpowers/specs/2026-11-20-majiang-ai-algorithms-survey-design.md`
+
+| 条目 | 动作 |
+|------|------|
+| §9 writing-plans | 已核：`[x]` 已开并链到 `docs/superpowers/plans/2026-11-20-majiang-ai-p1-heuristic-plan.md` |
+| §9 P1 人验收 | **新增未勾项**：计划已执行 / 工作区有码 / 测绿；**不**勾成已交付 |
+| §10.1 P1 | 补充事实备注：plan 已执行、测绿、未 commit、人验收未勾 |
+| §10.2 P2 | 保持「另开独立 plan」，明确不并入本 P1 |
+
+## 4. Concerns
+
+1. `run-mocha-cjs.js` 不按文件参数过滤，Task brief 中的「只跑三文件」实际变成全量回归；结果仍绿，但若日后需要窄跑，脚本需另改（本 Task 未改脚本）。
+2. P1 实现仍在工作区、无人确认勾选；提交须等用户明确要求（brief Step 3）。
+3. 未宣称补齐「对手听牌概率」等 Bakuuchi 级模型；现物危险度仅为 P1 范围。
+
+## 5. Out of scope（本 Task 遵守）
+
+- 无 git commit  
+- 无 core 公式修复  
+- 无 P2 / P3 施工  

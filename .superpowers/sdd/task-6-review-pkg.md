@@ -1,83 +1,83 @@
 # Review package Task 6
-# Task 6 报告：挂测回归 + 阶段 B 对照帧 · 防回退
+## spec diff
+(spec was untracked at branch start — show §9/§10)
+152:## 9. 验收（本文件本身）
+153-
+154-- [x] 算法族 + 代表系统表完整  
+155-- [x] 本仓模块对照表完整  
+156-- [x] 推荐路径写死为 P1→P2，P3 单独立项  
+157-- [x] 硬不做与规则边界明确  
+158-- [x] 用户要求写计划后，已开 `writing-plans`（P1）：`docs/superpowers/plans/2026-11-20-majiang-ai-p1-heuristic-plan.md`
+159-- [ ] P1 实现交付验收（人确认）：计划已执行、代码在工作区、回归测绿；**未**勾「已交付」——待用户确认后再勾
+160-- [ ] P2 期望值审牌层：P1 落地后再另开 plan（独立 plan，不并入本 P1）
+161-- [ ] P3 深度 RL：须单独立项 brainstorm，不在本调研包施工
+162-
+163:## 10. 后续闸门
+164-
+165-1. **P1**：按 `docs/superpowers/plans/2026-11-20-majiang-ai-p1-heuristic-plan.md` 执行（向听 / 有效牌 / 现物危险度）  
+166-   - 事实备注（2026-11-20 Task 6）：plan 已执行；`discard-ranker` / `rule-engine` / `game-session` 相关回归经 `node scripts/test/run-mocha-cjs.js` 全绿（3376 passing）；代码仍在工作区、未 commit；**人验收未勾**
+167-2. **P2**：P1 验收后再开独立 plan（期望值审牌层）；不与本 P1 plan 合并  
+168-3. **P3**：先开新 brainstorm（算力、许可、规则变体）再写 plan  
+169-4. 提交时机按 `commit-policy.md`：用户明确要求提交时再 commit
 
-**状态：PASS（功能防回退绿；不宣称视觉毕业 / 不关闭 GR-T7）**  
-**日期：2026-11-19**
+## report head
+# Task 6 Report：回归与规格回写
 
-## 结论
+**Status:** PASS  
+**Commits:** none（按 Critical overrides / brief Step 3：仅用户要求时才 commit）  
+**Date:** 2026-11-20
 
-| 项 | 结果 |
-|----|------|
-| 阶段 B 桌面实现帧 1440×900 | 已入库 |
-| Mocha `web-table-v3` + `web-lobby` | **8 passing** |
-| `npm run majiang:web:e2e` smoke | **8 pass / 0 fail** |
-| 移动 390×844 | 仅抽检（**不计入毕业**） |
-| 视觉毕业 / GR-T7 | **未宣称、未关闭** |
-| Commit | **未执行**（按 override） |
-
-## 阶段 B 产物
-
-| 路径 | 说明 |
-|------|------|
-| `docs/majiang/design-freeze/stage-b-v3-table/README.md` | 对照说明 + 清单 |
-| `docs/majiang/design-freeze/stage-b-v3-table/2026-11-19-table-impl-desktop-1440x900.png` | 实现帧 **1440×900** |
-| 对照目标 | `../stage-a-v3-table/2026-11-19-table-desktop-1440x900.png`（未冒充为本帧） |
-
-采证：`index.html?acceptance=1` + `window.majiangNextModelExample`（`response_window` / 可胡）。  
-移动抽检帧（非入库）：`.tmp/stage-b-v3-table-smoke/2026-11-19-table-impl-mobile-390x844-smoke.png` — 目视可胡主路径仍在，未见相对现网明显恶化；**不作毕业门槛**。
-
-## 回归命令与计数
+## 1. 回归命令
 
 ```bash
-npx mocha --require ts-node/register \
-  tests/majiang/web-table-v3.test.ts tests/majiang/web-lobby.test.ts -v
-# → 8 passing
-
-npm run majiang:web:e2e
-# → smoke pass=8 fail=0（E01–E08）
+node scripts/test/run-mocha-cjs.js \
+  tests/majiang/discard-ranker.test.ts \
+  tests/majiang/rule-engine.test.ts \
+  tests/majiang/game-session.test.ts
 ```
 
-另复验：`tests/majiang/meld-fixture.test.ts` 含 chi-ready → 与挂测合计 **15 passing**（非 brief 硬门槛，作夹具修复证据）。
+说明：`scripts/test/run-mocha-cjs.js` 当前实现会 `glob.sync('tests/**/*.test.ts')` 装载全量测例，**忽略** CLI 传入的路径参数；等价于全仓 Mocha 回归（含上述三文件）。
 
-## 夹具修复（e2e 根因，非 UI 三刀回退）
+## 2. 测试结果摘要
 
-首跑 e2e：**E07 必现吃** 失败  
-`page.waitForFunction` 等 `player_turn` 超时 30s（`.tmp/acceptance/majiang-web-e2e.json`）。
+| 项 | 值 |
+|----|----|
+| Exit code | `0` |
+| Summary line | `3376 passing (15s)` |
+| Failures | `0` |
+| Duration | ~15s（墙钟约 24s） |
+| game-session 脆弱断言 | 未触发；**未**改测例、**未**回退 ranker |
 
-根因：`installChiReadyFixture` 只清 4/5/6 万，手牌残留 **3/7 万** → `findChiCombinations` 多组 → `handleChi` 走 CLI 选组 → API 下超时/`chi failed`。单元测同失败。
+关键套件（节选，均 PASS）：
 
-修复：`src/majiang/session/game-session.ts` 吃夹具一并清 **3–7 万**，只植入唯一 4+6 组合。  
-**未改** `docs/majiang/web-ui-prototype/` 视觉实现。
+- `discard-ranker · 向听主排序`
+- `discard-ranker · 有效牌破平`（含 ukeire 破平）
+- `discard-ranker · 现物危险度`
+- `AIPlayer · P1 接入`
+- `GameSession (CAP-ENG-SESSION / MJ-ACC-ENG-01)` 及相关 dual/session 烟测
+- `rule-engine` 相关向听 / 胡牌条件等（含在全量 3376 内）
 
-## 关注点（Concerns）
+末行原文：
 
-1. 阶段 B 对照清单仍为未勾选人审项；功能绿 ≠ 视觉冲顶。
-2. `handleChi` 多组合仍依赖 CLI；API/e2e 依赖夹具保证单组合（已知天花板）。
-3. 移动帧仅 smoke，窄屏信息密度需另波评估。
+```
+  3376 passing (15s)
+```
 
-## 规范引用
+## 3. 规格回写
 
-- `docs/standards/testing/quality.md`
-- `docs/product/delivery-flow.md`（阶段 A/B 分验；功能自动化 ≠ 视觉毕业）
-- `docs/standards/rules/communication-for-beginners.md`
+文件：`docs/superpowers/specs/2026-11-20-majiang-ai-algorithms-survey-design.md`
 
-## Stage B files
-total 2120
-drwxr-xr-x   4 felix  staff      128 Nov 19 22:50 .
-drwxr-xr-x@ 13 felix  staff      416 Nov 19 22:49 ..
--rw-r--r--   1 felix  staff  1079512 Nov 19 22:50 2026-11-19-table-impl-desktop-1440x900.png
--rw-r--r--   1 felix  staff      745 Nov 19 22:49 README.md
-docs/majiang/design-freeze/stage-b-v3-table/2026-11-19-table-impl-desktop-1440x900.png: PNG image data, 1440 x 900, 8-bit/color RGB, non-interlaced
-/Users/felix/Desktop/AIUse/majiang/majiang1/docs/majiang/design-freeze/stage-b-v3-table/2026-11-19-table-impl-desktop-1440x900.png
-  pixelWidth: 1440
-  pixelHeight: 900
+| 条目 | 动作 |
+|------|------|
+| §9 writing-plans | 已核：`[x]` 已开并链到 `docs/superpowers/plans/2026-11-20-majiang-ai-p1-heuristic-plan.md` |
+| §9 P1 人验收 | **新增未勾项**：计划已执行 / 工作区有码 / 测绿；**不**勾成已交付 |
+| §10.1 P1 | 补充事实备注：plan 已执行、测绿、未 commit、人验收未勾 |
+| §10.2 P2 | 保持「另开独立 plan」，明确不并入本 P1 |
 
-## Diff beyond stage-b (fixture fixes?)
-## develop...origin/develop [ahead 6]
- M docs/majiang/web-ui-prototype/index.html
- M docs/majiang/web-ui-prototype/styles.css
-?? docs/majiang/design-freeze/stage-b-v3-table/
-?? tests/majiang/web-table-v3.test.ts
- docs/majiang/web-ui-prototype/index.html |  11 +-
- docs/majiang/web-ui-prototype/styles.css | 293 ++++++++++++++++++-------------
- 2 files changed, 176 insertions(+), 128 deletions(-)
+## 4. Concerns
+
+1. `run-mocha-cjs.js` 不按文件参数过滤，Task brief 中的「只跑三文件」实际变成全量回归；结果仍绿，但若日后需要窄跑，脚本需另改（本 Task 未改脚本）。
+2. P1 实现仍在工作区、无人确认勾选；提交须等用户明确要求（brief Step 3）。
+3. 未宣称补齐「对手听牌概率」等 Bakuuchi 级模型；现物危险度仅为 P1 范围。
+
+## 5. Out of scope（本 Task 遵守）

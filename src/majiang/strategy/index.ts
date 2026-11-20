@@ -151,3 +151,5 @@ export const MAJIANG_ALPHAZERO_INFO = {
     supportedActions: ['DISCARD', 'CHI', 'PENG', 'GANG', 'HU', 'PASS']
   }
 };
+
+export * from './heuristics';

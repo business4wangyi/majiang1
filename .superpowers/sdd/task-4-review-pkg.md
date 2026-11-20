@@ -1,163 +1,214 @@
-# Review package Task 4
-## Status
-## develop...origin/develop [ahead 6]
- M docs/majiang/web-ui-prototype/index.html
- M docs/majiang/web-ui-prototype/styles.css
- M docs/product/spines/majiang-webui-target.md
-?? docs/product/caps/majiang-web-table-v3-cap-tasks.md
-?? docs/product/spines/majiang-web-table-v3-target.md
-?? docs/product/waves/majiang-web-table-v3-W1.md
-?? tests/majiang/web-table-v3.test.ts
-## Diff styles (tile/river related)
-142- }
-143- 
-144:-.latest-action-wrap {
-145--  /* 教学文案层退出主舞台；细节仍可经二级上下文/读屏获取 */
-146--  position: absolute;
---
-156-+/* 桌心说明抽屉：弱化不抢主；保留 id 供展开 */
-157-+.center-detail-drawer,
-158:+.latest-action-wrap.table-aux {
-159-+  justify-self: center;
-160-+  opacity: 0.55;
---
-166- }
-167- 
-168: .latest-action-wrap > .label {
-169-   display: none;
-170- }
---
-177- }
-178- 
-179:+/* MJ-T3-TILE-01：最近弃牌金高亮（对齐阶段 A；禁蓝霓虹回潮） */
-180:+.river-grid .tile-mini--latest,
-181:+.river-grid .mini.latest,
-182: .tile-mini--latest {
-183--  border-color: rgba(118, 174, 255, 0.82);
-184-+  outline: 2px solid var(--gold-2);
---
-209- }
-210- 
-211:+/* MJ-T3-TILE-01：手牌主角节奏（对照阶段 A；图集路径仍由 has-tile-atlas 接管） */
-212: .hand-tiles {
-213-   display: flex;
-214-   justify-content: center;
---
-225- }
-226- 
-227:+.hand-tiles .tile,
-228:+.hand-tiles .tile.has-tile-atlas {
-229:+  width: 52px;
-230:+  height: 72px;
-231:+  min-height: 72px;
-232-+  border-radius: 6px;
-233-+}
-234-+
-235:+.hand-tiles .tile:not(.has-tile-atlas) {
-236-+  border: 1px solid rgba(90, 70, 40, 0.4);
-237:+  background: linear-gradient(180deg, var(--tile-face-cream) 0%, var(--tile-face-mid) 70%, var(--tile-face-base) 100%);
-238-+  box-shadow: 2px 3px 0 rgba(40, 90, 60, 0.4), 0 8px 14px rgba(0, 0, 0, 0.28);
-239-+}
-240-+
-241: .tile {
-242-   position: relative;
-243-   width: clamp(58px, 4.2vw, 76px);
---
-247-@@ -2191,24 +2172,33 @@ body {
-248- 
-249: .tile-asset--hand .tile-asset-white {
-250-   width: 28px;
-251-   height: 38px;
-252- }
-253- 
-254:+/* MJ-T3-TILE-01：选中抬起（app 仍写 selected；合同兼认 sel / is-selected） */
-255:+.hand-tiles .tile.sel,
-256:+.hand-tiles .tile.is-selected,
-257:+.hand-tiles .tile.selected,
-258: .tile.selected {
-259--  transform: translateY(-8px) translateZ(8px);
-260-+  transform: translateY(-10px) translateZ(8px);
---
-275-+}
-276-+
-277:+.hand-tiles .tile.has-tile-atlas.sel,
-278:+.hand-tiles .tile.has-tile-atlas.is-selected,
-279:+.hand-tiles .tile.has-tile-atlas.selected,
-280:+.tile.has-tile-atlas.selected {
-281-+  border-color: transparent;
-282-+  outline: 2px solid var(--gold-2);
---
-286- 
-287- /* 手牌同名仅弱提示，首眼留给牌河目标牌 */
-288: .tile.tile--response-match {
-289-   border-color: rgba(255, 184, 59, 0.42);
-290-   box-shadow:
---
-359-+.action-btn.action-seal {
-360-+  --seal-h: 44px;
-361:+  --seal-min-w: 72px;
-362-+  min-height: 44px;
-363:+  min-width: 72px;
-364-+  padding: 0 14px;
-365-+  font-size: 16px;
---
-376-+.action-btn.action-seal.action-secondary-choice {
-377-+  --seal-h: 44px;
-378:+  --seal-min-w: 72px;
-379-+  min-height: 44px;
-380:+  min-width: 72px;
-381-+  font-size: 16px;
-382- }
---
-481-   .action-btn[data-action-id="hu"].action-primary {
-482--    font-size: 28px;
-483:+    --seal-h: 52px;
-484-+    --seal-min-w: 88px;
-485-+    min-width: 88px;
-486:+    min-height: 52px;
-487-+    font-size: 20px;
-488-   }
---
-490-   .action-secondary {
-491-     --seal-h: 34px;
-492:     --seal-min-w: 72px;
-493-     font-size: 12px;
-## Test file tail / new asserts
-9:describe('CAP-T3 / MJ-T3-CENTER-01 / MJ-T3-TILE-01', () => {
-16:    expect(html).to.match(/id=["']handTiles["']/);
-18:    expect(html).to.match(/id=["']river-north["']/);
-19:    expect(html).to.match(/id=["']river-west["']/);
-20:    expect(html).to.match(/id=["']river-east["']/);
-21:    expect(html).to.match(/id=["']river-south["']/);
-50:    expect(css).to.match(/\.hand-tiles\s*\{/);
-51:    expect(css).to.match(/\.tile\.sel|\.tile\.is-selected|\.hand-tiles\s+\.sel/);
-52:    expect(css).to.match(/tile-mini--latest|\.mini\.latest|\.river-grid[\s\S]*latest/);
-## Report
-# Task 4 Report · MJ-T3-TILE-01
+# Review package Task 4 (AIPlayer wire)
+## git diff ai-player.ts
+diff --git a/src/majiang/strategy/agents/ai-player.ts b/src/majiang/strategy/agents/ai-player.ts
+index d990f7b..876fa96 100644
+--- a/src/majiang/strategy/agents/ai-player.ts
++++ b/src/majiang/strategy/agents/ai-player.ts
+@@ -1,21 +1,27 @@
+-import { debugLog, errorLog, infoLog } from '../../tools/logger';
++import { debugLog, errorLog } from '../../tools/logger';
+ import { Player, PlayerType } from '../../core/player';
+ import { Tile, TileType } from '../../core/tile';
+-import { displayManager } from '../../ui/display-manager';
+ import { GameEventHandler } from '../../ui/game-event-handler';
+ import { AUTO_PLAY_MODE } from '../../config/runtime-state';
+ import { WinConditions } from '../../core/win-conditions/win-conditions-main';
++import { pickDiscardIndex } from '../heuristics/discard-ranker';
+ 
+ export class AIPlayer extends Player {
+   private static idCounter = 1;
+ 
++  private visibleDiscards: Tile[] = [];
++
++  public setVisibleDiscards(tiles: Tile[]): void {
++    this.visibleDiscards = tiles.map(t => t.clone());
++  }
++
+   /**
+    * AI策略相关常量
+    */
+   private static AI_STRATEGY = {
+     // 牌的基础评分权重
+     WEIGHTS: {
+       PAIR: 10,         // 对子
+       TRIPLET: 25,      // 刻子
+       SEQUENCE: 8,      // 顺子贡献
+       NEAR_COMPLETE: 5, // 接近完成的组合
+@@ -214,83 +220,47 @@ export class AIPlayer extends Player {
+       } catch (fallbackError) {
+         debugLog(`AI出牌恢复策略也失败: ${fallbackError instanceof Error ? fallbackError.message : String(fallbackError)}`);
+         debugLog(`AI玩家无法出牌，请检查游戏状态`);
+       }
+ 
+       errorLog('游戏错误检查原因')
+       process.exit(0)
+     }
+   }
+ 
+-  // 获取AI出牌选择（优化版）
++  // 获取AI出牌选择（P1：向听启发式排序，旧权重仅破平）
+   public getAIMove(): number {
+     debugLog(`AI玩家 ${this.name} 正在思考出牌...`);
+     debugLog(`当前手牌数量: ${this.handTiles.length}`);
+ 
+     // 安全检查：如果手牌为空，返回-1
+     if (this.handTiles.length === 0) {
+       debugLog(`警告: AI玩家 ${this.name} 没有手牌可出`);
+       return -1;
+     }
+ 
+     try {
+-
+       // 打印手牌详情用于调试
+       debugLog(`AI玩家 ${this.name} 手牌详情: ${this.handTiles.map((t, idx) => `${idx}:${t.toString()}`).join(' ')}`);
+ 
+-      // 使用needsToDiscard方法判断是否需要出牌
+-      if (this.needsToDiscard()) {
+-        // 获取每张牌的价值评分
+-        const tileValues = this.getAllTileValues();
+-
+-        // 安全检查：确保有评分结果
+-        if (tileValues.length > 0) {
+-          // 选择价值最低的牌
+-          const lowestValueTile = tileValues[0];
+-          // 验证索引有效性
+-          if (lowestValueTile.index >= 0 && lowestValueTile.index < this.handTiles.length) {
+-            infoLog(`手牌数量超过预期(${this.getExpectedHandSize()})，实际(${this.handTiles.length})，选择价值最低的牌，索引=${lowestValueTile.index}, 牌=${lowestValueTile.tile.toString()}, 价值=${lowestValueTile.value}`);
+-            if (this.handTiles.length > this.getExpectedHandSize() + 1) {
+-              displayManager.displayPlayerHand(this)
+-              errorLog(`退出游戏排查问题`);
+-              process.exit(0);
+-            }
+-            return lowestValueTile.index;
+-          } else {
+-            debugLog(`警告: 评分结果索引无效 ${lowestValueTile.index}，使用备选策略`);
+-          }
+-        }
+-
+-        // 如果评分失败，使用安全的备选策略：打出最后一张牌
+-        const lastIndex = this.handTiles.length - 1;
+-        debugLog(`评分失败，使用备选策略: 打出最后一张牌，索引=${lastIndex}`);
+-        return lastIndex;
+-      }
+-
+-      // 获取每张牌的价值评分
+-      const tileValues = this.getAllTileValues();
+-
+-      // 安全检查：确保有评分结果
+-      if (tileValues.length > 0) {
+-        const selectedIndex = tileValues[0].index;
+-        // 确保索引在有效范围内
+-        if (selectedIndex >= 0 && selectedIndex < this.handTiles.length) {
+-          debugLog(`AI选择打出索引 ${selectedIndex}: ${this.handTiles[selectedIndex].toString()}, 价值: ${tileValues[0].value}`);
+-          return selectedIndex;
+-        } else {
+-          debugLog(`错误: AI返回的索引 ${selectedIndex} 超出范围，改为使用默认策略`);
+-        }
+-      } else {
+-        debugLog(`错误: 牌值评估结果为空，使用默认策略`);
++      const index = pickDiscardIndex(
++        {
++          handTiles: this.handTiles,
++          revealedSets: this.revealedSets ?? [],
++          visibleDiscards: this.visibleDiscards
++        },
++        (i, tile) => this.evaluateTileValue(tile, i)
++      );
++      if (index >= 0 && index < this.handTiles.length) {
++        debugLog(`AI P1排序选择索引 ${index}: ${this.handTiles[index].toString()}`);
++        return index;
+       }
+-
+-      // 如果评分系统出问题，返回最后一张牌的索引（最安全）
+       return this.handTiles.length - 1;
+     } catch (error) {
+       errorLog(`AI出牌决策发生错误: ${error instanceof Error ? error.message : error}`);
+       errorLog(`错误堆栈: ${error instanceof Error ? error.stack : '无堆栈信息'}`);
+ 
+       // 发生错误时返回最后一张牌的索引（最安全）
+       return this.handTiles.length > 0 ? this.handTiles.length - 1 : -1;
+     }
+   }
+ 
 
-**Status:** DONE（钩子合同绿；视觉毕业仍待 GR-T5/GR-T7 人眼）  
-**Commits:** none（按 Binding overrides）  
-**Date:** 2026-11-19
+## test file AIPlayer describe (tail)
+    const id = tid();
+    // brief 顺子手在 calculateRegularShanten（向听下限 0）下全员 sh=0、ukeire 恒 0，无法破平；
+    // 改用刻子向：打出后 sh≥1，同 shanten 组内风孤张 ukeire 高于孤张条。
+    const handTiles = [
+      new Tile(TileType.WAN, 2, id.next()),
+      new Tile(TileType.WAN, 2, id.next()),
+      new Tile(TileType.WAN, 2, id.next()),
+      new Tile(TileType.TIAO, 5, id.next()),
+      new Tile(TileType.TIAO, 5, id.next()),
+      new Tile(TileType.TIAO, 5, id.next()),
+      new Tile(TileType.TONG, 8, id.next()),
+      new Tile(TileType.TONG, 8, id.next()),
+      new Tile(TileType.TONG, 8, id.next()),
+      new Tile(TileType.WAN, 6, id.next()),
+      new Tile(TileType.WAN, 6, id.next()),
+      new Tile(TileType.TIAO, 1, id.next()), // 孤张条 · 同向听但 ukeire 较低
+      new Tile(TileType.FENG, 2, id.next()), // 南 · 孤张
+      new Tile(TileType.FENG, 4, id.next()), // 北 · 孤张
+    ];
+    const scores = scoreDiscardCandidates({ handTiles, revealedSets: [] });
+    const best = scores[0];
+    // 两张风牌孤张中，至少应打风牌；且 best.ukeire >= 同 shantenAfter 组内其他候选
+    expect(best.tile.type).to.equal(TileType.FENG);
+    const sameShanten = scores.filter(s => s.shantenAfter === best.shantenAfter);
+    const maxUkeire = Math.max(...sameShanten.map(s => s.ukeire));
+    expect(best.ukeire).to.equal(maxUkeire);
+  });
+});
 
-## TDD evidence
+describe('discard-ranker · 现物危险度', () => {
+  it('向听与 ukeire 相同时，优先打出现物安全牌', () => {
+    const id = tid();
+    const handTiles = [
+      new Tile(TileType.WAN, 1, id.next()),
+      new Tile(TileType.WAN, 2, id.next()),
+      new Tile(TileType.WAN, 3, id.next()),
+      new Tile(TileType.WAN, 4, id.next()),
+      new Tile(TileType.WAN, 5, id.next()),
+      new Tile(TileType.WAN, 6, id.next()),
+      new Tile(TileType.TIAO, 2, id.next()),
+      new Tile(TileType.TIAO, 3, id.next()),
+      new Tile(TileType.TIAO, 4, id.next()),
+      new Tile(TileType.TONG, 7, id.next()),
+      new Tile(TileType.TONG, 8, id.next()),
+      new Tile(TileType.TONG, 9, id.next()),
+      new Tile(TileType.FENG, 2, id.next()),
+      new Tile(TileType.JIAN, 1, id.next()), // 中
+    ];
+    const visibleDiscards = [new Tile(TileType.JIAN, 1, id.next())]; // 中已现物
+    const idx = pickDiscardIndex({ handTiles, revealedSets: [], visibleDiscards });
+    expect(handTiles[idx].type).to.equal(TileType.JIAN);
+    expect(handTiles[idx].value).to.equal(1);
+  });
+});
 
-| 阶段 | 命令 | 结果 |
-|------|------|------|
-| RED | `npx mocha --require ts-node/register tests/majiang/web-table-v3.test.ts -v` | 新 TILE 断言 **已部分满足**（钩子本就在 CSS）：5 passing；缺口在观感尺寸/选中抬起/最近牌金高亮 |
-| GREEN | 同上 | **5 passing** |
-
-## Changes
-
-| 文件 | 动作 |
-|------|------|
-| `tests/majiang/web-table-v3.test.ts` | 追加「手牌与最近牌高亮钩子在 CSS 合同内」 |
-| `docs/majiang/web-ui-prototype/styles.css` | MJ-T3-TILE-01：手牌 52×72 节奏；`sel`/`is-selected`/`selected` 抬起 −10px；最近牌金 outline（替蓝霓虹）；保留 `has-tile-atlas` |
-| `docs/majiang/web-ui-prototype/index.html` | 未改（牌河 DOM 层级无需动） |
-| `docs/majiang/web-ui-prototype/app.js` | 未改（仍写 `selected` + `tile-mini--latest`） |
-| 脊骨 / W1 / caps | G-T3 · TILE · `CAP-T3-TILE` → **已落地**；下一刀 FELT；**未关 GR-T5 / GR-T7** |
-
-## Concerns
-
-- 功能自动化绿 ≠ 阶段 B 视觉冲顶；GR-T5（手牌/牌河对照）与 GR-T7 仍待人批。
-- 图集启用时选中/最近牌靠 `outline` + 抬起，需对照阶段 A PNG 人眼确认厚度与金环是否够主角感。
-- 移动帧手牌尺寸仍由既有 `@media` 覆盖；本刀主合同为桌面 1440×900。
+describe('AIPlayer · P1 接入', () => {
+  it('getAIMove 在现物场景下打出安全字牌', () => {
+    const id = tid();
+    const ai = new AIPlayer('测AI');
+    ai.handTiles = [
+      new Tile(TileType.WAN, 1, id.next()),
+      new Tile(TileType.WAN, 2, id.next()),
+      new Tile(TileType.WAN, 3, id.next()),
+      new Tile(TileType.WAN, 4, id.next()),
+      new Tile(TileType.WAN, 5, id.next()),
+      new Tile(TileType.WAN, 6, id.next()),
+      new Tile(TileType.TIAO, 2, id.next()),
+      new Tile(TileType.TIAO, 3, id.next()),
+      new Tile(TileType.TIAO, 4, id.next()),
+      new Tile(TileType.TONG, 7, id.next()),
+      new Tile(TileType.TONG, 8, id.next()),
+      new Tile(TileType.TONG, 9, id.next()),
+      new Tile(TileType.FENG, 2, id.next()),
+      new Tile(TileType.JIAN, 1, id.next()),
+    ];
+    ai.setVisibleDiscards([new Tile(TileType.JIAN, 1, id.next())]);
+    const idx = ai.getAIMove();
+    expect(ai.handTiles[idx].type).to.equal(TileType.JIAN);
+  });
+});

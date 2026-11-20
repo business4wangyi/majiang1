@@ -1,45 +1,46 @@
-# Task 3 Report · MJ-T3-CENTER-01
+# Task 3 Report: 简单危险度（现物安全）
 
-**Status:** DONE（结构合同绿；视觉毕业仍待 GR-T4/GR-T7 人眼）  
-**Commits:** none（按 Binding overrides）  
-**Date:** 2026-11-19
+## Status
+
+**PASS** — TDD 完成；未提交。
+
+## What changed
+
+| File | Change |
+| --- | --- |
+| `tests/majiang/discard-ranker.test.ts` | 追加 `discard-ranker · 现物危险度`：同向听/ukeire 时断言优先打出现物 JIAN(中) |
+| `src/majiang/strategy/heuristics/discard-ranker.ts` | 实现 `tileKey` / `scoreDanger`；`scoreDiscardCandidates` 用 `scoreDanger(tile, ctx.visibleDiscards)` 替代 placeholder `0` |
+
+### Danger 规则（与 brief 一致）
+
+```
+visibleDiscards 中 type+value 匹配 → 0（现物）
+else FENG / JIAN → 1
+else → 2
+```
+
+排序仍为：`shantenAfter ↑` → `ukeire ↓` → `danger ↑` → `legacyValue ↓` → `index ↑`。
 
 ## TDD evidence
 
-| 阶段 | 命令 | 结果 |
-|------|------|------|
-| RED | `npx mocha --require ts-node/register tests/majiang/web-table-v3.test.ts -v` | 3 pass / 1 fail：`\.action-seal-bar` 在 CSS 中缺失 |
-| GREEN | 同上 | **4 passing** |
+1. **红**：仅加测例、danger 仍为 0 → `AssertionError: expected '万' to equal '箭'`（索引平局打出万 1）
+2. **绿**：接入 `scoreDanger` 后全套通过
 
-## Changes
-
-| 文件 | 动作 |
-|------|------|
-| `tests/majiang/web-table-v3.test.ts` | 新建（brief 原文） |
-| `docs/majiang/web-ui-prototype/index.html` | 桌心收敛：`center-public-info.hidden`；说明文案入 `secondaryContext`；抽屉类 `center-detail-drawer table-aux`；保留 `latest-action-wrap` 别名与全部关键 id |
-| `docs/majiang/web-ui-prototype/styles.css` | 方盘 220×220 合同；`.action-seal-bar`；印章钮非 pill；胡主路径金扣；抽屉弱化 |
-| `docs/majiang/web-ui-prototype/app.js` | 未改（仍用 id / `.table-center`） |
-| 脊骨 / W1 / caps | G-T2 · CENTER · `CAP-T3-CENTER` → **已落地**；下一刀 TILE；**未关 GR-T7 / GR-T4** |
-
-## Concerns
-
-- 方盘从旧八角形大盘缩到 220 合同方盘，分数字号需人眼对照阶段 A PNG。
-- `primaryFocusHint` / `stageMainPath` 默认藏在折叠抽屉内，展开才见长文案。
-- 功能自动化绿 ≠ 视觉冲顶；GR-T4 / GR-T7 仍待人批。
-
-## Review fix · 胡最大回退（2026-11-19）
-
-**Finding:** 胡钮曾用 `1.35rem`+96×56，但兄弟印章字号/高度更大（碰/杠/过 ~30px、基钮更高），未对齐阶段 A「胡最大」。
-
-**Change:** 仅改 `docs/majiang/web-ui-prototype/styles.css`
-- `.action-btn.action-seal` 兄弟基线：`16px` / min `72×44`
-- 碰/杠/过显式锁同尺寸，避免被旧 `action-pass` / `action-secondary-choice` 抬高
-- 胡主路径（`.action-seal[data-action-id="hu"].action-main-path|.action-primary`）：`22px` / min `96×56`，并设 `--seal-*` + 金扣背景，特异性压过 `.action-main-path` 金属大钮
-- 移动帧同步：兄弟 ~14px/40×64，胡 ~20px/88×52
-- 未动 lobby/core；**未关 GR-T7**；未 commit
-
-**Verify:**
+```bash
+node scripts/test/run-mocha-cjs.js tests/majiang/discard-ranker.test.ts
+# 3374 passing (11s), 0 failing
 ```
-npx mocha --require ts-node/register tests/majiang/web-table-v3.test.ts -v
-→ 4 passing (3ms)
-```
+
+## Test hand note
+
+Brief 顺子手（123/456万 + 234条 + 789筒 + 南 + 中，中已现物）在本仓 `calculateShanten` 下限 0 / ukeire 恒 0 下，全员 sh/ukeire 并列，danger 成为有效破平键；**未改测例手牌**，现物 JIAN 即可胜出。
+
+## Commits
+
+**none**（Critical override：DO NOT git commit）
+
+## Concerns / follow-ups
+
+- Danger 为启发式，非对手听牌概率；P1 不做放铳模型。
+- 现物判定仅 `type+value`，不区分自家/他家弃牌来源（与 brief `visibleDiscards?` 契约一致）。
+- Task 1–2 工作树改动仍未提交；本任务 diff 叠在其上。

@@ -1,97 +1,113 @@
-### Task 4: 手牌 / 牌河 / 最近牌 · `MJ-T3-TILE-01`
-
-**前置：** STAGEA 已批；建议 CENTER 已合入。
+### Task 4: 接入 `AIPlayer.getAIMove`
 
 **Files:**
-- Modify: `docs/majiang/web-ui-prototype/styles.css`（`.hand-tiles` / `.tile` / `.river-grid` / `.tile-mini--latest`）
-- Modify: `docs/majiang/web-ui-prototype/index.html`（仅当牌河 DOM 层级阻碍布局）
-- Modify: `docs/majiang/web-ui-prototype/app.js`（选中态 class：保持 `sel` / `is-selected` / `tile-mini--latest` 之一与现逻辑一致）
-- Modify: `tests/majiang/web-table-v3.test.ts`（补 TILE 断言）
-- Modify: 脊骨 G-T3 / caps `CAP-T3-TILE`
+- Modify: `src/majiang/strategy/agents/ai-player.ts`
+- Modify: `tests/majiang/discard-ranker.test.ts`（可增 AIPlayer 烟测，或新建极短 describe）
 
 **Interfaces:**
-- Consumes: 既有图集钩子 `has-tile-atlas`；阶段 A 手牌尺寸节奏
-- Produces: 手牌主角感；选中抬起；最近弃牌高亮
+- Consumes: `pickDiscardIndex`；保留现有 `evaluateTileValue` 作为 `legacyValueAt`
+- Produces:
+  - `AIPlayer` 实例字段 `private visibleDiscards: Tile[] = []`
+  - `public setVisibleDiscards(tiles: Tile[]): void`（防御拷贝）
+  - `getAIMove(): number` 改为：空手 → `-1`；否则 `pickDiscardIndex({ handTiles, revealedSets, visibleDiscards: this.visibleDiscards }, (i,t) => this.evaluateTileValue(t,i))`
+  - **保留** `getAllTileValues` / `evaluateTileValue` 私有方法供 legacy 破平与调试日志；可在 `getAIMove` 打一条 debug：最终索引与 `scoreDiscardCandidates` 首项摘要
 
-- [ ] **Step 1: 扩展挂测**
+- [ ] **Step 1: 写失败烟测（AIPlayer 走排序器）**
 
-在 `tests/majiang/web-table-v3.test.ts` 追加：
+在 `tests/majiang/discard-ranker.test.ts` 追加：
 
 ```typescript
-  it('手牌与最近牌高亮钩子在 CSS 合同内', () => {
-    expect(css).to.match(/\.hand-tiles\s*\{/);
-    expect(css).to.match(/\.tile\.sel|\.tile\.is-selected|\.hand-tiles\s+\.sel/);
-    expect(css).to.match(/tile-mini--latest|\.mini\.latest|\.river-grid[\s\S]*latest/);
-    expect(css).to.match(/has-tile-atlas/);
+import { AIPlayer } from '../../src/majiang/strategy/agents/ai-player';
+
+describe('AIPlayer · P1 接入', () => {
+  it('getAIMove 在现物场景下打出安全字牌', () => {
+    const id = tid();
+    const ai = new AIPlayer('测AI');
+    ai.handTiles = [
+      new Tile(TileType.WAN, 1, id.next()),
+      new Tile(TileType.WAN, 2, id.next()),
+      new Tile(TileType.WAN, 3, id.next()),
+      new Tile(TileType.WAN, 4, id.next()),
+      new Tile(TileType.WAN, 5, id.next()),
+      new Tile(TileType.WAN, 6, id.next()),
+      new Tile(TileType.TIAO, 2, id.next()),
+      new Tile(TileType.TIAO, 3, id.next()),
+      new Tile(TileType.TIAO, 4, id.next()),
+      new Tile(TileType.TONG, 7, id.next()),
+      new Tile(TileType.TONG, 8, id.next()),
+      new Tile(TileType.TONG, 9, id.next()),
+      new Tile(TileType.FENG, 2, id.next()),
+      new Tile(TileType.JIAN, 1, id.next()),
+    ];
+    ai.setVisibleDiscards([new Tile(TileType.JIAN, 1, id.next())]);
+    const idx = ai.getAIMove();
+    expect(ai.handTiles[idx].type).to.equal(TileType.JIAN);
   });
+});
 ```
 
-- [ ] **Step 2: 跑测确认新断言失败**
+- [ ] **Step 2: 跑测确认失败**
 
 ```bash
-npx mocha --require ts-node/register tests/majiang/web-table-v3.test.ts -v
+npx mocha -r ts-node/register tests/majiang/discard-ranker.test.ts --timeout 20000
 ```
 
-Expected: 新 TILE 断言 FAIL 或已部分满足；记录缺口再改。
+Expected: FAIL（`setVisibleDiscards` 不存在，或仍走旧权重打出非中）
 
-- [ ] **Step 3: CSS 收敛手牌/牌河（禁止色点矩形）**
+- [ ] **Step 3: 改 AIPlayer**
 
-```css
-/* MJ-T3-TILE-01 */
-.hand-tiles {
-  display: flex;
-  justify-content: center;
-  gap: 6px;
-  padding: 8px 12px 16px;
-}
+在 `ai-player.ts` 顶部增加：
 
-.hand-tiles .tile {
-  width: 52px;
-  height: 72px;
-  border-radius: 6px;
-  background: linear-gradient(180deg, var(--tile-face-cream) 0%, var(--tile-face-mid) 70%, var(--tile-face-base) 100%);
-  border: 1px solid rgba(90, 70, 40, 0.4);
-  box-shadow: 2px 3px 0 rgba(40, 90, 60, 0.4), 0 8px 14px rgba(0, 0, 0, 0.28);
-}
+```typescript
+import { pickDiscardIndex } from '../heuristics/discard-ranker';
+```
 
-.hand-tiles .tile.sel,
-.hand-tiles .tile.is-selected {
-  transform: translateY(-10px);
-  border-color: var(--gold-2);
-}
+类内增加：
 
-.river-grid .tile-mini--latest,
-.river-grid .mini.latest {
-  outline: 2px solid var(--gold-2);
-  transform: translateY(-3px);
-  box-shadow: 0 6px 10px rgba(0, 0, 0, 0.35);
+```typescript
+private visibleDiscards: Tile[] = [];
+
+public setVisibleDiscards(tiles: Tile[]): void {
+  this.visibleDiscards = tiles.map(t => t.clone());
 }
 ```
 
-若已有 `has-tile-atlas` 图集路径：保持启用，禁止退回纯色块文字牌。核对 `app.js` 给最近弃牌加 `tile-mini--latest`（或现有等价类）的逻辑仍在。
+将 `getAIMove` 的核心选牌（`needsToDiscard` 为真的分支与正常分支）收敛为：
 
-- [ ] **Step 4: 跑挂测 PASS**
+```typescript
+const index = pickDiscardIndex(
+  {
+    handTiles: this.handTiles,
+    revealedSets: this.revealedSets ?? [],
+    visibleDiscards: this.visibleDiscards
+  },
+  (i, tile) => this.evaluateTileValue(tile, i)
+);
+if (index >= 0 && index < this.handTiles.length) {
+  debugLog(`AI P1排序选择索引 ${index}: ${this.handTiles[index].toString()}`);
+  return index;
+}
+return this.handTiles.length - 1;
+```
+
+删除或绕开「仅 `getAllTileValues()[0]`」作为唯一决策的路径；异常 fallback 仍打最后一张。**不要**改 `handleDiscard` 的 `process.exit` 行为（本计划不修该历史问题）。
+
+- [ ] **Step 4: 跑测确认通过**
 
 ```bash
-npx mocha --require ts-node/register tests/majiang/web-table-v3.test.ts -v
+npx mocha -r ts-node/register tests/majiang/discard-ranker.test.ts --timeout 20000
 ```
 
-Expected: PASS。
+Expected: PASS
 
-- [ ] **Step 5: Commit（仅用户要求）**
+- [ ] **Step 5: Commit（仅用户要求时）**
 
 ```bash
-git add docs/majiang/web-ui-prototype/styles.css \
-  docs/majiang/web-ui-prototype/index.html \
-  docs/majiang/web-ui-prototype/app.js \
-  tests/majiang/web-table-v3.test.ts \
-  docs/product/spines/majiang-web-table-v3-target.md \
-  docs/product/waves/majiang-web-table-v3-W1.md \
-  docs/product/caps/majiang-web-table-v3-cap-tasks.md
+git add src/majiang/strategy/agents/ai-player.ts tests/majiang/discard-ranker.test.ts
 git commit -m "$(cat <<'EOF'
-feat(table-v3): 强化手牌主角感与牌河最近牌高亮
+feat(majiang): AIPlayer 出牌接入向听启发式排序
 
-对照阶段 A 抬选中态，禁色点矩形回潮。
+人机主路径弃牌改为向听/有效牌/现物优先，旧权重仅作破平。
 EOF
 )"
 ```

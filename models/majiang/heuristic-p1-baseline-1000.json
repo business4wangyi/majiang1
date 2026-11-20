@@ -1,0 +1,76 @@
+{
+  "ok": false,
+  "algorithm": "heuristic-P1-AIPlayer",
+  "note": "CLI 自动对弈四家同算法基线（P1：向听→有效牌→现物危险度）；局内 process.exit 拦截为 softFail 后继续；供与旧启发式对照（非 AlphaZero）",
+  "roundsRequested": 1000,
+  "roundsCompleted": 1000,
+  "failed": 1,
+  "softFailRatePct": 0.1,
+  "fails": [
+    {
+      "round": 363,
+      "message": "process.exit(0) intercepted during baseline",
+      "sample": "Error: process.exit(0) intercepted during baseline\n    at process.exit (/Users/felix/Desktop/AIUse/majiang/majiang1/scripts/training/majiang/baseline-1000-heuristic.ts:50:9)\n    at AIPlayer.handleDiscard (/Users/felix/Desktop/AIUse/majiang/majiang1/src/majiang/strategy/agents/ai-player.ts:127:15)\n    at GameEventHandler.handleCurrentPlayerDiscard (/Users/felix/Desktop/AIUse/majiang/majiang1/src/majiang/ui/game-event-handler.ts:1198:45)\n    at GameEventHandler.requirePlayerToDiscard (/Users/felix/Desktop/AIUse/majiang/majiang1/src/majiang/ui/game-event-handler.ts:1606:18)\n    at async GameEventHandler.handleAnGang (/Users/felix/Desktop/AIUse/majiang/majiang1/src/majiang/ui/game-event-handler.ts:744:9)\n    at async GameEventHandler.handleGang (/Users/felix/Desktop/AIUse/majiang/majiang1/src/majiang/ui/game-event-handler.ts:641:23)\n    at async GameEventHandler.checkSpecialActions (/Users/felix/Desktop/AIUse/majiang/majiang1/src/majiang/ui/game-event-handler.ts:1116:24)\n    at async GameEventHandler.game_event_handler_1.GameEventHandler.safeStartGameAndEnd (/Users/felix/Desktop/AIUse/majiang/majiang1/scripts/training/majiang/baseline-1000-heuristic.ts:74:29)\n    at async /Users/felix/Desktop/AIUse/majiang/majiang1/scripts/training/majiang/baseline-1000-heuristic.ts:118:7 | 东家(AI):hand=4/exp=4/total=13/sets=CHI+CHI+CHI/needDiscard=false; 南家(AI):hand=4/exp=4/total=14/sets=CHI+PENG+GANG/needDiscard=false; 西家(AI):hand=4/exp=4/total=13/sets=CHI+CHI+PENG/needDiscard=false; 北家(AI):hand=7/exp=7/total=13/sets=CHI+CHI/needDiscard=false"
+    }
+  ],
+  "players": [
+    {
+      "name": "东家(AI)",
+      "totalGames": 1000,
+      "winCount": 211,
+      "drawCount": 91,
+      "loseCount": 698,
+      "score": -180,
+      "winRate": 0.211,
+      "winRatePct": 21.1,
+      "avgScore": -0.18
+    },
+    {
+      "name": "南家(AI)",
+      "totalGames": 1000,
+      "winCount": 244,
+      "drawCount": 91,
+      "loseCount": 665,
+      "score": -32,
+      "winRate": 0.244,
+      "winRatePct": 24.4,
+      "avgScore": -0.032
+    },
+    {
+      "name": "西家(AI)",
+      "totalGames": 1000,
+      "winCount": 234,
+      "drawCount": 91,
+      "loseCount": 675,
+      "score": 120,
+      "winRate": 0.234,
+      "winRatePct": 23.4,
+      "avgScore": 0.12
+    },
+    {
+      "name": "北家(AI)",
+      "totalGames": 1000,
+      "winCount": 220,
+      "drawCount": 91,
+      "loseCount": 689,
+      "score": 92,
+      "winRate": 0.22,
+      "winRatePct": 22,
+      "avgScore": 0.092
+    }
+  ],
+  "summary": {
+    "totalWins": 909,
+    "totalDrawSeatCounts": 364,
+    "avgWinRatePct": 22.72,
+    "seatWinRatesPct": {
+      "东家(AI)": 21.1,
+      "南家(AI)": 24.4,
+      "西家(AI)": 23.4,
+      "北家(AI)": 22
+    }
+  },
+  "ms": 1628731,
+  "finishedAt": "2026-11-20T14:49:56.549Z",
+  "outPath": "models/majiang/heuristic-p1-baseline-1000.json"
+}

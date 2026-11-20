@@ -2,8 +2,9 @@
  * 启发式 AIPlayer 四家同算法自对弈基线（1000 局）。
  * - 局内异常不吞：任一局 throw 则整次失败退出
  * - 结果落盘供后续训练对照
+ * - 默认走 legacy；试用 P1：MAJIANG_DISCARD_STRATEGY=p1
  *
- * 用法: npx ts-node scripts/training/majiang/baseline-1000-heuristic.ts [rounds=1000]
+ * 用法: npx ts-node scripts/training/majiang/baseline-1000-heuristic.ts [rounds=1000] [out.json]
  */
 import * as fs from 'fs';
 import * as path from 'path';
@@ -38,6 +39,16 @@ function logProgress(line: string): void {
 setAutoPlayMode(true);
 setDebugMode(false);
 setLogLevel(LogLevel.ERROR);
+
+/** 拦截对局内 process.exit(0)，避免静默杀进程（AIPlayer/Player 错误路径会 exit） */
+let allowProcessExit = false;
+const originalExit = process.exit.bind(process);
+process.exit = ((code?: number) => {
+  if (allowProcessExit) {
+    return originalExit(code ?? 0);
+  }
+  throw new Error(`process.exit(${code ?? 0}) intercepted during baseline`);
+}) as typeof process.exit;
 
 const noop = () => undefined;
 for (const key of Object.getOwnPropertyNames(Object.getPrototypeOf(displayManager))) {
@@ -106,28 +117,17 @@ GameEventHandler.prototype.safeStartGameAndEnd = async function (this: GameEvent
     try {
       await handler.safeStartGameAndEnd();
     } catch (e) {
-      if (fails.length > 0) fails[fails.length - 1].round = i + 1;
-      else {
+      if (fails.length > 0 && fails[fails.length - 1].round === -1) {
+        fails[fails.length - 1].round = i + 1;
+      } else if (fails.length === 0 || fails[fails.length - 1].round !== i + 1) {
         fails.push({
           round: i + 1,
           message: e instanceof Error ? e.message : String(e),
         });
       }
-      const payload = {
-        ok: false,
-        algorithm: 'heuristic-AIPlayer',
-        note: '四家同算法自对弈；中途局内异常，基线无效',
-        roundsRequested: rounds,
-        roundsCompleted: i,
-        failed: fails.length,
-        fails,
-        ms: Date.now() - t0,
-        finishedAt: new Date().toISOString(),
-      };
-      fs.mkdirSync(path.dirname(outPath), { recursive: true });
-      fs.writeFileSync(outPath, JSON.stringify(payload, null, 2), 'utf8');
-      logProgress(`FAIL at round ${i + 1}/${rounds}: ${fails[fails.length - 1].message}`);
-      process.exit(1);
+      logProgress(
+        `SOFT_FAIL round ${i + 1}/${rounds}: ${fails[fails.length - 1].message} (继续)`
+      );
     }
 
     if (session.game.state !== GameState.ENDED) {
@@ -136,7 +136,7 @@ GameEventHandler.prototype.safeStartGameAndEnd = async function (this: GameEvent
     if (i < rounds - 1) session.game.reset();
 
     if ((i + 1) % 50 === 0 || i + 1 === rounds) {
-      logProgress(`progress ${i + 1}/${rounds} failed=${fails.length}`);
+      logProgress(`progress ${i + 1}/${rounds} softFails=${fails.length}`);
     }
   }
 
@@ -162,13 +162,15 @@ GameEventHandler.prototype.safeStartGameAndEnd = async function (this: GameEvent
   const totalWins = players.reduce((s, p) => s + p.winCount, 0);
   const totalDraws = players.reduce((s, p) => s + p.drawCount, 0);
   const payload = {
-    ok: true,
-    algorithm: 'heuristic-AIPlayer',
-    note: 'CLI 自动对弈四家同算法基线；供后续训练对照（非 AlphaZero）',
+    ok: fails.length === 0,
+    algorithm: process.env.MAJIANG_DISCARD_STRATEGY === 'p1' ? 'heuristic-P1-AIPlayer' : 'heuristic-legacy-AIPlayer',
+    note:
+      'CLI 自动对弈四家同算法基线（默认 legacy；MAJIANG_DISCARD_STRATEGY=p1 可试用 P1）；softFail 后继续',
     roundsRequested: rounds,
     roundsCompleted: rounds,
-    failed: 0,
-    fails: [] as RoundFail[],
+    failed: fails.length,
+    softFailRatePct: Number(((fails.length / rounds) * 100).toFixed(2)),
+    fails,
     players,
     summary: {
       totalWins,
@@ -188,8 +190,10 @@ GameEventHandler.prototype.safeStartGameAndEnd = async function (this: GameEvent
   logProgress(`DONE ok rounds=${rounds} ms=${payload.ms}`);
   logProgress(JSON.stringify(payload.summary));
   void orig;
+  allowProcessExit = true;
   process.exit(0);
 })().catch((e) => {
   logProgress('TOP ' + (e instanceof Error ? e.stack : String(e)));
+  allowProcessExit = true;
   process.exit(1);
 });

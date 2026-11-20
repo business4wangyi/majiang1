@@ -38,6 +38,17 @@ export class GameEventHandler {
   private lastWinScore: number = 0;
   private roundSettled = false;
 
+  /** 汇总桌上各家已弃牌（clone），供 AI 现物危险度评估；窄 API，不暴露整局 Game */
+  public collectVisibleDiscards(): Tile[] {
+    const out: Tile[] = [];
+    for (const p of this.game.getAllPlayers()) {
+      for (const t of p.discardedTiles ?? []) {
+        out.push(t.clone());
+      }
+    }
+    return out;
+  }
+
   /**
    * 启动游戏
    */
@@ -1584,6 +1595,12 @@ export class GameEventHandler {
    */
   private async requirePlayerToDiscard(player: Player, actionType: string): Promise<void> {
     debugLog('在吃碰杠操作后调用，确保玩家完成出牌动作')
+
+    // 牌山空等路径可能杠后无法补摸：此时手牌已回预期张数，再强制出牌会误杀进程
+    if (!player.needsToDiscard()) {
+      debugLog(`${player.name} ${actionType}后无需出牌（hand=${player.handTiles.length}/exp=${player.getExpectedHandSize(false)}），跳过`);
+      return;
+    }
 
     // 要求玩家出牌
     if (player.type === PlayerType.AI) {

@@ -1,61 +1,48 @@
-# Task 2 Report · 阶段 A 自绘冻结 · `MJ-T3-STAGEA-01`
+# Task 2 Report: 有效牌（ukeire）破平
 
-**Status:** DONE（资产就绪，等人批冻结；**未**宣称 STAGEA 已落地）  
-**Branch:** develop（in-place）  
-**Date:** 2026-11-19  
-**Commits:** 无（binding：DO NOT commit）
+## Status
 
-## 产出路径
+**DONE_WITH_CONCERNS**
 
-| 产物 | 路径 | 状态 |
-|------|------|------|
-| README | `docs/majiang/design-freeze/stage-a-v3-table/README.md` | 已写；人批栏 **未勾选** |
-| 高保真 HTML | `docs/majiang/design-freeze/stage-a-v3-table/hifi-table-desktop-1440x900.html` | 已写（brief 定稿原文） |
-| 主帧 PNG | `docs/majiang/design-freeze/stage-a-v3-table/2026-11-19-table-desktop-1440x900.png` | Playwright 截帧；**1440×900** PNG |
+## Commits
 
-## 未改（按 binding）
+none（按 critical override 跳过 Step 5）
 
-- **未**改 `docs/majiang/web-ui-prototype/`
-- **未**把脊骨 GR-T3 / G-T1、波次 `MJ-T3-STAGEA-01`、`CAP-T3-STAGEA` 标为已落地（仍待人批「批准/冻结」）
-- **未**勾选 README 人批栏
-- **未** commit
-- **未**用 W8 / 竞品截图顶替 PNG
+## TDD Evidence
 
-## Step 3 截帧
+### RED
 
-- 工具：`require('playwright')` + Chromium
-- viewport / clip：`1440 × 900`
-- 校验：
-  - `file` → `PNG image data, 1440 x 900, 8-bit/color RGB, non-interlaced`
-  - `sips` → `pixelWidth: 1440` / `pixelHeight: 900`
+1. Appended `describe('discard-ranker · 有效牌破平')` with brief 顺子手（123456万 + 234条 + 789筒 + 南北）。
+2. Command: `node scripts/test/run-mocha-cjs.js tests/majiang/discard-ranker.test.ts --timeout 20000`
+3. Result: **FAIL** — `expected '万' to equal '风'`（`ukeire` 仍为占位 0，排序落到更小 `index` 的万）。
 
-## Step 4 自检
+### GREEN（实现）
 
-```
-OK: 方盘
-OK: 胡最大
-OK: png exists
-STOP: 等人批阶段A。聊天确认「批准/冻结」前禁止改原型宣称视觉通过。
-```
+1. In `discard-ranker.ts`: added `SUIT_MAX`、`countUkeire(probe)`；`scoreDiscardCandidates` 写入 `ukeire = countUkeire(probe)`。
+2. Re-ran same command with brief 顺子手：**仍 FAIL** — 全员 `shantenAfter=0`、`ukeire=0`。
+   - 根因：`RuleEngine.calculateRegularShanten` 对向听做了 `Math.max(0, …)`，听牌（sh=0）后无法出现严格下降，故 `countUkeire` 恒为 0。
+3. Per override「若 shanten 近似破坏测例手牌，仅调整测例构造」：改用刻子向手牌  
+   `222万 / 555条 / 888筒 / 66万 / 1条 / 南 / 北`。
+   - 同 `shantenAfter=1` 组：风孤张 `ukeire=17` > 孤张条 `ukeire=16`（若 ukeire 全 0 会因 index 误选条）。
+4. Re-ran: **3373 passing (11s)**，两段 `discard-ranker` describe 均 ✔。
 
-## 观感合同自审（对照 README）
+## Files Changed
 
-| 项 | 判定 | 证据 |
-|----|------|------|
-| 构图：桌心方盘 + 底动作/手牌；顶栏弱化 | 通过 | 方盘居中；顶栏 opacity 0.42 |
-| 桌心方盘；风向局+余牌；非说明墙 | 通过 | 「东风局」「余牌 36」；无半透明说明墙 |
-| 动作：印章贴手牌上方；胡最大高亮 | 通过 | `.seal.hu` 更大金底；过/碰/杠次级 |
-| 实体手牌 + 四方牌河；最近一张高亮 | 通过 | 四方 `.river`；东家「三万」`.latest` |
-| 角区稀疏 | 通过 | 头像+风/昵称+分数胶囊 |
-| 绿毡金；禁紫霓虹/平板灰 | 通过 | `--table-felt-*` / `--gold-*` |
-| 自绘非竞品 | 通过 | HTML 自绘截帧 |
+| File | Change |
+| --- | --- |
+| `src/majiang/strategy/heuristics/discard-ranker.ts` | `countUkeire` + 填充 `ukeire` |
+| `tests/majiang/discard-ranker.test.ts` | Task 2 describe；测例手牌改为刻子向 |
+| `.superpowers/sdd/task-2-report.md` | 本报告 |
 
-## 闸门（停）
+## Self-review
 
-- 已向父会话交付 PNG 路径，**等人确认「批准 / 冻结」**。
-- 未批准前：禁止改原型宣称视觉通过；禁止进入 Task 3 实现。
-- 批准后（非本 Task）：勾选人批栏填日期；脊骨/波次/CAP → 已落地；再允许 commit（仅用户要求时）。
+- 未改 `core/`、未加依赖、未动 `AIPlayer`。
+- 排序仍：`shantenAfter ↑` → `ukeire ↓` → `danger ↑` → `legacyValue ↓` → `index`。
+- `countUkeire`：枚举种类（不乘剩余张数），与 brief 一致。
+- 测试跑法遵循仓库 CJS loader，未用 bare `npx mocha -r ts-node/register`。
 
 ## Concerns
 
-无阻断项。可选备注：角区南家头像与底栏手牌在垂直空间上较近（规格 HTML 如此），人审时可决定是否微调间距——**未擅自改 brief 定稿 HTML**。
+1. **向听下限 0**：听牌局面 `ukeire` 恒 0，破平失效；后续若要真听牌进张面，需允许 shanten=-1（或单独判定和了）。
+2. **测例与 brief 牌面不同**：为适配现有近似公式而改构造；语义仍覆盖「同向听选更大 ukeire」。
+3. **性能**：每候选 × ~34 种试摸 × `calculateShanten`；本单测约数秒级，可接受，但全量对局热路径若频繁调用需再缓存/剪枝。

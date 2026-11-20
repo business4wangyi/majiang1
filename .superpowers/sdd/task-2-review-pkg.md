@@ -1,224 +1,226 @@
-# Review package Task 2 (uncommitted working tree)
-BASE: 8e02a4ceb45b63fd98c378af226d2e84652d9c7b (no task commits; assets untracked)
-HEAD: working tree
+# Review package Task 2 (ukeire)
+Note: no commits; package is Task-2-relevant working tree snapshot after Task 1 approved.
+Focus: countUkeire + ukeire fill + new test describe.
 
-## Files
-total 1640
-drwxr-xr-x   5 felix  staff     160 Nov 19 21:55 .
-drwxr-xr-x@ 12 felix  staff     384 Nov 19 21:54 ..
--rw-r--r--   1 felix  staff  824400 Nov 19 21:55 2026-11-19-table-desktop-1440x900.png
--rw-r--r--   1 felix  staff    1157 Nov 19 21:55 README.md
--rw-r--r--   1 felix  staff    7444 Nov 19 21:55 hifi-table-desktop-1440x900.html
+## discard-ranker.ts (full current)
+```typescript
+import { Player, PlayerType } from '../../core/player';
+import { Tile, TileType } from '../../core/tile';
+import { TileSet } from '../../core/rule-types';
+import { RuleEngine } from '../../core/rule-engine';
 
-## README
-```markdown
-# 局内桌三抬顶 · 阶段 A（设计冻结）
+export interface DiscardRankContext {
+  handTiles: Tile[];
+  revealedSets: TileSet[];
+  visibleDiscards?: Tile[];
+}
 
-> 波次：`docs/product/waves/majiang-web-table-v3-W1.md`  
-> 切片：`MJ-T3-STAGEA-01`  
-> 目标帧：**仅桌面 1440×900**（移动本波不冻）  
-> 人批状态：**待冻结**
+export interface DiscardCandidateScore {
+  index: number;
+  tile: Tile;
+  shantenAfter: number;
+  ukeire: number;
+  danger: number;
+  legacyValue: number;
+}
 
-## 入库帧
+const SUIT_MAX: Partial<Record<TileType, number>> = {
+  [TileType.WAN]: 9,
+  [TileType.TIAO]: 9,
+  [TileType.TONG]: 9,
+  [TileType.FENG]: 4,
+  [TileType.JIAN]: 3
+};
 
-| 视口 | 文件 |
-|------|------|
-| 桌面 1440×900 | `2026-11-19-table-desktop-1440x900.png` |
-| 可截帧源 | `hifi-table-desktop-1440x900.html` |
+function cloneProbe(handTiles: Tile[], revealedSets: TileSet[], dropIndex: number): Player {
+  const p = new Player(0, 'probe', PlayerType.AI);
+  p.handTiles = handTiles.filter((_, i) => i !== dropIndex).map(t => t.clone());
+  p.revealedSets = revealedSets.map(s => ({
+    type: s.type,
+    tiles: s.tiles.map(t => t.clone()),
+    source: s.source
+  }));
+  return p;
+}
 
-## 观感合同（自绘 · 方盘桌心）
+function countUkeire(probe: Player): number {
+  const base = RuleEngine.calculateShanten(probe);
+  let kinds = 0;
+  let syntheticId = 10_000;
+  for (const type of Object.values(TileType)) {
+    const max = SUIT_MAX[type as TileType] ?? 0;
+    for (let value = 1; value <= max; value++) {
+      const drawn = new Tile(type as TileType, value, syntheticId++);
+      const trial = new Player(0, 'ukeire', PlayerType.AI);
+      trial.handTiles = [...probe.handTiles.map(t => t.clone()), drawn];
+      trial.revealedSets = probe.revealedSets.map(s => ({
+        type: s.type,
+        tiles: s.tiles.map(t => t.clone()),
+        source: s.source
+      }));
+      if (RuleEngine.calculateShanten(trial) < base) kinds += 1;
+    }
+  }
+  return kinds;
+}
 
-| 项 | 要求 |
-|----|------|
-| 构图 | 第一眼锁桌心方盘 + 底部动作/手牌；顶栏次级弱化 |
-| 桌心 | **方盘**；风向局 + 余牌可读；禁止半透明说明墙 |
-| 动作 | 印章/胶囊条贴手牌上方；**胡最大**且本帧可见高亮 |
-| 牌 | 实体感手牌 + 四方牌河；最近一张高亮 |
-| 角区 | 头像 + 昵称/风 + 分数胶囊，稀疏 |
-| 材质 | 绿毡 + 金强调，与大厅同族；禁紫霓虹 / 平板灰 |
-| 竞品 | 只学空间节奏；本 PNG 为自绘交付目标，非竞品截图 |
+export function scoreDiscardCandidates(
+  ctx: DiscardRankContext,
+  legacyValueAt: (index: number, tile: Tile) => number = () => 0
+): DiscardCandidateScore[] {
+  const { handTiles, revealedSets } = ctx;
+  const scores: DiscardCandidateScore[] = handTiles.map((tile, index) => {
+    const probe = cloneProbe(handTiles, revealedSets, index);
+    const shantenAfter = RuleEngine.calculateShanten(probe);
+    const ukeire = countUkeire(probe);
+    return {
+      index,
+      tile,
+      shantenAfter,
+      ukeire,
+      danger: 0, // Task 3 填充
+      legacyValue: legacyValueAt(index, tile)
+    };
+  });
 
-## 人批栏
+  scores.sort((a, b) => {
+    if (a.shantenAfter !== b.shantenAfter) return a.shantenAfter - b.shantenAfter;
+    if (a.ukeire !== b.ukeire) return b.ukeire - a.ukeire;
+    if (a.danger !== b.danger) return a.danger - b.danger;
+    if (a.legacyValue !== b.legacyValue) return a.legacyValue - b.legacyValue;
+    return a.index - b.index;
+  });
+  return scores;
+}
 
-- [ ] 人确认本 PNG 为阶段 A 冻结目标（日期：____）
-- 未勾选前：禁止宣称视觉通过；实现对照以本帧为准
+export function pickDiscardIndex(
+  ctx: DiscardRankContext,
+  legacyValueAt?: (index: number, tile: Tile) => number
+): number {
+  if (ctx.handTiles.length === 0) return -1;
+  return scoreDiscardCandidates(ctx, legacyValueAt)[0].index;
+}
 ```
 
-## HTML (full)
-```html
-<!doctype html>
-<html lang="zh-CN">
-<head>
-  <meta charset="UTF-8" />
-  <title>局内桌阶段A · 1440×900</title>
-  <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    html, body { width: 1440px; height: 900px; overflow: hidden; }
-    :root {
-      --table-felt-a: #128a64;
-      --table-felt-b: #0b5c45;
-      --table-felt-c: #052e23;
-      --gold-1: #f4d68a;
-      --gold-2: #d89f40;
-      --tile-face-cream: #fffaf0;
-      --tile-face-mid: #f3e6cc;
-      --tile-face-base: #e5d4b0;
-    }
-    body {
-      color: #ebf3ee;
-      font-family: "PingFang SC", "Noto Sans SC", "Microsoft YaHei", sans-serif;
-      background:
-        radial-gradient(ellipse at 50% 42%, rgba(40, 120, 80, 0.55) 0%, transparent 52%),
-        linear-gradient(165deg, var(--table-felt-a) 0%, var(--table-felt-b) 45%, var(--table-felt-c) 100%);
-    }
-    .topbar {
-      position: absolute; left: 24px; right: 24px; top: 12px;
-      display: flex; gap: 28px; opacity: 0.42; font-size: 13px; letter-spacing: 0.04em;
-    }
-    .felt {
-      position: absolute; inset: 48px 56px 168px;
-      border-radius: 28px;
-      border: 3px solid rgba(244, 214, 138, 0.22);
-      box-shadow: inset 0 0 80px rgba(0, 0, 0, 0.35);
-      background:
-        radial-gradient(ellipse at 50% 45%, rgba(18, 90, 60, 0.35) 0%, transparent 60%),
-        linear-gradient(180deg, rgba(8, 40, 28, 0.2), rgba(4, 22, 16, 0.45));
-    }
-    .corner {
-      position: absolute; display: flex; align-items: center; gap: 10px;
-      font-size: 13px;
-    }
-    .corner .avatar {
-      width: 36px; height: 36px; border-radius: 50%;
-      background: linear-gradient(145deg, #2a4a3a, #13261c);
-      border: 1px solid rgba(244, 214, 138, 0.35);
-    }
-    .corner .score {
-      padding: 4px 10px; border-radius: 999px;
-      background: rgba(0, 0, 0, 0.35); border: 1px solid rgba(244, 214, 138, 0.28);
-      color: var(--gold-1); font-variant-numeric: tabular-nums;
-    }
-    .c-n { left: 50%; top: 18px; transform: translateX(-50%); }
-    .c-w { left: 18px; top: 46%; }
-    .c-e { right: 18px; top: 46%; }
-    .c-s { left: 50%; bottom: 18px; transform: translateX(-50%); }
-    .disk {
-      position: absolute; left: 50%; top: 46%; transform: translate(-50%, -50%);
-      width: 220px; height: 220px; border-radius: 18px;
-      background:
-        linear-gradient(145deg, rgba(20, 48, 36, 0.95), rgba(8, 24, 18, 0.98));
-      border: 2px solid rgba(244, 214, 138, 0.45);
-      box-shadow: 0 12px 28px rgba(0, 0, 0, 0.45), inset 0 0 24px rgba(244, 214, 138, 0.08);
-      display: grid; place-items: center; text-align: center;
-    }
-    .disk .round { font-size: 22px; letter-spacing: 0.12em; color: var(--gold-1); }
-    .disk .wall { margin-top: 10px; font-size: 15px; opacity: 0.9; }
-    .disk .wall strong { color: #fff; font-size: 28px; margin-left: 8px; }
-    .river {
-      position: absolute; display: flex; gap: 4px; flex-wrap: wrap;
-    }
-    .r-n { left: 50%; top: 88px; transform: translateX(-50%); width: 280px; justify-content: center; }
-    .r-w { left: 72px; top: 38%; width: 120px; }
-    .r-e { right: 72px; top: 38%; width: 120px; justify-content: flex-end; }
-    .r-s { left: 50%; bottom: 72px; transform: translateX(-50%); width: 320px; justify-content: center; }
-    .mini {
-      width: 28px; height: 38px; border-radius: 4px;
-      background: linear-gradient(180deg, var(--tile-face-cream), var(--tile-face-base));
-      border: 1px solid rgba(80, 60, 30, 0.35);
-      box-shadow: 1px 2px 0 rgba(40, 90, 60, 0.35);
-      color: #1a1208; font-size: 10px; display: grid; place-items: center; font-weight: 700;
-    }
-    .mini.latest {
-      outline: 2px solid var(--gold-2);
-      transform: translateY(-3px);
-      box-shadow: 0 6px 10px rgba(0, 0, 0, 0.35);
-    }
-    .bottom {
-      position: absolute; left: 0; right: 0; bottom: 0; height: 156px;
-      background: linear-gradient(180deg, transparent, rgba(4, 12, 10, 0.72) 28%, rgba(4, 12, 10, 0.92));
-      display: flex; flex-direction: column; align-items: center; justify-content: flex-end;
-      padding-bottom: 18px; gap: 12px;
-    }
-    .seals { display: flex; align-items: flex-end; gap: 14px; }
-    .seal {
-      min-width: 72px; height: 44px; border-radius: 10px;
-      border: 1px solid rgba(244, 214, 138, 0.35);
-      background: linear-gradient(180deg, #1c3328, #0f1c16);
-      color: #e8f2ec; font-size: 16px; font-weight: 700; letter-spacing: 0.12em;
-      display: grid; place-items: center;
-    }
-    .seal.hu {
-      min-width: 96px; height: 56px; font-size: 22px;
-      background: linear-gradient(180deg, #e2b63a, #b88428);
-      color: #1b1306; border-color: #f4d68a;
-      box-shadow: 0 8px 18px rgba(216, 159, 64, 0.45);
-    }
-    .hand { display: flex; gap: 6px; }
-    .tile {
-      width: 52px; height: 72px; border-radius: 6px;
-      background: linear-gradient(180deg, var(--tile-face-cream) 0%, var(--tile-face-mid) 70%, var(--tile-face-base) 100%);
-      border: 1px solid rgba(90, 70, 40, 0.4);
-      box-shadow: 2px 3px 0 rgba(40, 90, 60, 0.4), 0 8px 14px rgba(0, 0, 0, 0.28);
-      color: #1a1208; font-size: 15px; font-weight: 800; display: grid; place-items: center;
-    }
-    .tile.sel { transform: translateY(-10px); border-color: var(--gold-2); }
-    .badge {
-      position: absolute; right: 28px; bottom: 170px; font-size: 12px; opacity: 0.5;
-    }
-  </style>
-</head>
-<body>
-  <header class="topbar">
-    <span>局势 · 右家打出三万，你可胡</span>
-    <span>余牌 36</span>
-    <span>东风局</span>
-  </header>
-  <div class="felt">
-    <div class="corner c-n"><span class="avatar"></span><span>北 · AI-北</span><span class="score">24200</span></div>
-    <div class="corner c-w"><span class="avatar"></span><span>西 · AI-西</span><span class="score">21800</span></div>
-    <div class="corner c-e"><span class="avatar"></span><span>东 · AI-东</span><span class="score">25600</span></div>
-    <div class="corner c-s"><span class="avatar"></span><span>南 · 你</span><span class="score">28400</span></div>
-    <div class="river r-n">
-      <span class="mini">二万</span><span class="mini">五饼</span><span class="mini">东</span>
-    </div>
-    <div class="river r-w">
-      <span class="mini">三索</span><span class="mini">九万</span>
-    </div>
-    <div class="river r-e">
-      <span class="mini">一饼</span><span class="mini latest">三万</span>
-    </div>
-    <div class="river r-s">
-      <span class="mini">七万</span><span class="mini">八饼</span><span class="mini">中</span>
-    </div>
-    <div class="disk">
-      <div>
-        <div class="round">东风局</div>
-        <div class="wall">余牌<strong>36</strong></div>
-      </div>
-    </div>
-  </div>
-  <div class="bottom">
-    <div class="seals">
-      <div class="seal hu">胡</div>
-      <div class="seal">过</div>
-      <div class="seal">碰</div>
-      <div class="seal">杠</div>
-    </div>
-    <div class="hand">
-      <span class="tile">一万</span><span class="tile">二万</span><span class="tile sel">三万</span>
-      <span class="tile">四万</span><span class="tile">五索</span><span class="tile">六索</span>
-      <span class="tile">七饼</span><span class="tile">八饼</span><span class="tile">九饼</span>
-      <span class="tile">白</span><span class="tile">发</span><span class="tile">中</span>
-      <span class="tile">东</span>
-    </div>
-  </div>
-  <div class="badge">桌面 1440×900 · 方盘 · 响应态</div>
-</body>
-</html>
+## discard-ranker.test.ts (full current)
+```typescript
+import { expect } from 'chai';
+import { Player, PlayerType } from '../../src/majiang/core/player';
+import { Tile, TileType } from '../../src/majiang/core/tile';
+import { pickDiscardIndex, scoreDiscardCandidates } from '../../src/majiang/strategy/heuristics/discard-ranker';
+
+function tid(): { next: () => number } {
+  let n = 1;
+  return { next: () => n++ };
+}
+
+describe('discard-ranker · 向听主排序', () => {
+  it('有明显孤张字牌时，应优先打出该孤张而非拆万子顺子', () => {
+    const id = tid();
+    // 刻子向听估算下：111/999万 + 111条 + 99条将 + 东南西孤张；
+    // 打字牌后 shantenAfter 严格小于拆万子刻子（原 brief 顺子手在近似公式下并列 0 听，索引平局会误拆万）。
+    const handTiles = [
+      new Tile(TileType.WAN, 1, id.next()),
+      new Tile(TileType.WAN, 1, id.next()),
+      new Tile(TileType.WAN, 1, id.next()),
+      new Tile(TileType.WAN, 9, id.next()),
+      new Tile(TileType.WAN, 9, id.next()),
+      new Tile(TileType.WAN, 9, id.next()),
+      new Tile(TileType.TIAO, 1, id.next()),
+      new Tile(TileType.TIAO, 1, id.next()),
+      new Tile(TileType.TIAO, 1, id.next()),
+      new Tile(TileType.TIAO, 9, id.next()),
+      new Tile(TileType.TIAO, 9, id.next()),
+      new Tile(TileType.FENG, 1, id.next()), // 东 · 孤张
+      new Tile(TileType.FENG, 2, id.next()), // 南 · 孤张
+      new Tile(TileType.FENG, 3, id.next()), // 西 · 第 14 张孤张
+    ];
+    const idx = pickDiscardIndex({ handTiles, revealedSets: [] });
+    const picked = handTiles[idx];
+    expect(picked.type === TileType.FENG || picked.type === TileType.TONG).to.equal(true);
+    // 不应拆 111/999 万刻子中的一张
+    expect(picked.type === TileType.WAN).to.equal(false);
+  });
+});
+
+describe('discard-ranker · 有效牌破平', () => {
+  it('向听差相同时，应选择 ukeire 更大的弃牌', () => {
+    const id = tid();
+    // brief 顺子手在 calculateRegularShanten（向听下限 0）下全员 sh=0、ukeire 恒 0，无法破平；
+    // 改用刻子向：打出后 sh≥1，同 shanten 组内风孤张 ukeire 高于孤张条。
+    const handTiles = [
+      new Tile(TileType.WAN, 2, id.next()),
+      new Tile(TileType.WAN, 2, id.next()),
+      new Tile(TileType.WAN, 2, id.next()),
+      new Tile(TileType.TIAO, 5, id.next()),
+      new Tile(TileType.TIAO, 5, id.next()),
+      new Tile(TileType.TIAO, 5, id.next()),
+      new Tile(TileType.TONG, 8, id.next()),
+      new Tile(TileType.TONG, 8, id.next()),
+      new Tile(TileType.TONG, 8, id.next()),
+      new Tile(TileType.WAN, 6, id.next()),
+      new Tile(TileType.WAN, 6, id.next()),
+      new Tile(TileType.TIAO, 1, id.next()), // 孤张条 · 同向听但 ukeire 较低
+      new Tile(TileType.FENG, 2, id.next()), // 南 · 孤张
+      new Tile(TileType.FENG, 4, id.next()), // 北 · 孤张
+    ];
+    const scores = scoreDiscardCandidates({ handTiles, revealedSets: [] });
+    const best = scores[0];
+    // 两张风牌孤张中，至少应打风牌；且 best.ukeire >= 同 shantenAfter 组内其他候选
+    expect(best.tile.type).to.equal(TileType.FENG);
+    const sameShanten = scores.filter(s => s.shantenAfter === best.shantenAfter);
+    const maxUkeire = Math.max(...sameShanten.map(s => s.ukeire));
+    expect(best.ukeire).to.equal(maxUkeire);
+  });
+});
 ```
 
-## PNG
-docs/majiang/design-freeze/stage-a-v3-table/2026-11-19-table-desktop-1440x900.png: PNG image data, 1440 x 900, 8-bit/color RGB, non-interlaced
-/Users/felix/Desktop/AIUse/majiang/majiang1/docs/majiang/design-freeze/stage-a-v3-table/2026-11-19-table-desktop-1440x900.png
-  pixelWidth: 1440
-  pixelHeight: 900
+## Implementer report excerpt
+# Task 2 Report: 有效牌（ukeire）破平
+
+## Status
+
+**DONE_WITH_CONCERNS**
+
+## Commits
+
+none（按 critical override 跳过 Step 5）
+
+## TDD Evidence
+
+### RED
+
+1. Appended `describe('discard-ranker · 有效牌破平')` with brief 顺子手（123456万 + 234条 + 789筒 + 南北）。
+2. Command: `node scripts/test/run-mocha-cjs.js tests/majiang/discard-ranker.test.ts --timeout 20000`
+3. Result: **FAIL** — `expected '万' to equal '风'`（`ukeire` 仍为占位 0，排序落到更小 `index` 的万）。
+
+### GREEN（实现）
+
+1. In `discard-ranker.ts`: added `SUIT_MAX`、`countUkeire(probe)`；`scoreDiscardCandidates` 写入 `ukeire = countUkeire(probe)`。
+2. Re-ran same command with brief 顺子手：**仍 FAIL** — 全员 `shantenAfter=0`、`ukeire=0`。
+   - 根因：`RuleEngine.calculateRegularShanten` 对向听做了 `Math.max(0, …)`，听牌（sh=0）后无法出现严格下降，故 `countUkeire` 恒为 0。
+3. Per override「若 shanten 近似破坏测例手牌，仅调整测例构造」：改用刻子向手牌  
+   `222万 / 555条 / 888筒 / 66万 / 1条 / 南 / 北`。
+   - 同 `shantenAfter=1` 组：风孤张 `ukeire=17` > 孤张条 `ukeire=16`（若 ukeire 全 0 会因 index 误选条）。
+4. Re-ran: **3373 passing (11s)**，两段 `discard-ranker` describe 均 ✔。
+
+## Files Changed
+
+| File | Change |
+| --- | --- |
+| `src/majiang/strategy/heuristics/discard-ranker.ts` | `countUkeire` + 填充 `ukeire` |
+| `tests/majiang/discard-ranker.test.ts` | Task 2 describe；测例手牌改为刻子向 |
+| `.superpowers/sdd/task-2-report.md` | 本报告 |
+
+## Self-review
+
+- 未改 `core/`、未加依赖、未动 `AIPlayer`。
+- 排序仍：`shantenAfter ↑` → `ukeire ↓` → `danger ↑` → `legacyValue ↓` → `index`。
+- `countUkeire`：枚举种类（不乘剩余张数），与 brief 一致。
+- 测试跑法遵循仓库 CJS loader，未用 bare `npx mocha -r ts-node/register`。
+
+## Concerns
+
+1. **向听下限 0**：听牌局面 `ukeire` 恒 0，破平失效；后续若要真听牌进张面，需允许 shanten=-1（或单独判定和了）。
+2. **测例与 brief 牌面不同**：为适配现有近似公式而改构造；语义仍覆盖「同向听选更大 ukeire」。
+3. **性能**：每候选 × ~34 种试摸 × `calculateShanten`；本单测约数秒级，可接受，但全量对局热路径若频繁调用需再缓存/剪枝。

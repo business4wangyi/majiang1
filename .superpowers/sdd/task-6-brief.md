@@ -1,66 +1,55 @@
-### Task 6: 挂测回归 + 阶段 B 对照帧 · 防回退
+### Task 6: 回归与规格回写
 
 **Files:**
-- Create: `docs/majiang/design-freeze/stage-b-v3-table/README.md`
-- Create: `docs/majiang/design-freeze/stage-b-v3-table/2026-11-19-table-impl-desktop-1440x900.png`
-- Modify: 无逻辑变更则不改原型；失败则回 Task 3–5 修
+- Modify: `docs/superpowers/specs/2026-11-20-majiang-ai-algorithms-survey-design.md`（§9/§10：标注 P1 plan 已落盘；**不**把 P1 实现勾成已交付，除非本 Task 测绿且用户确认）
+- Read-only 验证：既有 `tests/majiang/rule-engine.test.ts`、`tests/majiang/game-session.test.ts`
 
 **Interfaces:**
-- Consumes: 实现后的 `#tablePage`
-- Produces: 阶段 B 对照 PNG；e2e smoke 绿
+- Consumes: Task 1–5 交付物
+- Produces: 回归绿；规格闸门句子更新为「P1 计划：`docs/superpowers/plans/2026-11-20-majiang-ai-p1-heuristic-plan.md`」
 
-- [ ] **Step 1: 写阶段 B README**
-
-```markdown
-# 局内桌三抬顶 · 阶段 B（实现对照）
-
-> 对照目标：`../stage-a-v3-table/2026-11-19-table-desktop-1440x900.png`  
-> 本目录帧为实现截图，**不能**单独作为阶段 A 目标。
-
-## 入库帧
-
-| 视口 | 文件 |
-|------|------|
-| 桌面 1440×900 | `2026-11-19-table-impl-desktop-1440x900.png` |
-
-## 对照清单
-
-- [ ] 方盘桌心可读（风向局/余牌）
-- [ ] 印章条 + 胡主路径
-- [ ] 手牌实体感 + 选中抬起
-- [ ] 牌河有序 + 最近牌高亮
-- [ ] 毡/金与大厅同族
-```
-
-- [ ] **Step 2: 截实现帧**
-
-优先用既有验收/e2e 截图能力；若无，则本地起原型后 Playwright 打开对局页截 1440×900 存到阶段 B 路径。验收模式若提供固定响应态，优先截「可胡」态。
-
-- [ ] **Step 3: 跑回归**
+- [ ] **Step 1: 跑弃牌测 + 规则/会话烟测**
 
 ```bash
-npx mocha --require ts-node/register tests/majiang/web-table-v3.test.ts tests/majiang/web-lobby.test.ts -v
-npm run majiang:web:e2e
+npx mocha -r ts-node/register \
+  tests/majiang/discard-ranker.test.ts \
+  tests/majiang/rule-engine.test.ts \
+  tests/majiang/game-session.test.ts \
+  --timeout 20000
 ```
 
-Expected: 挂测 PASS；e2e smoke 绿。大厅挂测不得回归。
+Expected: 全部 PASS。若 `game-session` 因 AI 出牌选择变化导致脆弱断言失败：只放宽「具体打哪张」类断言，**禁止**为过测回退排序器。
 
-- [ ] **Step 4: 移动防回退抽检（不计入毕业）**
+- [ ] **Step 2: 规格闸门回写（文档）**
 
-浏览器 390×844 打开 `#tablePage`，目视不比现网明显恶化（可参考旧 W8 mobile 实现帧作「不恶化」下限，**不是**本波目标）。
+在调研规格 §9 将「方可开 writing-plans」改为已开，并链到本 plan；§10.1 保持「P2 另开 plan」。
 
-- [ ] **Step 5: Commit（仅用户要求）**
+- [ ] **Step 3: Commit（仅用户要求时）**
 
 ```bash
-git add docs/majiang/design-freeze/stage-b-v3-table \
-  tests/majiang/web-table-v3.test.ts
+git add docs/superpowers/specs/2026-11-20-majiang-ai-algorithms-survey-design.md \
+  docs/superpowers/plans/2026-11-20-majiang-ai-p1-heuristic-plan.md
 git commit -m "$(cat <<'EOF'
-test(table-v3): 入库阶段 B 对照帧并回归挂测 e2e
+docs(majiang): 登记 P1 启发式 AI 实现计划与规格闸门
 
-功能绿仅作防回退，不宣称视觉毕业。
+调研结论落地为可执行 P1 计划，P2/P3 仍单独立项。
 EOF
 )"
 ```
 
 ---
 
+## Self-Review（对照规格）
+
+| 规格条目 | 本计划任务 |
+|----------|------------|
+| §7.1 P1 向听数、有效牌、简单危险度 | Task 1–3 |
+| §7.1 可选轻量蒙特卡洛 | **刻意不做**（YAGNI；需另开刀） |
+| §7.2 P1→P2，P3 单独立项 | Global Constraints；无 P2/P3 施工 Task |
+| §3 / §7 不碰 core 权威、不引入依赖、不抄权重 | Global Constraints + Task 1 只读 `calculateShanten` |
+| §6 本仓 `agents/ai-player` 对照 | Task 4–5 |
+| §6 差距「对手听牌概率」 | 仅现物危险度，**不**宣称已补 Bakuuchi 级模型 |
+| 验收可观察「不像瞎打」 | Task 1/4 测例 + 人机主观仍属上线后观察，不在自动化内自批 |
+
+**Placeholder scan:** 无 TBD；测例牌面若与简化向听冲突，步骤已要求改测例不改 core。  
+**类型一致性:** `DiscardRankContext` / `pickDiscardIndex` / `setVisibleDiscards` / `collectVisibleDiscards` 命名在 Task 1–5 一致。
