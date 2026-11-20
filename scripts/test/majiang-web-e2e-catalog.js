@@ -3,6 +3,8 @@
 /**
  * Web e2e 场景目录（规格 SSOT 的脚本镜像）
  * docs/superpowers/specs/2026-11-18-majiang-web-e2e-catalog-design.md
+ * 人读矩阵：docs/standards/testing/majiang-web-e2e-matrix.md
+ * 独立回归：npm run regression:web（e2e:full + visual；不并入 daily）
  */
 const CASES = [
   { id: 'E01', title: '静态拒开局', tier: 'smoke', runner: 'staticFailClosed', fixture: null },

@@ -61,6 +61,18 @@ npm run regression:daily
 - 若后续修复既有 TypeScript 编译问题，可将 `npm run build` 升级为每日回归硬门槛。
 - GitHub Actions 动态跳过基线文件统一使用 `.agents/automation-memory/daily-regression/latest.json`（由 `.github/workflows/daily-regression.yml` 缓存与上传），不要混用其他历史示例路径。
 
+Web 独立回归入口（不并入每日回归）：
+
+```bash
+npm run regression:web
+```
+
+当前含义：
+
+- 顺序执行 `majiang:web:e2e:full` 与 `majiang:web:visual`。
+- 视觉金标为阶段 B 实现帧（大厅 + 局内桌 1440×900）；通过 ≠ 视觉冲顶毕业。
+- 场景矩阵见 [majiang-web-e2e-matrix.md](majiang-web-e2e-matrix.md)。
+
 ## 2. 测试目录与命名
 
 ### 2.1 目录规则
