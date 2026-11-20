@@ -4,5 +4,7 @@
 
 | 文件 | 说明 |
 |---|---|
-| `2026-11-19-lobby-impl-desktop-1440x900.png` | 原型 `index.html` 实现帧（1440×900） |
+| `2026-11-19-lobby-impl-desktop-1440x900.png` | 原型 `index.html` 实现帧（1440×900）；亦为 `majiang:web:visual` 金标 |
 | 目标 | `../stage-a-lobby-commercial/2026-11-19-lobby-desktop-1440x900.png` |
+
+视觉防回退：`npm run majiang:web:visual`（通过 ≠ 冲顶毕业）。重冻：`MAJIANG_VISUAL_UPDATE=1 npm run majiang:web:visual`。
