@@ -1,0 +1,55 @@
+{
+  "ok": true,
+  "algorithm": "1xP2-vs-3xlegacy",
+  "note": "每局轮换 P2 座位；胜率按策略累计（非座位）",
+  "roundsRequested": 100,
+  "roundsCompleted": 100,
+  "failed": 0,
+  "softFailRatePct": 0,
+  "fails": [],
+  "matchup": {
+    "p2Wins": 9,
+    "legacyWins": 88,
+    "draws": 3,
+    "decided": 97,
+    "p2WinRateAmongDecidedPct": 9.28,
+    "expectedP2WinRatePct": 14.55
+  },
+  "players": [
+    {
+      "name": "东家(AI)",
+      "totalGames": 100,
+      "winCount": 28,
+      "drawCount": 3,
+      "score": -36,
+      "winRatePct": 28
+    },
+    {
+      "name": "南家(AI)",
+      "totalGames": 100,
+      "winCount": 27,
+      "drawCount": 3,
+      "score": 2,
+      "winRatePct": 27
+    },
+    {
+      "name": "西家(AI)",
+      "totalGames": 100,
+      "winCount": 23,
+      "drawCount": 3,
+      "score": 32,
+      "winRatePct": 23
+    },
+    {
+      "name": "北家(AI)",
+      "totalGames": 100,
+      "winCount": 19,
+      "drawCount": 3,
+      "score": 2,
+      "winRatePct": 19
+    }
+  ],
+  "ms": 153677,
+  "finishedAt": "2026-11-21T09:33:37.029Z",
+  "outPath": "models/majiang/battle-p2-vs-legacy-1000.json"
+}
