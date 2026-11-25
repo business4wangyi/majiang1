@@ -16,6 +16,7 @@
     "majiang:dual:smoke": "node scripts/test/majiang-dual-smoke.js",
     "majiang:dual:nightly": "node scripts/test/majiang-dual-nightly.js",
     "majiang:api-server": "npx ts-node src/majiang/majiang-api-server.ts",
+    "majiang:web:static": "npx --yes serve docs/majiang/web-ui-prototype -l 8080",
 
     "regression:daily": "node scripts/test/daily-regression-report.js",
     "regression:web": "node scripts/test/majiang-web-regression.js",

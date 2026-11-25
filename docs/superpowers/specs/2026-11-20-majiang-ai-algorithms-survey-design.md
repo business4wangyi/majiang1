@@ -157,13 +157,14 @@ flowchart LR
 - [x] 硬不做与规则边界明确  
 - [x] 用户要求写计划后，已开 `writing-plans`（P1）：`docs/superpowers/plans/2026-11-20-majiang-ai-p1-heuristic-plan.md`
 - [ ] P1 实现交付验收（人确认）：计划已执行、代码在工作区、回归测绿；**未**勾「已交付」——待用户确认后再勾
-- [ ] P2 期望值审牌层：P1 落地后再另开 plan（独立 plan，不并入本 P1）
+- [x] P2 期望值审牌层：已另开独立 plan（不并入 P1）→ `docs/superpowers/plans/2026-11-20-majiang-ai-p2-ev-discard-plan.md`（用户拍板 A · 2026-11-20）
+- [ ] P2 实现交付验收（人确认）：计划执行、对战 `p2WinRateAmongDecidedPct`≥25、回归测绿后再勾
 - [ ] P3 深度 RL：须单独立项 brainstorm，不在本调研包施工
 
 ## 10. 后续闸门
 
 1. **P1**：按 `docs/superpowers/plans/2026-11-20-majiang-ai-p1-heuristic-plan.md` 执行（向听 / 有效牌 / 现物危险度）  
-   - 事实备注（2026-11-20 Task 6）：plan 已执行；`discard-ranker` / `rule-engine` / `game-session` 相关回归经 `node scripts/test/run-mocha-cjs.js` 全绿（3376 passing）；代码仍在工作区、未 commit；**人验收未勾**
-2. **P2**：P1 验收后再开独立 plan（期望值审牌层）；不与本 P1 plan 合并  
+   - 事实备注（2026-11-20）：plan 已执行并入库；1×P1 vs 3×legacy 1000 局决出胜负胜率约 **14.55%**（弱于均势）→ 人审认定效果不足，改走 P2
+2. **P2**：按 `docs/superpowers/plans/2026-11-20-majiang-ai-p2-ev-discard-plan.md` 执行（期望值 − 点炮代价）；不与 P1 plan 合并  
 3. **P3**：先开新 brainstorm（算力、许可、规则变体）再写 plan  
 4. 提交时机按 `commit-policy.md`：用户明确要求提交时再 commit

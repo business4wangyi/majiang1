@@ -9,8 +9,8 @@
 
 | 用途 | 做法 |
 |------|------|
-| **真玩（唯一正式入口）** | `npm run majiang:api-server` → 浏览器打开 `http://localhost:4100/` |
-| **纯静态** | 会**拒绝开局**（fail-closed，避免无 API 时假对局卡在 `waiting_ai`） |
+| **真玩（唯一正式入口）** | 仓库根目录：`npm run majiang:api-server` → `http://localhost:4100/` |
+| **纯静态预览** | 仓库根目录：`npm run majiang:web:static` → `http://localhost:8080/`（**拒绝开局**，fail-closed） |
 | **视觉演示（假对局）** | 静态打开时加 `?prototypeDemo=1`（或既有 `?acceptance=1`） |
 | **真浏览器 e2e** | 见下方 smoke / full 表（场景目录 `scripts/test/majiang-web-e2e-catalog.js`） |
 
@@ -25,12 +25,27 @@
 > 功能自动化绿 ≠ 视觉冲顶通过。
 
 ```bash
+# 必须在仓库根目录 majiang1/ 执行（不是 web-ui-prototype/ 内）
 npm run majiang:api-server
 # → http://localhost:4100/
 ```
 
+```mermaid
+flowchart LR
+  Wrong["python http.server / 错目录 npx serve"] --> Miss["缺对局 API"]
+  Miss --> Guard["fail-closed 拒绝开局"]
+  Right["npm run majiang:api-server"] --> Ok["4100 同源静态 + bridge-config"]
+  Ok --> Play["可真玩"]
+```
+
+| 你看到的日志 | 根因 | 正确做法 |
+| --- | --- | --- |
+| `GET /api/bridge-config` → 404（旧静态服）或 `enabled:false` | 静态服没有对局 API | 真玩用 `npm run majiang:api-server` → `:4100` |
+| `npx serve docs/majiang/...` 且 `GET /` → 404 | 已在 `web-ui-prototype/` 内又套了一层相对路径，目录空 | 回仓库根再 `npm run majiang:web:static`，或该目录内 `npx serve . -l 8080` |
+| `GET /json/version` → 404 | 浏览器/自动化在探 CDP，与本原型无关 | 可忽略 |
+
 > 一句口径：纯静态会拒绝开局；演示加 `?prototypeDemo=1`；真玩只用 `npm run majiang:api-server` → `http://localhost:4100/`。  
-> 勿把 `python3 -m http.server` / `npx serve` 当成可玩入口。
+> 勿把裸 `python3 -m http.server` / 错目录的 `npx serve` 当成可玩入口。
 
 > **当前状态（2026-11-16）**：一段已毕业；二段 W8-A **已冻结**；当前 `MJ-UI-COMP-02` 阶段B 可施工。  
 > **口径**：禁「基本有」关毕业；功能绿 ≠ 视觉通过；二段须人点名 + 新蓝图。  
