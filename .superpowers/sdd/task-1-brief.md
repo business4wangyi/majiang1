@@ -1,37 +1,38 @@
-### Task 1: 弃牌排序器 · 向听差主排序
+### Task 1: EV 评估器 · 进攻期望主序
 
 **Files:**
-- Create: `src/majiang/strategy/heuristics/discard-ranker.ts`
-- Create: `src/majiang/strategy/heuristics/index.ts`
-- Create: `tests/majiang/discard-ranker.test.ts`
-- Modify: `src/majiang/strategy/index.ts`（末尾增加一行 re-export）
+- Create: `src/majiang/strategy/heuristics/ev-discard-evaluator.ts`
+- Create: `tests/majiang/ev-discard-evaluator.test.ts`
+- Modify: `src/majiang/strategy/heuristics/index.ts`
 
 **Interfaces:**
-- Consumes: `RuleEngine.calculateShanten(player: Player): number`；`Player` / `Tile` / `TileSet`
+- Consumes: `scoreDiscardCandidates` / `DiscardRankContext` from `./discard-ranker`；`Tile` / `TileType`
 - Produces:
-  - `export interface DiscardRankContext { handTiles: Tile[]; revealedSets: TileSet[]; visibleDiscards?: Tile[]; }`
-  - `export interface DiscardCandidateScore { index: number; tile: Tile; shantenAfter: number; ukeire: number; danger: number; legacyValue: number; }`
-  - `export function scoreDiscardCandidates(ctx: DiscardRankContext, legacyValueAt?: (index: number, tile: Tile) => number): DiscardCandidateScore[]`
-  - `export function pickDiscardIndex(ctx: DiscardRankContext, legacyValueAt?: (index: number, tile: Tile) => number): number`
-  - 排序键（升序优先打出）：`shantenAfter` ↑ → `ukeire` ↓ → `danger` ↑ → `legacyValue` ↑ → `index` ↑
+  - `export interface EvDiscardContext extends DiscardRankContext { tilesLeft?: number; }`
+  - `export interface EvDiscardScore { index: number; tile: Tile; shantenAfter: number; ukeire: number; dealInRisk: number; offense: number; defense: number; ev: number; }`
+  - `export const EV_CONSTANTS: { WIN_PROXY: number; DEAL_IN_PENALTY: number; LATE_TILES_LEFT: number; LATE_RISK_MULT: number; }`
+  - `export function estimateDealInRisk(tile: Tile, visibleDiscards?: Tile[], tilesLeft?: number): number`
+  - `export function scoreDiscardByEv(ctx: EvDiscardContext, legacyValueAt?: (index: number, tile: Tile) => number): EvDiscardScore[]`
+  - `export function pickDiscardIndexByEv(ctx: EvDiscardContext, legacyValueAt?: (index: number, tile: Tile) => number): number`
 
-- [ ] **Step 1: 写失败测例（向听：打孤张优于拆完整面子）**
+- [ ] **Step 1: 写失败测例（同向听时，有效牌更宽者 EV 更高并被选中）**
 
 ```typescript
 import { expect } from 'chai';
-import { Player, PlayerType } from '../../src/majiang/core/player';
 import { Tile, TileType } from '../../src/majiang/core/tile';
-import { pickDiscardIndex, scoreDiscardCandidates } from '../../src/majiang/strategy/heuristics/discard-ranker';
+import {
+  pickDiscardIndexByEv,
+  scoreDiscardByEv
+} from '../../src/majiang/strategy/heuristics/ev-discard-evaluator';
 
-function tid(): { next: () => number } {
+function tid() {
   let n = 1;
   return { next: () => n++ };
 }
 
-describe('discard-ranker · 向听主排序', () => {
-  it('有明显孤张字牌时，应优先打出该孤张而非拆万子顺子', () => {
+describe('ev-discard-evaluator · 进攻期望', () => {
+  it('有明显孤张字牌时，应优先打出该孤张（offense 主导）', () => {
     const id = tid();
-    // 123万 456万 789万 + 东风孤张（13 张听前形态的简化：12 张面子向 + 1 孤张）
     const handTiles = [
       new Tile(TileType.WAN, 1, id.next()),
       new Tile(TileType.WAN, 2, id.next()),
@@ -43,137 +44,155 @@ describe('discard-ranker · 向听主排序', () => {
       new Tile(TileType.WAN, 8, id.next()),
       new Tile(TileType.WAN, 9, id.next()),
       new Tile(TileType.TIAO, 1, id.next()),
-      new Tile(TileType.TIAO, 1, id.next()),
-      new Tile(TileType.TIAO, 1, id.next()),
-      new Tile(TileType.FENG, 1, id.next()), // 东 · 孤张
-      new Tile(TileType.TONG, 5, id.next()), // 摸进后第 14 张：另一张孤立筒
+      new Tile(TileType.TIAO, 2, id.next()),
+      new Tile(TileType.TIAO, 3, id.next()),
+      new Tile(TileType.FENG, 1, id.next()) // 东风孤张
     ];
-    const idx = pickDiscardIndex({ handTiles, revealedSets: [] });
-    const picked = handTiles[idx];
-    expect(picked.type === TileType.FENG || picked.type === TileType.TONG).to.equal(true);
-    // 不应拆 123/456/789 万中的一张
-    expect(picked.type === TileType.WAN).to.equal(false);
+    const idx = pickDiscardIndexByEv({ handTiles, revealedSets: [] });
+    expect(handTiles[idx].type).to.equal(TileType.FENG);
+    const scores = scoreDiscardByEv({ handTiles, revealedSets: [] });
+    expect(scores[0].tile.type).to.equal(TileType.FENG);
+    expect(scores[0].ev).to.be.greaterThan(scores[scores.length - 1].ev);
   });
 });
 ```
 
 - [ ] **Step 2: 跑测确认失败**
 
-```bash
-npx mocha -r ts-node/register tests/majiang/discard-ranker.test.ts --timeout 10000
-```
+Run: `npx mocha -r ts-node/register tests/majiang/ev-discard-evaluator.test.ts --timeout 10000`  
+Expected: FAIL（模块不存在 / 导出名未定义）
 
-Expected: FAIL（模块不存在 / `pickDiscardIndex` 未定义）
+- [ ] **Step 3: 最小实现（进攻项 + 基础点炮风险；先让孤张字牌测例绿）**
 
-- [ ] **Step 3: 最小实现（仅向听差 + 占位 ukeire/danger）**
-
-`src/majiang/strategy/heuristics/discard-ranker.ts`:
+`src/majiang/strategy/heuristics/ev-discard-evaluator.ts`:
 
 ```typescript
-import { Player, PlayerType } from '../../core/player';
-import { Tile } from '../../core/tile';
-import { TileSet } from '../../core/rule-types';
-import { RuleEngine } from '../../core/rule-engine';
+import { Tile, TileType } from '../../core/tile';
+import {
+  DiscardRankContext,
+  scoreDiscardCandidates
+} from './discard-ranker';
 
-export interface DiscardRankContext {
-  handTiles: Tile[];
-  revealedSets: TileSet[];
-  visibleDiscards?: Tile[];
+export interface EvDiscardContext extends DiscardRankContext {
+  tilesLeft?: number;
 }
 
-export interface DiscardCandidateScore {
+export interface EvDiscardScore {
   index: number;
   tile: Tile;
   shantenAfter: number;
   ukeire: number;
-  danger: number;
-  legacyValue: number;
+  dealInRisk: number;
+  offense: number;
+  defense: number;
+  ev: number;
 }
 
-function cloneProbe(handTiles: Tile[], revealedSets: TileSet[], dropIndex: number): Player {
-  const p = new Player(0, 'probe', PlayerType.AI);
-  p.handTiles = handTiles.filter((_, i) => i !== dropIndex).map(t => t.clone());
-  p.revealedSets = revealedSets.map(s => ({
-    type: s.type,
-    tiles: s.tiles.map(t => t.clone()),
-    source: s.source
-  }));
-  return p;
+export const EV_CONSTANTS = {
+  WIN_PROXY: 100,
+  DEAL_IN_PENALTY: 120,
+  LATE_TILES_LEFT: 30,
+  LATE_RISK_MULT: 1.4
+};
+
+function tileKey(t: Tile): string {
+  return `${t.type}-${t.value}`;
 }
 
-export function scoreDiscardCandidates(
-  ctx: DiscardRankContext,
-  legacyValueAt: (index: number, tile: Tile) => number = () => 0
-): DiscardCandidateScore[] {
-  const { handTiles, revealedSets } = ctx;
-  const scores: DiscardCandidateScore[] = handTiles.map((tile, index) => {
-    const probe = cloneProbe(handTiles, revealedSets, index);
-    const shantenAfter = RuleEngine.calculateShanten(probe);
+export function estimateDealInRisk(
+  tile: Tile,
+  visibleDiscards?: Tile[],
+  tilesLeft?: number
+): number {
+  const seen = new Set((visibleDiscards ?? []).map(tileKey));
+  let risk: number;
+  if (seen.has(tileKey(tile))) risk = 0.05;
+  else if (tile.type === TileType.FENG || tile.type === TileType.JIAN) risk = 0.25;
+  else if (tile.value === 1 || tile.value === 9) risk = 0.35;
+  else risk = 0.55;
+
+  if (
+    tilesLeft != null &&
+    tilesLeft < EV_CONSTANTS.LATE_TILES_LEFT
+  ) {
+    risk = Math.min(1, risk * EV_CONSTANTS.LATE_RISK_MULT);
+  }
+  return risk;
+}
+
+export function scoreDiscardByEv(
+  ctx: EvDiscardContext,
+  legacyValueAt?: (index: number, tile: Tile) => number
+): EvDiscardScore[] {
+  const ranked = scoreDiscardCandidates(ctx, legacyValueAt);
+  const scores: EvDiscardScore[] = ranked.map(r => {
+    const dealInRisk = estimateDealInRisk(
+      r.tile,
+      ctx.visibleDiscards,
+      ctx.tilesLeft
+    );
+    const offense =
+      (EV_CONSTANTS.WIN_PROXY / Math.pow(r.shantenAfter + 1, 2)) *
+      (r.ukeire + 1);
+    const defense = dealInRisk * EV_CONSTANTS.DEAL_IN_PENALTY;
     return {
-      index,
-      tile,
-      shantenAfter,
-      ukeire: 0, // Task 2 填充
-      danger: 0, // Task 3 填充
-      legacyValue: legacyValueAt(index, tile)
+      index: r.index,
+      tile: r.tile,
+      shantenAfter: r.shantenAfter,
+      ukeire: r.ukeire,
+      dealInRisk,
+      offense,
+      defense,
+      ev: offense - defense
     };
   });
 
   scores.sort((a, b) => {
+    if (a.ev !== b.ev) return b.ev - a.ev;
     if (a.shantenAfter !== b.shantenAfter) return a.shantenAfter - b.shantenAfter;
     if (a.ukeire !== b.ukeire) return b.ukeire - a.ukeire;
-    if (a.danger !== b.danger) return a.danger - b.danger;
-    if (a.legacyValue !== b.legacyValue) return a.legacyValue - b.legacyValue;
     return a.index - b.index;
   });
   return scores;
 }
 
-export function pickDiscardIndex(
-  ctx: DiscardRankContext,
+export function pickDiscardIndexByEv(
+  ctx: EvDiscardContext,
   legacyValueAt?: (index: number, tile: Tile) => number
 ): number {
   if (ctx.handTiles.length === 0) return -1;
-  return scoreDiscardCandidates(ctx, legacyValueAt)[0].index;
+  return scoreDiscardByEv(ctx, legacyValueAt)[0].index;
 }
 ```
 
-`src/majiang/strategy/heuristics/index.ts`:
+`index.ts` 增加：
 
 ```typescript
 export {
-  scoreDiscardCandidates,
-  pickDiscardIndex,
-  DiscardRankContext,
-  DiscardCandidateScore
-} from './discard-ranker';
-```
-
-`src/majiang/strategy/index.ts` 在 agents 导出后增加：
-
-```typescript
-export * from './heuristics';
+  scoreDiscardByEv,
+  pickDiscardIndexByEv,
+  estimateDealInRisk,
+  EV_CONSTANTS,
+  EvDiscardContext,
+  EvDiscardScore
+} from './ev-discard-evaluator';
 ```
 
 - [ ] **Step 4: 跑测确认通过**
 
-```bash
-npx mocha -r ts-node/register tests/majiang/discard-ranker.test.ts --timeout 10000
-```
+Run: `npx mocha -r ts-node/register tests/majiang/ev-discard-evaluator.test.ts --timeout 10000`  
+Expected: PASS
 
-Expected: PASS。若因 `calculateShanten` 估算误差导致「万子被拆」，调整测例手牌使「打东/筒后 shantenAfter 严格更小」，**不要**改 core 向听公式。
-
-- [ ] **Step 5: Commit（仅用户要求时）**
+- [ ] **Step 5: Commit（仅用户明确要求时）**
 
 ```bash
-git add src/majiang/strategy/heuristics/discard-ranker.ts \
+# 用户要求提交后再执行
+git add src/majiang/strategy/heuristics/ev-discard-evaluator.ts \
   src/majiang/strategy/heuristics/index.ts \
-  src/majiang/strategy/index.ts \
-  tests/majiang/discard-ranker.test.ts
+  tests/majiang/ev-discard-evaluator.test.ts
 git commit -m "$(cat <<'EOF'
-feat(majiang): 新增弃牌排序器并以向听差为主键
+feat(majiang): 新增 P2 弃牌期望值评估器进攻主序
 
-为 P1 启发式加固提供可单测的纯函数入口，暂不改 AIPlayer 行为。
 EOF
 )"
 ```

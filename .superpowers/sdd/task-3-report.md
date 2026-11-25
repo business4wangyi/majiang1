@@ -1,46 +1,55 @@
-# Task 3 Report: 简单危险度（现物安全）
+# Task 3 Report: AIPlayer 接入策略 `p2`
 
 ## Status
 
-**PASS** — TDD 完成；未提交。
+**DONE** — GREEN；未提交（binding: DO NOT commit）
 
-## What changed
+## Changes
 
-| File | Change |
+| File | Action |
 | --- | --- |
-| `tests/majiang/discard-ranker.test.ts` | 追加 `discard-ranker · 现物危险度`：同向听/ukeire 时断言优先打出现物 JIAN(中) |
-| `src/majiang/strategy/heuristics/discard-ranker.ts` | 实现 `tileKey` / `scoreDanger`；`scoreDiscardCandidates` 用 `scoreDanger(tile, ctx.visibleDiscards)` 替代 placeholder `0` |
+| `src/majiang/strategy/agents/ai-player.ts` | Modify：`DiscardStrategy` 增加 `'p2'`；`resolveDiscardStrategy` 识别 explicit / env `p2`；`getAIMove` 在 legacy 后、p1 前走 `pickDiscardIndexByEv` |
+| `tests/majiang/ai-player-p2.test.ts` | Create：策略解析 + 孤张字牌出牌断言 |
 
-### Danger 规则（与 brief 一致）
+未改：`core/`、`GameEventHandler`、依赖；跳过可选 `tilesLeft` setter。
 
+## TDD
+
+```text
+RED  → TS2345：'"p2"' 不在 DiscardStrategy 联合
+GREEN → 5 passing（ai-player-p2 ×2 + ev-discard-evaluator ×3）
 ```
-visibleDiscards 中 type+value 匹配 → 0（现物）
-else FENG / JIAN → 1
-else → 2
-```
 
-排序仍为：`shantenAfter ↑` → `ukeire ↓` → `danger ↑` → `legacyValue ↓` → `index ↑`。
+手牌：brief 顺子手因向听下限 0 会假失败，按 override 改为与 Task1/P1 / `ev-discard-evaluator` 同构的**刻子向**（三组刻 + 将 + 三张风孤张），断言仍为打出字牌（`TileType.FENG`）。
 
-## TDD evidence
-
-1. **红**：仅加测例、danger 仍为 0 → `AssertionError: expected '万' to equal '箭'`（索引平局打出万 1）
-2. **绿**：接入 `scoreDanger` 后全套通过
+## Tests
 
 ```bash
-node scripts/test/run-mocha-cjs.js tests/majiang/discard-ranker.test.ts
-# 3374 passing (11s), 0 failing
+node -e "
+require('ts-node/register');
+const Mocha = require('mocha');
+const path = require('path');
+const mocha = new Mocha({ timeout: 10000 });
+mocha.addFile(path.resolve('tests/majiang/ai-player-p2.test.ts'));
+mocha.addFile(path.resolve('tests/majiang/ev-discard-evaluator.test.ts'));
+mocha.run((failures) => { process.exitCode = failures ? 1 : 0; });
+"
 ```
 
-## Test hand note
+结果：**5 passing**（exit 0）。说明：CJS `npm test` 忽略文件参数，故用内联 Mocha。
 
-Brief 顺子手（123/456万 + 234条 + 789筒 + 南 + 中，中已现物）在本仓 `calculateShanten` 下限 0 / ukeire 恒 0 下，全员 sh/ukeire 并列，danger 成为有效破平键；**未改测例手牌**，现物 JIAN 即可胜出。
+## Self-review
+
+- p2 分支位置正确（legacy → p2 → p1 默认）
+- 未注入 `tilesLeft`（本切片可选，未改 EventHandler）
+- 未碰 core / 无新依赖
+
+## Concerns
+
+1. 对战路径尚未把残牌数传入 EV，残牌加压仅单测/ctx 覆盖有效。
+2. `getAIMove` 顶注释仍写「P1 / legacy」，未同步提及 p2（文档小债）。
+3. 冷启动 ts-node/Mocha 约 ~100s；用例本身 ~250ms。
 
 ## Commits
 
-**none**（Critical override：DO NOT git commit）
-
-## Concerns / follow-ups
-
-- Danger 为启发式，非对手听牌概率；P1 不做放铳模型。
-- 现物判定仅 `type+value`，不区分自家/他家弃牌来源（与 brief `visibleDiscards?` 契约一致）。
-- Task 1–2 工作树改动仍未提交；本任务 diff 叠在其上。
+none

@@ -1,22 +1,22 @@
-### Task 2: 有效牌（ukeire）破平
+### Task 2: 点炮代价 · 现物与残牌加压
 
 **Files:**
-- Modify: `src/majiang/strategy/heuristics/discard-ranker.ts`
-- Modify: `tests/majiang/discard-ranker.test.ts`
+- Modify: `tests/majiang/ev-discard-evaluator.test.ts`
+- Modify: `src/majiang/strategy/heuristics/ev-discard-evaluator.ts`（若 Task1 已含完整 `estimateDealInRisk`，本任务只锁测例）
 
 **Interfaces:**
-- Consumes: Task 1 的 `scoreDiscardCandidates` / `cloneProbe`
-- Produces: `ukeire` = 打出后，对「剩余牌种类」枚举一张加入手牌能使 `calculateShanten` **严格下降**的种类数（每种最多计 1；不乘剩余张数，避免依赖牌山状态）
-- 辅助：`function countUkeire(probeHand: Player): number`（内部，可不 export）
+- Consumes: `estimateDealInRisk`、`pickDiscardIndexByEv`、`EV_CONSTANTS`
+- Produces: 行为契约——现物风险低于中张；残牌不足时风险上升；两张同向听候选时优先打现物
 
-- [ ] **Step 1: 写失败测例（同向听时选有效牌更多的打法）**
+- [ ] **Step 1: 写失败测例（现物优先于危险中张）**
 
 ```typescript
-describe('discard-ranker · 有效牌破平', () => {
-  it('向听差相同时，应选择 ukeire 更大的弃牌', () => {
+describe('ev-discard-evaluator · 点炮代价', () => {
+  it('两张候选进攻接近时，应优先打出现物（可见弃牌中已有同型）', () => {
     const id = tid();
-    // 构造两张都「打出后向听不变」的候选；其中一张打出后进张种类更多
-    // 具体牌面：在实现后用 scoreDiscardCandidates 断言 max ukeire 的那张被 pick
+    // 构造：两张孤张风 + 一张中张孤张；把中张做成「可见现物」应打现物中张，
+    // 若未注入 visibleDiscards 则倾向打风；注入后应打出已现物的中张。
+    const mid = new Tile(TileType.TONG, 5, id.next());
     const handTiles = [
       new Tile(TileType.WAN, 1, id.next()),
       new Tile(TileType.WAN, 2, id.next()),
@@ -24,94 +24,50 @@ describe('discard-ranker · 有效牌破平', () => {
       new Tile(TileType.WAN, 4, id.next()),
       new Tile(TileType.WAN, 5, id.next()),
       new Tile(TileType.WAN, 6, id.next()),
+      new Tile(TileType.WAN, 7, id.next()),
+      new Tile(TileType.WAN, 8, id.next()),
+      new Tile(TileType.WAN, 9, id.next()),
       new Tile(TileType.TIAO, 2, id.next()),
       new Tile(TileType.TIAO, 3, id.next()),
       new Tile(TileType.TIAO, 4, id.next()),
-      new Tile(TileType.TONG, 7, id.next()),
-      new Tile(TileType.TONG, 8, id.next()),
-      new Tile(TileType.TONG, 9, id.next()),
-      new Tile(TileType.FENG, 2, id.next()), // 南 · 孤张
-      new Tile(TileType.FENG, 4, id.next()), // 北 · 孤张
+      mid
     ];
-    const scores = scoreDiscardCandidates({ handTiles, revealedSets: [] });
-    const best = scores[0];
-    // 两张风牌孤张中，至少应打风牌；且 best.ukeire >= 同 shantenAfter 组内其他候选
-    expect(best.tile.type).to.equal(TileType.FENG);
-    const sameShanten = scores.filter(s => s.shantenAfter === best.shantenAfter);
-    const maxUkeire = Math.max(...sameShanten.map(s => s.ukeire));
-    expect(best.ukeire).to.equal(maxUkeire);
+    const visibleDiscards = [new Tile(TileType.TONG, 5, 9999)];
+    const idx = pickDiscardIndexByEv({
+      handTiles,
+      revealedSets: [],
+      visibleDiscards,
+      tilesLeft: 20
+    });
+    expect(handTiles[idx].type).to.equal(TileType.TONG);
+    expect(handTiles[idx].value).to.equal(5);
+  });
+
+  it('残牌加压：tilesLeft 小时 dealInRisk 不小于无加压', () => {
+    const t = new Tile(TileType.TONG, 5, 1);
+    const base = estimateDealInRisk(t, [], 80);
+    const late = estimateDealInRisk(t, [], 20);
+    expect(late).to.be.greaterThan(base);
   });
 });
 ```
 
-- [ ] **Step 2: 跑测确认失败**
+- [ ] **Step 2: 跑测**
+
+Run: `npx mocha -r ts-node/register tests/majiang/ev-discard-evaluator.test.ts --timeout 10000`  
+Expected: 若实现已完整则 PASS；若现物分支缺失则 FAIL 后按 Task1 公式补全
+
+- [ ] **Step 3: 必要时微调公式常数（禁止改 core）**
+
+仅允许改 `EV_CONSTANTS` 数值使上述测例稳定通过；禁止为过测硬编码「若是 5 筒就返回」。
+
+- [ ] **Step 4: Commit（仅用户明确要求时）**
 
 ```bash
-npx mocha -r ts-node/register tests/majiang/discard-ranker.test.ts --timeout 10000
-```
-
-Expected: FAIL（`ukeire` 仍为 0 导致破平断言失败，或行为未区分）
-
-- [ ] **Step 3: 实现 countUkeire 并写入 score**
-
-在 `discard-ranker.ts` 增加（贴进文件，替换 `ukeire: 0`）：
-
-```typescript
-import { TileType } from '../../core/tile';
-
-const SUIT_MAX: Partial<Record<TileType, number>> = {
-  [TileType.WAN]: 9,
-  [TileType.TIAO]: 9,
-  [TileType.TONG]: 9,
-  [TileType.FENG]: 4,
-  [TileType.JIAN]: 3
-};
-
-function countUkeire(probe: Player): number {
-  const base = RuleEngine.calculateShanten(probe);
-  let kinds = 0;
-  let syntheticId = 10_000;
-  for (const type of Object.values(TileType)) {
-    const max = SUIT_MAX[type as TileType] ?? 0;
-    for (let value = 1; value <= max; value++) {
-      const drawn = new Tile(type as TileType, value, syntheticId++);
-      const trial = new Player(0, 'ukeire', PlayerType.AI);
-      trial.handTiles = [...probe.handTiles.map(t => t.clone()), drawn];
-      trial.revealedSets = probe.revealedSets.map(s => ({
-        type: s.type,
-        tiles: s.tiles.map(t => t.clone()),
-        source: s.source
-      }));
-      if (RuleEngine.calculateShanten(trial) < base) kinds += 1;
-    }
-  }
-  return kinds;
-}
-```
-
-在 `scoreDiscardCandidates` 的 map 内：
-
-```typescript
-const shantenAfter = RuleEngine.calculateShanten(probe);
-const ukeire = countUkeire(probe);
-```
-
-- [ ] **Step 4: 跑测确认通过**
-
-```bash
-npx mocha -r ts-node/register tests/majiang/discard-ranker.test.ts --timeout 10000
-```
-
-Expected: PASS。单测内 `countUkeire` 对最多约 34 种牌 × 手牌候选，应在数秒内结束；若超时将 `--timeout` 提到 `20000`，禁止改为异步训练式搜索。
-
-- [ ] **Step 5: Commit（仅用户要求时）**
-
-```bash
-git add src/majiang/strategy/heuristics/discard-ranker.ts tests/majiang/discard-ranker.test.ts
+git add tests/majiang/ev-discard-evaluator.test.ts src/majiang/strategy/heuristics/ev-discard-evaluator.ts
 git commit -m "$(cat <<'EOF'
-feat(majiang): 弃牌排序器用有效牌种类数破平
+test(majiang): 锁定 P2 现物与残牌点炮加压行为
 
-同向听时优先保留进张面更宽的打法。
 EOF
 )"
 ```

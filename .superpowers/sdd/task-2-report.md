@@ -1,48 +1,77 @@
-# Task 2 Report: 有效牌（ukeire）破平
+# Task 2 Report: 点炮代价 · 现物与残牌加压
 
-## Status
+## What you implemented
 
-**DONE_WITH_CONCERNS**
+仅加测锁定 Task 1 已落地的 `estimateDealInRisk` / `pickDiscardIndexByEv` 行为契约；**未改** `ev-discard-evaluator.ts`、`core/`、依赖或 runner。
 
-## Commits
+新增 `describe('ev-discard-evaluator · 点炮代价')`：
 
-none（按 critical override 跳过 Step 5）
+1. **现物优先于危险中张**：可见弃牌注入同型后，进攻接近时应打出现物中张  
+2. **残牌加压**：`tilesLeft` 小于 `LATE_TILES_LEFT` 时 `dealInRisk` 严格大于无加压基线  
+
+保留 Task 1 进攻期望套件不动。
+
+## What you tested and results
+
+| 场景 | 命令 | 结果 |
+| --- | --- | --- |
+| 单文件 GREEN | 见下方 TDD Evidence | **3 passing**（进攻 1 + 点炮 2） |
+
+说明：`scripts/test/run-mocha-cjs.js` 仍忽略文件参数；聚焦验证继续用内联 Mocha + `ts-node/register`（与 Task 1 相同）。
 
 ## TDD Evidence
 
-### RED
+### Fixture note（brief 顺子手 / 中张+风 不绿）
 
-1. Appended `describe('discard-ranker · 有效牌破平')` with brief 顺子手（123456万 + 234条 + 789筒 + 南北）。
-2. Command: `node scripts/test/run-mocha-cjs.js tests/majiang/discard-ranker.test.ts --timeout 20000`
-3. Result: **FAIL** — `expected '万' to equal '风'`（`ukeire` 仍为占位 0，排序落到更小 `index` 的万）。
+1. brief 顺子手（123456789万+234条+5筒）与 Task 1 同类：向听下限 0 下 offense 虚高，无法验证 defense/现物主导。  
+2. 首版适配「刻子向 + 5筒 + 两孤张风」时：打风 `ukeire=15` / 打现物筒 `ukeire=11`，offense 差约 100，现有 `DEAL_IN_PENALTY=120` 下 defense 差不足，仍选风。  
+3. **最终手牌**：刻子向 + 三张孤张中张（5万/5条/5筒）。无现物打危险中张；注入 5 筒现物后 offense 仍接近，defense 拉开打现物 5 筒。断言意图不变；**未调** `EV_CONSTANTS`。
 
-### GREEN（实现）
+### GREEN
 
-1. In `discard-ranker.ts`: added `SUIT_MAX`、`countUkeire(probe)`；`scoreDiscardCandidates` 写入 `ukeire = countUkeire(probe)`。
-2. Re-ran same command with brief 顺子手：**仍 FAIL** — 全员 `shantenAfter=0`、`ukeire=0`。
-   - 根因：`RuleEngine.calculateRegularShanten` 对向听做了 `Math.max(0, …)`，听牌（sh=0）后无法出现严格下降，故 `countUkeire` 恒为 0。
-3. Per override「若 shanten 近似破坏测例手牌，仅调整测例构造」：改用刻子向手牌  
-   `222万 / 555条 / 888筒 / 66万 / 1条 / 南 / 北`。
-   - 同 `shantenAfter=1` 组：风孤张 `ukeire=17` > 孤张条 `ukeire=16`（若 ukeire 全 0 会因 index 误选条）。
-4. Re-ran: **3373 passing (11s)**，两段 `discard-ranker` describe 均 ✔。
+Command:
 
-## Files Changed
+```bash
+node -e "
+const Mocha = require('mocha');
+require('ts-node/register');
+const mocha = new Mocha({ timeout: 10000 });
+mocha.addFile(require('path').resolve('tests/majiang/ev-discard-evaluator.test.ts'));
+mocha.run(f => { process.exitCode = f ? 1 : 0; });
+"
+```
 
-| File | Change |
+Output:
+
+```
+  ev-discard-evaluator · 进攻期望
+    ✔ 有明显孤张字牌时，应优先打出该孤张（offense 主导）
+
+  ev-discard-evaluator · 点炮代价
+    ✔ 两张候选进攻接近时，应优先打出现物（可见弃牌中已有同型）
+    ✔ 残牌加压：tilesLeft 小时 dealInRisk 不小于无加压
+
+  3 passing (55ms)
+```
+
+## Files changed
+
+| 路径 | 动作 |
 | --- | --- |
-| `src/majiang/strategy/heuristics/discard-ranker.ts` | `countUkeire` + 填充 `ukeire` |
-| `tests/majiang/discard-ranker.test.ts` | Task 2 describe；测例手牌改为刻子向 |
-| `.superpowers/sdd/task-2-report.md` | 本报告 |
+| `tests/majiang/ev-discard-evaluator.test.ts` | Modify（加点炮代价套件；导入 `estimateDealInRisk`） |
+| `.superpowers/sdd/task-2-report.md` | Create（本报告） |
 
-## Self-review
+未改：`src/majiang/strategy/heuristics/ev-discard-evaluator.ts`、`src/majiang/core/**`
 
-- 未改 `core/`、未加依赖、未动 `AIPlayer`。
-- 排序仍：`shantenAfter ↑` → `ukeire ↓` → `danger ↑` → `legacyValue ↓` → `index`。
-- `countUkeire`：枚举种类（不乘剩余张数），与 brief 一致。
-- 测试跑法遵循仓库 CJS loader，未用 bare `npx mocha -r ts-node/register`。
+## Self-review findings
 
-## Concerns
+- 行为契约已由测例锁定；实现侧现物风险 0.05、字牌/幺九/中张分层与 `LATE_RISK_MULT` 与 Task 1 一致，无需常数微调。  
+- 测例相对 brief 手牌有意偏离并注释根因；额外断言「无现物不选 5 筒」强化「现物改变选择」而非仅碰巧选中张。  
+- 禁止硬编码「若是 5 筒返回」——本任务无生产代码改动，合规。  
+- Commit 按 controller 跳过。
 
-1. **向听下限 0**：听牌局面 `ukeire` 恒 0，破平失效；后续若要真听牌进张面，需允许 shanten=-1（或单独判定和了）。
-2. **测例与 brief 牌面不同**：为适配现有近似公式而改构造；语义仍覆盖「同向听选更大 ukeire」。
-3. **性能**：每候选 × ~34 种试摸 × `calculateShanten`；本单测约数秒级，可接受，但全量对局热路径若频繁调用需再缓存/剪枝。
+## Issues / concerns
+
+1. **CJS mocha runner 仍不支持按文件过滤** — 与 Task 1 相同；本任务未改 runner。  
+2. **Plan/brief 顺子手与向听下限不兼容** — 建议后续同步更新 P2 plan/Task brief 手牌为刻子向，避免执行者反复踩坑。  
+3. **现物 vs 风在 ukeire 差距大时可能仍选风** — 当前常数下「进攻接近」是前提；若产品期望「现物绝对优先」，需另议抬高 `DEAL_IN_PENALTY`（本次未改，以免扰动 offense 主序）。

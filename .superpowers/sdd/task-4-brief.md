@@ -1,113 +1,46 @@
-### Task 4: 接入 `AIPlayer.getAIMove`
+### Task 4: 对战评测脚本 · 1×P2 vs 3×legacy
 
 **Files:**
-- Modify: `src/majiang/strategy/agents/ai-player.ts`
-- Modify: `tests/majiang/discard-ranker.test.ts`（可增 AIPlayer 烟测，或新建极短 describe）
+- Create: `scripts/training/majiang/battle-p2-vs-legacy-1000.ts`
+- Runtime out: `models/majiang/battle-p2-vs-legacy-1000.json`
 
 **Interfaces:**
-- Consumes: `pickDiscardIndex`；保留现有 `evaluateTileValue` 作为 `legacyValueAt`
-- Produces:
-  - `AIPlayer` 实例字段 `private visibleDiscards: Tile[] = []`
-  - `public setVisibleDiscards(tiles: Tile[]): void`（防御拷贝）
-  - `getAIMove(): number` 改为：空手 → `-1`；否则 `pickDiscardIndex({ handTiles, revealedSets, visibleDiscards: this.visibleDiscards }, (i,t) => this.evaluateTileValue(t,i))`
-  - **保留** `getAllTileValues` / `evaluateTileValue` 私有方法供 legacy 破平与调试日志；可在 `getAIMove` 打一条 debug：最终索引与 `scoreDiscardCandidates` 首项摘要
+- Consumes: 复制 `battle-p1-vs-legacy-1000.ts` 结构；`setDiscardStrategy(idx === p2Seat ? 'p2' : 'legacy')`
+- Produces: JSON 字段 `algorithm: "1xP2-vs-3xlegacy"`；`matchup.p2Wins` / `legacyWins` / `p2WinRateAmongDecidedPct`；`expectedP2WinRatePct: 25`
 
-- [ ] **Step 1: 写失败烟测（AIPlayer 走排序器）**
+- [ ] **Step 1: 以 P1 对战脚本为模板新建文件**
 
-在 `tests/majiang/discard-ranker.test.ts` 追加：
+从 `scripts/training/majiang/battle-p1-vs-legacy-1000.ts` 复制后全局替换：
 
-```typescript
-import { AIPlayer } from '../../src/majiang/strategy/agents/ai-player';
+- 注释 / 用法中的 P1 → P2
+- `setDiscardStrategy(... 'p1' ...)` → `'p2'`
+- 变量名 `p1Wins` → `p2Wins`，`p1Seat` → `p2Seat`，`p1Won` → `p2Won`
+- `algorithm` / `outPath` 默认改为 `battle-p2-vs-legacy-1000.json`
+- `expectedP1WinRatePct` → `expectedP2WinRatePct`
 
-describe('AIPlayer · P1 接入', () => {
-  it('getAIMove 在现物场景下打出安全字牌', () => {
-    const id = tid();
-    const ai = new AIPlayer('测AI');
-    ai.handTiles = [
-      new Tile(TileType.WAN, 1, id.next()),
-      new Tile(TileType.WAN, 2, id.next()),
-      new Tile(TileType.WAN, 3, id.next()),
-      new Tile(TileType.WAN, 4, id.next()),
-      new Tile(TileType.WAN, 5, id.next()),
-      new Tile(TileType.WAN, 6, id.next()),
-      new Tile(TileType.TIAO, 2, id.next()),
-      new Tile(TileType.TIAO, 3, id.next()),
-      new Tile(TileType.TIAO, 4, id.next()),
-      new Tile(TileType.TONG, 7, id.next()),
-      new Tile(TileType.TONG, 8, id.next()),
-      new Tile(TileType.TONG, 9, id.next()),
-      new Tile(TileType.FENG, 2, id.next()),
-      new Tile(TileType.JIAN, 1, id.next()),
-    ];
-    ai.setVisibleDiscards([new Tile(TileType.JIAN, 1, id.next())]);
-    const idx = ai.getAIMove();
-    expect(ai.handTiles[idx].type).to.equal(TileType.JIAN);
-  });
-});
-```
+禁止改 GameEventHandler 主循环逻辑（与 P1 脚本保持同构，保证可比）。
 
-- [ ] **Step 2: 跑测确认失败**
+- [ ] **Step 2: 冒烟 20 局**
+
+Run: `npx ts-node scripts/training/majiang/battle-p2-vs-legacy-1000.ts 20 models/majiang/battle-p2-vs-legacy-smoke-20.json`  
+Expected: 进程退出码 0；JSON `roundsCompleted: 20`；无未捕获崩溃
+
+- [ ] **Step 3: 完整 1000 局（验收闸）**
+
+Run: `npx ts-node scripts/training/majiang/battle-p2-vs-legacy-1000.ts 1000 models/majiang/battle-p2-vs-legacy-1000.json`  
+Expected: `roundsCompleted: 1000`；**人话验收**：`p2WinRateAmongDecidedPct` **≥ 25**（不低于均势）；理想 **≥ 30**（明显强于 legacy）。若 &lt; 25，回到 Task1/2 只调 `EV_CONSTANTS` 或 risk 表，不改 core，再复测冒烟+1000。
+
+对照基线：P1 同脚本形态曾得约 **14.55%**（`models/majiang/battle-p1-vs-legacy-1000.json`）——P2 必须显著高于该值。
+
+- [ ] **Step 4: Commit（仅用户明确要求时）**
 
 ```bash
-npx mocha -r ts-node/register tests/majiang/discard-ranker.test.ts --timeout 20000
-```
-
-Expected: FAIL（`setVisibleDiscards` 不存在，或仍走旧权重打出非中）
-
-- [ ] **Step 3: 改 AIPlayer**
-
-在 `ai-player.ts` 顶部增加：
-
-```typescript
-import { pickDiscardIndex } from '../heuristics/discard-ranker';
-```
-
-类内增加：
-
-```typescript
-private visibleDiscards: Tile[] = [];
-
-public setVisibleDiscards(tiles: Tile[]): void {
-  this.visibleDiscards = tiles.map(t => t.clone());
-}
-```
-
-将 `getAIMove` 的核心选牌（`needsToDiscard` 为真的分支与正常分支）收敛为：
-
-```typescript
-const index = pickDiscardIndex(
-  {
-    handTiles: this.handTiles,
-    revealedSets: this.revealedSets ?? [],
-    visibleDiscards: this.visibleDiscards
-  },
-  (i, tile) => this.evaluateTileValue(tile, i)
-);
-if (index >= 0 && index < this.handTiles.length) {
-  debugLog(`AI P1排序选择索引 ${index}: ${this.handTiles[index].toString()}`);
-  return index;
-}
-return this.handTiles.length - 1;
-```
-
-删除或绕开「仅 `getAllTileValues()[0]`」作为唯一决策的路径；异常 fallback 仍打最后一张。**不要**改 `handleDiscard` 的 `process.exit` 行为（本计划不修该历史问题）。
-
-- [ ] **Step 4: 跑测确认通过**
-
-```bash
-npx mocha -r ts-node/register tests/majiang/discard-ranker.test.ts --timeout 20000
-```
-
-Expected: PASS
-
-- [ ] **Step 5: Commit（仅用户要求时）**
-
-```bash
-git add src/majiang/strategy/agents/ai-player.ts tests/majiang/discard-ranker.test.ts
+git add scripts/training/majiang/battle-p2-vs-legacy-1000.ts \
+  models/majiang/battle-p2-vs-legacy-1000.json \
+  models/majiang/battle-p2-vs-legacy-smoke-20.json
 git commit -m "$(cat <<'EOF'
-feat(majiang): AIPlayer 出牌接入向听启发式排序
+test(majiang): 增加 P2 对战 legacy 的 1000 局评测
 
-人机主路径弃牌改为向听/有效牌/现物优先，旧权重仅作破平。
 EOF
 )"
 ```
