@@ -5,14 +5,17 @@ import { GameEventHandler } from '../../ui/game-event-handler';
 import { AUTO_PLAY_MODE } from '../../config/runtime-state';
 import { WinConditions } from '../../core/win-conditions/win-conditions-main';
 import { pickDiscardIndex } from '../heuristics/discard-ranker';
+import { pickDiscardIndexByEv } from '../heuristics/ev-discard-evaluator';
 
-/** 弃牌策略：legacy=旧权重（默认）；p1=向听排序（试用，需显式打开） */
-export type DiscardStrategy = 'p1' | 'legacy';
+/** 弃牌策略：legacy=旧权重（默认）；p1=向听排序；p2=期望值（试用，需显式打开） */
+export type DiscardStrategy = 'p1' | 'p2' | 'legacy';
 
 function resolveDiscardStrategy(explicit?: DiscardStrategy): DiscardStrategy {
-  if (explicit === 'p1' || explicit === 'legacy') return explicit;
-  // 试用开关：MAJIANG_DISCARD_STRATEGY=p1
-  return process.env.MAJIANG_DISCARD_STRATEGY === 'p1' ? 'p1' : 'legacy';
+  if (explicit === 'p1' || explicit === 'p2' || explicit === 'legacy') return explicit;
+  // 试用开关：MAJIANG_DISCARD_STRATEGY=p1|p2
+  const env = process.env.MAJIANG_DISCARD_STRATEGY;
+  if (env === 'p1' || env === 'p2') return env;
+  return 'legacy';
 }
 
 export class AIPlayer extends Player {
@@ -270,6 +273,23 @@ export class AIPlayer extends Player {
             debugLog(`AI legacy选择索引 ${idx}: ${this.handTiles[idx].toString()}`);
             return idx;
           }
+        }
+        return this.handTiles.length - 1;
+      }
+
+      if (this.discardStrategy === 'p2') {
+        const index = pickDiscardIndexByEv(
+          {
+            handTiles: this.handTiles,
+            revealedSets: this.revealedSets ?? [],
+            visibleDiscards: this.visibleDiscards
+            // tilesLeft：本切片不强制注入；后续可在 EventHandler 设可选 setter
+          },
+          (i, tile) => this.evaluateTileValue(tile, i)
+        );
+        if (index >= 0 && index < this.handTiles.length) {
+          debugLog(`AI P2期望值选择索引 ${index}: ${this.handTiles[index].toString()}`);
+          return index;
         }
         return this.handTiles.length - 1;
       }
