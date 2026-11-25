@@ -78,5 +78,6 @@
 
 ## 变更记录
 - 2026-05-08：初次建立规则演进文档，补齐 fit 必需闭环结构。
+- 2026-11-25：提交规则新增「提交后必须推送」，同步更新 `commit-policy.md` 与 `git-mcp-automation.md`。
 - 2026-11-14：对齐 quantification 定封顶模型；落地触发表、E0 沟通/提交、delivery-flow 与 Web UI 脊骨；明确不引入 OpenSpec。
 - 2026-11-20：强制 `docs/superpowers/{specs,plans}` 与可管理 `.superpowers` 产物入库；运行时态仍忽略。

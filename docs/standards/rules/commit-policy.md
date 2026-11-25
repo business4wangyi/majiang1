@@ -54,4 +54,5 @@ type(scope): 中文主题
 ## 与自动化的关系
 
 - 自动提交仍须满足本文件 + `git-mcp-automation.md`
+- **提交后必须推送**：每次 commit 成功后，MUST 同步 `git push` 到当前分支的上游远程（本仓默认 `origin`），不得只提交不推送；推送失败须报告原因
 - 破坏性 Git 命令（`reset --hard`、`clean -fd`、force push 等）须用户显式确认
